@@ -1,0 +1,60 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/app/**/*.{js,jsx,ts,tsx}",
+    "./src/components/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+  presets: [require("nativewind/preset")],
+  theme: {
+    extend: {
+      colors: {
+        obsidian: {
+          DEFAULT: "#081013",
+          50: "#16282e",
+          100: "#1c3039",
+          200: "#15242b",
+          300: "#0f1b20",
+          400: "#0b1519",
+          500: "#081013",
+          surface: "#081013",
+          card: "#0f1b20",
+          elevated: "#15242b",
+          highlight: "#1c3039",
+          border: "#243c44",
+        },
+        teal: {
+          50: "#f0fdfa",
+          100: "#ccfbf1",
+          200: "#99f6e4",
+          300: "#5eead4",
+          400: "#2dd4bf",
+          500: "#14b8a6",
+          600: "#0d9488",
+          700: "#0f766e",
+          800: "#115e59",
+          900: "#134e4a",
+          950: "#042f2e",
+        },
+        warm: {
+          50: "#fffbeb",
+          100: "#fef3c7",
+          200: "#fde68a",
+          300: "#fcd34d",
+          400: "#fbbf24",
+          500: "#f59e0b",
+          600: "#d97706",
+          700: "#b45309",
+          800: "#92400e",
+          900: "#78350f",
+        },
+        slate: {
+          text: "#f1f5f9",
+          muted: "#94a3b8",
+          subtle: "#64748b",
+        },
+      },
+    },
+  },
+  plugins: [],
+};
