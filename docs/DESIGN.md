@@ -265,6 +265,8 @@ Warna saja tidak cukup (WCAG 1.4.1; 1 dari 12 pria buta warna merah-hijau [S24];
 | Info / netral | `primary` / `primaryContainer` | huruf *i* (lingkaran) | "Data tersimpan di perangkat ini" |
 | Belum dikerjakan | **netral** (`onSurfaceVariant`) | lingkaran kosong | — **bukan merah** (Prinsip 6) |
 
+**Warna ikon status:** di atas `surface`/`surfaceContainer*` ikon memakai warna status (`success`, `error`, `warning`, `primary`; kontras ≥ 5,00:1). Di atas `…Container` (banner, chip, lingkaran *empty state*) ikon memakai **`on…Container`** pasangannya, sesuai matriks 3.3.
+
 ### 3.5 Warna kategori (untuk label/ikon kategori buatan pengguna)
 
 Dipakai pada **ikon**, **cincin progres**, dan **penanda kecil** — **bukan** sebagai latar teks. Semua berkontras ≥ 3:1 terhadap `surface` (5,69–5,73:1) dan terhadap semua `surfaceContainer*` (min 4,63:1) — dihitung.
@@ -875,6 +877,8 @@ Dari hasil kontras: terisi `primary` vs track `surfaceContainerHighest` = 5,01:1
 | **Error** | Gagal memuat/menyimpan | Ikon error; `errorContainer` | "Gagal memuat" + "Coba lagi" |
 | **Izin ditolak** | Notifikasi ditolak | Ikon lonceng-coret | "Pengingat belum aktif" + "Buka pengaturan" |
 
+Warna ikon di dalam lingkaran: `onPrimaryContainer` (kosong awal/tak ada hasil), `onSuccessContainer` (semua selesai), `onErrorContainer` (error/izin ditolak; lingkaran `errorContainer`).
+
 *Empty state* melakukan tiga pekerjaan: menjelaskan mengapa kosong, mengajarkan apa yang dilakukan di sini, dan menyediakan **satu** aksi untuk mengisinya [D]. Detail loading dan pola waktu: Bagian 11.1.
 
 ### 7.17 Komponen kecil
@@ -884,7 +888,7 @@ Dari hasil kontras: terisi `primary` vs track `surfaceContainerHighest` = 5,01:1
 | **Divider** | 1 dp `outlineVariant`; di list inset kiri 16/72; antar-seksi penuh lebar |
 | **Judul seksi** (`SectionHeader`) | Tinggi min. 48; `titleMedium` `onSurface` di kiri; opsional tombol `text` "Lihat semua" di kanan (area sentuh 48); padding H 16; jarak atas 24 dari seksi sebelumnya |
 | **Badge** | Titik 6 dp atau angka (tinggi 16, min lebar 16, `labelSmall`); `error`/`onError`; maks. "99+" |
-| **Banner info/peringatan/error** | `…Container` + ikon 24 di awal + teks `bodyMedium` `on…Container` + (opsional) tombol `text`; `radius.lg`; padding 16; berada **di dalam konten** (tidak melayang) |
+| **Banner info/peringatan/error** | `…Container` + ikon 24 di awal (warna `on…Container`) + teks `bodyMedium` `on…Container` + (opsional) tombol `text`; `radius.lg`; padding 16; berada **di dalam konten** (tidak melayang) |
 | **Avatar/ubin ikon kategori** | 40 dp `radius.full`; latar `surfaceContainerHigh`; ikon 24 warna kategori (≥ 4,63:1) |
 | **Tooltip/hint kontekstual** | Dipakai hemat (Bagian 11.3); `inverseSurface`, `bodySmall`, `radius.xs` |
 | **Pemilih tanggal/waktu** | Gunakan komponen native/platform (picker Android) agar sesuai kebiasaan pengguna; **tidak dibuat sendiri** [D] |
