@@ -35,13 +35,22 @@ export const touchTarget = {
 } as const;
 
 export const typography = {
-  h1: { fontSize: 28, lineHeight: 34, fontWeight: '700' as const },
-  h2: { fontSize: 22, lineHeight: 28, fontWeight: '700' as const },
-  h3: { fontSize: 18, lineHeight: 24, fontWeight: '600' as const },
+  displayLarge: { fontSize: 36, lineHeight: 44, fontWeight: '700' as const },
+  displayMedium: { fontSize: 32, lineHeight: 40, fontWeight: '700' as const },
+  headlineLarge: { fontSize: 28, lineHeight: 34, fontWeight: '700' as const },
+  headlineMedium: { fontSize: 24, lineHeight: 30, fontWeight: '600' as const },
+  headlineSmall: { fontSize: 20, lineHeight: 26, fontWeight: '600' as const },
+  titleLarge: { fontSize: 22, lineHeight: 28, fontWeight: '600' as const },
+  titleMedium: { fontSize: 16, lineHeight: 24, fontWeight: '600' as const },
+  titleSmall: { fontSize: 14, lineHeight: 20, fontWeight: '600' as const },
   bodyLarge: { fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
   bodyMedium: { fontSize: 14, lineHeight: 20, fontWeight: '400' as const },
   bodySmall: { fontSize: 12, lineHeight: 16, fontWeight: '400' as const },
-  label: { fontSize: 13, lineHeight: 18, fontWeight: '500' as const },
+  labelLarge: { fontSize: 14, lineHeight: 20, fontWeight: '500' as const },
+  labelMedium: { fontSize: 12, lineHeight: 16, fontWeight: '500' as const },
+  labelSmall: { fontSize: 11, lineHeight: 14, fontWeight: '500' as const },
   badge: { fontSize: 11, lineHeight: 14, fontWeight: '600' as const },
   timer: { fontSize: 56, lineHeight: 64, fontWeight: '700' as const },
 } as const;
+
+export type TypographyVariant = keyof typeof typography;
