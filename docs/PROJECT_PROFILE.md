@@ -112,27 +112,35 @@ graph TD
   - Presentation: `TargetListScreen` (Template A), `TargetCard`, `PillarFilterChips`, `AddTargetModal` (Template C).
   - Route: Thin adapter `app/(tabs)/targets.tsx`.
 
-- [ ] **FASE 3: Vertical Slice 2 — Layar Terpadu: TODAY & FOKUS (SELANJUTNYA)**
+- [x] **FASE 3: Vertical Slice 2 — Layar Terpadu: TODAY & FOKUS (SELESAI)**
   - Menggabungkan Top 3-5 Prioritas Hari Ini dengan Timer Fokus Pomodoro & Deep Flow dalam satu cockpit.
   - Delta Timestamp Engine (tahan Android Doze Mode).
   - Hardware integration: `expo-keep-awake` (layar tetap nyala), `expo-haptics` (getaran mulai/jeda/selesai), `expo-audio` (lonceng mangkuk meditasi).
   - Dialog refleksi pasca-sesi (skala 1-5 bintang, hambatan, auto-catat menit kerja ke database).
   - Route: Thin adapter `app/(tabs)/index.tsx`.
 
-- [ ] **FASE 4: Vertical Slice 3 — Fitur PROJECT & MILESTONES**
+- [x] **FASE 4: Vertical Slice 3 — Fitur PROJECT & MILESTONES (SELESAI)**
   - Wadah eksekusi kerja spesifik pendukung Target.
   - Tampilan accordion milestone dan checklist tugas konkret.
   - Perhitungan otomatis persentase selesai tugas ke progres proyek dan target terkait.
   - Route: Thin adapter `app/(tabs)/projects.tsx` dan `app/projects/[id].tsx` (Template B).
 
-- [ ] **FASE 5: Vertical Slice 4 — Fitur AGENDA & JADWAL HARIAN**
-  - Timeline kronologis vertikal (jam 00:00 - 24:00) dengan garis penanda waktu sekarang (*current time line*).
-  - Blok waktu kerja (*time-blocked*) dan to-do fleksibel bebas jam.
-  - Penjadwalan alarm pengingat lokal via `expo-notifications` (10 menit sebelum acara).
+- [x] **FASE 5: Vertical Slice 4 — Fitur AGENDA & JADWAL HARIAN (SELESAI)**
+  - Timeline kronologis vertikal dengan pemisahan acara berwaktu dan tugas bebas jam (*all-day*).
+  - Date strip header interaktif (14 hari) dengan penanda hari ini.
+  - Kartu acara timeline dengan centang selesai di kiri (target sentuh $\ge 48$ dp), badge kategori warna pilar, dan konfirmasi hapus.
+  - Form penjadwalan modal (Template C) lengkap dengan kategori kerja/rapat/belajar/pribadi, pengingat menit, dan lokasi.
+  - Penjadwalan alarm pengingat lokal via `expo-notifications` (dengan izin sistem & pembatalan otomatis saat tuntas/dihapus).
+  - Lolos uji: `npx expo-doctor` (20/20 passed) & `npx tsc --noEmit` (0 error).
   - Route: Thin adapter `app/(tabs)/agenda.tsx`.
 
-- [ ] **FASE 6: HARDENING, BACKUP/EXPORT & BUILD APK PRODUKSI**
-  - Layar Pengaturan (Template D): kustomisasi durasi Pomodoro, toggle getaran, ekspor/impor database JSON lokal.
-  - Uji ketahanan offline penuh (mode pesawat).
-  - Build Android Application Package (`.apk`) produksi menggunakan EAS Build / local Gradle.
-  - Uji pasang di perangkat fisik Android.
+- [x] **FASE 6: HARDENING, SETTINGS (TEMPLATE D), BACKUP/EXPORT & BUILD APK READINESS (SELESAI)**
+  - Layar Pengaturan lengkap sesuai Template D (`docs/DESIGN.md` Bagian 8.4):
+    - Switch getaran haptik & layar tetap terjaga (efek seketika).
+    - Pemilih durasi Pomodoro (15, 25, 45, 60 mnt) & Deep Flow (45, 50, 60, 90 mnt).
+    - Ekspor snapshot seluruh 9 tabel SQLite ke cadangan JSON dengan modal preview.
+    - Ubin statistik database lokal (jumlah target, proyek, tugas, sesi fokus, agenda).
+  - Konfigurasi Android APK produksi di `app.json`: package `com.mylife.mobile`, versionCode 1, izin Android (`WAKE_LOCK`, `VIBRATE`, `RECEIVE_BOOT_COMPLETED`, `SCHEDULE_EXACT_ALARM`), tema latar Deep Obsidian Teal `#081013`.
+  - Konfigurasi `eas.json` dengan `buildType: "apk"` untuk menghasilkan installer `.apk` mandiri.
+  - Lolos uji verifikasi penuh: `npx expo-doctor` (20/20 passed) & `npx tsc --noEmit` (0 error).
+  - Route: `app/settings.tsx` dapat diakses dari tombol Pengaturan di header tab 'Hari Ini'.
