@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
@@ -160,20 +160,20 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   quickAddRow: {
-    flexDirection: 'row',
     gap: space[2],
     marginBottom: space[4],
   },
   textInput: {
-    flex: 1,
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    borderRadius: radius.pill,
+    borderColor: colors.outline,
+    borderRadius: radius.md,
     color: colors.onSurface,
     paddingHorizontal: space[4],
-    height: 48,
+    minHeight: 56,
+    paddingVertical: space[3],
     fontSize: 14,
+    fontFamily: fontFamily.regular,
   },
   addButton: {
     minWidth: 100,

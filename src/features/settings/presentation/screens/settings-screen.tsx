@@ -1,537 +1,120 @@
 import React, { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  Pressable,
-  Switch,
-  Modal,
-  TextInput,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { View, Pressable, Switch, TextInput, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
-import {
-  ChevronLeft,
-  Vibrate,
-  Eye,
-  Timer,
-  Flame,
-  HardDrive,
-  Download,
-  Smartphone,
-  ShieldCheck,
-} from 'lucide-react-native';
+import { ArrowLeft, ChevronRight, Tags, Vibrate, Eye, Timer, Flame, Download, ShieldCheck } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, radius, touchTarget, elevation } from '@/theme/tokens';
-import { Screen } from '@/shared/ui/screen';
-import { AppText } from '@/shared/ui/app-text';
-import { Card } from '@/shared/ui/card';
-import { Button } from '@/shared/ui/button';
-import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
+import { space, radius } from '@/theme/tokens';
+import { Screen, AppText, Card, Button, AppBottomSheet } from '@/shared/ui';
+import { CategoryManagerModal } from '@/features/categories/presentation/components/category-manager-modal';
 import { useSettings } from '../hooks/use-settings';
 
 const POMODORO_OPTIONS = [15, 25, 45, 60];
 const DEEP_FLOW_OPTIONS = [45, 50, 60, 90];
 
+function SettingRow({ title, description, icon, trailing, onPress }: {
+  title: string; description: string; icon: React.ReactNode; trailing?: React.ReactNode; onPress?: () => void;
+}) {
+  const content = <>
+    <View style={styles.leadingIcon}>{icon}</View>
+    <View style={styles.rowText}><AppText variant="titleSmall">{title}</AppText><AppText variant="bodySmall" color="onSurfaceVariant">{description}</AppText></View>
+    {trailing || (onPress && <ChevronRight size={18} color={colors.primary} />)}
+  </>;
+  return onPress ? <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [styles.row, pressed && styles.pressed]}>{content}</Pressable> :
+    <View style={styles.row}>{content}</View>;
+}
+
 export const SettingsScreen: React.FC = () => {
-  const {
-    settings,
-    stats,
-    isExporting,
-    backupJson,
-    setBackupJson,
-    updateSetting,
-    exportBackup,
-  } = useSettings();
-
-  const [activeDurationPicker, setActiveDurationPicker] = useState<'POMODORO' | 'DEEP_FLOW' | null>(null);
-
+  const { settings, stats, isLoading, isExporting, backupJson, setBackupJson, updateSetting, exportBackup } = useSettings();
+  const [isCategoryManagerVisible, setIsCategoryManagerVisible] = useState(false);
+  const [durationPicker, setDurationPicker] = useState<'POMODORO' | 'DEEP_FLOW' | null>(null);
+  const durationOptions = durationPicker === 'POMODORO' ? POMODORO_OPTIONS : DEEP_FLOW_OPTIONS;
   const handleExport = async () => {
-    const json = await exportBackup();
-    if (!json) {
-      Alert.alert('Gagal', 'Terjadi kesalahan saat mengekspor database.');
-    }
+    if (!await exportBackup()) Alert.alert('Belum dapat menampilkan data', 'Coba lagi beberapa saat.');
   };
 
   return (
-    <Screen>
-      {/* TopBar 64 dp (DESIGN.md Template D) */}
-      <View style={styles.topBar}>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Kembali"
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          style={styles.backButton}
-        >
-          <ChevronLeft size={24} color={colors.onSurface} />
+    <Screen withBottomPadding={false}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Kembali" style={styles.back}>
+          <ArrowLeft size={22} color={colors.primary} />
         </Pressable>
-
-        <View style={styles.topBarTitleBox}>
-          <AppText variant="titleLarge">Pengaturan</AppText>
-        </View>
+        <View style={styles.headerText}><AppText variant="bodySmall" color="onSurfaceVariant">Sesuaikan dengan caramu</AppText><AppText variant="headlineLarge">Pengaturan.</AppText></View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* SEKSI 1: TIMER & FOKUS */}
-        <View style={styles.sectionHeader}>
-          <AppText variant="titleMedium" color="onSurface">
-            Fokus & Timer
-          </AppText>
+      <AppText variant="headlineSmall" accessibilityRole="header" style={styles.sectionTitle}>Organisasi</AppText>
+      <SettingRow title="Kategori target" description="Kelola nama dan pengelompokan tujuanmu."
+        icon={<Tags size={20} color={colors.primary} />} onPress={() => setIsCategoryManagerVisible(true)} />
+
+      <AppText variant="headlineSmall" accessibilityRole="header" style={styles.sectionTitle}>Fokus & kenyamanan</AppText>
+      <SettingRow title="Getaran haptik" description="Preferensi umpan balik sentuh."
+        icon={<Vibrate size={20} color={colors.primary} />}
+        trailing={<Switch accessibilityLabel="Getaran haptik" value={settings.hapticsEnabled} onValueChange={value => updateSetting({ hapticsEnabled: value })}
+          trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }} thumbColor={colors.onPrimary} />} />
+      <SettingRow title="Layar tetap terjaga" description="Preferensi layar selama sesi fokus."
+        icon={<Eye size={20} color={colors.primary} />}
+        trailing={<Switch accessibilityLabel="Layar tetap terjaga" value={settings.keepAwakeEnabled} onValueChange={value => updateSetting({ keepAwakeEnabled: value })}
+          trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }} thumbColor={colors.onPrimary} />} />
+      <SettingRow title="Durasi Pomodoro" description={settings.pomodoroMinutes + ' menit per sesi'}
+        icon={<Timer size={20} color={colors.primary} />} onPress={() => setDurationPicker('POMODORO')} />
+      <SettingRow title="Durasi Deep Flow" description={settings.deepFlowMinutes + ' menit per sesi'}
+        icon={<Flame size={20} color={colors.primary} />} onPress={() => setDurationPicker('DEEP_FLOW')} />
+
+      <AppText variant="headlineSmall" accessibilityRole="header" style={styles.sectionTitle}>Data & privasi</AppText>
+      {!isLoading && <Card variant="highlight" padding={space[5]}>
+        <AppText variant="labelMedium" color="onPrimaryContainer">TERSIMPAN DI PERANGKAT INI</AppText>
+        <View style={styles.stats}>
+          {[
+            ['Target', stats.targetsCount], ['Proyek', stats.projectsCount], ['Tugas', stats.tasksCount],
+            ['Sesi fokus', stats.focusSessionsCount], ['Agenda', stats.agendaEventsCount],
+          ].map(([label, value]) => <View key={label} style={styles.stat}><AppText variant="headlineMedium" color="onPrimaryContainer" tabularNums>{value}</AppText><AppText variant="bodySmall" color="onPrimaryContainer">{label}</AppText></View>)}
         </View>
+      </Card>}
+      <View style={styles.dataActions}>
+        <SettingRow title="Pratinjau data JSON" description="Untuk inspeksi lokal. Pemulihan data belum tersedia."
+          icon={<Download size={20} color={colors.primary} />}
+          trailing={<ChevronRight size={18} color={colors.primary} />} onPress={isExporting ? undefined : handleExport} />
+      </View>
+      <SettingRow title="Penyimpanan lokal" description="Catatan aplikasi disimpan di perangkat ini."
+        icon={<ShieldCheck size={20} color={colors.primary} />} />
+      <View style={styles.footer}><AppText variant="titleMedium" color="primary">MyLife</AppText><AppText variant="bodySmall" color="onSurfaceVariant">Versi 1.0.0 · Ruang untuk hidup yang berarti.</AppText></View>
 
-        {/* Item: Getaran Haptik */}
-        <View style={styles.listItem56}>
-          <View style={styles.leadingIconBox}>
-            <Vibrate size={20} color={colors.primary} />
-          </View>
-          <View style={styles.itemTextCol}>
-            <AppText variant="bodyLarge">Getaran Haptik</AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">
-              Umpan balik sentuh saat timer mulai & selesai
-            </AppText>
-          </View>
-          <Switch
-            value={settings.hapticsEnabled}
-            onValueChange={(val) => updateSetting({ hapticsEnabled: val })}
-            trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }}
-            thumbColor={colors.onPrimary}
-          />
-        </View>
-
-        {/* Item: Layar Terjaga */}
-        <View style={styles.listItem56}>
-          <View style={styles.leadingIconBox}>
-            <Eye size={20} color={colors.primary} />
-          </View>
-          <View style={styles.itemTextCol}>
-            <AppText variant="bodyLarge">Layar Tetap Terjaga</AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">
-              Mencegah layar redup otomatis saat sesi fokus
-            </AppText>
-          </View>
-          <Switch
-            value={settings.keepAwakeEnabled}
-            onValueChange={(val) => updateSetting({ keepAwakeEnabled: val })}
-            trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }}
-            thumbColor={colors.onPrimary}
-          />
-        </View>
-
-        {/* Item: Durasi Pomodoro */}
-        <Pressable
-          onPress={() => setActiveDurationPicker('POMODORO')}
-          accessibilityRole="button"
-          style={styles.listItem72}
-        >
-          <View style={styles.leadingIconBox}>
-            <Timer size={20} color={colors.primary} />
-          </View>
-          <View style={styles.itemTextCol}>
-            <AppText variant="bodyLarge">Durasi Pomodoro</AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">
-              Waktu standar sesi kerja fokus teratur
-            </AppText>
-          </View>
-          <View style={styles.trailingChip}>
-            <AppText variant="labelMedium" color="primary">
-              {settings.pomodoroMinutes} mnt
-            </AppText>
-          </View>
-        </Pressable>
-
-        {/* Item: Durasi Deep Flow */}
-        <Pressable
-          onPress={() => setActiveDurationPicker('DEEP_FLOW')}
-          accessibilityRole="button"
-          style={styles.listItem72}
-        >
-          <View style={styles.leadingIconBox}>
-            <Flame size={20} color={colors.primary} />
-          </View>
-          <View style={styles.itemTextCol}>
-            <AppText variant="bodyLarge">Durasi Deep Flow</AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">
-              Waktu sesi kerja intensif tanpa jeda
-            </AppText>
-          </View>
-          <View style={styles.trailingChip}>
-            <AppText variant="labelMedium" color="primary">
-              {settings.deepFlowMinutes} mnt
-            </AppText>
-          </View>
-        </Pressable>
-
-        <View style={styles.divider} />
-
-        {/* SEKSI 2: DATA & PENYIMPANAN */}
-        <View style={styles.sectionHeader}>
-          <AppText variant="titleMedium" color="onSurface">
-            Data & Penyimpanan
-          </AppText>
-        </View>
-
-        {/* Database Stats Card */}
-        <Card variant="elevated" style={styles.statsCard}>
-          <View style={styles.statsHeader}>
-            <View style={styles.statsBadge}>
-              <HardDrive size={16} color={colors.primary} />
-            </View>
-            <AppText variant="labelLarge" color="primary">
-              Database SQLite Lokal
-            </AppText>
-          </View>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <AppText variant="titleLarge" tabularNums>
-                {stats.targetsCount}
-              </AppText>
-              <AppText variant="labelSmall" color="onSurfaceVariant">
-                Target
-              </AppText>
-            </View>
-            <View style={styles.statItem}>
-              <AppText variant="titleLarge" tabularNums>
-                {stats.projectsCount}
-              </AppText>
-              <AppText variant="labelSmall" color="onSurfaceVariant">
-                Proyek
-              </AppText>
-            </View>
-            <View style={styles.statItem}>
-              <AppText variant="titleLarge" tabularNums>
-                {stats.tasksCount}
-              </AppText>
-              <AppText variant="labelSmall" color="onSurfaceVariant">
-                Tugas
-              </AppText>
-            </View>
-            <View style={styles.statItem}>
-              <AppText variant="titleLarge" tabularNums>
-                {stats.focusSessionsCount}
-              </AppText>
-              <AppText variant="labelSmall" color="onSurfaceVariant">
-                Sesi Fokus
-              </AppText>
-            </View>
-            <View style={styles.statItem}>
-              <AppText variant="titleLarge" tabularNums>
-                {stats.agendaEventsCount}
-              </AppText>
-              <AppText variant="labelSmall" color="onSurfaceVariant">
-                Agenda
-              </AppText>
-            </View>
-          </View>
-        </Card>
-
-        {/* Item: Ekspor Data */}
-        <Pressable
-          onPress={handleExport}
-          accessibilityRole="button"
-          style={styles.listItem56}
-        >
-          <View style={styles.leadingIconBox}>
-            <Download size={20} color={colors.primary} />
-          </View>
-          <View style={styles.itemTextCol}>
-            <AppText variant="bodyLarge">Ekspor Cadangan Data JSON</AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">
-              Salin snapshot seluruh database ke format JSON
-            </AppText>
-          </View>
-          <Button
-            title={isExporting ? 'Mengekspor...' : 'Ekspor'}
-            variant="tonal"
-            size="compact"
-            onPress={handleExport}
-            loading={isExporting}
-          />
-        </Pressable>
-
-        <View style={styles.divider} />
-
-        {/* SEKSI 3: TENTANG APLIKASI */}
-        <View style={styles.sectionHeader}>
-          <AppText variant="titleMedium" color="onSurface">
-            Tentang MyLife Mobile
-          </AppText>
-        </View>
-
-        <View style={styles.listItem56}>
-          <View style={styles.leadingIconBox}>
-            <Smartphone size={20} color={colors.primary} />
-          </View>
-          <View style={styles.itemTextCol}>
-            <AppText variant="bodyLarge">Versi Aplikasi</AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">
-              v1.0.0 (Personal Life OS)
-            </AppText>
-          </View>
-        </View>
-
-        <View style={styles.listItem56}>
-          <View style={styles.leadingIconBox}>
-            <ShieldCheck size={20} color={colors.primary} />
-          </View>
-          <View style={styles.itemTextCol}>
-            <AppText variant="bodyLarge">Arsitektur Penyimpanan</AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">
-              100% Offline-First (Local SQLite on device)
-            </AppText>
-          </View>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footerBox}>
-          <AppText variant="bodySmall" color="onSurfaceSubtle" style={styles.footerText}>
-            MyLife Mobile • Dibuat untuk eksekusi hidup nyata tanpa distorsi.
-          </AppText>
-        </View>
-      </ScrollView>
-
-      {/* Modal Pemilih Durasi */}
-      <Modal
-        visible={activeDurationPicker !== null}
-        transparent
-        animationType="fade"
-        statusBarTranslucent
-        onRequestClose={() => setActiveDurationPicker(null)}
-      >
-        <View style={styles.pickerModalOverlay}>
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={() => setActiveDurationPicker(null)}
-            accessibilityRole="button"
-            accessibilityLabel="Tutup dialog pemilih durasi"
-          />
-          <View style={styles.pickerModalContent}>
-            <AppText variant="titleLarge" style={styles.pickerTitle}>
-              Pilih Durasi {activeDurationPicker === 'POMODORO' ? 'Pomodoro' : 'Deep Flow'}
-            </AppText>
-
-            <View style={styles.pickerChipsRow}>
-              {(activeDurationPicker === 'POMODORO'
-                ? POMODORO_OPTIONS
-                : DEEP_FLOW_OPTIONS
-              ).map((mins) => {
-                const isSelected =
-                  activeDurationPicker === 'POMODORO'
-                    ? settings.pomodoroMinutes === mins
-                    : settings.deepFlowMinutes === mins;
-
-                return (
-                  <Pressable
-                    key={mins}
-                    onPress={() => {
-                      if (activeDurationPicker === 'POMODORO') {
-                        updateSetting({ pomodoroMinutes: mins });
-                      } else {
-                        updateSetting({ deepFlowMinutes: mins });
-                      }
-                      setActiveDurationPicker(null);
-                    }}
-                    style={[
-                      styles.pickerChip,
-                      isSelected && styles.pickerChipSelected,
-                    ]}
-                  >
-                    <AppText
-                      variant="labelLarge"
-                      color={isSelected ? 'onPrimaryContainer' : 'onSurface'}
-                    >
-                      {mins} Menit
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <Button
-              title="Tutup"
-              variant="tonal"
-              onPress={() => setActiveDurationPicker(null)}
-              style={styles.pickerCloseBtn}
-            />
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal Preview Cadangan JSON */}
-      <AppBottomSheet
-        visible={backupJson !== null}
-        onClose={() => setBackupJson(null)}
-        title="Data Cadangan JSON"
-        subtitle="Salin data JSON berikut sebagai arsip offline cadanganmu"
-      >
-        <TextInput
-          value={backupJson || ''}
-          multiline
-          editable={false}
-          selectTextOnFocus
-          style={styles.backupTextInput}
-        />
-
-        <Button
-          title="Tutup Preview"
-          variant="filled"
-          onPress={() => setBackupJson(null)}
-          style={styles.backupCloseBtn}
-        />
+      {isCategoryManagerVisible && <CategoryManagerModal visible onClose={() => setIsCategoryManagerVisible(false)} />}
+      <AppBottomSheet visible={durationPicker !== null} onClose={() => setDurationPicker(null)}
+        title={durationPicker === 'POMODORO' ? 'Durasi Pomodoro' : 'Durasi Deep Flow'}
+        subtitle="Pilih durasi yang sesuai dengan ritmemu.">
+        <View style={styles.durationOptions}>{durationOptions.map(minutes => {
+          const selected = minutes === (durationPicker === 'POMODORO' ? settings.pomodoroMinutes : settings.deepFlowMinutes);
+          return <Pressable key={minutes} accessibilityRole="button" accessibilityState={{ selected }}
+            onPress={() => { updateSetting(durationPicker === 'POMODORO' ? { pomodoroMinutes: minutes } : { deepFlowMinutes: minutes }); setDurationPicker(null); }}
+            style={[styles.duration, selected && styles.selectedDuration]}>
+            <AppText variant="titleMedium" color={selected ? 'onPrimary' : 'onSurface'}>{minutes} menit</AppText>
+          </Pressable>;
+        })}</View>
+      </AppBottomSheet>
+      <AppBottomSheet visible={backupJson !== null} onClose={() => setBackupJson(null)}
+        title="Pratinjau data" subtitle="Snapshot untuk inspeksi. Bukan pemulihan lengkap."
+        footer={<Button title="Tutup pratinjau" onPress={() => setBackupJson(null)} />}>
+        <TextInput accessibilityLabel="Isi snapshot JSON" value={backupJson || ''} multiline editable={false} selectTextOnFocus style={styles.json} />
       </AppBottomSheet>
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  topBar: {
-    height: 64,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: space[2],
-  },
-  backButton: {
-    width: touchTarget.min,
-    height: touchTarget.min,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: space[2],
-  },
-  topBarTitleBox: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: space[10],
-  },
-  sectionHeader: {
-    height: 48,
-    justifyContent: 'center',
-    marginTop: space[2],
-  },
-  listItem56: {
-    minHeight: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: space[2],
-  },
-  listItem72: {
-    minHeight: 72,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: space[2],
-  },
-  leadingIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surfaceContainerHighest,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: space[3],
-  },
-  itemTextCol: {
-    flex: 1,
-    marginRight: space[2],
-  },
-  trailingChip: {
-    paddingVertical: 4,
-    paddingHorizontal: space[3],
-    borderRadius: radius.pill,
-    backgroundColor: colors.primaryContainer,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.outlineVariant,
-    marginVertical: space[4],
-  },
-  statsCard: {
-    marginVertical: space[2],
-    padding: space[4],
-    borderRadius: radius.xl,
-  },
-  statsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[2],
-    marginBottom: space[3],
-  },
-  statsBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.pill,
-    backgroundColor: colors.primaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  footerBox: {
-    marginTop: space[8],
-    alignItems: 'center',
-  },
-  footerText: {
-    textAlign: 'center',
-  },
-  pickerModalOverlay: {
-    flex: 1,
-    backgroundColor: colors.scrim,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: space[4],
-  },
-  pickerModalContent: {
-    width: '100%',
-    maxWidth: 340,
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: radius.xxl,
-    padding: space[5],
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    ...elevation.level3,
-  },
-  pickerTitle: {
-    marginBottom: space[4],
-    textAlign: 'center',
-  },
-  pickerChipsRow: {
-    gap: space[2],
-    marginBottom: space[4],
-  },
-  pickerChip: {
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    backgroundColor: colors.surfaceContainerLowest,
-  },
-  pickerChipSelected: {
-    backgroundColor: colors.primaryContainer,
-    borderColor: colors.primary,
-  },
-  pickerCloseBtn: {
-    marginTop: space[2],
-  },
-  backupTextInput: {
-    height: 300,
-    backgroundColor: colors.surfaceContainerLowest,
-    color: colors.onSurface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    padding: space[3],
-    fontSize: 12,
-    fontFamily: 'monospace',
-    textAlignVertical: 'top',
-    marginBottom: space[4],
-  },
-  backupCloseBtn: {
-    marginTop: space[2],
-  },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space[3], marginTop: space[4], marginBottom: space[4] },
+  headerText: { flex: 1 },
+  back: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.surfaceContainerLowest, alignItems: 'center', justifyContent: 'center' },
+  sectionTitle: { marginTop: space[6], marginBottom: space[3] },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[4], minHeight: 80, backgroundColor: colors.surfaceContainerLowest, borderRadius: radius.lg, marginBottom: space[2] },
+  leadingIcon: { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center' },
+  rowText: { flex: 1, gap: space[1] },
+  pressed: { opacity: 0.8 },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: space[5], marginTop: space[4] },
+  stat: { minWidth: 72, flexGrow: 1 },
+  dataActions: { marginTop: space[3] },
+  footer: { gap: space[1], paddingVertical: space[8] },
+  durationOptions: { gap: space[3] },
+  duration: { minHeight: 56, padding: space[4], borderRadius: radius.md, backgroundColor: colors.surfaceContainerLow },
+  selectedDuration: { backgroundColor: colors.primary },
+  json: { minHeight: 240, color: colors.onSurface, backgroundColor: colors.surfaceContainerLow, padding: space[4], borderRadius: radius.md, fontFamily: 'monospace', fontSize: 12, textAlignVertical: 'top' },
 });

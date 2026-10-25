@@ -25,6 +25,7 @@ export interface AppBottomSheetProps {
   icon?: React.ReactNode;
   headerRight?: React.ReactNode;
   children: React.ReactNode;
+  footer?: React.ReactNode;
   maxHeight?: DimensionValue;
   scrollable?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
@@ -32,7 +33,7 @@ export interface AppBottomSheetProps {
 }
 
 /**
- * Standardized Marshmallow Bottom Sheet
+ * Bottom sheet bersama dengan area aksi di luar isi yang dapat digulir.
  * Memastikan overlay menutupi 100% layar (termasuk status bar & navigation bar Android),
  * dilengkapi backdrop dismiss, rounded pill handle, dan safe-area bottom yang rapi.
  */
@@ -44,6 +45,7 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
   icon,
   headerRight,
   children,
+  footer,
   maxHeight = '90%',
   scrollable = true,
   contentContainerStyle,
@@ -70,7 +72,7 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
 
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.keyboardAvoid}
+          style={[styles.keyboardAvoid, { paddingTop: insets.top + space[4] }]}
         >
           <View
             style={[
@@ -94,12 +96,12 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
                   {icon && <View style={styles.iconCircle}>{icon}</View>}
                   <View style={styles.titleCol}>
                     {title && (
-                      <AppText variant="titleLarge" numberOfLines={1}>
+                      <AppText variant="titleLarge">
                         {title}
                       </AppText>
                     )}
                     {subtitle && (
-                      <AppText variant="bodySmall" color="onSurfaceVariant" numberOfLines={1}>
+                      <AppText variant="bodySmall" color="onSurfaceVariant">
                         {subtitle}
                       </AppText>
                     )}
@@ -125,6 +127,7 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
             {/* Content Area */}
             {scrollable ? (
               <ScrollView
+                style={styles.scroll}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
@@ -134,6 +137,7 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
             ) : (
               <View style={[styles.staticContent, contentContainerStyle]}>{children}</View>
             )}
+            {footer && <View style={styles.footer}>{footer}</View>}
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -148,10 +152,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   keyboardAvoid: {
+    flex: 1,
     width: '100%',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
+    flexShrink: 1,
     backgroundColor: colors.surfaceContainerLowest, // Solid murni #FFFFFF
     borderTopLeftRadius: radius.xxl,
     borderTopRightRadius: radius.xxl,
@@ -198,9 +204,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   closeBtn: {
-    padding: space[2],
-    borderRadius: radius.pill,
+    minWidth: 48,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerLow,
   },
+  scroll: { flexShrink: 1 },
+  footer: { paddingHorizontal: space[4], paddingTop: space[3], borderTopWidth: 1, borderTopColor: colors.outlineVariant },
   scrollContent: {
     padding: space[4],
   },

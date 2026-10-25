@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { formatLocalDate } from '@/shared/utils/local-date';
+import { useState, useCallback } from 'react';
 import type {
   DailyFocusItemEntity,
   TaskEntity,
@@ -7,7 +9,7 @@ import type {
 import { dailyFocusRepository } from '../../data/repositories/daily-focus.repository.impl';
 
 export function useTodayFocus() {
-  const todayDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+  const todayDate = formatLocalDate();
 
   const [focusItems, setFocusItems] = useState<DailyFocusItemEntity[]>([]);
   const [completedMinutes, setCompletedMinutes] = useState<number>(0);
@@ -43,9 +45,9 @@ export function useTodayFocus() {
     await loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useFocusEffect(useCallback(() => {
+    void loadData();
+  }, [loadData]));
 
   const toggleTask = async (taskId: string, currentCompleted: boolean) => {
     try {
@@ -95,6 +97,7 @@ export function useTodayFocus() {
       await loadData();
     } catch (err) {
       console.error('[useTodayFocus] Record session error:', err);
+      throw err;
     }
   };
 

@@ -5,9 +5,9 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
-import { Target as TargetIcon, Plus } from 'lucide-react-native';
+import { Target as TargetIcon } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
@@ -19,7 +19,6 @@ export interface AddTargetModalProps {
   categories: CategoryWithCount[];
   onClose: () => void;
   onSubmit: (input: CreateTargetInput) => Promise<boolean>;
-  onOpenCategoryManager: () => void;
 }
 
 export const AddTargetModal: React.FC<AddTargetModalProps> = ({
@@ -27,7 +26,6 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
   categories,
   onClose,
   onSubmit,
-  onOpenCategoryManager,
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -37,16 +35,19 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (visible) {
+    if (!visible) {
       setTitle('');
       setDescription('');
       setPriority('MEDIUM');
       setErrorMessage(null);
-      if (categories.length > 0 && !categoryId) {
-        setCategoryId(categories[0].id);
-      }
     }
-  }, [visible, categories, categoryId]);
+  }, [visible]);
+
+  useEffect(() => {
+    if (!categories.some(category => category.id === categoryId)) {
+      setCategoryId(categories[0]?.id || '');
+    }
+  }, [categories, categoryId]);
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -86,6 +87,23 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
       onClose={onClose}
       title="Buat Target Baru"
       icon={<TargetIcon size={20} color={colors.primary} />}
+      footer={
+        <View style={styles.actionRow}>
+          <Button
+            title="Batal"
+            variant="tonal"
+            onPress={onClose}
+            style={styles.cancelButton}
+          />
+          <Button
+            title="Simpan Target"
+            variant="filled"
+            onPress={handleSubmit}
+            loading={isSubmitting}
+            style={styles.saveButton}
+          />
+        </View>
+      }
     >
       {/* Error Message */}
       {errorMessage && (
@@ -116,36 +134,13 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
         <AppText variant="labelLarge" style={styles.inputLabel}>
           Kategori *
         </AppText>
-        <Pressable
-          onPress={() => {
-            onClose();
-            onOpenCategoryManager();
-          }}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={styles.manageCategoryTouch}
-        >
-          <Plus size={14} color={colors.primary} />
-          <AppText variant="labelSmall" color="primary">
-            Kelola Kategori
-          </AppText>
-        </Pressable>
       </View>
 
       {categories.length === 0 ? (
         <View style={styles.noCategoriesCard}>
           <AppText variant="bodySmall" color="onSurfaceVariant">
-            Belum ada kategori. Buat kategori terlebih dahulu agar target dapat dikelompokkan.
+            Belum ada kategori. Buat kategori melalui Pengaturan → Kategori target, lalu kembali ke sini.
           </AppText>
-          <Button
-            title="Buat Kategori Baru"
-            variant="tonal"
-            size="compact"
-            onPress={() => {
-              onClose();
-              onOpenCategoryManager();
-            }}
-            style={styles.createCatBtn}
-          />
         </View>
       ) : (
         <View style={styles.chipRow}>
@@ -156,6 +151,7 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
                 key={c.id}
                 onPress={() => setCategoryId(c.id)}
                 accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
                 style={[styles.choiceChip, isSelected && styles.choiceChipSelected]}
               >
                 <AppText
@@ -214,22 +210,6 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
         })}
       </View>
 
-      {/* Tombol Aksi */}
-      <View style={styles.actionRow}>
-        <Button
-          title="Batal"
-          variant="tonal"
-          onPress={onClose}
-          style={styles.cancelButton}
-        />
-        <Button
-          title="Simpan Target"
-          variant="filled"
-          onPress={handleSubmit}
-          loading={isSubmitting}
-          style={styles.saveButton}
-        />
-      </View>
     </AppBottomSheet>
   );
 };
@@ -251,35 +231,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  manageCategoryTouch: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-  },
   noCategoriesCard: {
     padding: space[3],
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     gap: space[2],
-  },
-  createCatBtn: {
-    alignSelf: 'flex-start',
   },
   textInput: {
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     borderRadius: radius.lg,
     color: colors.onSurface,
     paddingHorizontal: space[3],
-    height: 48,
+    minHeight: 56,
     fontSize: 14,
+    fontFamily: fontFamily.regular,
   },
   textArea: {
-    height: 72,
+    minHeight: 96,
     textAlignVertical: 'top',
     paddingVertical: space[2],
   },
@@ -293,7 +265,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[4],
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
   },
   choiceChipSelected: {
@@ -308,10 +280,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 40,
+    minHeight: 48,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
   },
   priorityChipSelected: {
@@ -321,8 +293,8 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: space[3],
-    marginTop: space[6],
-    marginBottom: space[4],
+    marginTop: space[1],
+    marginBottom: space[1],
   },
   cancelButton: {
     flex: 1,

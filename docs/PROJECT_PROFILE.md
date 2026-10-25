@@ -1,5 +1,7 @@
 # PROJECT_PROFILE.md — MyLife Mobile (Personal Life OS)
 
+> Arsip definisi lama. Audit 26 Oktober 2026 menemukan perbedaan dengan implementasi. Mulai dari [START_HERE.md](./START_HERE.md) untuk keadaan aktual dan keputusan v2; klaim selesai di bawah bukan hasil verifikasi terbaru.
+
 > **Status:** Active Project Definition & Single Source of Truth Alignment  
 > **Platform:** Android APK (Primary) / Mobile (React Native + Expo SDK 58)  
 > **Arsitektur:** 100% Offline-First / Local-First (SQLite via Drizzle ORM)  

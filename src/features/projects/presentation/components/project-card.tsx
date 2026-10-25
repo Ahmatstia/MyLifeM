@@ -1,208 +1,30 @@
 import React from 'react';
 import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { ArrowUpRight } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, radius } from '@/theme/tokens';
-import { Card } from '@/shared/ui/card';
-import { AppText } from '@/shared/ui/app-text';
-import { ProgressBar } from '@/shared/ui/progress-bar';
+import { Card, AppText, ProgressBar } from '@/shared/ui';
 import type { ProjectWithSummary } from '../../domain/entities/project.entity';
 
-export interface ProjectCardProps {
-  project: ProjectWithSummary;
-  onPress: () => void;
-  style?: StyleProp<ViewStyle>;
-}
-
-/**
- * ProjectCard: Desain Cute Marshmallow Minimal.
- * - Tanpa tumpukan ikon (flag, layers, target).
- * - Pil kategori pastel bertekstur empuk.
- * - Progress bar chubby.
- */
-export const ProjectCard: React.FC<ProjectCardProps> = ({
-  project,
-  onPress,
-  style,
-}) => {
-  const { taskSummary, targetTitle, milestonesCount } = project;
-  const isCompleted =
-    project.status === 'COMPLETED' ||
-    (taskSummary.totalTasks > 0 && taskSummary.progressPercent >= 100);
-
-  return (
-    <Card
-      variant={isCompleted ? 'filled' : 'elevated'}
-      onPress={onPress}
-      padding={space[4]}
-      style={[styles.card, style]}
-    >
-      {/* Header: Pil Target / Mandiri & Status */}
-      <View style={styles.headerRow}>
-        <View style={styles.badgePill}>
-          <AppText variant="labelSmall" color="primary" numberOfLines={1}>
-            {targetTitle ? targetTitle : 'Proyek Mandiri'}
-          </AppText>
-        </View>
-
-        <View style={styles.priorityPill}>
-          <AppText variant="labelSmall" color="onSurfaceSubtle">
-            {project.priority === 'HIGH' ? 'Prioritas Utama' : 'Standar'}
-          </AppText>
-        </View>
-      </View>
-
-      {/* Project Title & Navigation Chevron */}
-      <View style={styles.titleRow}>
-        <AppText
-          variant="titleMedium"
-          color={isCompleted ? 'onSurfaceSubtle' : 'onSurface'}
-          numberOfLines={2}
-          style={[styles.title, isCompleted && styles.completedTitle]}
-        >
-          {project.title}
-        </AppText>
-        <ChevronRight size={18} color={colors.onSurfaceSubtle} />
-      </View>
-
-      {project.description ? (
-        <AppText
-          variant="bodySmall"
-          color="onSurfaceSubtle"
-          numberOfLines={2}
-          style={styles.description}
-        >
-          {project.description}
-        </AppText>
-      ) : null}
-
-      {/* Task Summary Metrics */}
-      <View style={styles.metricRow}>
-        <AppText variant="bodySmall" color="onSurfaceVariant" tabularNums>
-          {taskSummary.totalTasks > 0
-            ? `${taskSummary.completedTasks}/${taskSummary.totalTasks} tugas selesai`
-            : 'Belum ada tugas'}
-        </AppText>
-
-        <View style={styles.percentPill}>
-          <AppText
-            variant="labelSmall"
-            color={isCompleted ? 'success' : 'primary'}
-            tabularNums
-          >
-            {taskSummary.progressPercent}%
-          </AppText>
-        </View>
-      </View>
-
-      {/* Chubby Progress Bar */}
-      <ProgressBar
-        progress={taskSummary.progressPercent}
-        color={isCompleted ? colors.success : colors.primary}
-        height={8}
-        style={styles.progressBar}
-      />
-
-      {/* Footer Meta: Milestones Count */}
-      <View style={styles.footerRow}>
-        <View style={styles.milestonePill}>
-          <AppText variant="labelSmall" color="onSurfaceSubtle">
-            {project.stagesCount > 0
-              ? `${project.stagesCount} tahap`
-              : milestonesCount > 0
-                ? `${milestonesCount} tahap`
-                : 'Belum ada tahap'}
-          </AppText>
-        </View>
-
-        {isCompleted && (
-          <View style={styles.completedPill}>
-            <AppText variant="labelSmall" color="success">
-              Selesai
-            </AppText>
-          </View>
-        )}
-      </View>
-    </Card>
-  );
-};
-
+export interface ProjectCardProps { project: ProjectWithSummary; onPress: () => void; style?: StyleProp<ViewStyle>; }
+const STATUS_LABELS = { PLANNING: 'Rencana', ACTIVE: 'Aktif', ON_HOLD: 'Ditunda', COMPLETED: 'Selesai' };
+export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, style }) => (
+  <Card variant="elevated" onPress={onPress} padding={space[5]} style={[styles.card, style]}>
+    <View style={styles.top}><AppText variant="labelMedium" color="onSecondaryContainer" style={styles.status}>{STATUS_LABELS[project.status] || project.status}</AppText><ArrowUpRight size={20} color={colors.primary} /></View>
+    <AppText variant="headlineSmall" style={styles.title} numberOfLines={3}>{project.title}</AppText>
+    <AppText variant="bodySmall" color="primary" style={styles.target} numberOfLines={2}>{project.targetTitle || 'Proyek mandiri'}</AppText>
+    {project.description && <AppText variant="bodyMedium" color="onSurfaceVariant" numberOfLines={2} style={styles.description}>{project.description}</AppText>}
+    <View style={styles.metric}><AppText variant="bodySmall" color="onSurfaceVariant" style={styles.label}>{project.taskSummary.completedTasks}/{project.taskSummary.totalTasks} tugas rencana · {project.stagesCount || project.milestonesCount} tahap</AppText><AppText variant="titleMedium" color="primary" tabularNums>{project.taskSummary.progressPercent}%</AppText></View>
+    <ProgressBar progress={project.taskSummary.progressPercent} height={6} />
+  </Card>
+);
 const styles = StyleSheet.create({
-  card: {
-    marginBottom: space[3],
-    borderRadius: radius.xl,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: space[2],
-  },
-  badgePill: {
-    backgroundColor: colors.primaryContainer,
-    paddingVertical: 3,
-    paddingHorizontal: space[3],
-    borderRadius: radius.pill,
-    maxWidth: '70%',
-  },
-  priorityPill: {
-    backgroundColor: colors.surfaceContainerLow,
-    paddingVertical: 3,
-    paddingHorizontal: space[2],
-    borderRadius: radius.pill,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginTop: space[1],
-    marginBottom: space[1],
-  },
-  title: {
-    flex: 1,
-    lineHeight: 22,
-    marginRight: space[2],
-  },
-  completedTitle: {
-    textDecorationLine: 'line-through',
-    opacity: 0.6,
-  },
-  description: {
-    lineHeight: 18,
-    marginBottom: space[2],
-  },
-  metricRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: space[2],
-    marginBottom: space[2],
-  },
-  percentPill: {
-    backgroundColor: colors.primaryContainer,
-    paddingVertical: 2,
-    paddingHorizontal: space[2],
-    borderRadius: radius.pill,
-  },
-  progressBar: {
-    marginVertical: space[1],
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: space[3],
-  },
-  milestonePill: {
-    backgroundColor: colors.surfaceContainerLow,
-    paddingVertical: 3,
-    paddingHorizontal: space[3],
-    borderRadius: radius.pill,
-  },
-  completedPill: {
-    backgroundColor: colors.successContainer,
-    paddingVertical: 3,
-    paddingHorizontal: space[3],
-    borderRadius: radius.pill,
-  },
+  card: { marginBottom: space[4] },
+  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space[3] },
+  status: { backgroundColor: colors.secondaryContainer, borderRadius: radius.sm, paddingHorizontal: space[3], paddingVertical: space[1] },
+  title: { marginTop: space[4], marginBottom: space[2] },
+  target: { marginBottom: space[3] },
+  description: { marginBottom: space[3] },
+  metric: { flexDirection: 'row', alignItems: 'center', gap: space[3], marginVertical: space[3] },
+  label: { flex: 1 },
 });

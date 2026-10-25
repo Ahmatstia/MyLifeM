@@ -60,7 +60,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
           <Pressable
             onPress={onMinimize}
             accessibilityRole="button"
-            accessibilityLabel="Tutup sesi fokus"
+            accessibilityLabel="Ciutkan tampilan timer"
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.minimizeBtn}
           >
@@ -73,7 +73,9 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
       <View style={styles.modeRow}>
         <Pressable
           onPress={() => onChangeMode('POMODORO', 25)}
+          disabled={isRunning}
           accessibilityRole="button"
+          accessibilityState={{ selected: mode === 'POMODORO', disabled: isRunning }}
           style={[
             styles.modePill,
             mode === 'POMODORO' && styles.modePillActive,
@@ -90,7 +92,9 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 
         <Pressable
           onPress={() => onChangeMode('DEEP_FLOW', 50)}
+          disabled={isRunning}
           accessibilityRole="button"
+          accessibilityState={{ selected: mode === 'DEEP_FLOW', disabled: isRunning }}
           style={[
             styles.modePill,
             mode === 'DEEP_FLOW' && styles.modePillActive,
@@ -107,7 +111,9 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 
         <Pressable
           onPress={() => onChangeMode('STOPWATCH')}
+          disabled={isRunning}
           accessibilityRole="button"
+          accessibilityState={{ selected: mode === 'STOPWATCH', disabled: isRunning }}
           style={[
             styles.modePill,
             mode === 'STOPWATCH' && styles.modePillActive,
@@ -126,10 +132,10 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
       {/* Tautan Tugas yang Sedang Difokuskan */}
       {activeTask ? (
         <View style={styles.activeTaskPill}>
-          <AppText variant="labelSmall" color="onPrimaryContainer" numberOfLines={1} style={styles.activeTaskText}>
+          <AppText variant="labelSmall" color="onPrimaryContainer" style={styles.activeTaskText}>
             Fokus: {activeTask.title}
           </AppText>
-          {onClearActiveTask && (
+          {onClearActiveTask && !isRunning && (
             <Pressable
               onPress={onClearActiveTask}
               accessibilityRole="button"
@@ -224,15 +230,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   minimizeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.pill,
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
     backgroundColor: colors.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modeRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: space[2],
     marginBottom: space[3],
   },
@@ -240,8 +247,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 38,
-    borderRadius: radius.pill,
+    minWidth: 88,
+    minHeight: 48,
+    padding: space[2],
+    borderRadius: radius.md,
     backgroundColor: colors.surfaceContainerLow,
   },
   modePillActive: {
@@ -268,7 +277,10 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   clearBtn: {
-    padding: 2,
+    width: 48,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   idleTaskPill: {
     alignSelf: 'center',
@@ -300,8 +312,8 @@ const styles = StyleSheet.create({
   },
   resetButton: {
     width: touchTarget.min,
-    height: touchTarget.min,
-    borderRadius: radius.pill,
+    minHeight: touchTarget.min,
+    borderRadius: radius.md,
     backgroundColor: colors.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
@@ -309,8 +321,9 @@ const styles = StyleSheet.create({
   ctaPill: {
     flex: 1,
     maxWidth: 240,
-    height: touchTarget.min,
-    borderRadius: radius.pill,
+    minHeight: touchTarget.min,
+    paddingVertical: space[3],
+    borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -331,6 +344,7 @@ const styles = StyleSheet.create({
     marginRight: space[2],
   },
   ctaText: {
+    flexShrink: 1,
     letterSpacing: 0.2,
   },
 });

@@ -1,5 +1,7 @@
 # Database Schema & Data Model Document — MyLife Mobile
 
+> Skema historis. Kode runtime saat audit membentuk 11 tabel tanpa foreign key aktual. Lihat [audit](./SYSTEM_AUDIT_2026-10-26.md) dan [rencana model/migrasi v2](./ARCHITECTURE_V2.md); jangan menjalankan DDL di bawah untuk memigrasikan data pengguna.
+
 **Mesin Database:** SQLite 3 (melalui `expo-sqlite`)  
 **ORM:** Drizzle ORM (TypeScript Type-Safe)  
 **Tipe Integritas:** Relasional dengan Foreign Keys Aktif (`PRAGMA foreign_keys = ON;`)  

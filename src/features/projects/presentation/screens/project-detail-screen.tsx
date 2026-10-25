@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  ScrollView,
   Pressable,
   StyleSheet,
   ActivityIndicator,
@@ -113,7 +112,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
   }
 
   return (
-    <Screen>
+    <Screen withBottomPadding={false}>
       {/* TopBar */}
       <View style={styles.topBar}>
         <Pressable
@@ -141,7 +140,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
         </Pressable>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.scrollContent}>
         {/* Project Heading & Description */}
         <View style={styles.headingSection}>
           <AppText variant="headlineMedium" style={styles.projectTitle}>
@@ -163,9 +162,9 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
 
         {/* Stats Row (2 Kolom Marshmallow) */}
         <View style={styles.statsRow}>
-          <Card variant="elevated" style={styles.statCol}>
+          <Card variant="highlight" style={styles.statCol}>
             <AppText variant="labelSmall" color="onSurfaceVariant">
-              Kemajuan Proyek
+              Progres rencana
             </AppText>
             <AppText variant="headlineLarge" color="primary" tabularNums style={styles.statValue}>
               {project.taskSummary.progressPercent}%
@@ -236,6 +235,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
             <StageCard
               key={stage.id}
               stage={stage}
+              stepNumber={idx + 1}
               isFirst={idx === 0}
               isLast={idx === stages.length - 1}
               onMoveUp={() => reorderStage(stage.id, 'UP')}
@@ -258,7 +258,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
             />
           ))
         )}
-      </ScrollView>
+      </View>
 
       {/* Add / Edit Stage Modal */}
       <AddEditStageModal
@@ -316,15 +316,17 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   topBar: {
-    height: 56,
+    minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: space[2],
   },
   backButton: {
-    width: 44,
-    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerLowest,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -334,8 +336,8 @@ const styles = StyleSheet.create({
     marginHorizontal: space[2],
   },
   deleteTopButton: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -363,11 +365,13 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: space[3],
     marginBottom: space[4],
   },
   statCol: {
     flex: 1,
+    minWidth: 144,
     padding: space[4],
     borderRadius: radius.xl,
   },
@@ -376,6 +380,8 @@ const styles = StyleSheet.create({
   },
   sectionHeaderRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space[3],
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: space[3],

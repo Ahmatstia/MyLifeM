@@ -6,7 +6,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
@@ -89,6 +89,8 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
     setIsSubmitting(false);
     if (success) {
       onClose();
+    } else {
+      setErrorMessage('Tugas belum tersimpan. Silakan coba lagi.');
     }
   };
 
@@ -98,6 +100,23 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
       onClose={onClose}
       title={initialData ? 'Ubah Tugas' : 'Tambah Tugas'}
       subtitle={`Tahap: ${stageName}`}
+      footer={
+        <View style={styles.actionRow}>
+          <Button
+            title="Batal"
+            variant="tonal"
+            onPress={onClose}
+            style={styles.cancelBtn}
+          />
+          <Button
+            title={initialData ? 'Simpan Perubahan' : 'Buat Tugas'}
+            variant="filled"
+            onPress={handleSubmit}
+            loading={isSubmitting}
+            style={styles.submitBtn}
+          />
+        </View>
+      }
     >
       {errorMessage && (
         <View style={styles.errorBox}>
@@ -207,21 +226,7 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
         })}
       </View>
 
-      <View style={styles.actionRow}>
-        <Button
-          title="Batal"
-          variant="tonal"
-          onPress={onClose}
-          style={styles.cancelBtn}
-        />
-        <Button
-          title={initialData ? 'Simpan Perubahan' : 'Buat Tugas'}
-          variant="filled"
-          onPress={handleSubmit}
-          loading={isSubmitting}
-          style={styles.submitBtn}
-        />
-      </View>
+
     </AppBottomSheet>
   );
 };
@@ -241,15 +246,16 @@ const styles = StyleSheet.create({
   textInput: {
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     borderRadius: radius.lg,
     color: colors.onSurface,
     paddingHorizontal: space[3],
-    height: 48,
+    minHeight: 56,
     fontSize: 14,
+    fontFamily: fontFamily.regular,
   },
   textArea: {
-    height: 64,
+    minHeight: 80,
     textAlignVertical: 'top',
     paddingVertical: space[2],
   },
@@ -261,10 +267,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 40,
+    minHeight: 48,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
   },
   choiceChipSelected: {
@@ -274,7 +280,7 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: space[3],
-    marginTop: space[6],
+    marginTop: space[1],
   },
   cancelBtn: {
     flex: 1,

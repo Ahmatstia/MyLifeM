@@ -2,6 +2,7 @@ import React from 'react';
 import {
   View,
   ScrollView,
+  useWindowDimensions,
   type ViewStyle,
   } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -27,6 +28,7 @@ export const Screen: React.FC<ScreenProps> = ({
   contentContainerStyle,
 }) => {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
 
   const containerStyle: ViewStyle = {
     flex: 1,
@@ -34,7 +36,7 @@ export const Screen: React.FC<ScreenProps> = ({
     paddingTop: insets.top,
   };
 
-  const horizontalPadding = withHorizontalPadding ? space[4] : 0;
+  const horizontalPadding = withHorizontalPadding ? (width < 360 ? space[4] : space[5]) : 0;
   // Extra bottom padding for Android gesture bar and tabs
   const bottomPadding = (withBottomPadding ? 80 : 0) + insets.bottom + space[4];
 
@@ -43,11 +45,17 @@ export const Screen: React.FC<ScreenProps> = ({
       <View style={[containerStyle, style]}>
         <StatusBar style="dark" />
         <ScrollView
+          style={{ flex: 1 }}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             {
               paddingHorizontal: horizontalPadding,
               paddingBottom: bottomPadding,
+              flexGrow: 1,
+              width: '100%',
+              maxWidth: 640,
+              alignSelf: 'center',
             },
             contentContainerStyle,
           ]}

@@ -4,22 +4,19 @@
  */
 
 import { Platform } from 'react-native';
+import { colors } from '@/theme/colors';
+
+const lightColors = {
+  text: colors.onSurface,
+  background: colors.background,
+  backgroundElement: colors.surfaceContainerLow,
+  backgroundSelected: colors.primaryContainer,
+  textSecondary: colors.onSurfaceVariant,
+};
 
 export const Colors = {
-  light: {
-    text: '#242132',
-    background: '#FAF8FE',
-    backgroundElement: '#F4F1FA',
-    backgroundSelected: '#ECEAFE',
-    textSecondary: '#68637B',
-  },
-  dark: {
-    text: '#242132',
-    background: '#FAF8FE',
-    backgroundElement: '#F4F1FA',
-    backgroundSelected: '#ECEAFE',
-    textSecondary: '#68637B',
-  },
+  light: lightColors,
+  dark: lightColors,
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;

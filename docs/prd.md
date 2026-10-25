@@ -1,5 +1,7 @@
 # Product Requirements Document (PRD) — MyLife Mobile
 
+> Dokumen historis. Arah produk terbaru ada di [PRD_V2.md](./PRD_V2.md); status implementasi dan bukti audit ada di [START_HERE.md](./START_HERE.md).
+
 **Versi:** 1.0.0  
 **Target Platform:** Mobile (Android APK / iOS via Expo)  
 **Arsitektur:** Offline-First (Local Database SQLite)  

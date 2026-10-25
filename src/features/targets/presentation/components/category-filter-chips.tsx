@@ -6,7 +6,6 @@ import {
   StyleSheet,
   type ViewStyle,
 } from 'react-native';
-import { Plus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space, elevation } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
@@ -16,7 +15,6 @@ export interface CategoryFilterChipsProps {
   categories: CategoryWithCount[];
   selectedCategoryId: string | null;
   onSelectCategory: (categoryId: string | null) => void;
-  onManageCategories: () => void;
   style?: ViewStyle;
 }
 
@@ -27,7 +25,6 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
   categories,
   selectedCategoryId,
   onSelectCategory,
-  onManageCategories,
   style,
 }) => {
   const isAllSelected = selectedCategoryId === null;
@@ -84,18 +81,6 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
           );
         })}
 
-        {/* Action Button: Kelola / Tambah Kategori */}
-        <Pressable
-          onPress={onManageCategories}
-          accessibilityRole="button"
-          accessibilityLabel="Kelola kategori"
-          style={({ pressed }) => [styles.manageChip, pressed && styles.pressed]}
-        >
-          <Plus size={14} color={colors.primary} />
-          <AppText variant="labelMedium" color="primary">
-            Kategori
-          </AppText>
-        </Pressable>
       </ScrollView>
     </View>
   );
@@ -112,7 +97,8 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 38,
+    minHeight: 48,
+    paddingVertical: space[3],
     paddingHorizontal: space[4],
     borderRadius: radius.pill,
   },
@@ -124,15 +110,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-  },
-  manageChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 38,
-    paddingHorizontal: space[3],
-    borderRadius: radius.pill,
-    backgroundColor: colors.primaryContainer,
-    gap: 4,
   },
   pressed: {
     opacity: 0.82,

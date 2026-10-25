@@ -1,457 +1,112 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Alert } from 'react-native';
-import {
-  ChevronUp,
-  ChevronDown,
-  Pencil,
-  Trash2,
-  Check,
-  Plus,
-} from 'lucide-react-native';
+import { Check, ChevronDown, ChevronUp, MoreHorizontal, Plus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
-import { Card } from '@/shared/ui/card';
-import { AppText } from '@/shared/ui/app-text';
-import { Button } from '@/shared/ui/button';
-import {
-  type StageWithTasks,
-  type TaskItemEntity,
-  type TaskStatus,
-  getStageStatusLabel,
-} from '../../domain/entities/stage.entity';
+import { Card, AppText, Button, AppBottomSheet } from '@/shared/ui';
+import { type StageWithTasks, type TaskItemEntity, type TaskStatus, getStageStatusLabel } from '../../domain/entities/stage.entity';
 
 export interface StageCardProps {
-  stage: StageWithTasks;
-  isFirst: boolean;
-  isLast: boolean;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onEditStage: () => void;
-  onDeleteStage: () => void;
-  onAddTask: () => void;
-  onEditTask: (task: TaskItemEntity) => void;
-  onDeleteTask: (task: TaskItemEntity) => void;
+  stage: StageWithTasks; stepNumber?: number; isFirst: boolean; isLast: boolean;
+  onMoveUp: () => void; onMoveDown: () => void; onEditStage: () => void; onDeleteStage: () => void;
+  onAddTask: () => void; onEditTask: (task: TaskItemEntity) => void; onDeleteTask: (task: TaskItemEntity) => void;
   onToggleTaskStatus: (taskId: string, currentStatus: TaskStatus) => void;
 }
 
 export const StageCard: React.FC<StageCardProps> = ({
-  stage,
-  isFirst,
-  isLast,
-  onMoveUp,
-  onMoveDown,
-  onEditStage,
-  onDeleteStage,
-  onAddTask,
-  onEditTask,
-  onDeleteTask,
-  onToggleTaskStatus,
+  stage, stepNumber, isFirst, isLast, onMoveUp, onMoveDown, onEditStage,
+  onDeleteStage, onAddTask, onEditTask, onDeleteTask, onToggleTaskStatus,
 }) => {
-  const getStatusBadgeStyle = () => {
-    switch (stage.status) {
-      case 'COMPLETED':
-        return { bg: colors.surfaceContainerHighest, text: colors.success };
-      case 'IN_PROGRESS':
-        return { bg: colors.primaryContainer, text: colors.primary };
-      case 'NOT_STARTED':
-        return { bg: colors.surfaceContainerHigh, text: colors.onSurfaceVariant };
-      case 'NO_TASKS':
-      default:
-        return { bg: colors.surfaceContainerLow, text: colors.onSurfaceSubtle };
-    }
-  };
-
-  const badgeStyle = getStatusBadgeStyle();
+  const [expanded, setExpanded] = useState(stage.status !== 'COMPLETED');
+  const [stageMenu, setStageMenu] = useState(false);
+  const [taskMenu, setTaskMenu] = useState<TaskItemEntity | null>(null);
+  const complete = stage.status === 'COMPLETED';
 
   return (
-    <Card variant="elevated" padding={space[4]} style={styles.stageCard}>
-      {/* Header Tahapan */}
-      <View style={styles.stageHeader}>
-        <View style={styles.titleCol}>
-          <AppText variant="titleMedium">{stage.name}</AppText>
-          {stage.description && (
-            <AppText variant="bodySmall" color="onSurfaceVariant" style={styles.descText}>
-              {stage.description}
-            </AppText>
-          )}
-
-          {/* Badges Row */}
-          <View style={styles.metaRow}>
-            <View style={[styles.statusBadge, { backgroundColor: badgeStyle.bg }]}>
-              <AppText variant="labelSmall" style={{ color: badgeStyle.text }}>
-                {getStageStatusLabel(stage.status)}
-              </AppText>
-            </View>
-
-            <View style={styles.metaPill}>
-              <AppText variant="labelSmall" color="onSurfaceVariant" tabularNums>
-                {stage.completedTasks}/{stage.totalTasks} tugas
-              </AppText>
-            </View>
-
-            <View style={styles.metaPill}>
-              <AppText variant="labelSmall" color="onSurfaceVariant" tabularNums>
-                {stage.totalEstimatedHours} jam
-              </AppText>
-            </View>
+    <Card variant="outlined" padding={space[4]} style={styles.card}>
+      <View style={styles.header}>
+        <Pressable onPress={() => setExpanded(!expanded)} accessibilityRole="button"
+          accessibilityState={{ expanded }} accessibilityLabel={stage.name + ', ' + getStageStatusLabel(stage.status)}
+          style={styles.heading}>
+          <View style={[styles.step, complete && styles.completedStep]}>
+            {complete ? <Check size={18} color={colors.onPrimary} /> : <AppText variant="titleSmall" color="onPrimaryContainer" tabularNums>{stepNumber || '•'}</AppText>}
           </View>
-        </View>
-
-        {/* Action Controls */}
-        <View style={styles.stageActions}>
-          <Pressable
-            disabled={isFirst}
-            onPress={onMoveUp}
-            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-            style={[styles.iconTouch, isFirst && styles.iconDisabled]}
-            accessibilityLabel="Pindah ke atas"
-          >
-            <ChevronUp size={18} color={isFirst ? colors.onSurfaceSubtle : colors.onSurface} />
-          </Pressable>
-
-          <Pressable
-            disabled={isLast}
-            onPress={onMoveDown}
-            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-            style={[styles.iconTouch, isLast && styles.iconDisabled]}
-            accessibilityLabel="Pindah ke bawah"
-          >
-            <ChevronDown size={18} color={isLast ? colors.onSurfaceSubtle : colors.onSurface} />
-          </Pressable>
-
-          <Pressable
-            onPress={onEditStage}
-            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-            style={styles.iconTouch}
-            accessibilityLabel="Ubah tahapan"
-          >
-            <Pencil size={15} color={colors.primary} />
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              Alert.alert(
-                'Hapus Tahapan',
-                `Apakah kamu yakin ingin menghapus "${stage.name}" beserta ${stage.totalTasks} tugas di dalamnya?`,
-                [
-                  { text: 'Batal', style: 'cancel' },
-                  { text: 'Hapus', style: 'destructive', onPress: onDeleteStage },
-                ]
-              );
-            }}
-            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-            style={styles.iconTouch}
-            accessibilityLabel="Hapus tahapan"
-          >
-            <Trash2 size={15} color={colors.error} />
-          </Pressable>
-        </View>
+          <View style={styles.headingText}>
+            <AppText variant="titleMedium">{stage.name}</AppText>
+            <AppText variant="bodySmall" color="onSurfaceVariant">{getStageStatusLabel(stage.status)} · {stage.completedTasks}/{stage.totalTasks} tugas</AppText>
+          </View>
+          {expanded ? <ChevronUp size={18} color={colors.primary} /> : <ChevronDown size={18} color={colors.primary} />}
+        </Pressable>
+        <Pressable onPress={() => setStageMenu(true)} accessibilityRole="button" accessibilityLabel={'Opsi tahapan ' + stage.name} style={styles.menuButton}>
+          <MoreHorizontal size={22} color={colors.primary} />
+        </Pressable>
       </View>
-
-      {/* Divider */}
-      <View style={styles.divider} />
-
-      {/* Task List */}
-      <View style={styles.tasksSection}>
-        {stage.tasks.length === 0 ? (
-          <View style={styles.emptyTasksBox}>
-            <AppText variant="bodySmall" color="onSurfaceSubtle">
-              Belum ada tugas di tahap ini.
-            </AppText>
-            <Button
-              title="+ Tambah Tugas"
-              variant="tonal"
-              size="compact"
-              onPress={onAddTask}
-              style={styles.emptyAddBtn}
-            />
-          </View>
-        ) : (
-          <>
-            <View style={styles.tasksList}>
-              {stage.tasks.map((task) => {
-                const isDone = task.status === 'DONE';
-                const isInProgress = task.status === 'IN_PROGRESS';
-
-                const priorityLabel =
-                  task.priority === 'HIGH' ? 'Tinggi' : task.priority === 'LOW' ? 'Rendah' : 'Sedang';
-
-                return (
-                  <View key={task.id} style={[styles.taskRow, isDone && styles.taskRowDone]}>
-                    {/* 28dp tactile stamp checkbox */}
-                    <Pressable
-                      onPress={() => onToggleTaskStatus(task.id, task.status)}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: isDone }}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      style={[
-                        styles.stampCheck,
-                        isDone && styles.stampCheckDone,
-                        isInProgress && styles.stampCheckProgress,
-                      ]}
-                    >
-                      {isDone && <Check size={16} color={colors.onPrimary} strokeWidth={3} />}
-                    </Pressable>
-
-                    {/* Task Title & Details */}
-                    <View style={styles.taskTextCol}>
-                      <AppText
-                        variant="bodyMedium"
-                        color={isDone ? 'onSurfaceSubtle' : 'onSurface'}
-                        style={isDone && styles.textStrikethrough}
-                      >
-                        {task.name}
-                      </AppText>
-                      {task.description && (
-                        <AppText variant="bodySmall" color="onSurfaceSubtle" numberOfLines={1}>
-                          {task.description}
-                        </AppText>
-                      )}
-
-                      {/* Pill Row */}
-                      <View style={styles.taskPillRow}>
-                        {/* Status Switcher Chip */}
-                        <Pressable
-                          onPress={() => onToggleTaskStatus(task.id, task.status)}
-                          style={[
-                            styles.taskStatusChip,
-                            isInProgress && styles.taskStatusChipProgress,
-                            isDone && styles.taskStatusChipDone,
-                          ]}
-                        >
-                          <AppText
-                            variant="labelSmall"
-                            color={
-                              isDone
-                                ? 'onSurfaceSubtle'
-                                : isInProgress
-                                  ? 'primary'
-                                  : 'onSurfaceVariant'
-                            }
-                          >
-                            {task.status === 'DONE'
-                              ? 'Selesai'
-                              : task.status === 'IN_PROGRESS'
-                                ? 'Sedang jalan'
-                                : 'Belum jalan'}
-                          </AppText>
-                        </Pressable>
-
-                        {/* Priority Pill */}
-                        <View style={styles.priorityPill}>
-                          <AppText variant="labelSmall" color="onSurfaceVariant">
-                            {priorityLabel}
-                          </AppText>
-                        </View>
-
-                        {/* Estimated Hours Pill */}
-                        <View style={styles.hoursPill}>
-                          <AppText variant="labelSmall" color="onSurfaceVariant" tabularNums>
-                            {task.estimatedHours} jam
-                          </AppText>
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Task Action Controls */}
-                    <View style={styles.taskActions}>
-                      <Pressable
-                        onPress={() => onEditTask(task)}
-                        hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                        style={styles.taskActionBtn}
-                      >
-                        <Pencil size={14} color={colors.onSurfaceVariant} />
-                      </Pressable>
-                      <Pressable
-                        onPress={() => {
-                          Alert.alert(
-                            'Hapus Tugas',
-                            `Hapus tugas "${task.name}"?`,
-                            [
-                              { text: 'Batal', style: 'cancel' },
-                              { text: 'Hapus', style: 'destructive', onPress: () => onDeleteTask(task) },
-                            ]
-                          );
-                        }}
-                        hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                        style={styles.taskActionBtn}
-                      >
-                        <Trash2 size={14} color={colors.onSurfaceVariant} />
-                      </Pressable>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-
-            {/* Bottom Add Task Button */}
-            <Pressable
-              onPress={onAddTask}
-              style={({ pressed }) => [styles.addTaskRowBtn, pressed && styles.pressed]}
-            >
-              <Plus size={15} color={colors.primary} />
-              <AppText variant="labelMedium" color="primary">
-                Tambah Tugas di Tahap Ini
-              </AppText>
+      {expanded && <View style={styles.content}>
+        {stage.description && <AppText variant="bodyMedium" color="onSurfaceVariant" style={styles.description}>{stage.description}</AppText>}
+        {stage.tasks.map(task => {
+          const done = task.status === 'DONE';
+          return <View key={task.id} style={styles.taskRow}>
+            <Pressable onPress={() => onToggleTaskStatus(task.id, task.status)} accessibilityRole="checkbox"
+              accessibilityState={{ checked: done }} accessibilityLabel={(done ? 'Buka kembali ' : 'Selesaikan ') + task.name} style={styles.checkTouch}>
+              <View style={[styles.checkbox, done && styles.checked]}>{done && <Check size={16} color={colors.onPrimary} />}</View>
             </Pressable>
-          </>
-        )}
-      </View>
+            <View style={styles.taskText}>
+              <AppText variant="bodyMedium" style={done ? styles.strike : undefined}>{task.name}</AppText>
+              {task.description && <AppText variant="bodySmall" color="onSurfaceVariant" numberOfLines={2}>{task.description}</AppText>}
+              <AppText variant="bodySmall" color="onSurfaceVariant">{task.estimatedHours} jam · {done ? 'Selesai' : task.status === 'IN_PROGRESS' ? 'Sedang dikerjakan' : task.priority === 'HIGH' ? 'Prioritas tinggi' : task.priority === 'LOW' ? 'Prioritas rendah' : 'Belum dimulai'}</AppText>
+            </View>
+            <Pressable onPress={() => setTaskMenu(task)} accessibilityRole="button" accessibilityLabel={'Opsi tugas ' + task.name} style={styles.menuButton}>
+              <MoreHorizontal size={20} color={colors.onSurfaceVariant} />
+            </Pressable>
+          </View>;
+        })}
+        {stage.tasks.length === 0 && <AppText variant="bodySmall" color="onSurfaceVariant" style={styles.description}>Tambahkan langkah kecil untuk memulai tahap ini.</AppText>}
+        <Button title="Tambah tugas" variant="text" onPress={onAddTask} leftIcon={<Plus size={16} color={colors.primary} />} style={styles.addTask} />
+      </View>}
+      <AppBottomSheet visible={stageMenu} onClose={() => setStageMenu(false)} title="Opsi tahapan" subtitle={stage.name}>
+        <View style={styles.actions}>
+          <Button title="Ubah tahapan" variant="tonal" onPress={() => { setStageMenu(false); onEditStage(); }} />
+          <Button title="Pindah ke atas" variant="outlined" disabled={isFirst} onPress={() => { setStageMenu(false); onMoveUp(); }} />
+          <Button title="Pindah ke bawah" variant="outlined" disabled={isLast} onPress={() => { setStageMenu(false); onMoveDown(); }} />
+          <Button title="Hapus tahapan" variant="danger" onPress={() => {
+            setStageMenu(false);
+            Alert.alert('Hapus tahapan?', 'Tahap ini dan ' + stage.totalTasks + ' tugas di dalamnya akan dihapus.', [
+              { text: 'Batal', style: 'cancel' }, { text: 'Hapus tahapan', style: 'destructive', onPress: onDeleteStage },
+            ]);
+          }} />
+        </View>
+      </AppBottomSheet>
+      <AppBottomSheet visible={taskMenu !== null} onClose={() => setTaskMenu(null)} title="Opsi tugas" subtitle={taskMenu?.name}>
+        <View style={styles.actions}>
+          <Button title="Ubah tugas" variant="tonal" onPress={() => { if (taskMenu) { onEditTask(taskMenu); setTaskMenu(null); } }} />
+          <Button title="Hapus tugas" variant="danger" onPress={() => {
+            if (!taskMenu) return;
+            const task = taskMenu;
+            setTaskMenu(null);
+            Alert.alert('Hapus tugas?', task.name, [{ text: 'Batal', style: 'cancel' }, { text: 'Hapus tugas', style: 'destructive', onPress: () => onDeleteTask(task) }]);
+          }} />
+        </View>
+      </AppBottomSheet>
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
-  stageCard: {
-    borderRadius: radius.xl,
-    marginBottom: space[3],
-  },
-  stageHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  titleCol: {
-    flex: 1,
-    marginRight: space[2],
-  },
-  descText: {
-    marginTop: 2,
-    marginBottom: space[2],
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: space[2],
-    marginTop: space[2],
-  },
-  statusBadge: {
-    paddingVertical: 3,
-    paddingHorizontal: space[3],
-    borderRadius: radius.pill,
-  },
-  metaPill: {
-    backgroundColor: colors.surfaceContainerHighest,
-    paddingVertical: 3,
-    paddingHorizontal: space[3],
-    borderRadius: radius.pill,
-  },
-  stageActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  iconTouch: {
-    padding: 6,
-  },
-  iconDisabled: {
-    opacity: 0.3,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.outlineVariant,
-    marginVertical: space[3],
-  },
-  tasksSection: {},
-  emptyTasksBox: {
-    paddingVertical: space[3],
-    alignItems: 'center',
-    gap: space[2],
-  },
-  emptyAddBtn: {
-    borderRadius: radius.pill,
-  },
-  tasksList: {
-    gap: space[2],
-  },
-  taskRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    borderRadius: radius.lg,
-    padding: space[3],
-  },
-  taskRowDone: {
-    opacity: 0.7,
-    backgroundColor: colors.surfaceContainerLow,
-  },
-  stampCheck: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.pill,
-    borderWidth: 2,
-    borderColor: colors.outline,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: space[3],
-  },
-  stampCheckProgress: {
-    borderColor: colors.primary,
-    borderWidth: 2.5,
-  },
-  stampCheckDone: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  taskTextCol: {
-    flex: 1,
-    marginRight: space[2],
-  },
-  textStrikethrough: {
-    textDecorationLine: 'line-through',
-  },
-  taskPillRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: space[1],
-    marginTop: 4,
-  },
-  taskStatusChip: {
-    backgroundColor: colors.surfaceContainerHighest,
-    paddingVertical: 2,
-    paddingHorizontal: space[2],
-    borderRadius: radius.pill,
-  },
-  taskStatusChipProgress: {
-    backgroundColor: colors.primaryContainer,
-  },
-  taskStatusChipDone: {
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  priorityPill: {
-    backgroundColor: colors.surfaceContainerHigh,
-    paddingVertical: 2,
-    paddingHorizontal: space[2],
-    borderRadius: radius.pill,
-  },
-  hoursPill: {
-    backgroundColor: colors.surfaceContainerHigh,
-    paddingVertical: 2,
-    paddingHorizontal: space[2],
-    borderRadius: radius.pill,
-  },
-  taskActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  taskActionBtn: {
-    padding: 6,
-  },
-  addTaskRowBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space[1],
-    paddingVertical: space[2],
-    marginTop: space[2],
-    borderRadius: radius.pill,
-    backgroundColor: colors.primaryContainer,
-  },
-  pressed: {
-    opacity: 0.8,
-  },
+  card: { marginBottom: space[4], borderLeftWidth: 3, borderLeftColor: colors.primaryContainer },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space[1] },
+  heading: { flex: 1, minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: space[3] },
+  headingText: { flex: 1, gap: space[1] },
+  step: { width: 36, height: 36, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primaryContainer },
+  completedStep: { backgroundColor: colors.primary },
+  menuButton: { width: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  content: { marginTop: space[3], borderTopWidth: 1, borderTopColor: colors.outlineVariant, paddingTop: space[3] },
+  description: { marginBottom: space[3] },
+  taskRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: space[2], paddingVertical: space[2] },
+  checkTouch: { width: 48, minHeight: 48, justifyContent: 'center', alignItems: 'center' },
+  checkbox: { width: 24, height: 24, borderRadius: radius.xs, borderWidth: 1.5, borderColor: colors.outline, alignItems: 'center', justifyContent: 'center' },
+  checked: { backgroundColor: colors.primary, borderColor: colors.primary },
+  taskText: { flex: 1, gap: space[1], paddingTop: space[2] },
+  strike: { textDecorationLine: 'line-through' },
+  addTask: { alignSelf: 'flex-start' },
+  actions: { gap: space[3] },
 });

@@ -1,5 +1,7 @@
 # DESIGN.md — Panduan UI & UX Aplikasi Mobile (Produktivitas / Tracker)
 
+> Spesifikasi desain historis. Redesign berikutnya mengikuti [DESIGN_V2.md](./DESIGN_V2.md) dan [PRD_V2.md](./PRD_V2.md). Tema runtime masih lama; klaim riset/verifikasi dokumen ini tidak otomatis berlaku pada seluruh komponen saat ini.
+
 > **Versi 1.0 · 23 Oktober 2026**
 > **Platform:** Android saja · **Framework:** React Native (Expo) · **Tema:** Light saja · **Bahasa UI:** Bahasa Indonesia
 > **Basis desain:** lebar layar **360 dp** · **Sistem:** Material Design 3 yang di-*tune* (bukan M3 bawaan)

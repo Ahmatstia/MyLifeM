@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { FolderPlus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
@@ -78,6 +78,23 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       onClose={onClose}
       title="Buat Proyek Baru"
       icon={<FolderPlus size={20} color={colors.primary} />}
+      footer={
+        <View style={styles.actionRow}>
+          <Button
+            title="Batal"
+            onPress={onClose}
+            variant="tonal"
+            style={styles.cancelButton}
+          />
+          <Button
+            title="Simpan Proyek"
+            onPress={handleSubmit}
+            variant="filled"
+            loading={isSubmitting}
+            style={styles.saveButton}
+          />
+        </View>
+      }
     >
       {/* Error Message */}
       {errorMessage && (
@@ -186,21 +203,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       </View>
 
       {/* Sticky Action Button Row (DESIGN.md Template C) */}
-      <View style={styles.actionRow}>
-        <Button
-          title="Batal"
-          onPress={onClose}
-          variant="tonal"
-          style={styles.cancelButton}
-        />
-        <Button
-          title="Simpan Proyek"
-          onPress={handleSubmit}
-          variant="filled"
-          loading={isSubmitting}
-          style={styles.saveButton}
-        />
-      </View>
+
     </AppBottomSheet>
   );
 };
@@ -220,15 +223,16 @@ const styles = StyleSheet.create({
   textInput: {
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     borderRadius: radius.lg,
     color: colors.onSurface,
     paddingHorizontal: space[3],
-    height: 48,
+    minHeight: 56,
     fontSize: 14,
+    fontFamily: fontFamily.regular,
   },
   textArea: {
-    height: 72,
+    minHeight: 96,
     textAlignVertical: 'top',
     paddingVertical: space[2],
   },
@@ -242,7 +246,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[3],
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
     maxWidth: '90%',
   },
@@ -258,10 +262,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 40,
+    minHeight: 48,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
   },
   priorityChipSelected: {
@@ -271,8 +275,8 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: space[3],
-    marginTop: space[6],
-    marginBottom: space[4],
+    marginTop: space[1],
+    marginBottom: space[1],
   },
   cancelButton: {
     flex: 1,

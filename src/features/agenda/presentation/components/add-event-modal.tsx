@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { CalendarPlus, Clock, MapPin, Bell } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
@@ -127,6 +127,23 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       title="Jadwalkan Agenda"
       subtitle={selectedDate}
       icon={<CalendarPlus size={20} color={colors.primary} />}
+      footer={
+        <View style={styles.actionRow}>
+          <Button
+            title="Batal"
+            onPress={handleClose}
+            variant="tonal"
+            style={styles.cancelButton}
+          />
+          <Button
+            title="Jadwalkan"
+            onPress={handleSubmit}
+            variant="filled"
+            loading={isSubmitting}
+            style={styles.saveButton}
+          />
+        </View>
+      }
     >
       {/* Error Message */}
       {errorMessage && (
@@ -308,21 +325,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       />
 
       {/* Sticky Action Button Row (Template C) */}
-      <View style={styles.actionRow}>
-        <Button
-          title="Batal"
-          onPress={handleClose}
-          variant="tonal"
-          style={styles.cancelButton}
-        />
-        <Button
-          title="Jadwalkan"
-          onPress={handleSubmit}
-          variant="filled"
-          loading={isSubmitting}
-          style={styles.saveButton}
-        />
-      </View>
+
     </AppBottomSheet>
   );
 };
@@ -345,15 +348,16 @@ const styles = StyleSheet.create({
   textInput: {
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     borderRadius: radius.lg,
     color: colors.onSurface,
     paddingHorizontal: space[3],
-    height: 48,
+    minHeight: 56,
     fontSize: 14,
+    fontFamily: fontFamily.regular,
   },
   textArea: {
-    height: 64,
+    minHeight: 80,
     textAlignVertical: 'top',
     paddingVertical: space[2],
   },
@@ -369,7 +373,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[3],
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
     gap: 6,
   },
@@ -390,7 +394,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[3],
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
   },
   allDayToggleActive: {
@@ -415,32 +419,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     borderRadius: radius.lg,
     paddingHorizontal: space[3],
-    height: 48,
+    minHeight: 56,
     gap: space[2],
   },
   timeInput: {
     flex: 1,
     color: colors.onSurface,
     fontSize: 14,
+    fontFamily: fontFamily.regular,
   },
   iconInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     borderRadius: radius.lg,
     paddingHorizontal: space[3],
-    height: 48,
+    minHeight: 56,
     gap: space[2],
   },
   flexInput: {
     flex: 1,
     color: colors.onSurface,
     fontSize: 14,
+    fontFamily: fontFamily.regular,
   },
   reminderRow: {
     flexDirection: 'row',
@@ -451,10 +457,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 40,
+    minHeight: 48,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
     gap: 4,
   },
@@ -465,8 +471,8 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: space[3],
-    marginTop: space[6],
-    marginBottom: space[4],
+    marginTop: space[1],
+    marginBottom: space[1],
   },
   cancelButton: {
     flex: 1,

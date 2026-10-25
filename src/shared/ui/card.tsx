@@ -14,12 +14,12 @@ export interface CardProps {
 }
 
 /**
- * Card (DESIGN.md 7.10 + referensi UI "puffy").
+ * Shared card surfaces (DESIGN_V2.md).
  * - filled: surfaceContainerLow, tanpa border
  * - elevated: kartu putih dengan bayangan lembut level 1 (daftar item di referensi)
  * - outlined: border outlineVariant
  * - highlight: primaryContainer lembut (ringkasan)
- * - hero: primary penuh, radius xl (maks. satu per layar)
+ * - hero: petrol dengan dekorasi bubble yang tidak menangkap sentuhan.
  */
 export const Card: React.FC<CardProps> = ({
   children,
@@ -55,13 +55,10 @@ export const Card: React.FC<CardProps> = ({
     case 'highlight':
       backgroundColor = colors.primaryContainer;
       borderRadius = radius.xl;
-      borderColor = '#D9D3F8';
-      borderWidth = 1;
       break;
     case 'hero':
-      backgroundColor = colors.primary;
+      backgroundColor = colors.hero;
       borderRadius = radius.xxl;
-      shadow = elevation.level3;
       break;
   }
 
@@ -74,6 +71,16 @@ export const Card: React.FC<CardProps> = ({
     ...shadow,
   };
 
+  const content = variant === 'hero' ? (
+    <>
+      <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.decoration}>
+        <View style={styles.bubble} />
+        <View style={styles.smallBubble} />
+      </View>
+      <View>{children}</View>
+    </>
+  ) : children;
+
   if (onPress) {
     return (
       <Pressable
@@ -81,15 +88,18 @@ export const Card: React.FC<CardProps> = ({
         accessibilityRole="button"
         style={({ pressed }) => [cardStyle, pressed && styles.pressed, style]}
       >
-        {children}
+        {content}
       </Pressable>
     );
   }
 
-  return <View style={[cardStyle, style]}>{children}</View>;
+  return <View style={[cardStyle, style]}>{content}</View>;
 };
 
 const styles = StyleSheet.create({
+  decoration: { ...StyleSheet.absoluteFill, borderRadius: radius.xxl, overflow: 'hidden' },
+  bubble: { position: 'absolute', width: 144, height: 144, borderRadius: radius.full, right: -96, top: -40, backgroundColor: colors.heroDecoration },
+  smallBubble: { position: 'absolute', width: 80, height: 80, borderRadius: radius.full, right: -64, bottom: -36, backgroundColor: colors.highlight },
   pressed: {
     opacity: 0.88,
   },

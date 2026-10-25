@@ -1,157 +1,35 @@
 import React from 'react';
 import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
-import { Check } from 'lucide-react-native';
+import { ArrowUpRight, Check } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
-import { Card } from '@/shared/ui/card';
-import { AppText } from '@/shared/ui/app-text';
-import { ProgressBar } from '@/shared/ui/progress-bar';
+import { Card, AppText, ProgressBar } from '@/shared/ui';
 import type { TargetEntity } from '../../domain/entities/target.entity';
 
-export interface TargetCardProps {
-  target: TargetEntity;
-  onPress: () => void;
-  style?: StyleProp<ViewStyle>;
-}
-
-/**
- * TargetCard: Desain Cute Marshmallow Minimal sesuai PRD 14.
- * - Nama Target
- * - Nama Kategori
- * - Persentase progres
- * - Jumlah tugas selesai dan total tugas
- */
-export const TargetCard: React.FC<TargetCardProps> = ({
-  target,
-  onPress,
-  style,
-}) => {
-  const isCompleted = target.progressPercent >= 100 && target.totalTasks > 0;
-
-  return (
-    <Card
-      variant="elevated"
-      onPress={onPress}
-      padding={space[4]}
-      style={[styles.card, style]}
-    >
-      {/* Header: Kategori Pill & Status */}
-      <View style={styles.headerRow}>
-        <View style={styles.categoryPill}>
-          <AppText variant="labelSmall" color="primary">
-            {target.categoryName || 'Umum'}
-          </AppText>
-        </View>
-
-        {isCompleted && (
-          <View style={styles.completedPill}>
-            <Check size={12} color={colors.success} strokeWidth={3} />
-            <AppText variant="labelSmall" color="success">
-              Selesai
-            </AppText>
-          </View>
-        )}
-      </View>
-
-      {/* Judul & Deskripsi */}
-      <AppText
-        variant="titleMedium"
-        color="onSurface"
-        numberOfLines={2}
-        style={styles.title}
-      >
-        {target.title}
-      </AppText>
-
-      {target.description ? (
-        <AppText
-          variant="bodySmall"
-          color="onSurfaceSubtle"
-          numberOfLines={2}
-          style={styles.description}
-        >
-          {target.description}
-        </AppText>
-      ) : null}
-
-      {/* Metric Row: Tugas selesai & Persentase */}
-      <View style={styles.metricRow}>
-        <AppText variant="bodySmall" color="onSurfaceVariant" tabularNums>
-          {target.totalTasks === 0
-            ? 'Belum ada tugas'
-            : `${target.completedTasks}/${target.totalTasks} tugas selesai`}
-        </AppText>
-
-        <View style={styles.percentPill}>
-          <AppText
-            variant="labelSmall"
-            color={isCompleted ? 'success' : 'primary'}
-            tabularNums
-          >
-            {target.progressPercent}%
-          </AppText>
-        </View>
-      </View>
-
-      {/* Chubby Progress Bar */}
-      <ProgressBar
-        progress={target.progressPercent}
-        color={isCompleted ? colors.success : colors.primary}
-        height={8}
-        style={styles.progressBar}
-      />
-    </Card>
-  );
-};
-
+export interface TargetCardProps { target: TargetEntity; onPress: () => void; style?: StyleProp<ViewStyle>; }
+export const TargetCard: React.FC<TargetCardProps> = ({ target, onPress, style }) => (
+  <Card variant="elevated" onPress={onPress} padding={space[5]} style={[styles.card, style]}>
+    <View style={styles.top}>
+      <AppText variant="labelMedium" color="onPrimaryContainer" style={styles.category}>{target.categoryName || 'Umum'}</AppText>
+      <ArrowUpRight size={20} color={colors.primary} />
+    </View>
+    <AppText variant="headlineSmall" style={styles.title} numberOfLines={3}>{target.title}</AppText>
+    {target.description && <AppText variant="bodyMedium" color="onSurfaceVariant" numberOfLines={2} style={styles.description}>{target.description}</AppText>}
+    <View style={styles.metric}>
+      <AppText variant="bodySmall" color="onSurfaceVariant" style={styles.label}>{target.totalTasks > 0 ? target.completedTasks + ' / ' + target.totalTasks + ' tugas rencana' : 'Belum ada tugas rencana'}</AppText>
+      <AppText variant="titleMedium" color="primary" tabularNums>{target.progressPercent}%</AppText>
+    </View>
+    <ProgressBar progress={target.progressPercent} height={6} />
+    {target.status === 'COMPLETED' && <View style={styles.completed}><Check size={16} color={colors.success} /><AppText variant="labelMedium" color="success">Target selesai</AppText></View>}
+  </Card>
+);
 const styles = StyleSheet.create({
-  card: {
-    marginBottom: space[3],
-    borderRadius: radius.xl,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: space[2],
-  },
-  categoryPill: {
-    backgroundColor: colors.primaryContainer,
-    paddingVertical: 3,
-    paddingHorizontal: space[3],
-    borderRadius: radius.pill,
-  },
-  completedPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.successContainer,
-    paddingVertical: 3,
-    paddingHorizontal: space[2],
-    borderRadius: radius.pill,
-    gap: 4,
-  },
-  title: {
-    lineHeight: 22,
-    marginBottom: 4,
-  },
-  description: {
-    lineHeight: 18,
-    marginBottom: space[2],
-  },
-  metricRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: space[2],
-    marginBottom: space[2],
-  },
-  percentPill: {
-    backgroundColor: colors.primaryContainer,
-    paddingVertical: 2,
-    paddingHorizontal: space[2],
-    borderRadius: radius.pill,
-  },
-  progressBar: {
-    marginVertical: space[1],
-  },
+  card: { marginBottom: space[4] },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[3] },
+  category: { backgroundColor: colors.primaryContainer, paddingHorizontal: space[3], paddingVertical: space[1], borderRadius: radius.sm, flexShrink: 1 },
+  title: { marginTop: space[4], marginBottom: space[2] },
+  description: { marginBottom: space[3] },
+  metric: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[3], marginVertical: space[3] },
+  label: { flex: 1 },
+  completed: { flexDirection: 'row', gap: space[2], marginTop: space[3], alignItems: 'center' },
 });

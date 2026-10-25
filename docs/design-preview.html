@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyLife — Botanical Pop / Konsep desain</title>
+<style>
+@font-face{font-family:Jakarta;src:url('../node_modules/@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf');font-weight:400}
+@font-face{font-family:Jakarta;src:url('../node_modules/@expo-google-fonts/plus-jakarta-sans/700Bold/PlusJakartaSans_700Bold.ttf');font-weight:700}
+:root{--paper:#f7f5ef;--ink:#262d29;--muted:#5d6861;--teal:#125b50;--hero:#173c36;--lime:#d5f478;--lime-ink:#293b13;--peach:#ffe3d5;--peach-ink:#6c2b18;--soft:#ddede5;--line:#daddd3;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Jakarta,'Segoe UI',sans-serif;font-size:14px;line-height:1.6}button,a{font:inherit}button{cursor:pointer;color:inherit}button:focus-visible,a:focus-visible{outline:3px solid var(--teal);outline-offset:3px}button{border:0}p,h1,h2,h3{margin:0}h1{font-size:clamp(32px,5vw,62px);line-height:1.12;letter-spacing:-2px;max-width:580px}h2{font-size:27px;line-height:1.25;letter-spacing:-1px}h3{font-size:17px;line-height:1.4}small,.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.5px}.muted{color:var(--muted)}.board{max-width:1140px;margin:auto;padding:46px 40px;display:grid;grid-template-columns:1fr 390px;gap:76px;align-items:start}.brand{font-size:24px;font-weight:700;letter-spacing:-1px;display:flex;align-items:center;gap:10px;margin-bottom:68px}.brandmark{width:32px;height:32px;border-radius:12px 12px 12px 2px;background:var(--teal);display:grid;place-items:center;color:var(--lime)}.intro p{max-width:460px;margin-top:24px;font-size:16px}.intro .eyebrow{color:var(--teal);margin-bottom:20px}.note{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);max-width:440px}.swatches{display:flex;gap:12px;margin-top:32px}.swatch{display:flex;flex-direction:column;gap:8px;font-size:11px}.swatch i{width:66px;height:50px;border-radius:16px;display:block}.screen-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}.screen-links button{min-height:44px;background:var(--soft);border-radius:12px;padding:8px 16px}.screen-links button[aria-pressed=true]{background:var(--teal);color:var(--white)}.doc-link{display:inline-block;color:var(--teal);margin-top:24px}.phone{border:7px solid var(--ink);border-radius:43px;background:var(--paper);overflow:hidden;width:100%;position:relative}.status{height:38px;display:flex;align-items:center;justify-content:space-between;padding:8px 24px;font-size:11px;font-weight:700}.status span:last-child{letter-spacing:2px}.phone-content{height:690px;overflow-y:auto;scrollbar-width:thin;padding:16px 20px 28px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:10px}.top p{font-size:12px;color:var(--muted);margin-bottom:4px}.icon-btn{width:48px;min-height:48px;border-radius:16px;background:var(--white);display:grid;place-items:center;flex-shrink:0}.icon-btn svg{width:21px;height:21px}.hero{position:relative;background:var(--hero);color:var(--white);border-radius:28px;overflow:hidden;padding:22px;margin-bottom:20px}.hero .content{position:relative;z-index:1;max-width:250px}.hero .eyebrow{color:var(--lime);font-size:10px;margin-bottom:14px;display:block}.hero h2{font-size:27px;line-height:1.25;max-width:210px}.hero p{color:#dfeae2;font-size:12px;max-width:220px;margin:12px 0 18px}.bubble{position:absolute;border-radius:50%;pointer-events:none}.bubble.one{width:140px;height:140px;right:-72px;top:-24px;background:#31584d}.bubble.two{width:85px;height:85px;right:-34px;bottom:-28px;background:#d5f478}.cta{min-height:48px;padding:12px 18px;border-radius:16px;background:var(--lime);color:var(--lime-ink);font-weight:700;display:inline-flex;align-items:center;gap:18px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 24px}.stat{padding:14px 16px;border-radius:20px;background:var(--soft)}.stat.peach{background:var(--peach)}.stat strong{font-size:25px;display:block;line-height:1.4}.stat span{font-size:11px;color:var(--muted)}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:22px 0 12px}.section-head button{min-height:48px;padding:10px;background:transparent;color:var(--teal);font-weight:700;font-size:12px}.task{display:flex;gap:12px;padding:16px 14px;align-items:center;background:var(--white);border-radius:18px;margin-bottom:10px}.check{width:23px;height:23px;border:1.5px solid var(--muted);border-radius:8px;flex-shrink:0;display:grid;place-items:center;font-size:13px}.check.done{background:var(--teal);color:var(--white);border-color:var(--teal)}.task .copy{flex:1;min-width:0}.task strong{font-size:13px;display:block}.task p{font-size:11px;color:var(--muted);margin-top:4px}.task .arrow{font-size:18px;color:var(--teal)}.done-title{text-decoration:line-through}.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;border-radius:8px;padding:4px 8px;background:var(--soft);color:#153f35}.tag.peach{background:var(--peach);color:var(--peach-ink)}.review{background:var(--peach);color:var(--peach-ink);border-radius:22px;padding:18px;margin-top:24px}.review p{font-size:12px;margin-top:6px}.nav{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:12px 12px 20px;background:var(--white);border-top:1px solid var(--line)}.nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:50px;border-radius:14px;background:transparent;font-size:10px;color:var(--muted)}.nav button svg{width:20px;height:20px}.nav button[aria-current=page]{background:var(--soft);color:var(--teal);font-weight:700}.goal{background:var(--white);padding:20px;border-radius:24px;margin-bottom:14px}.goal h3{font-size:20px;letter-spacing:-.5px;margin:12px 0 8px}.goal>p{font-size:12px;color:var(--muted);margin-bottom:18px}.goal-foot{display:flex;justify-content:space-between;gap:8px;font-size:11px;margin:12px 0 8px}.track{height:7px;border-radius:8px;background:var(--soft);overflow:hidden}.fill{height:100%;background:var(--teal);border-radius:8px}.filters{display:flex;gap:8px;margin:20px 0}.filters span{padding:8px 12px;border-radius:12px;font-size:11px;background:var(--white)}.filters span:first-child{background:var(--teal);color:var(--white)}.caption{font-size:11px;color:var(--muted);padding:8px 0}.milestone{display:grid;grid-template-columns:28px 1fr;gap:12px;margin-bottom:16px}.milestone .number{width:28px;height:28px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-size:11px;font-weight:700}.milestone .body{border-bottom:1px solid var(--line);padding-bottom:16px}.milestone strong{font-size:13px}.milestone p{font-size:11px;color:var(--muted);margin-top:4px}.dates{display:flex;justify-content:space-between;gap:6px;margin-bottom:24px}.dates span{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--white);padding:10px 11px;border-radius:16px;font-size:11px}.dates b{font-size:18px}.dates .active{background:var(--teal);color:var(--white)}.event{display:grid;grid-template-columns:44px 1fr;gap:10px;margin-bottom:20px}.event time{font-size:11px;color:var(--muted);padding-top:14px}.event-card{background:var(--soft);border-radius:20px;padding:16px;border-left:3px solid var(--teal)}.event-card.peach{background:var(--peach);border-color:var(--peach-ink)}.event-card strong{font-size:13px}.event-card p{font-size:11px;margin-top:5px;color:var(--muted)}.setting{background:var(--white);border-radius:20px;padding:16px;margin-bottom:12px}.setting p{font-size:12px;margin-top:6px;color:var(--muted)}[hidden]{display:none!important}.demo-bar{font-size:10px;text-align:center;padding:9px 6px;color:var(--muted);background:var(--soft)}.modal{position:absolute;inset:0;display:flex;align-items:flex-end;background:#173c3670;z-index:5}.modal-box{background:var(--paper);padding:28px 22px;border-radius:28px 28px 0 0;width:100%}.modal-box p{margin:14px 0 24px}.modal-box button{width:100%;justify-content:center}.modal-box .timer{font-size:52px;font-weight:700;margin:20px 0;color:var(--teal)}@media(max-width:820px){.board{grid-template-columns:1fr;gap:32px;padding:28px 20px;max-width:520px}.brand{margin-bottom:32px}.phone{max-width:390px;margin:auto}.intro h1{font-size:38px}.intro p{font-size:14px}.phone-content{height:640px}}@media(prefers-reduced-motion:no-preference){button{transition:background .15s ease,transform .15s ease}button:active{transform:scale(.98)}}
+</style>
+</head>
+<body>
+<main class="board">
+<aside class="intro">
+  <div class="brand"><span class="brandmark" aria-hidden="true">m</span>MyLife<span class="muted" style="font-size:12px;letter-spacing:0;font-weight:400;margin-left:8px">DESIGN DIRECTION / 02</span></div>
+  <div class="eyebrow">BOTANICAL POP</div>
+  <h1>Hidup punya arah.<br>Hari ini punya langkah.</h1>
+  <p class="muted">Ruang pribadi untuk tujuan besar, langkah kecil, dan waktu yang berarti. Berani pada aksen, tenang saat dibaca.</p>
+  <div class="swatches" aria-label="Palet desain"><span class="swatch"><i style="background:#173c36"></i>Petrol</span><span class="swatch"><i style="background:#d5f478"></i>Citron</span><span class="swatch"><i style="background:#ffe3d5"></i>Peach</span><span class="swatch"><i style="background:#ddede5"></i>Sage</span></div>
+  <div class="screen-links" aria-label="Pilih contoh layar"><button data-go="today" aria-pressed="true">Hari Ini</button><button data-go="targets" aria-pressed="false">Target</button><button data-go="projects" aria-pressed="false">Proyek</button><button data-go="agenda" aria-pressed="false">Agenda</button><button data-go="settings" aria-pressed="false">Pengaturan</button></div>
+  <div class="note"><strong>Konsep desain, bukan aplikasi aktif.</strong><p class="muted" style="font-size:12px;margin-top:8px">Semua nama, aktivitas, dan angka di contoh ini adalah data simulasi. Navigasi dan pratinjau sesi dapat dicoba; tidak membaca atau mengubah data Anda. Bukti hasil dan review merupakan rancangan R2.</p></div>
+  <a class="doc-link" href="DESIGN_V2.md">Baca spesifikasi desain →</a>
+</aside>
+<div class="phone" aria-label="Pratinjau layar mobile MyLife">
+  <div class="status" aria-hidden="true"><span>09:41</span><span>● ▰</span></div>
+  <div class="demo-bar">KONSEP · DATA SIMULASI · BELUM DIIMPLEMENTASIKAN</div>
+  <div class="phone-content" id="phone-content">
+    <section data-screen="today" aria-label="Hari Ini">
+      <header class="top"><div><p>Senin, 26 Oktober</p><h2>Hari Ini<span style="color:var(--teal)">.</span></h2></div><button class="icon-btn" data-go="settings" aria-label="Buka contoh Pengaturan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m9 3-1 3-3 1-2 5 2 5 3 1 1 3h6l1-3 3-1 2-5-2-5-3-1-1-3z"/><circle cx="12" cy="12" r="3"/></svg></button></header>
+      <article class="hero"><div class="bubble one" aria-hidden="true"></div><div class="bubble two" aria-hidden="true"></div><div class="content"><span class="eyebrow">LANGKAH BERIKUTNYA</span><h2>Satu langkah lebih dekat.</h2><p>Latihan Python 30 menit.<br>Bagian dari perjalanan AI Engineer.</p><button class="cta" id="show-session">Lihat sesi contoh <span aria-hidden="true">↗</span></button></div></article>
+      <div class="stats"><div class="stat"><strong>1<span style="font-size:16px"> / 3</span></strong><span>prioritas selesai</span></div><div class="stat peach"><strong>45 <span style="font-size:13px">mnt</span></strong><span>waktu fokus tercatat</span></div></div>
+      <div class="section-head"><h3>Yang penting hari ini</h3><span class="tag">3 pilihan</span></div>
+      <div class="task"><span class="check" aria-hidden="true"></span><div class="copy"><strong>Latihan Python: fungsi & list</strong><p>AI Engineer · 30 menit</p></div><span class="arrow" aria-hidden="true">↗</span></div>
+      <div class="task"><span class="check" aria-hidden="true"></span><div class="copy"><strong>Tulis evaluasi baseline model</strong><p>Portofolio · 45 menit</p></div></div>
+      <div class="task"><span class="check done" aria-hidden="true">✓</span><div class="copy"><strong class="done-title">Baca catatan kuliah</strong><p>Belajar · selesai</p></div></div>
+      <div class="section-head"><h3>Di agenda</h3><button data-go="agenda">Lihat semua →</button></div>
+      <div class="event"><time>19:30</time><div class="event-card"><strong>Ruang belajar Python</strong><p>30 menit · Rumah</p></div></div>
+      <div class="review"><small>RUANG REFLEKSI / KONSEP R2</small><h3 style="margin-top:8px">Bukan hanya sibuk. Bertumbuh.</h3><p>Apa yang sudah kamu pahami minggu ini?</p></div>
+    </section>
+    <section data-screen="targets" aria-label="Target" hidden>
+      <header class="top"><div><p>Untuk hidup yang kamu pilih</p><h2>Target Hidup.</h2></div><span class="tag">CONTOH</span></header>
+      <div class="hero"><div class="bubble one" aria-hidden="true"></div><div class="content"><span class="eyebrow">ARAH, BUKAN SEKADAR ANGKA</span><h2>Langkah kecil.<br>Tujuan besar.</h2><p>Kemajuan diukur dari rencana dan hasil yang bisa kamu lihat.</p></div></div>
+      <div class="filters" aria-label="Contoh filter"><span>Semua</span><span>Belajar</span><span>Pribadi</span></div>
+      <article class="goal"><span class="tag">BELAJAR & KARIER</span><h3>Siap menjadi<br>AI Engineer</h3><p>Berikutnya: latihan Python dan dokumentasikan hasilnya.</p><div class="goal-foot"><span>9 / 24 tugas rencana</span><strong>38%</strong></div><div class="track" role="progressbar" aria-label="Progres tugas rencana AI Engineer, contoh" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:38%"></div></div><p style="font-size:10px;margin-top:12px;margin-bottom:0">Persentase tugas rencana, bukan tingkat kompetensi.</p></article>
+      <article class="goal"><span class="tag peach">PRIBADI</span><h3>Lebih banyak waktu<br>untuk membaca</h3><p>Berikutnya: baca dan rangkum satu bab.</p><div class="goal-foot"><span>1 / 5 tugas rencana</span><strong>20%</strong></div><div class="track"><div class="fill" style="width:20%"></div></div></article>
+      <p class="caption">Kategori dikelola dari Pengaturan; pilihan dan filter tetap ada di sini.</p>
+    </section>
+    <section data-screen="projects" aria-label="Proyek" hidden>
+      <header class="top"><div><p>Ide menjadi sesuatu yang nyata</p><h2>Proyek.</h2></div><span class="tag">CONTOH</span></header>
+      <article class="goal" style="background:var(--peach)"><span class="tag" style="background:var(--white)">AI ENGINEER</span><h3>Portofolio pertamamu,<br>dibangun selangkah.</h3><p style="color:var(--peach-ink)">Demo klasifikasi teks dengan baseline dan evaluasi yang bisa dijelaskan.</p><div class="goal-foot"><span>3 / 8 tugas selesai</span><strong>38%</strong></div><div class="track" style="background:#f0c7b6"><div class="fill" style="width:38%"></div></div></article>
+      <div class="section-head"><h3>Roadmap proyek</h3><span class="tag">3 tahap</span></div>
+      <div class="milestone"><span class="number">✓</span><div class="body"><strong>Temukan masalah & dataset</strong><p>Selesai · 2 tugas</p></div></div>
+      <div class="milestone"><span class="number" style="background:var(--teal);color:var(--white)">02</span><div class="body"><strong>Bangun baseline</strong><p>Berjalan · 1 dari 3 tugas selesai</p><div class="task" style="margin-top:12px"><span class="check" aria-hidden="true"></span><div class="copy"><strong>Catat hasil evaluasi</strong><p>45 menit · langkah berikutnya</p></div></div></div></div>
+      <div class="milestone"><span class="number">03</span><div class="body"><strong>Demo & dokumentasi</strong><p>Belum dimulai · 3 tugas</p></div></div>
+      <div class="review"><small>KRITERIA HASIL / KONSEP R2</small><p>Demo dapat dijalankan dan keputusan model dapat dijelaskan.</p></div>
+    </section>
+    <section data-screen="agenda" aria-label="Agenda" hidden>
+      <header class="top"><div><p>Senin, 26 Oktober 2026</p><h2>Ritme harimu.</h2></div><span class="tag">CONTOH</span></header>
+      <div class="dates"><span>Sab<b>24</b></span><span>Min<b>25</b></span><span class="active">Sen<b>26</b></span><span>Sel<b>27</b></span><span>Rab<b>28</b></span></div>
+      <span class="tag peach">SEPANJANG HARI</span><div class="task" style="margin-top:10px;margin-bottom:24px"><span class="check" aria-hidden="true"></span><div class="copy"><strong>Kumpulkan tugas analisis data</strong><p>Tenggat hari ini · Belajar</p></div></div>
+      <div class="section-head"><h3>Waktu yang sudah dijaga</h3></div>
+      <div class="event"><time>09:00</time><div class="event-card"><span class="tag" style="background:var(--white)">KULIAH</span><p><strong style="color:var(--ink)">Statistika terapan</strong></p><p>09:00–10:30 · Kampus</p></div></div>
+      <div class="event"><time>13:00</time><div class="event-card peach"><span class="tag peach" style="background:var(--white)">PRIBADI</span><p><strong style="color:var(--ink)">Makan siang & istirahat</strong></p><p>13:00–14:00 · Ruang untuk jeda</p></div></div>
+      <div class="event"><time>19:30</time><div class="event-card"><span class="tag" style="background:var(--white)">AI ENGINEER</span><p><strong style="color:var(--ink)">Latihan Python</strong></p><p>19:30–20:00 · Terkait satu tugas yang sama</p></div></div>
+      <p class="caption">Jadwal adalah rencana waktu. Menyelesaikan agenda tidak otomatis membuktikan tugas atau tujuan selesai.</p>
+    </section>
+    <section data-screen="settings" aria-label="Pengaturan" hidden>
+      <header class="top"><div><p>Sesuaikan dengan caramu</p><h2>Pengaturan.</h2></div></header>
+      <div class="section-head"><h3>Organisasi</h3></div><div class="setting"><strong>Kategori target ↗</strong><p>Belajar, Karier, Pribadi, dan kategori milikmu. Dikelola di sini tanpa tab tambahan.</p></div>
+      <div class="section-head"><h3>Fokus</h3></div><div class="setting"><strong>Durasi & kenyamanan</strong><p>Pomodoro · Deep Flow · Getaran · Layar terjaga. Preferensi dan timer harus memakai nilai yang sama.</p></div>
+      <div class="section-head"><h3>Data & privasi</h3></div><div class="setting"><strong>Cadangan yang bisa dipulihkan</strong><p>Ekspor dan pemulihan lengkap beserta kategori, tahapan, serta riwayat. Ini rancangan perbaikan R0, belum tersedia.</p></div>
+      <div class="setting"><strong>Data tetap di perangkat</strong><p>Rancangan awal lokal. Tidak ada sinkronisasi atau pengiriman catatan otomatis pada konsep ini.</p></div>
+    </section>
+  </div>
+  <nav class="nav" aria-label="Navigasi contoh aplikasi">
+    <button data-go="today" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="6"/><path d="m8 12 3 3 5-6"/></svg>Hari Ini</button>
+    <button data-go="targets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="m12 12 7-7"/></svg>Target</button>
+    <button data-go="projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8V5h7l2 3h9v12H3z"/><path d="M8 12v4m4-4v4m4-4v4"/></svg>Proyek</button>
+    <button data-go="agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="16" rx="4"/><path d="M8 3v5m8-5v5M4 11h16"/></svg>Agenda</button>
+  </nav>
+  <div class="modal" id="session-modal" role="dialog" aria-modal="true" aria-labelledby="session-title" hidden><div class="modal-box"><small>SIMULASI TAMPILAN</small><h2 id="session-title">Ruang untuk fokus.</h2><p class="muted">Latihan Python · AI Engineer</p><div class="timer">25:00</div><p class="muted">Timer contoh ini tidak berjalan atau menyimpan sesi. Implementasi berikutnya harus mengikuti preferensi dan memulihkan sesi saat aplikasi dibuka kembali.</p><button class="cta" id="close-session">Kembali ke konsep</button></div></div>
+</div>
+</main>
+<script>
+const panels = [...document.querySelectorAll('[data-screen]')];
+const navigation = [...document.querySelectorAll('button[data-go]')];
+function navigate(destination) {
+  if (!panels.some(panel => panel.dataset.screen === destination)) return;
+  panels.forEach(panel => { panel.hidden = panel.dataset.screen !== destination; });
+  navigation.forEach(button => {
+    if (button.closest('.screen-links')) button.setAttribute('aria-pressed', String(button.dataset.go === destination));
+    if (button.closest('.nav')) {
+      if (button.dataset.go === destination) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
+    }
+  });
+  document.getElementById('phone-content').scrollTop = 0;
+}
+navigation.forEach(button => button.addEventListener('click', () => navigate(button.dataset.go)));
+const modal = document.getElementById('session-modal');
+const openSession = document.getElementById('show-session');
+const closeSession = document.getElementById('close-session');
+function dismissSession() { modal.hidden = true; openSession.focus(); }
+openSession.addEventListener('click', () => { modal.hidden = false; closeSession.focus(); });
+closeSession.addEventListener('click', dismissSession);
+modal.addEventListener('click', event => { if (event.target === modal) dismissSession(); });
+document.addEventListener('keydown', event => { if (!modal.hidden && event.key === 'Escape') dismissSession(); if (!modal.hidden && event.key === 'Tab') { event.preventDefault(); closeSession.focus(); } });
+</script>
+</body>
+</html>

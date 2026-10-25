@@ -1,212 +1,54 @@
 import React from 'react';
-import { View, Pressable, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
-import { Check, MoreHorizontal } from 'lucide-react-native';
+import { View, Pressable, StyleSheet, useWindowDimensions, type ViewStyle, type StyleProp } from 'react-native';
+import { Check, Trash2 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
-import { Card } from '@/shared/ui/card';
-import { AppText } from '@/shared/ui/app-text';
+import { AppText } from '@/shared/ui';
 import type { AgendaEventEntity, AgendaEventType } from '../../domain/entities/agenda.entity';
 
 export interface TimelineEventCardProps {
-  event: AgendaEventEntity;
-  onToggleComplete: () => void;
-  onDelete: () => void;
-  style?: StyleProp<ViewStyle>;
+  event: AgendaEventEntity; onToggleComplete: () => void; onDelete: () => void; style?: StyleProp<ViewStyle>;
 }
+const LABELS: Record<AgendaEventType, string> = { WORK: 'Kerja', PERSONAL: 'Pribadi', LEARNING: 'Belajar', MEETING: 'Rapat' };
+const formatTime = (value: string) => new Date(value).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-const EVENT_TYPE_COLORS: Record<AgendaEventType, string> = {
-  WORK: colors.pillars.career,     // Teal
-  MEETING: colors.pillars.finance,  // Amber
-  LEARNING: colors.pillars.growth,  // Purple
-  PERSONAL: colors.pillars.personal,// Blue
-};
-
-const EVENT_TYPE_LABELS: Record<AgendaEventType, string> = {
-  WORK: 'Kerja',
-  MEETING: 'Rapat',
-  LEARNING: 'Belajar',
-  PERSONAL: 'Pribadi',
-};
-
-/**
- * TimelineEventCard: Desain Cute Marshmallow Minimal.
- * - Tanpa tumpukan icon (clock, map pin, trash).
- * - Checkbox bundar tactile 28dp.
- * - Pil pastel lembut untuk waktu dan tipe kegiatan.
- */
-export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
-  event,
-  onToggleComplete,
-  onDelete,
-  style,
-}) => {
-  const { isCompleted, isAllDay, eventType } = event;
-  const typeColor = EVENT_TYPE_COLORS[eventType] || colors.primary;
-
-  // Format time display
-  const formatTimeStr = (iso: string) => {
-    try {
-      const d = new Date(iso);
-      const hours = d.getHours().toString().padStart(2, '0');
-      const mins = d.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${mins}`;
-    } catch {
-      return '';
-    }
-  };
-
-  const timeLabel = isAllDay
-    ? 'Bebas Jam'
-    : `${formatTimeStr(event.startTime)} - ${formatTimeStr(event.endTime)}`;
-
+export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onToggleComplete, onDelete, style }) => {
+  const { fontScale } = useWindowDimensions();
   return (
-    <Card
-      variant={isCompleted ? 'filled' : 'elevated'}
-      padding={space[4]}
-      style={[styles.container, style]}
-    >
-      <View style={styles.row}>
-        {/* Checkbox Bundar Tactile */}
-        <Pressable
-          onPress={onToggleComplete}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: isCompleted }}
-          accessibilityLabel={`Tandai ${event.title} ${isCompleted ? 'belum selesai' : 'selesai'}`}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={styles.checkButton}
-        >
-          <View style={[styles.stampCircle, isCompleted && styles.stampCircleDone]}>
-            {isCompleted && <Check size={16} color={colors.onPrimary} strokeWidth={3} />}
-          </View>
-        </Pressable>
-
-        {/* Event Content */}
-        <View style={styles.contentCol}>
-          {/* Header Row: Pil Waktu & Pil Tipe Pastel */}
-          <View style={styles.metaHeader}>
-            <View style={styles.timePill}>
-              <AppText variant="labelSmall" color="onSurfaceVariant" tabularNums>
-                {timeLabel}
-              </AppText>
-            </View>
-
-            <View style={styles.typePill}>
-              <View style={[styles.typeDot, { backgroundColor: typeColor }]} />
-              <AppText variant="labelSmall" style={{ color: typeColor }}>
-                {EVENT_TYPE_LABELS[eventType]}
-              </AppText>
-            </View>
-          </View>
-
-          {/* Title */}
-          <AppText
-            variant="titleMedium"
-            color={isCompleted ? 'onSurfaceSubtle' : 'onSurface'}
-            numberOfLines={2}
-            style={[styles.title, isCompleted && styles.completedTitle]}
-          >
-            {event.title}
-          </AppText>
-
-          {/* Location text if available */}
-          {event.location ? (
-            <View style={styles.locationRow}>
-              <AppText variant="bodySmall" color="onSurfaceSubtle" numberOfLines={1}>
-                {event.location}
-              </AppText>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Delete option (discreet menu trigger) */}
-        <Pressable
-          onPress={onDelete}
-          accessibilityRole="button"
-          accessibilityLabel="Hapus agenda ini"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          style={styles.moreButton}
-        >
-          <MoreHorizontal size={18} color={colors.onSurfaceSubtle} />
-        </Pressable>
+  <View style={[styles.row, style]}>
+    {!event.isAllDay && fontScale <= 1.3 && <View style={styles.timeColumn}><AppText variant="labelMedium" color="onSurfaceVariant" tabularNums>{formatTime(event.startTime)}</AppText><View style={styles.rail} /></View>}
+    <View style={[styles.card, event.eventType === 'PERSONAL' && styles.personal]}>
+      <View style={styles.header}>
+        <AppText variant="labelMedium" color={event.eventType === 'PERSONAL' ? 'onSecondaryContainer' : 'onPrimaryContainer'} style={styles.type}>{LABELS[event.eventType]}</AppText>
+        <Pressable onPress={onDelete} accessibilityRole="button" accessibilityLabel={'Hapus agenda ' + event.title} style={styles.touch}><Trash2 size={17} color={colors.onSurfaceVariant} /></Pressable>
       </View>
-    </Card>
+      <View style={styles.main}>
+        <Pressable onPress={onToggleComplete} accessibilityRole="checkbox" accessibilityState={{ checked: event.isCompleted }}
+          accessibilityLabel={(event.isCompleted ? 'Buka kembali ' : 'Selesaikan ') + event.title} style={styles.touch}>
+          <View style={[styles.checkbox, event.isCompleted && styles.checked]}>{event.isCompleted && <Check size={16} color={colors.onPrimary} />}</View>
+        </Pressable>
+        <View style={styles.text}>
+          <AppText variant="titleSmall" style={event.isCompleted ? styles.completed : undefined}>{event.title}</AppText>
+          {!event.isAllDay && <AppText variant="bodySmall" color="onSurfaceVariant" tabularNums>{formatTime(event.startTime)}–{formatTime(event.endTime)}</AppText>}
+          {event.location && <AppText variant="bodySmall" color="onSurfaceVariant">{event.location}</AppText>}
+        </View>
+      </View>
+    </View>
+  </View>
   );
 };
-
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: space[3],
-    borderRadius: radius.xl,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: space[2],
-  },
-  stampCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.pill,
-    borderWidth: 2,
-    borderColor: '#D4CEF2',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stampCircleDone: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  contentCol: {
-    flex: 1,
-    paddingRight: space[2],
-  },
-  metaHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[2],
-    marginBottom: space[1],
-  },
-  timePill: {
-    backgroundColor: colors.surfaceContainerLow,
-    paddingVertical: 2,
-    paddingHorizontal: space[2],
-    borderRadius: radius.pill,
-  },
-  typePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primaryContainer,
-    paddingVertical: 2,
-    paddingHorizontal: space[2],
-    borderRadius: radius.pill,
-    gap: 4,
-  },
-  typeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: radius.pill,
-  },
-  title: {
-    lineHeight: 22,
-  },
-  completedTitle: {
-    textDecorationLine: 'line-through',
-    opacity: 0.6,
-  },
-  locationRow: {
-    marginTop: 2,
-  },
-  moreButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  row: { flexDirection: 'row', gap: space[2], marginBottom: space[4] },
+  timeColumn: { width: 48, alignItems: 'center', paddingTop: space[4], gap: space[3] },
+  rail: { width: 1, flex: 1, backgroundColor: colors.outlineVariant },
+  card: { flex: 1, borderRadius: radius.lg, padding: space[3], backgroundColor: colors.primaryContainer },
+  personal: { backgroundColor: colors.secondaryContainer },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  type: { flex: 1, paddingLeft: space[2] },
+  main: { flexDirection: 'row', alignItems: 'flex-start' },
+  touch: { width: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  text: { flex: 1, gap: space[1], paddingVertical: space[2] },
+  checkbox: { width: 24, height: 24, borderRadius: radius.xs, borderWidth: 1.5, borderColor: colors.outline, alignItems: 'center', justifyContent: 'center' },
+  checked: { borderColor: colors.primary, backgroundColor: colors.primary },
+  completed: { textDecorationLine: 'line-through' },
 });

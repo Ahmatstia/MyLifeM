@@ -1,0 +1,58 @@
+{
+  "purpose": "Known-bug reproductions, NOT a healthy-system test suite",
+  "storage": ":memory: only",
+  "tableCount": 11,
+  "reproduced": [
+    {
+      "id": "A01",
+      "message": "Fresh database has no foreign keys",
+      "observed": 0
+    },
+    {
+      "id": "A04",
+      "message": "00:30 WIB is assigned to yesterday by UTC date slicing",
+      "observed": "2026-10-25"
+    },
+    {
+      "id": "A05",
+      "message": "Finished project-stage task is absent from its target progress",
+      "observed": 0
+    },
+    {
+      "id": "A06",
+      "message": "Today checkbox disagrees with the completed task",
+      "observed": {
+        "focus": false,
+        "task": true
+      }
+    },
+    {
+      "id": "A01-orphan",
+      "message": "Invalid task reference is accepted",
+      "observed": 1
+    },
+    {
+      "id": "A02",
+      "message": "Backup omits categories and stages",
+      "observed": {
+        "categories": false,
+        "stages": false
+      }
+    },
+    {
+      "id": "A01-delete",
+      "message": "Deleting a project leaves a dangling daily-focus link",
+      "observed": 1
+    },
+    {
+      "id": "A09-overlap",
+      "message": "An ongoing timed event is absent from the next UTC day query",
+      "observed": 0
+    },
+    {
+      "id": "A09-validation",
+      "message": "Repository accepts blank title and reversed times",
+      "observed": ""
+    }
+  ]
+}

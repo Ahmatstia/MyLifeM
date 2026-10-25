@@ -1,5 +1,7 @@
 # Product Requirements Document (PRD)
 
+> Dokumen MVP historis. Gunakan [PRD_V2.md](./PRD_V2.md) dan [START_HERE.md](./START_HERE.md) untuk keputusan terbaru. Rancangan v2 belum berarti sudah diterapkan pada kode.
+
 ## MyLife — Mobile App
 
 **Versi:** 0.1 (Draft MVP)  

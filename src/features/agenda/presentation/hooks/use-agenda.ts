@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { formatLocalDate } from '@/shared/utils/local-date';
+import { useState, useCallback } from 'react';
 import type {
   AgendaEventEntity,
   CreateAgendaInput,
@@ -7,7 +9,7 @@ import { agendaRepository } from '../../data/repositories/agenda.repository.impl
 import { AgendaNotificationService } from '../../data/services/agenda-notification.service';
 
 export function useAgenda() {
-  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  const getTodayStr = () => formatLocalDate();
 
   const [selectedDate, setSelectedDate] = useState<string>(getTodayStr());
   const [events, setEvents] = useState<AgendaEventEntity[]>([]);
@@ -34,9 +36,9 @@ export function useAgenda() {
     await loadEvents();
   }, [loadEvents]);
 
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+  useFocusEffect(useCallback(() => {
+    void loadEvents();
+  }, [loadEvents]));
 
   const addEvent = async (input: CreateAgendaInput): Promise<boolean> => {
     try {

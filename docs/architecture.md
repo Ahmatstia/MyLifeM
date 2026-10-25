@@ -1,5 +1,7 @@
 # System Architecture Document — MyLife Mobile
 
+> Rancangan historis, bukan gambaran implementasi yang terverifikasi. Baca [audit aktual](./SYSTEM_AUDIT_2026-10-26.md) dan [arsitektur v2](./ARCHITECTURE_V2.md) melalui [START_HERE.md](./START_HERE.md).
+
 **Versi:** 1.0.0  
 **Tipe Aplikasi:** Native Mobile (React Native + Expo)  
 **Pola Arsitektur:** Local-First / Offline-First Architecture  

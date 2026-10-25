@@ -69,7 +69,7 @@ export const QuickAddScreen: React.FC = () => {
         </View>
 
         <View style={styles.header}>
-          <AppText variant="titleLarge">Tambah baru</AppText>
+          <View style={styles.rowText}><AppText variant="headlineMedium">Langkah baru.</AppText><AppText variant="bodySmall" color="onSurfaceVariant">Apa yang ingin kamu rencanakan?</AppText></View>
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[4],
   },
   handleStrip: {
-    height: 48,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -142,10 +142,10 @@ const styles = StyleSheet.create({
     marginRight: -space[3],
   },
   row: {
-    minHeight: 72,
+    minHeight: 88,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: space[2],
+    paddingVertical: space[4],
     borderRadius: radius.lg,
   },
   rowPressed: {
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   iconTile: {
     width: 40,
     height: 40,
-    borderRadius: radius.full,
+    borderRadius: radius.md,
     backgroundColor: colors.primaryContainer,
     alignItems: 'center',
     justifyContent: 'center',

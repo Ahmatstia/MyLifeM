@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useState, useCallback } from 'react';
 import type {
   TargetEntity,
   LifePillarEntity,
@@ -45,9 +46,9 @@ export function useTargets() {
     await loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useFocusEffect(useCallback(() => {
+    void loadData();
+  }, [loadData]));
 
   const addTarget = async (input: CreateTargetInput): Promise<boolean> => {
     try {

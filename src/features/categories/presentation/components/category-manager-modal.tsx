@@ -5,13 +5,15 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { X, Plus, Pencil, Trash2, Check } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
+import { Banner } from '@/shared/ui/banner';
 import { useCategories } from '../hooks/use-categories';
 
 export interface CategoryManagerModalProps {
@@ -25,7 +27,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
   onClose,
   onSelectCategory,
 }) => {
-  const { categories, addCategory, editCategory, removeCategory } = useCategories();
+  const { categories, isLoading, error, refresh, addCategory, editCategory, removeCategory } = useCategories();
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
@@ -106,6 +108,8 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
       title="Kelola Kategori Target"
       subtitle="Label pengelompokan untuk target pengembangan dirimu"
     >
+      {error && <Banner variant="error" message={error} actionText="Coba lagi" onActionPress={refresh} />}
+      {isLoading && <ActivityIndicator color={colors.primary} />}
       {/* Error Message */}
       {errorMessage && (
         <View style={styles.errorBox}>
@@ -117,7 +121,9 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
 
       {/* Input Tambah Kategori */}
       <View style={styles.addCategoryBox}>
+        <AppText variant="labelLarge">Kategori baru</AppText>
         <TextInput
+          accessibilityLabel="Nama kategori baru"
           value={newCategoryName}
           onChangeText={(text) => {
             setNewCategoryName(text);
@@ -143,7 +149,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
         Daftar Kategori ({categories.length})
       </AppText>
 
-      {categories.length === 0 ? (
+      {!isLoading && !error && categories.length === 0 ? (
         <View style={styles.emptyCard}>
           <AppText variant="bodyMedium" color="onSurfaceSubtle" align="center">
             Belum ada kategori. Buat kategori pertamamu di atas.
@@ -158,6 +164,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
               return (
                 <View key={cat.id} style={styles.editRow}>
                   <TextInput
+                    accessibilityLabel="Ubah nama kategori"
                     value={editingName}
                     onChangeText={setEditingName}
                     autoFocus
@@ -165,6 +172,8 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                   />
                   <Pressable
                     onPress={handleSaveEdit}
+                    accessibilityRole="button"
+                    accessibilityLabel="Simpan nama kategori"
                     style={styles.actionIconButton}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
@@ -172,6 +181,8 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                   </Pressable>
                   <Pressable
                     onPress={() => setEditingId(null)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Batalkan perubahan kategori"
                     style={styles.actionIconButton}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
@@ -184,6 +195,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
             return (
               <View key={cat.id} style={styles.categoryCard}>
                 <Pressable
+                  disabled={!onSelectCategory}
                   onPress={() => {
                     if (onSelectCategory) {
                       onSelectCategory(cat.id);
@@ -203,6 +215,8 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                 <View style={styles.actionButtonsCol}>
                   <Pressable
                     onPress={() => startEdit(cat.id, cat.name)}
+                    accessibilityRole="button"
+                    accessibilityLabel={'Ubah kategori ' + cat.name}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     style={styles.actionIconButton}
                   >
@@ -210,6 +224,8 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                   </Pressable>
                   <Pressable
                     onPress={() => handleDelete(cat.id, cat.name, cat.targetCount)}
+                    accessibilityRole="button"
+                    accessibilityLabel={'Hapus kategori ' + cat.name}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     style={styles.actionIconButton}
                   >
@@ -233,20 +249,20 @@ const styles = StyleSheet.create({
     marginBottom: space[3],
   },
   addCategoryBox: {
-    flexDirection: 'row',
     gap: space[2],
     marginBottom: space[4],
   },
   textInput: {
-    flex: 1,
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    borderRadius: radius.pill,
+    borderColor: colors.outline,
+    borderRadius: radius.md,
     color: colors.onSurface,
     paddingHorizontal: space[4],
-    height: 48,
+    minHeight: 56,
+    paddingVertical: space[3],
     fontSize: 14,
+    fontFamily: fontFamily.regular,
   },
   addButton: {
     minWidth: 100,
@@ -271,8 +287,7 @@ const styles = StyleSheet.create({
   },
   categoryTextCol: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: space[3],
   },
   targetCountBadge: {
@@ -287,6 +302,8 @@ const styles = StyleSheet.create({
     gap: space[2],
   },
   actionIconButton: {
+    width: 48,
+    minHeight: 48,
     padding: space[2],
     alignItems: 'center',
     justifyContent: 'center',
@@ -306,7 +323,8 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.onSurface,
     fontSize: 14,
-    height: 40,
+    minHeight: 48,
+    fontFamily: fontFamily.regular,
     paddingHorizontal: space[2],
   },
   emptyCard: {

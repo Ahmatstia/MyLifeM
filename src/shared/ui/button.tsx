@@ -10,7 +10,7 @@ import { colors } from '@/theme/colors';
 import { radius, space, touchTarget } from '@/theme/tokens';
 import { AppText } from './app-text';
 
-export type ButtonVariant = 'filled' | 'tonal' | 'outlined' | 'text' | 'danger';
+export type ButtonVariant = 'filled' | 'tonal' | 'outlined' | 'text' | 'danger' | 'accent';
 export type ButtonSize = 'standard' | 'cta' | 'compact';
 
 export interface ButtonProps {
@@ -55,6 +55,11 @@ export const Button: React.FC<ButtonProps> = ({
   let loaderColor: string = colors.onPrimary;
 
   switch (variant) {
+    case 'accent':
+      backgroundColor = colors.highlight;
+      textColor = 'onHighlight';
+      loaderColor = colors.onHighlight;
+      break;
     case 'filled':
       backgroundColor = colors.primary;
       textColor = 'onPrimary';
@@ -67,7 +72,7 @@ export const Button: React.FC<ButtonProps> = ({
       break;
     case 'outlined':
       backgroundColor = 'transparent';
-      borderColor = colors.outlineVariant;
+      borderColor = colors.outline;
       textColor = 'primary';
       loaderColor = colors.primary;
       break;
@@ -84,14 +89,14 @@ export const Button: React.FC<ButtonProps> = ({
   }
 
   const containerStyle: ViewStyle = {
-    height,
-    minHeight: size === 'compact' ? touchTarget.compact : touchTarget.min,
+    minHeight: height,
     minWidth: fullWidth ? '100%' : touchTarget.min,
     backgroundColor,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     borderWidth: borderColor ? 1 : 0,
     borderColor,
     paddingHorizontal: size === 'compact' ? space[3] : space[5],
+    paddingVertical: space[3],
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -119,6 +124,8 @@ export const Button: React.FC<ButtonProps> = ({
           <AppText
             variant={size === 'compact' ? 'labelMedium' : 'labelLarge'}
             color={textColor}
+            align="center"
+            style={styles.label}
           >
             {title}
           </AppText>
@@ -134,6 +141,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 1,
+  },
+  label: {
+    flexShrink: 1,
   },
   iconMargin: {
     marginRight: space[2],
