@@ -3,26 +3,31 @@ import type {
   TargetEntity,
   LifePillarEntity,
   CreateTargetInput,
+  UpdateTargetInput,
 } from '../../domain/entities/target.entity';
 import { targetRepository } from '../../data/repositories/target.repository.impl';
+import { categoryRepository } from '@/features/categories/data/repositories/category.repository.impl';
+import type { CategoryWithCount } from '@/features/categories/domain/entities/category.entity';
 
 export function useTargets() {
   const [targets, setTargets] = useState<TargetEntity[]>([]);
+  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [pillars, setPillars] = useState<LifePillarEntity[]>([]);
-  const [selectedPillarId, setSelectedPillarId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
-
-      const [loadedPillars, loadedTargets] = await Promise.all([
+      const [loadedCats, loadedPillars, loadedTargets] = await Promise.all([
+        categoryRepository.getAll(),
         targetRepository.getPillars(),
         targetRepository.getTargets(
-          selectedPillarId ? { pillarId: selectedPillarId } : undefined
+          selectedCategoryId ? { categoryId: selectedCategoryId } : undefined
         ),
       ]);
 
+      setCategories(loadedCats);
       setPillars(loadedPillars);
       setTargets(loadedTargets);
       setError(null);
@@ -32,9 +37,8 @@ export function useTargets() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedPillarId]);
+  }, [selectedCategoryId]);
 
-  // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
   const refresh = useCallback(async () => {
     setError(null);
     setIsLoading(true);
@@ -56,12 +60,14 @@ export function useTargets() {
     }
   };
 
-  const updateProgress = async (id: string, currentValue: number): Promise<void> => {
+  const editTarget = async (id: string, updates: UpdateTargetInput): Promise<boolean> => {
     try {
-      await targetRepository.updateTargetProgress(id, currentValue);
+      await targetRepository.updateTarget(id, updates);
       await loadData();
+      return true;
     } catch (err) {
-      console.error('[useTargets] Update progress error:', err);
+      console.error('[useTargets] Update error:', err);
+      return false;
     }
   };
 
@@ -76,14 +82,15 @@ export function useTargets() {
 
   return {
     targets,
+    categories,
     pillars,
-    selectedPillarId,
-    setSelectedPillarId,
+    selectedCategoryId,
+    setSelectedCategoryId,
     isLoading,
     error,
     refresh,
     addTarget,
-    updateProgress,
+    editTarget,
     removeTarget,
   };
 }

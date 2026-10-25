@@ -1,32 +1,37 @@
 import { useState, useEffect, useCallback } from 'react';
-import type {
-  ProjectWithSummary,
-  MilestoneEntity,
-  } from '../../domain/entities/project.entity';
-import type { TaskEntity } from '@/features/today-focus/domain/entities/daily-focus.entity';
+import type { ProjectWithSummary } from '../../domain/entities/project.entity';
 import { projectRepository } from '../../data/repositories/project.repository.impl';
+import { stageRepository } from '@/features/stages/data/repositories/stage.repository.impl';
+import type {
+  StageWithTasks,
+  TaskItemEntity,
+  TaskStatus,
+  CreateTaskInput,
+  UpdateTaskInput,
+} from '@/features/stages/domain/entities/stage.entity';
 
 export function useProjectDetail(projectId: string) {
   const [project, setProject] = useState<ProjectWithSummary | null>(null);
-  const [milestones, setMilestones] = useState<MilestoneEntity[]>([]);
-  const [tasks, setTasks] = useState<TaskEntity[]>([]);
+  const [stages, setStages] = useState<StageWithTasks[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     if (!projectId) return;
     try {
-
-      const [proj, miles, tList] = await Promise.all([
+      const [proj, loadedStages] = await Promise.all([
         projectRepository.getProjectById(projectId),
-        projectRepository.getMilestones(projectId),
-        projectRepository.getProjectTasks(projectId),
+        stageRepository.getStagesWithTasks('PROJECT', projectId),
       ]);
 
-      setProject(proj);
-      setMilestones(miles);
-      setTasks(tList);
-      setError(null);
+      if (!proj) {
+        setError('Proyek tidak ditemukan.');
+        setProject(null);
+      } else {
+        setProject(proj);
+        setStages(loadedStages);
+        setError(null);
+      }
     } catch (err: any) {
       console.error('[useProjectDetail] Load error:', err);
       setError('Gagal memuat detail proyek.');
@@ -35,9 +40,7 @@ export function useProjectDetail(projectId: string) {
     }
   }, [projectId]);
 
-  // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
   const refresh = useCallback(async () => {
-    setError(null);
     setIsLoading(true);
     await loadData();
   }, [loadData]);
@@ -46,43 +49,58 @@ export function useProjectDetail(projectId: string) {
     loadData();
   }, [loadData]);
 
-  const addMilestone = async (title: string, dueDate?: string): Promise<boolean> => {
+  // Stage Actions
+  const addStage = async (name: string, description?: string): Promise<boolean> => {
     try {
-      await projectRepository.createMilestone({
-        projectId,
-        title,
-        sortOrder: milestones.length + 1,
-        dueDate,
+      await stageRepository.createStage({
+        parentType: 'PROJECT',
+        parentId: projectId,
+        name,
+        description,
       });
       await loadData();
       return true;
     } catch (err) {
-      console.error('[useProjectDetail] Add milestone error:', err);
+      console.error('[useProjectDetail] Add stage error:', err);
       return false;
     }
   };
 
-  const toggleMilestone = async (id: string, currentCompleted: boolean) => {
+  const editStage = async (stageId: string, name: string, description?: string): Promise<boolean> => {
     try {
-      await projectRepository.toggleMilestone(id, !currentCompleted);
+      await stageRepository.updateStage(stageId, { name, description });
       await loadData();
+      return true;
     } catch (err) {
-      console.error('[useProjectDetail] Toggle milestone error:', err);
+      console.error('[useProjectDetail] Edit stage error:', err);
+      return false;
     }
   };
 
-  const removeMilestone = async (id: string) => {
+  const removeStage = async (stageId: string): Promise<boolean> => {
     try {
-      await projectRepository.deleteMilestone(id);
+      await stageRepository.deleteStage(stageId);
       await loadData();
+      return true;
     } catch (err) {
-      console.error('[useProjectDetail] Remove milestone error:', err);
+      console.error('[useProjectDetail] Delete stage error:', err);
+      return false;
     }
   };
 
-  const addTask = async (title: string, milestoneId?: string | null): Promise<boolean> => {
+  const reorderStage = async (stageId: string, direction: 'UP' | 'DOWN'): Promise<void> => {
     try {
-      await projectRepository.createProjectTask(projectId, title, milestoneId);
+      await stageRepository.reorderStage(stageId, direction);
+      await loadData();
+    } catch (err) {
+      console.error('[useProjectDetail] Reorder stage error:', err);
+    }
+  };
+
+  // Task Actions
+  const addTask = async (input: CreateTaskInput): Promise<boolean> => {
+    try {
+      await stageRepository.createTask(input);
       await loadData();
       return true;
     } catch (err) {
@@ -91,21 +109,35 @@ export function useProjectDetail(projectId: string) {
     }
   };
 
-  const toggleTask = async (taskId: string, currentCompleted: boolean) => {
+  const editTask = async (taskId: string, input: UpdateTaskInput): Promise<boolean> => {
     try {
-      await projectRepository.toggleProjectTask(taskId, !currentCompleted);
+      await stageRepository.updateTask(taskId, input);
       await loadData();
+      return true;
     } catch (err) {
-      console.error('[useProjectDetail] Toggle task error:', err);
+      console.error('[useProjectDetail] Edit task error:', err);
+      return false;
     }
   };
 
-  const removeTask = async (taskId: string) => {
+  const removeTask = async (task: TaskItemEntity): Promise<boolean> => {
     try {
-      await projectRepository.deleteProjectTask(taskId);
+      await stageRepository.deleteTask(task.id);
+      await loadData();
+      return true;
+    } catch (err) {
+      console.error('[useProjectDetail] Delete task error:', err);
+      return false;
+    }
+  };
+
+  const toggleTaskStatus = async (taskId: string, currentStatus: TaskStatus): Promise<void> => {
+    try {
+      const nextStatus: TaskStatus = currentStatus === 'DONE' ? 'TODO' : 'DONE';
+      await stageRepository.setTaskStatus(taskId, nextStatus);
       await loadData();
     } catch (err) {
-      console.error('[useProjectDetail] Remove task error:', err);
+      console.error('[useProjectDetail] Toggle task status error:', err);
     }
   };
 
@@ -115,17 +147,18 @@ export function useProjectDetail(projectId: string) {
 
   return {
     project,
-    milestones,
-    tasks,
+    stages,
     isLoading,
     error,
     refresh,
-    addMilestone,
-    toggleMilestone,
-    removeMilestone,
+    addStage,
+    editStage,
+    removeStage,
+    reorderStage,
     addTask,
-    toggleTask,
+    editTask,
     removeTask,
+    toggleTaskStatus,
     deleteThisProject,
   };
 }

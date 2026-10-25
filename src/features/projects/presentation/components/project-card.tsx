@@ -107,7 +107,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       <View style={styles.footerRow}>
         <View style={styles.milestonePill}>
           <AppText variant="labelSmall" color="onSurfaceSubtle">
-            {milestonesCount > 0 ? `${milestonesCount} babak kerja` : '1 tahap'}
+            {project.stagesCount > 0
+              ? `${project.stagesCount} tahap`
+              : milestonesCount > 0
+                ? `${milestonesCount} tahap`
+                : 'Belum ada tahap'}
           </AppText>
         </View>
 

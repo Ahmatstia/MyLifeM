@@ -4,6 +4,7 @@ import {
   projects,
   targets,
   milestones,
+  stages,
   tasks,
   type Project,
   type Milestone,
@@ -102,6 +103,13 @@ export class ProjectRepositoryImpl implements ProjectRepository {
       projectRows = await db.select().from(projects).orderBy(desc(projects.updatedAt));
     }
 
+    const allProjectStages = await db
+      .select()
+      .from(stages)
+      .where(eq(stages.parentType, 'PROJECT'));
+
+    const allTasks = await db.select().from(tasks);
+
     const result: ProjectWithSummary[] = [];
 
     for (const p of projectRows) {
@@ -117,31 +125,45 @@ export class ProjectRepositoryImpl implements ProjectRepository {
         }
       }
 
-      // Count milestones
+      // Count milestones & stages
+      const pStages = allProjectStages.filter((s) => s.parentId === p.id);
+      const stageIds = pStages.map((s) => s.id);
+
       const milestoneRows = await db
         .select({ count: sql<number>`count(*)` })
         .from(milestones)
         .where(eq(milestones.projectId, p.id));
       const milestonesCount = milestoneRows[0]?.count || 0;
 
-      // Count tasks & completion
-      const projectTasks = await db
-        .select()
-        .from(tasks)
-        .where(eq(tasks.projectId, p.id));
+      // Count tasks & completion (both from stageIds and direct projectId)
+      const projectTasks = allTasks.filter((t) => {
+        if (t.stageId && stageIds.includes(t.stageId)) return true;
+        if (t.projectId === p.id) return true;
+        return false;
+      });
 
       const totalTasks = projectTasks.length;
-      const completedTasks = projectTasks.filter((t) => t.isCompleted === 1).length;
+      const completedTasks = projectTasks.filter(
+        (t) => t.isCompleted === 1 || t.status === 'DONE' || t.status === 'COMPLETED'
+      ).length;
       const progressPercent = calculateProjectProgress(completedTasks, totalTasks);
+      const totalEstimatedHours = Math.round(
+        projectTasks.reduce(
+          (acc, curr) => acc + (curr.estimatedHours ? Number(curr.estimatedHours) : Math.max(1, Math.round((curr.estimatedMinutes || 60) / 60))),
+          0
+        ) * 10
+      ) / 10;
 
       result.push({
         ...mapToProjectEntity(p),
         targetTitle,
         milestonesCount,
+        stagesCount: pStages.length,
         taskSummary: {
           totalTasks,
           completedTasks,
           progressPercent,
+          totalEstimatedHours,
         },
       });
     }
@@ -150,57 +172,23 @@ export class ProjectRepositoryImpl implements ProjectRepository {
   }
 
   async getProjectById(id: string): Promise<ProjectWithSummary | null> {
-    const rows = await db.select().from(projects).where(eq(projects.id, id));
-    if (rows.length === 0) return null;
-
-    const p = rows[0];
-
-    let targetTitle: string | null = null;
-    if (p.targetId) {
-      const targetRow = await db
-        .select({ title: targets.title })
-        .from(targets)
-        .where(eq(targets.id, p.targetId));
-      if (targetRow.length > 0) {
-        targetTitle = targetRow[0].title;
-      }
-    }
-
-    const milestoneRows = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(milestones)
-      .where(eq(milestones.projectId, p.id));
-    const milestonesCount = milestoneRows[0]?.count || 0;
-
-    const projectTasks = await db
-      .select()
-      .from(tasks)
-      .where(eq(tasks.projectId, p.id));
-
-    const totalTasks = projectTasks.length;
-    const completedTasks = projectTasks.filter((t) => t.isCompleted === 1).length;
-    const progressPercent = calculateProjectProgress(completedTasks, totalTasks);
-
-    return {
-      ...mapToProjectEntity(p),
-      targetTitle,
-      milestonesCount,
-      taskSummary: {
-        totalTasks,
-        completedTasks,
-        progressPercent,
-      },
-    };
+    const list = await this.getProjects();
+    return list.find((p) => p.id === id) || null;
   }
 
   async createProject(input: CreateProjectInput): Promise<ProjectEntity> {
+    const cleanTitle = input.title.trim();
+    if (!cleanTitle) {
+      throw new Error('Nama proyek wajib diisi.');
+    }
+
     const id = generateId();
     const now = new Date().toISOString();
 
     const newRow = {
       id,
       targetId: input.targetId || null,
-      title: input.title.trim(),
+      title: cleanTitle,
       description: input.description?.trim() || null,
       status: 'ACTIVE',
       priority: input.priority || 'MEDIUM',
@@ -226,6 +214,29 @@ export class ProjectRepositoryImpl implements ProjectRepository {
   }
 
   async deleteProject(id: string): Promise<void> {
+    // Find all stages of this project
+    const projectStages = await db.select({ id: stages.id }).from(stages).where(
+      and(eq(stages.parentType, 'PROJECT'), eq(stages.parentId, id))
+    );
+    const stageIds = projectStages.map((s) => s.id);
+
+    // Delete tasks in stages
+    for (const sid of stageIds) {
+      await db.delete(tasks).where(eq(tasks.stageId, sid));
+    }
+
+    // Delete direct tasks
+    await db.delete(tasks).where(eq(tasks.projectId, id));
+
+    // Delete stages
+    await db.delete(stages).where(
+      and(eq(stages.parentType, 'PROJECT'), eq(stages.parentId, id))
+    );
+
+    // Delete milestones
+    await db.delete(milestones).where(eq(milestones.projectId, id));
+
+    // Delete project
     await db.delete(projects).where(eq(projects.id, id));
   }
 
@@ -289,7 +300,6 @@ export class ProjectRepositoryImpl implements ProjectRepository {
     const id = generateId();
     const now = new Date().toISOString();
 
-    // Check project targetId so task inherits target link
     const projRows = await db.select({ targetId: projects.targetId }).from(projects).where(eq(projects.id, projectId));
     const targetId = projRows[0]?.targetId || null;
 
@@ -299,6 +309,7 @@ export class ProjectRepositoryImpl implements ProjectRepository {
       targetId,
       milestoneId: milestoneId || null,
       title: title.trim(),
+      name: title.trim(),
       description: null,
       priority: 'MEDIUM' as const,
       status: 'TODO' as const,

@@ -1,10 +1,12 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '@/db/client';
-import { lifePillars, targets, type Target, type LifePillar } from '@/db/schema';
-import type {
-  TargetEntity,
-  LifePillarEntity,
-  CreateTargetInput,
+import { categories, lifePillars, targets, stages, tasks, type LifePillar } from '@/db/schema';
+import {
+  type TargetEntity,
+  type LifePillarEntity,
+  type CreateTargetInput,
+  type UpdateTargetInput,
+  calculateTargetProgress,
 } from '../../domain/entities/target.entity';
 import type {
   TargetRepository,
@@ -20,26 +22,6 @@ function generateId(): string {
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
-}
-
-function mapToTargetEntity(row: Target): TargetEntity {
-  return {
-    id: row.id,
-    pillarId: row.pillarId,
-    title: row.title,
-    description: row.description,
-    type: row.type as TargetEntity['type'],
-    targetValue: row.targetValue,
-    currentValue: row.currentValue,
-    unit: row.unit,
-    status: row.status as TargetEntity['status'],
-    priority: row.priority as TargetEntity['priority'],
-    startDate: row.startDate,
-    targetDate: row.targetDate,
-    completedAt: row.completedAt,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  };
 }
 
 function mapToPillarEntity(row: LifePillar): LifePillarEntity {
@@ -60,6 +42,9 @@ export class TargetRepositoryImpl implements TargetRepository {
 
   async getTargets(filter?: TargetFilterOptions): Promise<TargetEntity[]> {
     const conditions = [];
+    if (filter?.categoryId) {
+      conditions.push(eq(targets.categoryId, filter.categoryId));
+    }
     if (filter?.pillarId) {
       conditions.push(eq(targets.pillarId, filter.pillarId));
     }
@@ -67,82 +52,161 @@ export class TargetRepositoryImpl implements TargetRepository {
       conditions.push(eq(targets.status, filter.status));
     }
 
-    let rows: Target[];
+    let targetRows;
     if (conditions.length > 0) {
-      rows = await db
+      targetRows = await db
         .select()
         .from(targets)
         .where(and(...conditions))
         .orderBy(desc(targets.updatedAt));
     } else {
-      rows = await db.select().from(targets).orderBy(desc(targets.updatedAt));
+      targetRows = await db.select().from(targets).orderBy(desc(targets.updatedAt));
     }
 
-    return rows.map(mapToTargetEntity);
+    // Load all categories for name resolution
+    const categoryRows = await db.select().from(categories);
+    const catMap = new Map<string, string>();
+    for (const c of categoryRows) {
+      catMap.set(c.id, c.name);
+    }
+
+    // Load stages and tasks to calculate task-based progress
+    const allStages = await db.select().from(stages).where(eq(stages.parentType, 'TARGET'));
+    const allTasks = await db.select().from(tasks);
+
+    // Map stages to targets
+    const targetStagesMap = new Map<string, string[]>();
+    for (const s of allStages) {
+      const list = targetStagesMap.get(s.parentId) || [];
+      list.push(s.id);
+      targetStagesMap.set(s.parentId, list);
+    }
+
+    return targetRows.map((t) => {
+      const stageIds = targetStagesMap.get(t.id) || [];
+      const targetTasks = allTasks.filter((task) => {
+        if (task.stageId && stageIds.includes(task.stageId)) return true;
+        if (task.targetId === t.id) return true;
+        return false;
+      });
+
+      const totalTasks = targetTasks.length;
+      const completedTasks = targetTasks.filter(
+        (task) => task.status === 'COMPLETED' || task.status === 'DONE' || task.isCompleted === 1
+      ).length;
+      const progressPercent = calculateTargetProgress(completedTasks, totalTasks);
+      const totalEstimatedHours = Math.round(
+        targetTasks.reduce(
+          (acc, curr) => acc + (curr.estimatedHours ? Number(curr.estimatedHours) : Math.max(1, Math.round((curr.estimatedMinutes || 60) / 60))),
+          0
+        ) * 10
+      ) / 10;
+
+      const catName = t.categoryId ? (catMap.get(t.categoryId) || 'Umum') : 'Umum';
+
+      return {
+        id: t.id,
+        categoryId: t.categoryId || 'cat-karier',
+        categoryName: catName,
+        pillarId: t.pillarId,
+        title: t.title,
+        description: t.description,
+        status: (t.status as TargetEntity['status']) || 'ACTIVE',
+        priority: (t.priority as TargetEntity['priority']) || 'MEDIUM',
+        totalTasks,
+        completedTasks,
+        progressPercent,
+        totalEstimatedHours,
+        startDate: t.startDate,
+        targetDate: t.targetDate,
+        completedAt: t.completedAt,
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt,
+      };
+    });
   }
 
   async getTargetById(id: string): Promise<TargetEntity | null> {
-    const rows = await db.select().from(targets).where(eq(targets.id, id));
-    if (rows.length === 0) return null;
-    return mapToTargetEntity(rows[0]);
+    const list = await this.getTargets();
+    return list.find((t) => t.id === id) || null;
   }
 
   async createTarget(input: CreateTargetInput): Promise<TargetEntity> {
+    const cleanTitle = input.title.trim();
+    if (!cleanTitle) {
+      throw new Error('Nama target wajib diisi.');
+    }
+    if (!input.categoryId) {
+      throw new Error('Kategori wajib dipilih.');
+    }
+
     const now = new Date().toISOString();
     const id = generateId();
 
-    const newRow = {
+    await db.insert(targets).values({
       id,
-      pillarId: input.pillarId,
-      title: input.title,
-      description: input.description || null,
-      type: input.type,
-      targetValue: input.targetValue,
-      currentValue: input.currentValue ?? 0,
-      unit: input.unit || '%',
+      categoryId: input.categoryId,
+      pillarId: input.pillarId || null,
+      title: cleanTitle,
+      description: input.description?.trim() || null,
+      type: 'MILESTONE_BASED',
+      targetValue: 100.0,
+      currentValue: 0.0,
+      unit: '%',
       status: 'ACTIVE',
       priority: input.priority || 'MEDIUM',
       startDate: now,
-      targetDate: input.targetDate || null,
-      completedAt: null,
       createdAt: now,
       updatedAt: now,
-    };
+    });
 
-    await db.insert(targets).values(newRow);
     const created = await this.getTargetById(id);
     return created!;
   }
 
-  async updateTarget(id: string, updates: Partial<TargetEntity>): Promise<void> {
-    await db
-      .update(targets)
-      .set({
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(targets.id, id));
-  }
+  async updateTarget(id: string, updates: UpdateTargetInput): Promise<void> {
+    const patch: Record<string, any> = {
+      updatedAt: new Date().toISOString(),
+    };
+    if (updates.title !== undefined) {
+      const cleanTitle = updates.title.trim();
+      if (!cleanTitle) throw new Error('Nama target tidak boleh kosong.');
+      patch.title = cleanTitle;
+    }
+    if (updates.categoryId !== undefined) {
+      patch.categoryId = updates.categoryId;
+    }
+    if (updates.description !== undefined) {
+      patch.description = updates.description?.trim() || null;
+    }
+    if (updates.priority !== undefined) {
+      patch.priority = updates.priority;
+    }
 
-  async updateTargetProgress(id: string, currentValue: number): Promise<void> {
-    const target = await this.getTargetById(id);
-    if (!target) return;
-
-    const isComplete = currentValue >= target.targetValue;
-    const now = new Date().toISOString();
-
-    await db
-      .update(targets)
-      .set({
-        currentValue,
-        status: isComplete ? 'COMPLETED' : target.status,
-        completedAt: isComplete ? now : null,
-        updatedAt: now,
-      })
-      .where(eq(targets.id, id));
+    await db.update(targets).set(patch).where(eq(targets.id, id));
   }
 
   async deleteTarget(id: string): Promise<void> {
+    // Find all stages of this target
+    const targetStages = await db.select({ id: stages.id }).from(stages).where(
+      and(eq(stages.parentType, 'TARGET'), eq(stages.parentId, id))
+    );
+    const stageIds = targetStages.map((s) => s.id);
+
+    // Delete tasks in stages
+    for (const sid of stageIds) {
+      await db.delete(tasks).where(eq(tasks.stageId, sid));
+    }
+
+    // Delete direct tasks
+    await db.delete(tasks).where(eq(tasks.targetId, id));
+
+    // Delete stages
+    await db.delete(stages).where(
+      and(eq(stages.parentType, 'TARGET'), eq(stages.parentId, id))
+    );
+
+    // Finally delete target
     await db.delete(targets).where(eq(targets.id, id));
   }
 }

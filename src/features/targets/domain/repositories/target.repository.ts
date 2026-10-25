@@ -2,9 +2,11 @@ import type {
   TargetEntity,
   LifePillarEntity,
   CreateTargetInput,
+  UpdateTargetInput,
 } from '../entities/target.entity';
 
 export interface TargetFilterOptions {
+  categoryId?: string;
   pillarId?: string;
   status?: string;
 }
@@ -14,7 +16,6 @@ export interface TargetRepository {
   getTargets(filter?: TargetFilterOptions): Promise<TargetEntity[]>;
   getTargetById(id: string): Promise<TargetEntity | null>;
   createTarget(input: CreateTargetInput): Promise<TargetEntity>;
-  updateTarget(id: string, updates: Partial<TargetEntity>): Promise<void>;
-  updateTargetProgress(id: string, currentValue: number): Promise<void>;
+  updateTarget(id: string, updates: UpdateTargetInput): Promise<void>;
   deleteTarget(id: string): Promise<void>;
 }

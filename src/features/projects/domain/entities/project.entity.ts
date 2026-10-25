@@ -1,6 +1,6 @@
 /**
- * Project & Milestone Domain Entities
- * Pure domain logic and calculations with zero external dependencies.
+ * Project Domain Entities
+ * Strictly follows MYLIFE_MOBILE_PRD_MVP.md.
  */
 
 export type ProjectStatus = 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED';
@@ -33,11 +33,13 @@ export interface ProjectTaskSummary {
   totalTasks: number;
   completedTasks: number;
   progressPercent: number;
+  totalEstimatedHours: number;
 }
 
 export interface ProjectWithSummary extends ProjectEntity {
   targetTitle?: string | null;
   milestonesCount: number;
+  stagesCount: number;
   taskSummary: ProjectTaskSummary;
 }
 
@@ -49,6 +51,13 @@ export interface CreateProjectInput {
   targetDate?: string | null;
 }
 
+export interface UpdateProjectInput {
+  title?: string;
+  description?: string;
+  priority?: ProjectPriority;
+  status?: ProjectStatus;
+}
+
 export interface CreateMilestoneInput {
   projectId: string;
   title: string;
@@ -57,7 +66,7 @@ export interface CreateMilestoneInput {
 }
 
 /**
- * Domain Calculation: Calculate project progress percentage based on task completion
+ * PRD 8: Calculate project progress percentage based on task completion
  */
 export function calculateProjectProgress(completedTasks: number, totalTasks: number): number {
   if (totalTasks <= 0) return 0;

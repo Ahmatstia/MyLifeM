@@ -9,7 +9,27 @@ import {
 } from 'drizzle-orm/sqlite-core';
 
 // ==========================================
-// 1. LIFE PILLARS
+// 1. CATEGORIES (PRD MVP: Grouping for Targets)
+// ==========================================
+export const categories = sqliteTable(
+  'categories',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('idx_categories_name_unique').on(table.name),
+  ]
+);
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  targets: many(targets),
+}));
+
+// ==========================================
+// 2. LIFE PILLARS (Legacy / Compatibility)
 // ==========================================
 export const lifePillars = sqliteTable('life_pillars', {
   id: text('id').primaryKey(),
@@ -24,15 +44,18 @@ export const lifePillarsRelations = relations(lifePillars, ({ many }) => ({
 }));
 
 // ==========================================
-// 2. TARGETS (Goals - Core Feature)
+// 3. TARGETS (Goals - Core Feature)
 // ==========================================
 export const targets = sqliteTable(
   'targets',
   {
     id: text('id').primaryKey(),
-    pillarId: text('pillar_id')
-      .notNull()
-      .references(() => lifePillars.id, { onDelete: 'restrict' }),
+    categoryId: text('category_id').references(() => categories.id, {
+      onDelete: 'restrict',
+    }),
+    pillarId: text('pillar_id').references(() => lifePillars.id, {
+      onDelete: 'set null',
+    }),
     title: text('title').notNull(),
     description: text('description'),
     type: text('type').notNull().default('MILESTONE_BASED'), // 'MILESTONE_BASED' | 'NUMERIC' | 'MAINTENANCE'
@@ -48,18 +71,24 @@ export const targets = sqliteTable(
     updatedAt: text('updated_at').notNull(),
   },
   (table) => [
+    index('idx_targets_category_status').on(table.categoryId, table.status),
     index('idx_targets_pillar_status').on(table.pillarId, table.status),
     index('idx_targets_updated_at').on(table.updatedAt),
   ]
 );
 
 export const targetsRelations = relations(targets, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [targets.categoryId],
+    references: [categories.id],
+  }),
   pillar: one(lifePillars, {
     fields: [targets.pillarId],
     references: [lifePillars.id],
   }),
   projects: many(projects),
   tasks: many(tasks),
+  stages: many(stages),
   agendaEvents: many(agendaEvents),
 }));
 
@@ -94,12 +123,37 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     references: [targets.id],
   }),
   milestones: many(milestones),
+  stages: many(stages),
   tasks: many(tasks),
   agendaEvents: many(agendaEvents),
 }));
 
 // ==========================================
-// 4. MILESTONES
+// 4. STAGES (PRD MVP: Tahapan for Target and Project)
+// ==========================================
+export const stages = sqliteTable(
+  'stages',
+  {
+    id: text('id').primaryKey(),
+    parentType: text('parent_type').notNull(), // 'TARGET' | 'PROJECT'
+    parentId: text('parent_id').notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    index('idx_stages_parent').on(table.parentType, table.parentId, table.sortOrder),
+  ]
+);
+
+export const stagesRelations = relations(stages, ({ many }) => ({
+  tasks: many(tasks),
+}));
+
+// ==========================================
+// 5. MILESTONES (Legacy Compatibility)
 // ==========================================
 export const milestones = sqliteTable(
   'milestones',
@@ -128,12 +182,15 @@ export const milestonesRelations = relations(milestones, ({ one, many }) => ({
 }));
 
 // ==========================================
-// 5. TASKS
+// 6. TASKS (Tugas - Stage Child)
 // ==========================================
 export const tasks = sqliteTable(
   'tasks',
   {
     id: text('id').primaryKey(),
+    stageId: text('stage_id').references(() => stages.id, {
+      onDelete: 'cascade',
+    }),
     projectId: text('project_id').references(() => projects.id, {
       onDelete: 'cascade',
     }),
@@ -144,11 +201,14 @@ export const tasks = sqliteTable(
       onDelete: 'set null',
     }),
     title: text('title').notNull(),
+    name: text('name'),
     description: text('description'),
     priority: text('priority').notNull().default('MEDIUM'), // 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
     status: text('status').notNull().default('TODO'), // 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+    estimatedHours: real('estimated_hours').default(1.0),
     estimatedMinutes: integer('estimated_minutes').notNull().default(25),
     actualMinutes: integer('actual_minutes').notNull().default(0),
+    sortOrder: integer('sort_order').notNull().default(0),
     dueDate: text('due_date'),
     isCompleted: integer('is_completed').notNull().default(0),
     completedAt: text('completed_at'),
@@ -156,6 +216,7 @@ export const tasks = sqliteTable(
     updatedAt: text('updated_at').notNull(),
   },
   (table) => [
+    index('idx_tasks_stage_id').on(table.stageId),
     index('idx_tasks_project_id').on(table.projectId),
     index('idx_tasks_target_id').on(table.targetId),
     index('idx_tasks_milestone_id').on(table.milestoneId),
@@ -165,6 +226,10 @@ export const tasks = sqliteTable(
 );
 
 export const tasksRelations = relations(tasks, ({ one, many }) => ({
+  stage: one(stages, {
+    fields: [tasks.stageId],
+    references: [stages.id],
+  }),
   project: one(projects, {
     fields: [tasks.projectId],
     references: [projects.id],
@@ -302,6 +367,12 @@ export const userSettings = sqliteTable('user_settings', {
 // Infered TypeScript Types
 export type LifePillar = typeof lifePillars.$inferSelect;
 export type NewLifePillar = typeof lifePillars.$inferInsert;
+
+export type Category = typeof categories.$inferSelect;
+export type NewCategory = typeof categories.$inferInsert;
+
+export type Stage = typeof stages.$inferSelect;
+export type NewStage = typeof stages.$inferInsert;
 
 export type Target = typeof targets.$inferSelect;
 export type NewTarget = typeof targets.$inferInsert;

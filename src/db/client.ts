@@ -70,6 +70,14 @@ export const db = drizzle(sqliteDb, { schema });
 const INITIAL_DDL = `
 PRAGMA foreign_keys = ON;
 
+CREATE TABLE IF NOT EXISTS categories (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name_unique ON categories(name);
+
 CREATE TABLE IF NOT EXISTS life_pillars (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -80,7 +88,8 @@ CREATE TABLE IF NOT EXISTS life_pillars (
 
 CREATE TABLE IF NOT EXISTS targets (
     id TEXT PRIMARY KEY,
-    pillar_id TEXT NOT NULL REFERENCES life_pillars(id) ON DELETE RESTRICT,
+    category_id TEXT REFERENCES categories(id) ON DELETE RESTRICT,
+    pillar_id TEXT REFERENCES life_pillars(id) ON DELETE SET NULL,
     title TEXT NOT NULL,
     description TEXT,
     type TEXT NOT NULL DEFAULT 'MILESTONE_BASED',
@@ -109,6 +118,18 @@ CREATE TABLE IF NOT EXISTS projects (
     updated_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS stages (
+    id TEXT PRIMARY KEY,
+    parent_type TEXT NOT NULL,
+    parent_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_stages_parent ON stages(parent_type, parent_id, sort_order);
+
 CREATE TABLE IF NOT EXISTS milestones (
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -121,15 +142,19 @@ CREATE TABLE IF NOT EXISTS milestones (
 
 CREATE TABLE IF NOT EXISTS tasks (
     id TEXT PRIMARY KEY,
+    stage_id TEXT REFERENCES stages(id) ON DELETE CASCADE,
     project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
     target_id TEXT REFERENCES targets(id) ON DELETE SET NULL,
     milestone_id TEXT REFERENCES milestones(id) ON DELETE SET NULL,
     title TEXT NOT NULL,
+    name TEXT,
     description TEXT,
     priority TEXT NOT NULL DEFAULT 'MEDIUM',
     status TEXT NOT NULL DEFAULT 'TODO',
+    estimated_hours REAL DEFAULT 1.0,
     estimated_minutes INTEGER NOT NULL DEFAULT 25,
     actual_minutes INTEGER NOT NULL DEFAULT 0,
+    sort_order INTEGER NOT NULL DEFAULT 0,
     due_date TEXT,
     is_completed INTEGER NOT NULL DEFAULT 0,
     completed_at TEXT,
@@ -192,6 +217,7 @@ CREATE INDEX IF NOT EXISTS idx_milestones_project_id ON milestones(project_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_target_id ON tasks(target_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_milestone_id ON tasks(milestone_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_stage_id ON tasks(stage_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_focus_unique ON daily_focus_items(date, task_id);
@@ -199,6 +225,14 @@ CREATE INDEX IF NOT EXISTS idx_daily_focus_date ON daily_focus_items(date);
 CREATE INDEX IF NOT EXISTS idx_focus_sessions_task ON focus_sessions(task_id);
 CREATE INDEX IF NOT EXISTS idx_focus_sessions_started_at ON focus_sessions(started_at DESC);
 CREATE INDEX IF NOT EXISTS idx_agenda_time_range ON agenda_events(start_time, end_time);
+`;
+
+const SEED_CATEGORIES_SQL = `
+INSERT OR IGNORE INTO categories (id, name, created_at, updated_at) VALUES
+('cat-belajar', 'Belajar', datetime('now'), datetime('now')),
+('cat-karier', 'Karier', datetime('now'), datetime('now')),
+('cat-olahraga', 'Olahraga', datetime('now'), datetime('now')),
+('cat-pribadi', 'Pribadi', datetime('now'), datetime('now'));
 `;
 
 const SEED_PILLARS_SQL = `
@@ -233,8 +267,33 @@ export async function initDatabase(): Promise<void> {
     // Execute DDL batch
     rawDb.execSync(INITIAL_DDL);
     
-    // Seed default life pillars if empty
+    // Safe Column Migrations for Existing Database instances
+    const migrations = [
+      'ALTER TABLE targets ADD COLUMN category_id TEXT REFERENCES categories(id) ON DELETE RESTRICT;',
+      'ALTER TABLE tasks ADD COLUMN stage_id TEXT REFERENCES stages(id) ON DELETE CASCADE;',
+      'ALTER TABLE tasks ADD COLUMN name TEXT;',
+      'ALTER TABLE tasks ADD COLUMN estimated_hours REAL DEFAULT 1.0;',
+      'ALTER TABLE tasks ADD COLUMN sort_order INTEGER DEFAULT 0;',
+    ];
+    for (const sql of migrations) {
+      try {
+        rawDb.execSync(sql);
+      } catch {
+        // Column already exists or table was freshly created with DDL
+      }
+    }
+
+    // Seed default categories and pillars if empty
+    rawDb.execSync(SEED_CATEGORIES_SQL);
     rawDb.execSync(SEED_PILLARS_SQL);
+
+    // Ensure data backfill for existing records
+    try {
+      rawDb.execSync("UPDATE targets SET category_id = 'cat-karier' WHERE category_id IS NULL;");
+      rawDb.execSync('UPDATE tasks SET name = title WHERE name IS NULL;');
+    } catch {
+      // Ignore if no update needed
+    }
 
     _isInitialized = true;
     console.log('[Database] SQLite initialized and seeded successfully.');

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import { router } from 'expo-router';
 import { Target as TargetIcon } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, radius } from '@/theme/tokens';
@@ -10,40 +11,39 @@ import { Banner } from '@/shared/ui/banner';
 import { EmptyState } from '@/shared/ui/empty-state';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import { useTargets } from '../hooks/use-targets';
-import { PillarFilterChips } from '../components/pillar-filter-chips';
+import { CategoryFilterChips } from '../components/category-filter-chips';
 import { TargetCard } from '../components/target-card';
 import { AddTargetModal } from '../components/add-target-modal';
-import { calculateTargetProgress } from '../../domain/entities/target.entity';
+import { CategoryManagerModal } from '@/features/categories/presentation/components/category-manager-modal';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 
 export const TargetListScreen: React.FC = () => {
   const {
     targets,
-    pillars,
-    selectedPillarId,
-    setSelectedPillarId,
+    categories,
+    selectedCategoryId,
+    setSelectedCategoryId,
     isLoading,
     error,
     refresh,
     addTarget,
-    updateProgress,
   } = useTargets();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isCategoryManagerVisible, setIsCategoryManagerVisible] = useState(false);
   useOpenAddFromParam(() => setIsModalVisible(true));
 
-  // Calculate high-level summary metrics
-  const activeTargets = targets.filter((t) => t.status === 'ACTIVE');
+  // Summary Metrics
+  const totalTasks = targets.reduce((acc, curr) => acc + curr.totalTasks, 0);
+  const totalCompleted = targets.reduce((acc, curr) => acc + curr.completedTasks, 0);
   const totalProgress =
-    targets.length > 0
-      ? Math.round(
-          targets.reduce((acc, curr) => acc + calculateTargetProgress(curr), 0) /
-            targets.length
-        )
-      : 0;
-
-  const getPillarForTarget = (pillarId: string) =>
-    pillars.find((p) => p.id === pillarId);
+    totalTasks > 0
+      ? Math.round((totalCompleted / totalTasks) * 100)
+      : targets.length > 0
+        ? Math.round(
+            targets.reduce((acc, curr) => acc + curr.progressPercent, 0) / targets.length
+          )
+        : 0;
 
   return (
     <Screen>
@@ -54,7 +54,7 @@ export const TargetListScreen: React.FC = () => {
             Target Hidup
           </AppText>
           <AppText variant="bodySmall" color="onSurfaceVariant">
-            Arah dan pencapaian masa depanmu
+            Tujuan pengembangan diri yang terstruktur
           </AppText>
         </View>
 
@@ -78,7 +78,7 @@ export const TargetListScreen: React.FC = () => {
               Ikhtisar Target
             </AppText>
             <AppText variant="bodySmall" color="onSurfaceVariant">
-              {activeTargets.length} target aktif berjalan
+              {targets.length} target terdaftar • {totalCompleted}/{totalTasks} tugas selesai
             </AppText>
           </View>
           <View style={styles.heroScoreCol}>
@@ -88,7 +88,7 @@ export const TargetListScreen: React.FC = () => {
               </AppText>
             </View>
             <AppText variant="labelSmall" color="onSurfaceSubtle">
-              Rata-rata
+              Progres Rata-rata
             </AppText>
           </View>
         </View>
@@ -101,11 +101,12 @@ export const TargetListScreen: React.FC = () => {
         />
       </Card>
 
-      {/* Filter Chips per Pilar Kehidupan */}
-      <PillarFilterChips
-        pillars={pillars}
-        selectedPillarId={selectedPillarId}
-        onSelectPillar={setSelectedPillarId}
+      {/* Filter Chips per Kategori */}
+      <CategoryFilterChips
+        categories={categories}
+        selectedCategoryId={selectedCategoryId}
+        onSelectCategory={setSelectedCategoryId}
+        onManageCategories={() => setIsCategoryManagerVisible(true)}
       />
 
       {/* Error state */}
@@ -133,11 +134,11 @@ export const TargetListScreen: React.FC = () => {
       {!isLoading && targets.length === 0 && (
         <EmptyState
           title={
-            selectedPillarId
-              ? 'Belum Ada Target di Pilar Ini'
+            selectedCategoryId
+              ? 'Belum Ada Target di Kategori Ini'
               : 'Mulai Petualangan Hidupmu'
           }
-          description="Tetapkan target pertamamu sekarang. Target akan menjadi panduan untuk seluruh proyek dan fokus harianmu."
+          description="Tetapkan target pertamamu sekarang. Target akan dipecah menjadi tahapan dan tugas yang jelas untuk dieksekusi."
           customIcon={<TargetIcon size={32} color={colors.onPrimaryContainer} />}
           actionTitle="Buat Target Pertama"
           onActionPress={() => setIsModalVisible(true)}
@@ -151,17 +152,29 @@ export const TargetListScreen: React.FC = () => {
           <TargetCard
             key={target.id}
             target={target}
-            pillar={getPillarForTarget(target.pillarId)}
-            onIncrement={() => updateProgress(target.id, target.currentValue + 1)}
+            onPress={() => router.push(`/targets/${target.id}` as any)}
           />
         ))}
 
       {/* Modal Form Tambah Target */}
       <AddTargetModal
         visible={isModalVisible}
-        pillars={pillars}
+        categories={categories}
         onClose={() => setIsModalVisible(false)}
         onSubmit={addTarget}
+        onOpenCategoryManager={() => setIsCategoryManagerVisible(true)}
+      />
+
+      {/* Modal Kelola Kategori */}
+      <CategoryManagerModal
+        visible={isCategoryManagerVisible}
+        onClose={() => {
+          setIsCategoryManagerVisible(false);
+          refresh();
+        }}
+        onSelectCategory={(catId) => {
+          setSelectedCategoryId(catId);
+        }}
       />
     </Screen>
   );
@@ -202,7 +215,7 @@ const styles = StyleSheet.create({
   },
   percentBadge: {
     backgroundColor: colors.primaryContainer,
-    paddingVertical: 2,
+    paddingVertical: 4,
     paddingHorizontal: space[3],
     borderRadius: radius.pill,
     marginBottom: 2,
@@ -210,22 +223,22 @@ const styles = StyleSheet.create({
   heroProgress: {
     marginTop: space[1],
   },
-  bannerMargin: {
-    marginVertical: space[3],
-  },
   loadingBox: {
+    paddingVertical: space[8],
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: space[12],
+    gap: space[2],
   },
   loadingText: {
-    marginTop: space[3],
+    marginTop: space[1],
+  },
+  bannerMargin: {
+    marginBottom: space[3],
   },
   emptyStateMargin: {
     marginTop: space[4],
   },
   pressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.96 }],
+    opacity: 0.8,
   },
 });

@@ -1,11 +1,10 @@
 /**
  * Target Domain Entity & Invariants
- * Pure business logic with zero framework or database dependencies.
+ * Strictly aligns with MYLIFE_MOBILE_PRD_MVP.md.
  */
 
-export type TargetType = 'MILESTONE_BASED' | 'NUMERIC' | 'MAINTENANCE';
 export type TargetStatus = 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
-export type TargetPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type TargetPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export interface LifePillarEntity {
   id: string;
@@ -17,15 +16,17 @@ export interface LifePillarEntity {
 
 export interface TargetEntity {
   id: string;
-  pillarId: string;
+  categoryId: string;
+  categoryName: string;
+  pillarId?: string | null;
   title: string;
   description: string | null;
-  type: TargetType;
-  targetValue: number;
-  currentValue: number;
-  unit: string;
   status: TargetStatus;
   priority: TargetPriority;
+  totalTasks: number;
+  completedTasks: number;
+  progressPercent: number;
+  totalEstimatedHours: number;
   startDate: string;
   targetDate: string | null;
   completedAt: string | null;
@@ -34,24 +35,26 @@ export interface TargetEntity {
 }
 
 export interface CreateTargetInput {
-  pillarId: string;
+  categoryId: string;
   title: string;
   description?: string;
-  type: TargetType;
-  targetValue: number;
-  currentValue?: number;
-  unit: string;
+  pillarId?: string;
   priority?: TargetPriority;
-  targetDate?: string;
+}
+
+export interface UpdateTargetInput {
+  categoryId?: string;
+  title?: string;
+  description?: string;
+  priority?: TargetPriority;
 }
 
 /**
- * Domain Calculation: Calculate percentage progress (0 - 100)
+ * PRD 8: Target Progress Calculation
+ * Progres (%) = (Jumlah tugas berstatus Selesai / Jumlah seluruh tugas) × 100
  */
-export function calculateTargetProgress(target: Pick<TargetEntity, 'type' | 'targetValue' | 'currentValue' | 'status'>): number {
-  if (target.status === 'COMPLETED') return 100;
-  if (target.targetValue <= 0) return 0;
-  
-  const percentage = (target.currentValue / target.targetValue) * 100;
+export function calculateTargetProgress(completedTasks: number, totalTasks: number): number {
+  if (totalTasks <= 0) return 0;
+  const percentage = (completedTasks / totalTasks) * 100;
   return Math.min(Math.max(Math.round(percentage), 0), 100);
 }
