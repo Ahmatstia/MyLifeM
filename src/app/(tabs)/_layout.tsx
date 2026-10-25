@@ -1,26 +1,37 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { Target, CheckCircle2, FolderKanban, Calendar } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
+import { fontFamily } from '@/theme/tokens';
+import { TabFabButton } from '@/shared/ui/tab-fab-button';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.surfaceContainer,
+          backgroundColor: colors.surfaceContainerLowest,
           borderTopColor: colors.outlineVariant,
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
+          height: 64 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
+          overflow: 'visible',
+          shadowColor: '#534685',
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.05,
+          shadowRadius: 10,
+          elevation: 4,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.onSurfaceVariant,
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '500',
+          fontFamily: fontFamily.medium,
         },
       }}
     >
@@ -39,6 +50,15 @@ export default function TabLayout() {
           title: 'Target',
           tabBarIcon: ({ color, size }) => (
             <Target size={size || 22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="add"
+        options={{
+          title: 'Tambah',
+          tabBarButton: () => (
+            <TabFabButton onPress={() => router.push('/quick-add' as any)} />
           ),
         }}
       />

@@ -21,9 +21,7 @@ import {
   Smartphone,
   ShieldCheck,
   X,
-  Copy,
-  Check,
-} from 'lucide-react-native';
+  } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, radius, touchTarget } from '@/theme/tokens';
 import { Screen } from '@/shared/ui/screen';
@@ -174,9 +172,11 @@ export const SettingsScreen: React.FC = () => {
         </View>
 
         {/* Database Stats Card */}
-        <Card variant="filled" style={styles.statsCard}>
+        <Card variant="elevated" style={styles.statsCard}>
           <View style={styles.statsHeader}>
-            <HardDrive size={18} color={colors.primary} />
+            <View style={styles.statsBadge}>
+              <HardDrive size={16} color={colors.primary} />
+            </View>
             <AppText variant="labelLarge" color="primary">
               Database SQLite Lokal
             </AppText>
@@ -434,8 +434,8 @@ const styles = StyleSheet.create({
   leadingIconBox: {
     width: 40,
     height: 40,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceContainerHigh,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surfaceContainerHighest,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: space[3],
@@ -457,13 +457,22 @@ const styles = StyleSheet.create({
   },
   statsCard: {
     marginVertical: space[2],
-    padding: space[3],
+    padding: space[4],
+    borderRadius: radius.xl,
   },
   statsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[2],
     marginBottom: space[3],
+  },
+  statsBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primaryContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -481,7 +490,7 @@ const styles = StyleSheet.create({
   },
   pickerModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    backgroundColor: colors.scrim,
     justifyContent: 'center',
     alignItems: 'center',
     padding: space[4],
@@ -489,9 +498,11 @@ const styles = StyleSheet.create({
   pickerModalContent: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
     padding: space[5],
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   pickerTitle: {
     marginBottom: space[4],
@@ -505,10 +516,10 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   pickerChipSelected: {
     backgroundColor: colors.primaryContainer,
@@ -519,13 +530,15 @@ const styles = StyleSheet.create({
   },
   backupModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    backgroundColor: colors.scrim,
     justifyContent: 'flex-end',
   },
   backupModalContent: {
-    backgroundColor: colors.surfaceContainer,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
     maxHeight: '90%',
     padding: space[4],
     paddingBottom: space[8],

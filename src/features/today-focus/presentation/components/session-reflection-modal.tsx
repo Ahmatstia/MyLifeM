@@ -147,14 +147,14 @@ export const SessionReflectionModal: React.FC<SessionReflectionModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.76)',
+    backgroundColor: colors.scrim,
     alignItems: 'center',
     justifyContent: 'center',
     padding: space[4],
   },
   dialogCard: {
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: radius.xl,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: radius.xxl,
     padding: space[5],
     width: '100%',
     maxWidth: 360,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   awardCircle: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: radius.pill,
     backgroundColor: colors.primaryContainer,
     alignItems: 'center',
     justifyContent: 'center',
@@ -196,13 +196,13 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   textInput: {
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.outline,
-    borderRadius: radius.md,
+    borderColor: colors.outlineVariant,
+    borderRadius: radius.lg,
     color: colors.onSurface,
     paddingHorizontal: space[3],
-    height: 44,
+    height: 48,
     fontSize: 13,
   },
   submitButton: {

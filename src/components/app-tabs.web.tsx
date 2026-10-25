@@ -3,7 +3,6 @@ import {
   TabList,
   TabTrigger,
   TabSlot,
-  TabTriggerSlotProps,
   TabListProps,
 } from 'expo-router/ui';
 import { SymbolView } from 'expo-symbols';
@@ -22,10 +21,16 @@ export default function AppTabs() {
       <TabList asChild>
         <CustomTabList>
           <TabTrigger name="home" href="/" asChild>
-            <TabButton>Home</TabButton>
+            <TabButton>Hari Ini</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+          <TabTrigger name="targets" href="/targets" asChild>
+            <TabButton>Target</TabButton>
+          </TabTrigger>
+          <TabTrigger name="projects" href="/projects" asChild>
+            <TabButton>Proyek</TabButton>
+          </TabTrigger>
+          <TabTrigger name="agenda" href="/agenda" asChild>
+            <TabButton>Agenda</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  ScrollView,
   Pressable,
   TextInput,
   StyleSheet,
@@ -12,7 +11,6 @@ import { router } from 'expo-router';
 import {
   ArrowLeft,
   Trash2,
-  Plus,
   CheckCircle2,
   Circle,
   Layers,
@@ -20,7 +18,7 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget } from '@/theme/tokens';
+import { radius, space } from '@/theme/tokens';
 import { Screen } from '@/shared/ui/screen';
 import { AppText } from '@/shared/ui/app-text';
 import { Card } from '@/shared/ui/card';
@@ -105,14 +103,14 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
     );
   }
 
-  if (!project) {
+  if (error || !project) {
     return (
       <Screen>
         <Banner
           variant="error"
-          message="Proyek tidak ditemukan atau telah dihapus."
-          actionText="Kembali"
-          onActionPress={() => router.back()}
+          message={error || 'Proyek tidak ditemukan atau telah dihapus.'}
+          actionText={error ? 'Coba Lagi' : 'Kembali'}
+          onActionPress={error ? refresh : () => router.back()}
         />
       </Screen>
     );
@@ -152,9 +150,11 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
       <View style={styles.headingSection}>
         <AppText variant="headlineMedium">{project.title}</AppText>
         {project.targetTitle && (
-          <AppText variant="labelMedium" color="primary" style={styles.targetLink}>
-            🎯 Mendukung Target: {project.targetTitle}
-          </AppText>
+          <View style={styles.targetPill}>
+            <AppText variant="labelSmall" color="primary">
+              Target: {project.targetTitle}
+            </AppText>
+          </View>
         )}
         {project.description && (
           <AppText variant="bodyMedium" color="onSurfaceVariant" style={styles.descText}>
@@ -393,7 +393,12 @@ const styles = StyleSheet.create({
   headingSection: {
     marginBottom: space[4],
   },
-  targetLink: {
+  targetPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 3,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
     marginTop: space[1],
   },
   descText: {

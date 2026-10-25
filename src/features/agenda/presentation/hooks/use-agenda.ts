@@ -16,10 +16,9 @@ export function useAgenda() {
 
   const loadEvents = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
       const items = await agendaRepository.getEventsForDate(selectedDate);
       setEvents(items);
+      setError(null);
     } catch (err: any) {
       console.error('[useAgenda] Load error:', err);
       setError('Gagal memuat agenda hari ini.');
@@ -27,6 +26,13 @@ export function useAgenda() {
       setIsLoading(false);
     }
   }, [selectedDate]);
+
+  // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
+  const refresh = useCallback(async () => {
+    setError(null);
+    setIsLoading(true);
+    await loadEvents();
+  }, [loadEvents]);
 
   useEffect(() => {
     loadEvents();
@@ -83,7 +89,7 @@ export function useAgenda() {
     isLoading,
     error,
     isSelectedDateToday,
-    refresh: loadEvents,
+    refresh,
     addEvent,
     toggleEvent,
     removeEvent,

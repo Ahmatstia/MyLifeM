@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Plus, CheckCircle, Sparkles, Flame, Settings } from 'lucide-react-native';
+import { Settings, Play } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, radius, touchTarget } from '@/theme/tokens';
+import { space, radius, elevation } from '@/theme/tokens';
 import { Screen } from '@/shared/ui/screen';
 import { AppText } from '@/shared/ui/app-text';
-import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { Banner } from '@/shared/ui/banner';
 import { EmptyState } from '@/shared/ui/empty-state';
+import { ProgressRing } from '@/shared/ui/progress-ring';
+import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 import { useTodayFocus } from '../hooks/use-today-focus';
 import { useFocusTimer } from '../hooks/use-focus-timer';
 import { FocusTimerWidget } from '../components/focus-timer-widget';
@@ -20,6 +21,13 @@ import {
   type SessionReflectionData,
 } from '../components/session-reflection-modal';
 
+/**
+ * TodayFocusScreen: Desain Cute Marshmallow Minimal.
+ * - Header lapang dengan pill tanggal bernuansa pastel.
+ * - Centerpiece Focus Capsule yang rapi dan elegan (tidak ada dua widget raksasa yang saling bertumpuk).
+ * - Timer dapat dibuka secara fluid saat dibutuhkan, menjaga layar tetap bersih & zen.
+ * - Bebas dari tumpukan ikon/emoji yang berlebihan.
+ */
 export const TodayFocusScreen: React.FC = () => {
   const {
     focusItems,
@@ -34,6 +42,9 @@ export const TodayFocusScreen: React.FC = () => {
     removeFromToday,
     recordSession,
   } = useTodayFocus();
+
+  // State untuk timer yang dibuka/diciutkan
+  const [isTimerExpanded, setIsTimerExpanded] = useState(false);
 
   // State for post-session reflection modal
   const [reflectionState, setReflectionState] = useState<{
@@ -55,6 +66,7 @@ export const TodayFocusScreen: React.FC = () => {
 
   // State for Add Priority Modal
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  useOpenAddFromParam(() => setIsAddModalVisible(true));
 
   // Focus Timer Hook
   const timer = useFocusTimer({
@@ -89,74 +101,129 @@ export const TodayFocusScreen: React.FC = () => {
     weekday: 'long',
     day: 'numeric',
     month: 'short',
-    year: 'numeric',
   });
 
   const completedCount = focusItems.filter((i) => i.isCompleted).length;
+  const showFullTimer = timer.isRunning || timer.activeTask !== null || isTimerExpanded;
 
   return (
     <Screen>
-      {/* Screen Header */}
+      {/* 1. Header Lapang & Adorable */}
       <View style={styles.header}>
-        <View style={styles.headerTitleBox}>
-          <AppText variant="headlineLarge">Hari Ini & Fokus</AppText>
-          <AppText variant="bodySmall" color="onSurfaceVariant">
-            {todayFormatted}
+        <View style={styles.headerLeft}>
+          <AppText variant="headlineLarge" color="onSurface" style={styles.greetingTitle}>
+            Hari Ini
           </AppText>
-        </View>
-
-        <View style={styles.headerRightRow}>
-          {/* Daily Total Focus Badge */}
-          <View style={styles.todayStatsBadge}>
-            <Flame size={16} color={colors.highlight} />
-            <AppText variant="labelMedium" color="highlight" tabularNums style={styles.todayStatsText}>
-              {completedMinutes} mnt
+          <View style={styles.datePill}>
+            <AppText variant="labelMedium" color="primary">
+              {todayFormatted}
             </AppText>
           </View>
-
-          {/* Settings Button */}
-          <Pressable
-            onPress={() => router.push('/settings')}
-            accessibilityRole="button"
-            accessibilityLabel="Buka Pengaturan"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={styles.settingsButton}
-          >
-            <Settings size={20} color={colors.onSurface} />
-          </Pressable>
         </View>
+
+        <Pressable
+          onPress={() => router.push('/settings')}
+          accessibilityRole="button"
+          accessibilityLabel="Buka Pengaturan"
+          style={({ pressed }) => [styles.settingsBtn, pressed && styles.btnPressed]}
+        >
+          <Settings size={20} color={colors.onSurfaceVariant} />
+        </Pressable>
       </View>
 
-      {/* Integrated Focus Timer Cockpit */}
-      <FocusTimerWidget
-        mode={timer.mode}
-        formattedTime={timer.formattedTime}
-        isRunning={timer.isRunning}
-        activeTask={timer.activeTask}
-        progressRatio={timer.progressRatio}
-        onChangeMode={timer.changeMode}
-        onStart={timer.startTimer}
-        onPause={timer.pauseTimer}
-        onReset={timer.resetTimer}
-        onClearActiveTask={() => timer.setActiveTask(null)}
-      />
+      {/* 2. Interactive Focus Capsule / Timer Cockpit */}
+      {showFullTimer ? (
+        <FocusTimerWidget
+          mode={timer.mode}
+          formattedTime={timer.formattedTime}
+          isRunning={timer.isRunning}
+          activeTask={timer.activeTask}
+          progressRatio={timer.progressRatio}
+          onChangeMode={timer.changeMode}
+          onStart={timer.startTimer}
+          onPause={timer.pauseTimer}
+          onReset={timer.resetTimer}
+          onClearActiveTask={() => timer.setActiveTask(null)}
+          onMinimize={() => setIsTimerExpanded(false)}
+        />
+      ) : (
+        /* Unified Hero Capsule: Bersih, Empuk, & Menyenangkan */
+        <Card variant="elevated" padding={space[4]} style={styles.heroCapsule}>
+          <View style={styles.heroInnerRow}>
+            <ProgressRing
+              value={completedCount}
+              total={focusItems.length}
+              size={84}
+              strokeWidth={8}
+              tone="default"
+              label="Selesai"
+            />
 
-      {/* Section Header: Prioritas Hari Ini */}
+            <View style={styles.heroDetailsCol}>
+              <AppText variant="bodySmall" color="onSurfaceVariant">
+                Fokus Hari Ini
+              </AppText>
+              <AppText variant="headlineLarge" color="primary" tabularNums style={styles.focusMinutesText}>
+                {completedMinutes} <AppText variant="bodyMedium" color="onSurfaceVariant">mnt</AppText>
+              </AppText>
+
+              <View style={styles.heroBadgeRow}>
+                <View style={styles.priorityCountBadge}>
+                  <AppText variant="labelSmall" color="onPrimaryContainer">
+                    {focusItems.length === 0
+                      ? 'Atur prioritasmu'
+                      : `${focusItems.length} prioritas aktif`}
+                  </AppText>
+                </View>
+
+                <Pressable
+                  onPress={() => setIsTimerExpanded(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Buka timer fokus"
+                  style={({ pressed }) => [styles.quickStartPill, pressed && styles.btnPressed]}
+                >
+                  <Play size={12} color={colors.onPrimary} fill={colors.onPrimary} />
+                  <AppText variant="labelSmall" color="onPrimary" style={styles.quickStartText}>
+                    Fokus
+                  </AppText>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Card>
+      )}
+
+      {/* 3. Section Header: Prioritas Hari Ini */}
       <View style={styles.sectionHeader}>
         <View style={styles.sectionTitleRow}>
-          <AppText variant="titleMedium">Prioritas Hari Ini</AppText>
-          <AppText variant="labelMedium" color="onSurfaceVariant" tabularNums style={styles.counterText}>
-            ({completedCount}/{focusItems.length} selesai)
+          <AppText variant="titleLarge" color="onSurface">
+            Prioritas
           </AppText>
+          <View style={styles.counterBubble}>
+            <AppText variant="labelSmall" color="primary" tabularNums>
+              {completedCount}/{focusItems.length}
+            </AppText>
+          </View>
         </View>
 
-        <Button
-          title="+ Tambah"
-          variant="tonal"
-          size="compact"
-          disabled={focusItems.length >= 5}
+        <Pressable
           onPress={() => setIsAddModalVisible(true)}
-        />
+          disabled={focusItems.length >= 5}
+          accessibilityRole="button"
+          accessibilityLabel="Tambah prioritas hari ini"
+          style={({ pressed }) => [
+            styles.addPillBtn,
+            focusItems.length >= 5 && styles.addPillDisabled,
+            pressed && styles.btnPressed,
+          ]}
+        >
+          <AppText
+            variant="labelMedium"
+            color={focusItems.length >= 5 ? 'onSurfaceSubtle' : 'onPrimaryContainer'}
+          >
+            + Tambah
+          </AppText>
+        </Pressable>
       </View>
 
       {/* Error Notice */}
@@ -174,7 +241,7 @@ export const TodayFocusScreen: React.FC = () => {
       {isLoading && (
         <View style={styles.loadingBox}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <AppText variant="bodyMedium" color="onSurfaceVariant" style={styles.loadingText}>
+          <AppText variant="bodySmall" color="onSurfaceVariant" style={styles.loadingText}>
             Memuat tugas prioritas...
           </AppText>
         </View>
@@ -183,10 +250,9 @@ export const TodayFocusScreen: React.FC = () => {
       {/* Empty State when no priority items for today */}
       {!isLoading && focusItems.length === 0 && (
         <EmptyState
-          title="Belum Ada Prioritas Terpilih"
-          description="Pilih 3 hingga 5 tugas utama hari ini (The Rule of 3-5 Priorities) agar eksekusimu tajam dan bebas dari rasa kewalahan."
-          customIcon={<Sparkles size={32} color={colors.onPrimaryContainer} />}
-          actionTitle="Pilih Prioritas Hari Ini"
+          title="Belum Ada Prioritas Hari Ini"
+          description="Pilih 3 hingga 5 tugas utama agar eksekusimu terarah dan tidak merasa kewalahan."
+          actionTitle="Pilih Prioritas"
           onActionPress={() => setIsAddModalVisible(true)}
           style={styles.emptyMargin}
         />
@@ -205,6 +271,7 @@ export const TodayFocusScreen: React.FC = () => {
               onStartFocus={() => {
                 timer.setActiveTask(item.task);
                 timer.startTimer();
+                setIsTimerExpanded(true);
               }}
               onRemove={() => removeFromToday(item.id)}
             />
@@ -239,45 +306,84 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: space[3],
-    marginBottom: space[3],
+    marginBottom: space[4],
   },
-  headerTitleBox: {
+  headerLeft: {
     flex: 1,
-  },
-  headerRightRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space[2],
+    gap: space[3],
   },
-  settingsButton: {
-    width: touchTarget.compact,
-    height: touchTarget.compact,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceContainerHigh,
+  greetingTitle: {
+    letterSpacing: -0.5,
+  },
+  datePill: {
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 4,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
+  },
+  settingsBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceContainerLowest,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.outlineVariant,
+    ...elevation.level1,
   },
-  todayStatsBadge: {
+  btnPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.96 }],
+  },
+  heroCapsule: {
+    marginBottom: space[4],
+    borderRadius: radius.xxl,
+  },
+  heroInnerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerHigh,
-    paddingVertical: space[1],
+    gap: space[4],
+  },
+  heroDetailsCol: {
+    flex: 1,
+  },
+  focusMinutesText: {
+    marginVertical: 2,
+    letterSpacing: -0.5,
+  },
+  heroBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[2],
+    marginTop: space[1],
+  },
+  priorityCountBadge: {
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 4,
     paddingHorizontal: space[3],
     borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
   },
-  todayStatsText: {
-    marginLeft: 4,
-    fontWeight: '600',
+  quickStartPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: 5,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
+    gap: 4,
+    ...elevation.level1,
+  },
+  quickStartText: {
+    letterSpacing: 0.2,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: space[3],
+    marginTop: space[2],
     marginBottom: space[3],
   },
   sectionTitleRow: {
@@ -285,8 +391,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space[2],
   },
-  counterText: {
-    marginLeft: 2,
+  counterBubble: {
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 2,
+    paddingHorizontal: space[2],
+    borderRadius: radius.pill,
+  },
+  addPillBtn: {
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 6,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
+  },
+  addPillDisabled: {
+    opacity: 0.4,
   },
   bannerMargin: {
     marginVertical: space[2],

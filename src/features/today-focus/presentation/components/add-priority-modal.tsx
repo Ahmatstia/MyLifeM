@@ -9,9 +9,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { X, Plus, Check } from 'lucide-react-native';
+import { X, Plus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget } from '@/theme/tokens';
+import { radius, space } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import type { TaskEntity } from '../../domain/entities/daily-focus.entity';
@@ -183,13 +183,15 @@ export const AddPriorityModal: React.FC<AddPriorityModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    backgroundColor: colors.scrim,
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: colors.surfaceContainer,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
     maxHeight: '85%',
     paddingBottom: space[8],
   },
@@ -209,7 +211,7 @@ const styles = StyleSheet.create({
   },
   errorBox: {
     backgroundColor: colors.errorContainer,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: space[3],
     marginBottom: space[3],
   },
@@ -225,12 +227,12 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outline,
-    borderRadius: radius.md,
+    borderColor: colors.outlineVariant,
+    borderRadius: radius.pill,
     color: colors.onSurface,
-    paddingHorizontal: space[3],
+    paddingHorizontal: space[4],
     height: 48,
     fontSize: 14,
   },
@@ -244,10 +246,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    borderRadius: radius.md,
+    borderRadius: radius.xl,
     padding: space[3],
     minHeight: 52,
   },
@@ -258,7 +260,7 @@ const styles = StyleSheet.create({
   selectBadge: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: radius.pill,
     backgroundColor: colors.primaryContainer,
     alignItems: 'center',
     justifyContent: 'center',

@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   View,
   type ViewStyle,
-  type TextStyle,
   StyleSheet,
 } from 'react-native';
 import { colors } from '@/theme/colors';
@@ -62,13 +61,13 @@ export const Button: React.FC<ButtonProps> = ({
       loaderColor = colors.onPrimary;
       break;
     case 'tonal':
-      backgroundColor = colors.surfaceContainerHigh;
-      textColor = 'onSurface';
-      loaderColor = colors.onSurface;
+      backgroundColor = colors.primaryContainer;
+      textColor = 'onPrimaryContainer';
+      loaderColor = colors.primary;
       break;
     case 'outlined':
       backgroundColor = 'transparent';
-      borderColor = colors.outline;
+      borderColor = colors.outlineVariant;
       textColor = 'primary';
       loaderColor = colors.primary;
       break;
@@ -89,7 +88,7 @@ export const Button: React.FC<ButtonProps> = ({
     minHeight: size === 'compact' ? touchTarget.compact : touchTarget.min,
     minWidth: fullWidth ? '100%' : touchTarget.min,
     backgroundColor,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     borderWidth: borderColor ? 1 : 0,
     borderColor,
     paddingHorizontal: size === 'compact' ? space[3] : space[5],

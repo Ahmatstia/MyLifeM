@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Pressable, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
-import { Plus, Check, Calendar, Flag } from 'lucide-react-native';
+import { Plus, Check } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget } from '@/theme/tokens';
+import { radius, space } from '@/theme/tokens';
 import { Card } from '@/shared/ui/card';
 import { AppText } from '@/shared/ui/app-text';
 import { ProgressBar } from '@/shared/ui/progress-bar';
@@ -20,6 +20,12 @@ export interface TargetCardProps {
   style?: StyleProp<ViewStyle>;
 }
 
+/**
+ * TargetCard: Desain Cute Marshmallow Minimal.
+ * - Tanpa ikon flag/calendar yang berantakan.
+ * - Pil kategori pastel bertekstur halus.
+ * - Tombol increment +1 empuk.
+ */
 export const TargetCard: React.FC<TargetCardProps> = ({
   target,
   pillar,
@@ -31,7 +37,7 @@ export const TargetCard: React.FC<TargetCardProps> = ({
   const pillarColor = pillar?.color || colors.primary;
   const isCompleted = target.status === 'COMPLETED' || progressPercent >= 100;
 
-  // Format deadline if present
+  // Format deadline sederhana tanpa ikon berlebih
   let deadlineText: string | null = null;
   if (target.targetDate) {
     try {
@@ -39,7 +45,6 @@ export const TargetCard: React.FC<TargetCardProps> = ({
       deadlineText = d.toLocaleDateString('id-ID', {
         day: 'numeric',
         month: 'short',
-        year: 'numeric',
       });
     } catch {
       deadlineText = target.targetDate;
@@ -50,29 +55,31 @@ export const TargetCard: React.FC<TargetCardProps> = ({
     <Card
       variant={isCompleted ? 'filled' : 'elevated'}
       onPress={onPress}
+      padding={space[4]}
       style={[styles.card, style]}
     >
-      {/* Header: Pillar Badge & Priority */}
+      {/* Header: Pil Kategori Pilar & Prioritas */}
       <View style={styles.headerRow}>
-        <View style={styles.pillarBadge}>
+        <View style={[styles.pillarPill, { backgroundColor: colors.primaryContainer }]}>
           <View style={[styles.pillarDot, { backgroundColor: pillarColor }]} />
           <AppText variant="labelSmall" style={{ color: pillarColor }}>
             {pillar?.name || 'Target Hidup'}
           </AppText>
         </View>
 
-        <View style={styles.priorityRow}>
-          <Flag size={12} color={colors.onSurfaceSubtle} />
-          <AppText variant="labelSmall" color="onSurfaceSubtle" style={styles.priorityText}>
-            {target.priority}
-          </AppText>
-        </View>
+        {deadlineText && (
+          <View style={styles.deadlinePill}>
+            <AppText variant="labelSmall" color="onSurfaceSubtle">
+              Sampai {deadlineText}
+            </AppText>
+          </View>
+        )}
       </View>
 
-      {/* Target Title & Description */}
+      {/* Judul & Deskripsi */}
       <AppText
         variant="titleMedium"
-        color={isCompleted ? 'onSurfaceVariant' : 'onSurface'}
+        color={isCompleted ? 'onSurfaceSubtle' : 'onSurface'}
         numberOfLines={2}
         style={[styles.title, isCompleted && styles.completedText]}
       >
@@ -95,64 +102,55 @@ export const TargetCard: React.FC<TargetCardProps> = ({
         <AppText variant="bodySmall" color="onSurfaceVariant" tabularNums>
           {target.type === 'NUMERIC'
             ? `${target.currentValue} / ${target.targetValue} ${target.unit}`
-            : `${progressPercent}% Selesai`}
+            : `${progressPercent}% selesai`}
         </AppText>
 
-        <AppText
-          variant="labelMedium"
-          style={{ color: isCompleted ? colors.success : pillarColor }}
-          tabularNums
-        >
-          {progressPercent}%
-        </AppText>
+        <View style={styles.percentPill}>
+          <AppText
+            variant="labelSmall"
+            style={{ color: isCompleted ? colors.success : colors.primary }}
+            tabularNums
+          >
+            {progressPercent}%
+          </AppText>
+        </View>
       </View>
 
-      {/* Progress Bar */}
+      {/* Chubby Progress Bar */}
       <ProgressBar
         progress={progressPercent}
-        color={isCompleted ? colors.success : pillarColor}
+        color={isCompleted ? colors.success : colors.primary}
         height={8}
         style={styles.progressBar}
       />
 
-      {/* Footer: Due date & Quick Increment Button */}
-      <View style={styles.footerRow}>
-        {deadlineText ? (
-          <View style={styles.deadlineContainer}>
-            <Calendar size={13} color={colors.onSurfaceSubtle} />
-            <AppText variant="labelSmall" color="onSurfaceSubtle" style={styles.deadlineLabel}>
-              {deadlineText}
-            </AppText>
-          </View>
-        ) : (
-          <View />
-        )}
-
-        {/* Quick Increment Action */}
-        {!isCompleted && onIncrement && (
+      {/* Footer: Quick Increment Action */}
+      {!isCompleted && onIncrement && (
+        <View style={styles.footerRow}>
           <Pressable
             onPress={onIncrement}
             accessibilityRole="button"
             accessibilityLabel={`Tambah progres ${target.title}`}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={styles.incrementButton}
+            style={({ pressed }) => [styles.incrementPill, pressed && styles.pressed]}
           >
-            <Plus size={16} color={colors.primary} />
+            <Plus size={14} color={colors.primary} />
             <AppText variant="labelSmall" color="primary" style={styles.incrementText}>
               +1 {target.unit !== '%' ? target.unit : ''}
             </AppText>
           </Pressable>
-        )}
+        </View>
+      )}
 
-        {isCompleted && (
-          <View style={styles.completedBadge}>
-            <Check size={14} color={colors.success} />
-            <AppText variant="labelSmall" color="success" style={styles.completedLabel}>
+      {isCompleted && (
+        <View style={styles.completedBadgeRow}>
+          <View style={styles.completedPill}>
+            <Check size={13} color={colors.success} strokeWidth={3} />
+            <AppText variant="labelSmall" color="success">
               Tercapai
             </AppText>
           </View>
-        )}
-      </View>
+        </View>
+      )}
     </Card>
   );
 };
@@ -160,6 +158,7 @@ export const TargetCard: React.FC<TargetCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     marginBottom: space[3],
+    borderRadius: radius.xl,
   },
   headerRow: {
     flexDirection: 'row',
@@ -167,77 +166,86 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: space[2],
   },
-  pillarBadge: {
+  pillarPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 3,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
   },
   pillarDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
-    marginRight: space[1],
+    borderRadius: radius.pill,
+    marginRight: space[2],
   },
-  priorityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  priorityText: {
-    marginLeft: 2,
-    textTransform: 'capitalize',
+  deadlinePill: {
+    backgroundColor: colors.surfaceContainerLow,
+    paddingVertical: 3,
+    paddingHorizontal: space[2],
+    borderRadius: radius.pill,
   },
   title: {
-    marginBottom: space[1],
+    lineHeight: 22,
+    marginBottom: 4,
   },
   completedText: {
     textDecorationLine: 'line-through',
+    opacity: 0.6,
   },
   description: {
-    marginBottom: space[3],
+    lineHeight: 18,
+    marginBottom: space[2],
   },
   metricRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: space[2],
     marginBottom: space[2],
-    marginTop: space[1],
+  },
+  percentPill: {
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 2,
+    paddingHorizontal: space[2],
+    borderRadius: radius.pill,
   },
   progressBar: {
-    marginBottom: space[3],
+    marginVertical: space[1],
   },
   footerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    minHeight: 28,
+    justifyContent: 'flex-end',
+    marginTop: space[3],
   },
-  deadlineContainer: {
+  incrementPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  deadlineLabel: {
-    marginLeft: 4,
-  },
-  incrementButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceContainerHigh,
-    paddingVertical: space[1],
-    paddingHorizontal: space[3],
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 6,
+    paddingHorizontal: space[4],
     borderRadius: radius.pill,
-    minHeight: 32,
+    gap: 4,
   },
   incrementText: {
-    marginLeft: 4,
-    fontWeight: '600',
+    letterSpacing: 0.2,
   },
-  completedBadge: {
+  completedBadgeRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: space[2],
+  },
+  completedPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.successContainer,
+    paddingVertical: 4,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
     gap: 4,
   },
-  completedLabel: {
-    fontWeight: '600',
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.96 }],
   },
 });

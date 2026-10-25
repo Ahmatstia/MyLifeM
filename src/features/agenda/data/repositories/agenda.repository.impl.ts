@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, asc } from 'drizzle-orm';
+import { eq, desc, sql, asc } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { agendaEvents, type AgendaEvent } from '@/db/schema';
 import type {

@@ -4,6 +4,13 @@ import * as SplashScreen from 'expo-splash-screen';
 import { View, ActivityIndicator } from 'react-native';
 import { initDatabase } from '@/db/client';
 import { colors } from '@/theme/colors';
+import {
+  useFonts,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+} from '@expo-google-fonts/plus-jakarta-sans';
 
 // Keep the splash screen visible while initializing local database
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -19,14 +26,26 @@ export default function RootLayout() {
         console.error('[RootLayout] Database initialization failed:', error);
       } finally {
         setIsReady(true);
-        await SplashScreen.hideAsync().catch(() => {});
       }
     }
 
     setupApp();
   }, []);
 
-  if (!isReady) {
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+  });
+
+  useEffect(() => {
+    if (isReady && (fontsLoaded || fontError)) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [isReady, fontsLoaded, fontError]);
+
+  if (!isReady || !(fontsLoaded || fontError)) {
     return (
       <View
         style={{
@@ -50,6 +69,11 @@ export default function RootLayout() {
     >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="projects/[id]" />
+      <Stack.Screen name="settings" />
+      <Stack.Screen
+        name="quick-add"
+        options={{ presentation: 'transparentModal', animation: 'fade' }}
+      />
     </Stack>
   );
 }

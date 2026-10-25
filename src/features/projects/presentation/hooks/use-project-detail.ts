@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type {
   ProjectWithSummary,
   MilestoneEntity,
-  CreateMilestoneInput,
-} from '../../domain/entities/project.entity';
+  } from '../../domain/entities/project.entity';
 import type { TaskEntity } from '@/features/today-focus/domain/entities/daily-focus.entity';
 import { projectRepository } from '../../data/repositories/project.repository.impl';
 
@@ -17,8 +16,6 @@ export function useProjectDetail(projectId: string) {
   const loadData = useCallback(async () => {
     if (!projectId) return;
     try {
-      setIsLoading(true);
-      setError(null);
 
       const [proj, miles, tList] = await Promise.all([
         projectRepository.getProjectById(projectId),
@@ -29,6 +26,7 @@ export function useProjectDetail(projectId: string) {
       setProject(proj);
       setMilestones(miles);
       setTasks(tList);
+      setError(null);
     } catch (err: any) {
       console.error('[useProjectDetail] Load error:', err);
       setError('Gagal memuat detail proyek.');
@@ -36,6 +34,13 @@ export function useProjectDetail(projectId: string) {
       setIsLoading(false);
     }
   }, [projectId]);
+
+  // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
+  const refresh = useCallback(async () => {
+    setError(null);
+    setIsLoading(true);
+    await loadData();
+  }, [loadData]);
 
   useEffect(() => {
     loadData();
@@ -114,7 +119,7 @@ export function useProjectDetail(projectId: string) {
     tasks,
     isLoading,
     error,
-    refresh: loadData,
+    refresh,
     addMilestone,
     toggleMilestone,
     removeMilestone,

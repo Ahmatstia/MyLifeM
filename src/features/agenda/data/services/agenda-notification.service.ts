@@ -1,12 +1,45 @@
 import { Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
+
+let notificationsModule: any = null;
+let isLoaded = false;
+
+/**
+ * Safely get notifications module only when native support is present.
+ * In Expo Go on Android, expo-notifications fails due to missing ExpoTopicSubscriptionModule.
+ */
+function getNotifications() {
+  if (isLoaded) return notificationsModule;
+  isLoaded = true;
+
+  if (Platform.OS === 'web') {
+    return null;
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { isRunningInExpoGo } = require('expo');
+    if (isRunningInExpoGo && isRunningInExpoGo()) {
+      // In Expo Go, native push notification modules (ExpoTopicSubscriptionModule) are not bundled
+      return null;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    notificationsModule = require('expo-notifications');
+    return notificationsModule;
+  } catch {
+    console.warn('[AgendaNotificationService] Notifications native module unavailable in this environment.');
+    return null;
+  }
+}
 
 export class AgendaNotificationService {
   /**
    * Request notification permissions for Android/iOS
    */
   static async requestPermissions(): Promise<boolean> {
-    if (Platform.OS === 'web') return false;
+    const Notifications = getNotifications();
+    if (!Notifications) return false;
+
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
@@ -29,7 +62,10 @@ export class AgendaNotificationService {
     startTimeIso: string,
     reminderMinutes: number
   ): Promise<string | null> {
-    if (Platform.OS === 'web' || reminderMinutes <= 0) return null;
+    if (reminderMinutes <= 0) return null;
+
+    const Notifications = getNotifications();
+    if (!Notifications) return null;
 
     try {
       const eventTime = new Date(startTimeIso).getTime();
@@ -41,6 +77,8 @@ export class AgendaNotificationService {
       const hasPermission = await this.requestPermissions();
       if (!hasPermission) return null;
 
+      const triggerType = Notifications.SchedulableTriggerInputTypes?.DATE || 'date';
+
       const notifId = await Notifications.scheduleNotificationAsync({
         identifier: `agenda-${eventId}`,
         content: {
@@ -49,7 +87,7 @@ export class AgendaNotificationService {
           sound: 'default',
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          type: triggerType,
           date: new Date(triggerTimeMs),
         },
       });
@@ -65,7 +103,9 @@ export class AgendaNotificationService {
    * Cancel scheduled notification when event is completed or deleted
    */
   static async cancelReminder(eventId: string): Promise<void> {
-    if (Platform.OS === 'web') return;
+    const Notifications = getNotifications();
+    if (!Notifications) return;
+
     try {
       await Notifications.cancelScheduledNotificationAsync(`agenda-${eventId}`);
     } catch (err) {

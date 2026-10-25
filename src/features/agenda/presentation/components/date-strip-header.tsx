@@ -7,7 +7,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget } from '@/theme/tokens';
+import { radius, space, elevation } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 
 export interface DateStripHeaderProps {
@@ -16,6 +16,9 @@ export interface DateStripHeaderProps {
   style?: ViewStyle;
 }
 
+/**
+ * DateStripHeader: Kapsul kalender empuk & lucu (cute marshmallow calendar pills).
+ */
 export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
   selectedDate,
   onSelectDate,
@@ -58,23 +61,23 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
               accessibilityRole="button"
               accessibilityLabel={`${item.dayName}, ${item.dayNum}`}
               accessibilityState={{ selected: isSelected }}
-              hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
-              style={[
+              style={({ pressed }) => [
                 styles.dayCard,
                 isSelected ? styles.dayCardSelected : styles.dayCardUnselected,
+                pressed && styles.pressed,
               ]}
             >
               <AppText
                 variant="labelSmall"
-                color={isSelected ? 'onPrimaryContainer' : 'onSurfaceSubtle'}
+                color={isSelected ? 'onPrimary' : 'onSurfaceSubtle'}
                 style={styles.dayName}
               >
                 {item.dayName}
               </AppText>
 
               <AppText
-                variant="titleMedium"
-                color={isSelected ? 'onPrimaryContainer' : 'onSurface'}
+                variant="titleLarge"
+                color={isSelected ? 'onPrimary' : 'onSurface'}
                 tabularNums
                 style={styles.dayNum}
               >
@@ -88,8 +91,8 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
                     styles.todayDot,
                     {
                       backgroundColor: isSelected
-                        ? colors.primary
-                        : colors.highlight,
+                        ? colors.onPrimary
+                        : colors.secondary,
                     },
                   ]}
                 />
@@ -104,40 +107,47 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: space[2],
+    marginVertical: space[3],
   },
   scrollContent: {
-    paddingHorizontal: space[1],
     gap: space[2],
+    paddingHorizontal: 2,
+    paddingVertical: 2,
   },
   dayCard: {
-    width: 52,
-    height: 68,
-    borderRadius: radius.lg,
+    width: 54,
+    height: 74,
+    borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: space[2],
-    borderWidth: 1,
   },
   dayCardSelected: {
-    backgroundColor: colors.primaryContainer,
-    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+    ...elevation.level1,
   },
   dayCardUnselected: {
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
     borderColor: colors.outlineVariant,
   },
   dayName: {
-    textTransform: 'capitalize',
+    fontSize: 11,
     marginBottom: 2,
+    textTransform: 'capitalize',
   },
   dayNum: {
-    fontWeight: '700',
+    fontSize: 20,
+    lineHeight: 24,
   },
   todayDot: {
     width: 5,
     height: 5,
-    borderRadius: 2.5,
-    marginTop: 4,
+    borderRadius: radius.pill,
+    marginTop: 3,
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.96 }],
   },
 });

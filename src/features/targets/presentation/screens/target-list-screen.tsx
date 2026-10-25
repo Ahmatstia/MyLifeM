@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
-import { Plus, Compass, Target as TargetIcon } from 'lucide-react-native';
+import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import { Target as TargetIcon } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, radius } from '@/theme/tokens';
 import { Screen } from '@/shared/ui/screen';
 import { AppText } from '@/shared/ui/app-text';
-import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { Banner } from '@/shared/ui/banner';
 import { EmptyState } from '@/shared/ui/empty-state';
@@ -15,6 +14,7 @@ import { PillarFilterChips } from '../components/pillar-filter-chips';
 import { TargetCard } from '../components/target-card';
 import { AddTargetModal } from '../components/add-target-modal';
 import { calculateTargetProgress } from '../../domain/entities/target.entity';
+import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 
 export const TargetListScreen: React.FC = () => {
   const {
@@ -30,6 +30,7 @@ export const TargetListScreen: React.FC = () => {
   } = useTargets();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  useOpenAddFromParam(() => setIsModalVisible(true));
 
   // Calculate high-level summary metrics
   const activeTargets = targets.filter((t) => t.status === 'ACTIVE');
@@ -49,39 +50,43 @@ export const TargetListScreen: React.FC = () => {
       {/* Screen Header */}
       <View style={styles.header}>
         <View>
-          <AppText variant="headlineLarge" color="onSurface">
+          <AppText variant="headlineLarge" color="onSurface" style={styles.headerTitle}>
             Target Hidup
           </AppText>
           <AppText variant="bodySmall" color="onSurfaceVariant">
-            Kompas utama & arah pencapaian masa depanmu
+            Arah dan pencapaian masa depanmu
           </AppText>
         </View>
 
-        <Button
-          title="Tambah"
-          variant="filled"
-          size="compact"
-          leftIcon={<Plus size={16} color={colors.onPrimary} />}
+        <Pressable
           onPress={() => setIsModalVisible(true)}
-        />
+          accessibilityRole="button"
+          accessibilityLabel="Tambah target baru"
+          style={({ pressed }) => [styles.addPillBtn, pressed && styles.pressed]}
+        >
+          <AppText variant="labelMedium" color="onPrimary">
+            + Tambah
+          </AppText>
+        </Pressable>
       </View>
 
       {/* Summary Hero Card */}
-      <Card variant="highlight" style={styles.heroCard}>
+      <Card variant="elevated" padding={space[4]} style={styles.heroCard}>
         <View style={styles.heroRow}>
-          <View style={styles.heroIconBox}>
-            <Compass size={24} color={colors.primary} />
-          </View>
           <View style={styles.heroTextCol}>
-            <AppText variant="titleMedium">Ikhtisar Target</AppText>
+            <AppText variant="titleMedium" color="onSurface">
+              Ikhtisar Target
+            </AppText>
             <AppText variant="bodySmall" color="onSurfaceVariant">
               {activeTargets.length} target aktif berjalan
             </AppText>
           </View>
           <View style={styles.heroScoreCol}>
-            <AppText variant="headlineSmall" color="primary" tabularNums>
-              {totalProgress}%
-            </AppText>
+            <View style={styles.percentBadge}>
+              <AppText variant="titleLarge" color="primary" tabularNums>
+                {totalProgress}%
+              </AppText>
+            </View>
             <AppText variant="labelSmall" color="onSurfaceSubtle">
               Rata-rata
             </AppText>
@@ -91,7 +96,7 @@ export const TargetListScreen: React.FC = () => {
         <ProgressBar
           progress={totalProgress}
           color={colors.primary}
-          height={6}
+          height={8}
           style={styles.heroProgress}
         />
       </Card>
@@ -170,28 +175,37 @@ const styles = StyleSheet.create({
     marginTop: space[3],
     marginBottom: space[4],
   },
+  headerTitle: {
+    letterSpacing: -0.5,
+  },
+  addPillBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: 7,
+    paddingHorizontal: space[4],
+    borderRadius: radius.pill,
+  },
   heroCard: {
-    marginBottom: space[2],
+    marginBottom: space[3],
+    borderRadius: radius.xl,
   },
   heroRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: space[3],
-  },
-  heroIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.primaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: space[3],
   },
   heroTextCol: {
     flex: 1,
   },
   heroScoreCol: {
     alignItems: 'flex-end',
+  },
+  percentBadge: {
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 2,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
+    marginBottom: 2,
   },
   heroProgress: {
     marginTop: space[1],
@@ -209,5 +223,9 @@ const styles = StyleSheet.create({
   },
   emptyStateMargin: {
     marginTop: space[4],
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.96 }],
   },
 });

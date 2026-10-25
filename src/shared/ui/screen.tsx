@@ -3,8 +3,7 @@ import {
   View,
   ScrollView,
   type ViewStyle,
-  StyleSheet,
-} from 'react-native';
+  } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
@@ -42,7 +41,7 @@ export const Screen: React.FC<ScreenProps> = ({
   if (scrollable) {
     return (
       <View style={[containerStyle, style]}>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
@@ -70,7 +69,7 @@ export const Screen: React.FC<ScreenProps> = ({
         style,
       ]}
     >
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       {children}
     </View>
   );

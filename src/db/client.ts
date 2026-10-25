@@ -4,11 +4,64 @@ import * as schema from './schema';
 
 export const DB_NAME = 'mylife.db';
 
-// Open native SQLite database
-export const sqliteDb = SQLite.openDatabaseSync(DB_NAME);
+let _activeSqliteDb: SQLite.SQLiteDatabase | null = null;
 
-// Initialize Drizzle ORM
+/**
+ * Memastikan koneksi native SQLite aktif dan tidak berstatus closed resource.
+ * Jika koneksi tertutup (misal saat Fast Refresh atau reload Expo di Android),
+ * fungsi ini membuka ulang koneksi secara transparan.
+ */
+function isHandleAlive(dbInstance: SQLite.SQLiteDatabase | null): boolean {
+  if (!dbInstance) return false;
+  try {
+    dbInstance.execSync('SELECT 1;');
+    return true;
+  } catch (err: any) {
+    const msg = String(err?.message || err);
+    if (msg.includes('closed resource') || msg.includes('Access to closed') || msg.includes('NullPointer')) {
+      return false;
+    }
+    return true;
+  }
+}
+
+export function getSqliteDb(): SQLite.SQLiteDatabase {
+  if (!_activeSqliteDb || !isHandleAlive(_activeSqliteDb)) {
+    if (_activeSqliteDb) {
+      console.warn('[Database] Native SQLite connection was closed. Reopening...');
+    }
+    const freshDb = SQLite.openDatabaseSync(DB_NAME);
+    try {
+      freshDb.execSync('PRAGMA foreign_keys = ON;');
+    } catch {
+      // Ignored if PRAGMA fails
+    }
+    _activeSqliteDb = freshDb;
+    return freshDb;
+  }
+  return _activeSqliteDb;
+}
+
+// Proxy transparan yang selalu mendelegasikan ke koneksi native aktif
+export const sqliteDb: SQLite.SQLiteDatabase = new Proxy({} as SQLite.SQLiteDatabase, {
+  get(_target, prop) {
+    const active = getSqliteDb();
+    const val = (active as any)[prop];
+    if (typeof val === 'function') {
+      return val.bind(active);
+    }
+    return val;
+  },
+  set(_target, prop, value) {
+    const active = getSqliteDb();
+    (active as any)[prop] = value;
+    return true;
+  },
+});
+
+// Initialize Drizzle ORM dengan proxy yang resilient
 export const db = drizzle(sqliteDb, { schema });
+
 
 /**
  * SQL DDL Statements for 9 tables and their indexes
@@ -150,27 +203,40 @@ CREATE INDEX IF NOT EXISTS idx_agenda_time_range ON agenda_events(start_time, en
 
 const SEED_PILLARS_SQL = `
 INSERT OR IGNORE INTO life_pillars (id, name, icon, color, sort_order) VALUES
-('career', 'Karier & Bisnis', 'briefcase', '#14b8a6', 1),
-('finance', 'Finansial & Aset', 'wallet', '#f59e0b', 2),
-('health', 'Kesehatan & Fisik', 'heart-pulse', '#ef4444', 3),
-('growth', 'Pengembangan Diri', 'book-open', '#8b5cf6', 4),
-('personal', 'Pribadi & Hubungan', 'users', '#3b82f6', 5);
+('career', 'Karier & Bisnis', 'briefcase', '#2EA39B', 1),
+('finance', 'Finansial & Aset', 'wallet', '#E28743', 2),
+('health', 'Kesehatan & Fisik', 'heart-pulse', '#E25252', 3),
+('growth', 'Pengembangan Diri', 'book-open', '#8A5BE0', 4),
+('personal', 'Pribadi & Hubungan', 'users', '#3A7BD5', 5);
+UPDATE life_pillars SET color = '#2EA39B' WHERE id = 'career';
+UPDATE life_pillars SET color = '#E28743' WHERE id = 'finance';
+UPDATE life_pillars SET color = '#E25252' WHERE id = 'health';
+UPDATE life_pillars SET color = '#8A5BE0' WHERE id = 'growth';
+UPDATE life_pillars SET color = '#3A7BD5' WHERE id = 'personal';
 `;
+
+let _isInitialized = false;
 
 /**
  * Initialize Database tables and insert seed data
  */
 export async function initDatabase(): Promise<void> {
+  if (_isInitialized) {
+    return;
+  }
   try {
+    const rawDb = getSqliteDb();
+
     // Enable Foreign Keys
-    sqliteDb.execSync('PRAGMA foreign_keys = ON;');
+    rawDb.execSync('PRAGMA foreign_keys = ON;');
     
     // Execute DDL batch
-    sqliteDb.execSync(INITIAL_DDL);
+    rawDb.execSync(INITIAL_DDL);
     
     // Seed default life pillars if empty
-    sqliteDb.execSync(SEED_PILLARS_SQL);
+    rawDb.execSync(SEED_PILLARS_SQL);
 
+    _isInitialized = true;
     console.log('[Database] SQLite initialized and seeded successfully.');
   } catch (error) {
     console.error('[Database] Initialization error:', error);

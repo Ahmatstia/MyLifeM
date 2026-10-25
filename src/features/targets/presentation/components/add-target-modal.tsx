@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { X, Target as TargetIcon } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget } from '@/theme/tokens';
+import { radius, space } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import type {
@@ -43,13 +43,6 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
   const [priority, setPriority] = useState<TargetPriority>('MEDIUM');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Sync initial pillar if pillars load after mount
-  React.useEffect(() => {
-    if (pillars.length > 0 && !pillarId) {
-      setPillarId(pillars[0].id);
-    }
-  }, [pillars, pillarId]);
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -318,13 +311,15 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    backgroundColor: colors.scrim,
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: colors.surfaceContainer,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
     maxHeight: '90%',
     paddingBottom: space[6],
   },
@@ -344,7 +339,7 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: radius.pill,
     backgroundColor: colors.primaryContainer,
     alignItems: 'center',
     justifyContent: 'center',
@@ -357,7 +352,7 @@ const styles = StyleSheet.create({
   },
   errorBox: {
     backgroundColor: colors.errorContainer,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: space[3],
     marginBottom: space[3],
   },
@@ -367,10 +362,10 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   textInput: {
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outline,
-    borderRadius: radius.md,
+    borderColor: colors.outlineVariant,
+    borderRadius: radius.lg,
     color: colors.onSurface,
     paddingHorizontal: space[3],
     height: 48,
@@ -394,7 +389,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   choiceDot: {
     width: 8,
@@ -411,10 +406,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 44,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   typeOptionSelected: {
     backgroundColor: colors.primaryContainer,
@@ -435,11 +430,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 38,
-    borderRadius: radius.sm,
+    height: 40,
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   priorityChipSelected: {
     backgroundColor: colors.primaryContainer,

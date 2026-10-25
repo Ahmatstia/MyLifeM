@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, type TextProps, type TextStyle } from 'react-native';
 import { colors } from '@/theme/colors';
-import { typography, type TypographyVariant } from '@/theme/tokens';
+import { fontFamily, typography, type TypographyVariant } from '@/theme/tokens';
 
 export interface AppTextProps extends TextProps {
   variant?: TypographyVariant;
@@ -9,6 +9,14 @@ export interface AppTextProps extends TextProps {
   align?: 'left' | 'center' | 'right';
   tabularNums?: boolean;
 }
+
+// Di RN, bobot font kustom dipilih lewat nama keluarga font, bukan fontWeight (DESIGN.md L4).
+const FAMILY_BY_WEIGHT: Record<string, string> = {
+  '400': fontFamily.regular,
+  '500': fontFamily.medium,
+  '600': fontFamily.semibold,
+  '700': fontFamily.bold,
+};
 
 export const AppText: React.FC<AppTextProps> = ({
   children,
@@ -28,7 +36,7 @@ export const AppText: React.FC<AppTextProps> = ({
   const combinedStyle: TextStyle = {
     fontSize: typoStyle.fontSize,
     lineHeight: typoStyle.lineHeight,
-    fontWeight: typoStyle.fontWeight,
+    fontFamily: FAMILY_BY_WEIGHT[typoStyle.fontWeight] ?? fontFamily.regular,
     color: resolvedColor,
     textAlign: align,
     ...(tabularNums ? { fontVariant: ['tabular-nums'] } : {}),

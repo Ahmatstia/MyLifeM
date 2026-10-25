@@ -5,3 +5,4 @@ export * from './screen';
 export * from './banner';
 export * from './empty-state';
 export * from './progress-bar';
+export * from './progress-ring';

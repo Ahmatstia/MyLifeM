@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Plus, FolderKanban, CheckCircle2 } from 'lucide-react-native';
+import { FolderKanban } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, radius } from '@/theme/tokens';
+import { space, radius, elevation } from '@/theme/tokens';
 import { Screen } from '@/shared/ui/screen';
 import { AppText } from '@/shared/ui/app-text';
-import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { Banner } from '@/shared/ui/banner';
 import { EmptyState } from '@/shared/ui/empty-state';
@@ -14,6 +13,7 @@ import { ProgressBar } from '@/shared/ui/progress-bar';
 import { useProjects } from '../hooks/use-projects';
 import { ProjectCard } from '../components/project-card';
 import { AddProjectModal } from '../components/add-project-modal';
+import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 
 export const ProjectListScreen: React.FC = () => {
   const {
@@ -27,6 +27,7 @@ export const ProjectListScreen: React.FC = () => {
   } = useProjects();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  useOpenAddFromParam(() => setIsModalVisible(true));
 
   const activeProjects = projects.filter((p) => p.status === 'ACTIVE');
   const totalTasksCount = projects.reduce(
@@ -54,37 +55,43 @@ export const ProjectListScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <AppText variant="headlineLarge">Proyek Eksekusi</AppText>
+          <AppText variant="headlineLarge" color="onSurface" style={styles.headerTitle}>
+            Proyek Eksekusi
+          </AppText>
           <AppText variant="bodySmall" color="onSurfaceVariant">
-            Wadah eksekusi kerja nyata pendukung Target hidupmu
+            Wadah kerja nyata untuk target hidupmu
           </AppText>
         </View>
 
-        <Button
-          title="Tambah"
-          variant="filled"
-          size="compact"
-          leftIcon={<Plus size={16} color={colors.onPrimary} />}
+        <Pressable
           onPress={() => setIsModalVisible(true)}
-        />
+          accessibilityRole="button"
+          accessibilityLabel="Tambah proyek baru"
+          style={({ pressed }) => [styles.addPillBtn, pressed && styles.pressed]}
+        >
+          <AppText variant="labelMedium" color="onPrimary">
+            + Tambah
+          </AppText>
+        </Pressable>
       </View>
 
       {/* Hero Summary Card */}
-      <Card variant="highlight" style={styles.heroCard}>
+      <Card variant="elevated" padding={space[4]} style={styles.heroCard}>
         <View style={styles.heroRow}>
-          <View style={styles.heroIconBox}>
-            <FolderKanban size={24} color={colors.primary} />
-          </View>
           <View style={styles.heroTextCol}>
-            <AppText variant="titleMedium">Ikhtisar Eksekusi</AppText>
+            <AppText variant="titleMedium" color="onSurface">
+              Ikhtisar Eksekusi
+            </AppText>
             <AppText variant="bodySmall" color="onSurfaceVariant">
               {activeProjects.length} proyek aktif • {completedTasksCount}/{totalTasksCount} tugas
             </AppText>
           </View>
           <View style={styles.heroScoreCol}>
-            <AppText variant="headlineSmall" color="primary" tabularNums>
-              {averageProgress}%
-            </AppText>
+            <View style={styles.percentBadge}>
+              <AppText variant="titleLarge" color="primary" tabularNums>
+                {averageProgress}%
+              </AppText>
+            </View>
             <AppText variant="labelSmall" color="onSurfaceSubtle">
               Progres
             </AppText>
@@ -94,7 +101,7 @@ export const ProjectListScreen: React.FC = () => {
         <ProgressBar
           progress={averageProgress}
           color={colors.primary}
-          height={6}
+          height={8}
           style={styles.heroProgress}
         />
       </Card>
@@ -118,7 +125,7 @@ export const ProjectListScreen: React.FC = () => {
               >
                 <AppText
                   variant="labelMedium"
-                  color={isSelected ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+                  color={isSelected ? 'onPrimary' : 'onSurfaceVariant'}
                 >
                   {tab.label}
                 </AppText>
@@ -189,28 +196,37 @@ const styles = StyleSheet.create({
     marginTop: space[3],
     marginBottom: space[4],
   },
+  headerTitle: {
+    letterSpacing: -0.5,
+  },
+  addPillBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: 7,
+    paddingHorizontal: space[4],
+    borderRadius: radius.pill,
+  },
   heroCard: {
     marginBottom: space[3],
+    borderRadius: radius.xl,
   },
   heroRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: space[3],
-  },
-  heroIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.primaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: space[3],
   },
   heroTextCol: {
     flex: 1,
   },
   heroScoreCol: {
     alignItems: 'flex-end',
+  },
+  percentBadge: {
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 2,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
+    marginBottom: 2,
   },
   heroProgress: {
     marginTop: space[1],
@@ -228,14 +244,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: space[4],
     borderRadius: radius.pill,
-    borderWidth: 1,
   },
   filterChipSelected: {
-    backgroundColor: colors.primaryContainer,
-    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+    ...elevation.level1,
   },
   filterChipUnselected: {
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
     borderColor: colors.outlineVariant,
   },
   bannerMargin: {
@@ -251,5 +267,9 @@ const styles = StyleSheet.create({
   },
   emptyMargin: {
     marginTop: space[4],
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.96 }],
   },
 });

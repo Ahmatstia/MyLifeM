@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, type ViewStyle, StyleSheet } from 'react-native';
-import { FolderOpen, CheckCircle, AlertOctagon, HelpCircle } from 'lucide-react-native';
+import { FolderOpen, CheckCircle, AlertOctagon } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space } from '@/theme/tokens';
 import { AppText } from './app-text';

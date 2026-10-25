@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Pressable, StyleSheet, type ViewStyle } from 'react-native';
-import { CheckCircle2, Circle, Play, Trash2, Clock } from 'lucide-react-native';
+import { Check, Play, MoreHorizontal } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget } from '@/theme/tokens';
+import { radius, space, elevation } from '@/theme/tokens';
 import { Card } from '@/shared/ui/card';
 import { AppText } from '@/shared/ui/app-text';
 import type { DailyFocusItemEntity } from '../../domain/entities/daily-focus.entity';
@@ -16,6 +16,12 @@ export interface PriorityTaskCardProps {
   style?: ViewStyle;
 }
 
+/**
+ * PriorityTaskCard: Desain Cute Marshmallow Minimal.
+ * - Tanpa tumpukan icon (jam, trash, dsb).
+ * - Checkbox bundar 30dp yang empuk dan memuaskan saat ditekan.
+ * - Pil pastel lembut untuk estimasi waktu & status pilar.
+ */
 export const PriorityTaskCard: React.FC<PriorityTaskCardProps> = ({
   item,
   isActiveTimerTask = false,
@@ -29,86 +35,106 @@ export const PriorityTaskCard: React.FC<PriorityTaskCardProps> = ({
   return (
     <Card
       variant={isActiveTimerTask ? 'highlight' : isCompleted ? 'filled' : 'elevated'}
-      padding={space[3]}
+      padding={space[4]}
       style={[styles.container, style]}
     >
-      <View style={styles.row}>
-        {/* CheckCircle on LEFT edge with >= 48dp hit area per DESIGN.md 9.2 */}
+      <View style={styles.mainRow}>
+        {/* Checkbox Bundar Tactile (Minimal 48dp hit-box) */}
         <Pressable
           onPress={onToggleComplete}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: isCompleted }}
           accessibilityLabel={`Tandai ${task.title} ${isCompleted ? 'belum selesai' : 'selesai'}`}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={styles.checkButton}
+          style={styles.checkTouchArea}
         >
-          {isCompleted ? (
-            <CheckCircle2 size={24} color={colors.success} />
-          ) : (
-            <Circle size={24} color={colors.outline} />
-          )}
+          <View style={[styles.stampCircle, isCompleted && styles.stampCircleDone]}>
+            {isCompleted && <Check size={16} color={colors.onPrimary} strokeWidth={3} />}
+          </View>
         </Pressable>
 
-        {/* Task Details */}
-        <View style={styles.detailsCol}>
+        {/* Info Tugas */}
+        <View style={styles.textContainer}>
           <AppText
-            variant="titleSmall"
+            variant="titleMedium"
             color={isCompleted ? 'onSurfaceSubtle' : 'onSurface'}
             numberOfLines={2}
-            style={isCompleted ? styles.completedTitle : undefined}
+            style={[styles.taskTitle, isCompleted && styles.completedText]}
           >
             {task.title}
           </AppText>
 
-          <View style={styles.metaRow}>
-            <View style={styles.minutesBadge}>
-              <Clock size={12} color={colors.onSurfaceVariant} />
-              <AppText variant="labelSmall" color="onSurfaceVariant" tabularNums style={styles.minutesText}>
-                {task.actualMinutes}/{task.estimatedMinutes} mnt
+          {/* Pil Pastel Minimalis: Tanpa Ikon Jam */}
+          <View style={styles.pillRow}>
+            <View style={styles.tagPill}>
+              <AppText variant="labelSmall" color="onSurfaceVariant" tabularNums>
+                {task.estimatedMinutes} mnt
               </AppText>
             </View>
 
-            <AppText variant="labelSmall" color="onSurfaceSubtle" style={styles.priorityText}>
-              • {task.priority.toLowerCase()}
-            </AppText>
+            {task.priority !== 'MEDIUM' && (
+              <View
+                style={[
+                  styles.priorityPill,
+                  task.priority === 'HIGH' ? styles.priorityHigh : styles.priorityLow,
+                ]}
+              >
+                <AppText
+                  variant="labelSmall"
+                  style={{
+                    color: task.priority === 'HIGH' ? colors.secondary : colors.onSurfaceVariant,
+                  }}
+                >
+                  {task.priority === 'HIGH' ? 'Penting' : 'Santai'}
+                </AppText>
+              </View>
+            )}
           </View>
         </View>
 
-        {/* Action Buttons: Start Focus or Delete */}
-        <View style={styles.actionsCol}>
-          {!isCompleted && (
+        {/* Aksi Sisi Kanan: Mulai Fokus / Hapus Bersih */}
+        <View style={styles.actionsBox}>
+          {!isCompleted ? (
             <Pressable
               onPress={onStartFocus}
               accessibilityRole="button"
-              accessibilityLabel={`Mulai fokus untuk ${task.title}`}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              style={[
-                styles.focusButton,
-                isActiveTimerTask && styles.activeFocusButton,
+              accessibilityLabel={`Fokus pada ${task.title}`}
+              style={({ pressed }) => [
+                styles.focusPill,
+                isActiveTimerTask ? styles.focusPillActive : styles.focusPillIdle,
+                pressed && styles.pressed,
               ]}
             >
               <Play
-                size={14}
+                size={13}
                 color={isActiveTimerTask ? colors.onPrimary : colors.primary}
+                fill={isActiveTimerTask ? colors.onPrimary : colors.primary}
               />
               <AppText
                 variant="labelSmall"
                 color={isActiveTimerTask ? 'onPrimary' : 'primary'}
-                style={styles.focusButtonText}
+                style={styles.focusPillText}
               >
                 {isActiveTimerTask ? 'Aktif' : 'Fokus'}
               </AppText>
             </Pressable>
+          ) : (
+            <View style={styles.donePill}>
+              <AppText variant="labelSmall" color="success">
+                Selesai
+              </AppText>
+            </View>
           )}
 
+          {/* Opsi Lepas dari Hari Ini (Diskrit, tidak mengotori layar) */}
           <Pressable
             onPress={onRemove}
             accessibilityRole="button"
-            accessibilityLabel="Hapus dari prioritas hari ini"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={styles.removeButton}
+            accessibilityLabel="Lepas tugas ini dari prioritas hari ini"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={styles.moreBtn}
           >
-            <Trash2 size={16} color={colors.onSurfaceSubtle} />
+            <MoreHorizontal size={18} color={colors.onSurfaceSubtle} />
           </Pressable>
         </View>
       </View>
@@ -118,71 +144,105 @@ export const PriorityTaskCard: React.FC<PriorityTaskCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    minHeight: 72, // ListItem 72 per DESIGN.md
     marginBottom: space[3],
-    justifyContent: 'center',
+    borderRadius: radius.xl,
   },
-  row: {
+  mainRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  checkButton: {
-    width: touchTarget.compact, // 40 with 8dp hitSlop = 48dp
-    height: touchTarget.compact,
+  checkTouchArea: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: space[2],
   },
-  detailsCol: {
+  stampCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: '#D4CEF2',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stampCircleDone: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  textContainer: {
     flex: 1,
-    marginRight: space[2],
+    paddingRight: space[2],
   },
-  completedTitle: {
+  taskTitle: {
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  completedText: {
     textDecorationLine: 'line-through',
+    opacity: 0.6,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  minutesBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  minutesText: {
-    marginLeft: 2,
-  },
-  priorityText: {
-    marginLeft: 4,
-    textTransform: 'capitalize',
-  },
-  actionsCol: {
+  pillRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[2],
   },
-  focusButton: {
+  tagPill: {
+    backgroundColor: colors.surfaceContainerLow,
+    paddingVertical: 2,
+    paddingHorizontal: space[2],
+    borderRadius: radius.pill,
+  },
+  priorityPill: {
+    paddingVertical: 2,
+    paddingHorizontal: space[2],
+    borderRadius: radius.pill,
+  },
+  priorityHigh: {
+    backgroundColor: colors.secondaryContainer,
+  },
+  priorityLow: {
+    backgroundColor: colors.surfaceContainerLow,
+  },
+  actionsBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 36,
+    gap: space[1],
+  },
+  focusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
     paddingHorizontal: space[3],
     borderRadius: radius.pill,
-    backgroundColor: colors.surfaceContainerHigh,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    gap: 4,
   },
-  activeFocusButton: {
+  focusPillIdle: {
+    backgroundColor: colors.primaryContainer,
+  },
+  focusPillActive: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    ...elevation.level1,
   },
-  focusButtonText: {
-    marginLeft: 4,
-    fontWeight: '600',
+  focusPillText: {
+    letterSpacing: 0.2,
   },
-  removeButton: {
-    padding: space[2],
+  donePill: {
+    backgroundColor: colors.successContainer,
+    paddingVertical: 4,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
+  },
+  moreBtn: {
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.96 }],
   },
 });

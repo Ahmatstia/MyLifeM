@@ -7,7 +7,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { radius, space, elevation } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import type { LifePillarEntity } from '../../domain/entities/target.entity';
 
@@ -18,6 +18,9 @@ export interface PillarFilterChipsProps {
   style?: ViewStyle;
 }
 
+/**
+ * PillarFilterChips: Pil filter pastel yang empuk (cute marshmallow tabs).
+ */
 export const PillarFilterChips: React.FC<PillarFilterChipsProps> = ({
   pillars,
   selectedPillarId,
@@ -38,17 +41,17 @@ export const PillarFilterChips: React.FC<PillarFilterChipsProps> = ({
           onPress={() => onSelectPillar(null)}
           accessibilityRole="button"
           accessibilityState={{ selected: isAllSelected }}
-          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-          style={[
+          style={({ pressed }) => [
             styles.chip,
             isAllSelected ? styles.chipSelected : styles.chipUnselected,
+            pressed && styles.pressed,
           ]}
         >
           <AppText
             variant="labelMedium"
-            color={isAllSelected ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+            color={isAllSelected ? 'onPrimary' : 'onSurfaceVariant'}
           >
-            Semua Pilar
+            Semua
           </AppText>
         </Pressable>
 
@@ -62,22 +65,21 @@ export const PillarFilterChips: React.FC<PillarFilterChipsProps> = ({
               onPress={() => onSelectPillar(pillar.id)}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-              style={[
+              style={({ pressed }) => [
                 styles.chip,
                 isSelected ? styles.chipSelected : styles.chipUnselected,
+                pressed && styles.pressed,
               ]}
             >
-              {/* Pillar indicator dot */}
               <View
                 style={[
                   styles.pillarDot,
-                  { backgroundColor: pillar.color || colors.primary },
+                  { backgroundColor: isSelected ? colors.onPrimary : (pillar.color || colors.primary) },
                 ]}
               />
               <AppText
                 variant="labelMedium"
-                color={isSelected ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+                color={isSelected ? 'onPrimary' : 'onSurfaceVariant'}
               >
                 {pillar.name}
               </AppText>
@@ -100,24 +102,27 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 40,
-    minHeight: 40,
+    height: 38,
     paddingHorizontal: space[4],
     borderRadius: radius.pill,
-    borderWidth: 1,
   },
   chipSelected: {
-    backgroundColor: colors.primaryContainer,
-    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+    ...elevation.level1,
   },
   chipUnselected: {
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
     borderColor: colors.outlineVariant,
   },
   pillarDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: radius.pill,
     marginRight: space[2],
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.97 }],
   },
 });

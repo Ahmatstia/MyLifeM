@@ -1,11 +1,10 @@
 import React from 'react';
 import { View, Pressable, StyleSheet, type ViewStyle } from 'react-native';
-import { Play, Pause, RotateCcw, Flame, Sparkles, Clock } from 'lucide-react-native';
+import { Play, Pause, RotateCcw, X, ChevronUp } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget } from '@/theme/tokens';
+import { radius, space, touchTarget, elevation } from '@/theme/tokens';
 import { Card } from '@/shared/ui/card';
 import { AppText } from '@/shared/ui/app-text';
-import { Button } from '@/shared/ui/button';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import type {
   FocusTimerMode,
@@ -23,9 +22,16 @@ export interface FocusTimerWidgetProps {
   onPause: () => void;
   onReset: () => void;
   onClearActiveTask?: () => void;
+  onMinimize?: () => void;
   style?: ViewStyle;
 }
 
+/**
+ * FocusTimerWidget: Desain Cute Marshmallow Minimal.
+ * - Tanpa tumpukan ikon dekoratif (bebas emoji/ikon berlebih).
+ * - Mode selector berbentuk pil pastel yang empuk dan responsif.
+ * - Angka timer besar dengan tipografi Plus Jakarta Sans yang ramah.
+ */
 export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   mode,
   formattedTime,
@@ -37,28 +43,45 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   onPause,
   onReset,
   onClearActiveTask,
+  onMinimize,
   style,
 }) => {
   return (
-    <Card variant="highlight" style={[styles.container, style]}>
-      {/* Mode Selector Chips */}
+    <Card variant="elevated" padding={space[5]} style={[styles.container, style]}>
+      {/* Top Header: Mode Title & Optional Minimize */}
+      <View style={styles.topHeader}>
+        <View style={styles.titleBadge}>
+          <AppText variant="labelMedium" color="primary">
+            Sesi Fokus
+          </AppText>
+        </View>
+
+        {onMinimize && (
+          <Pressable
+            onPress={onMinimize}
+            accessibilityRole="button"
+            accessibilityLabel="Tutup sesi fokus"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.minimizeBtn}
+          >
+            <ChevronUp size={20} color={colors.onSurfaceVariant} />
+          </Pressable>
+        )}
+      </View>
+
+      {/* Mode Selector: 3 Pil Pastel Tanpa Ikon Berlebih */}
       <View style={styles.modeRow}>
         <Pressable
           onPress={() => onChangeMode('POMODORO', 25)}
           accessibilityRole="button"
-          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
           style={[
-            styles.modeChip,
-            mode === 'POMODORO' && styles.modeChipSelected,
+            styles.modePill,
+            mode === 'POMODORO' && styles.modePillActive,
           ]}
         >
-          <Flame
-            size={14}
-            color={mode === 'POMODORO' ? colors.onPrimaryContainer : colors.onSurfaceVariant}
-          />
           <AppText
             variant="labelSmall"
-            color={mode === 'POMODORO' ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+            color={mode === 'POMODORO' ? 'onPrimary' : 'onSurfaceVariant'}
             style={styles.modeText}
           >
             Pomodoro 25m
@@ -68,19 +91,14 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         <Pressable
           onPress={() => onChangeMode('DEEP_FLOW', 50)}
           accessibilityRole="button"
-          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
           style={[
-            styles.modeChip,
-            mode === 'DEEP_FLOW' && styles.modeChipSelected,
+            styles.modePill,
+            mode === 'DEEP_FLOW' && styles.modePillActive,
           ]}
         >
-          <Sparkles
-            size={14}
-            color={mode === 'DEEP_FLOW' ? colors.onPrimaryContainer : colors.onSurfaceVariant}
-          />
           <AppText
             variant="labelSmall"
-            color={mode === 'DEEP_FLOW' ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+            color={mode === 'DEEP_FLOW' ? 'onPrimary' : 'onSurfaceVariant'}
             style={styles.modeText}
           >
             Deep Flow 50m
@@ -90,94 +108,99 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         <Pressable
           onPress={() => onChangeMode('STOPWATCH')}
           accessibilityRole="button"
-          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
           style={[
-            styles.modeChip,
-            mode === 'STOPWATCH' && styles.modeChipSelected,
+            styles.modePill,
+            mode === 'STOPWATCH' && styles.modePillActive,
           ]}
         >
-          <Clock
-            size={14}
-            color={mode === 'STOPWATCH' ? colors.onPrimaryContainer : colors.onSurfaceVariant}
-          />
           <AppText
             variant="labelSmall"
-            color={mode === 'STOPWATCH' ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+            color={mode === 'STOPWATCH' ? 'onPrimary' : 'onSurfaceVariant'}
             style={styles.modeText}
           >
-            Stopwatch
+            Bebas
           </AppText>
         </Pressable>
       </View>
 
-      {/* Active Task Tag */}
+      {/* Tautan Tugas yang Sedang Difokuskan */}
       {activeTask ? (
-        <View style={styles.activeTaskBadge}>
-          <AppText variant="labelSmall" color="primary" numberOfLines={1} style={styles.activeTaskText}>
+        <View style={styles.activeTaskPill}>
+          <AppText variant="labelSmall" color="onPrimaryContainer" numberOfLines={1} style={styles.activeTaskText}>
             Fokus: {activeTask.title}
           </AppText>
           {onClearActiveTask && (
             <Pressable
               onPress={onClearActiveTask}
+              accessibilityRole="button"
+              accessibilityLabel="Lepas tugas"
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={styles.clearBtn}
             >
-              <AppText variant="labelSmall" color="onSurfaceSubtle">
-                [Lepas]
-              </AppText>
+              <X size={14} color={colors.onPrimaryContainer} />
             </Pressable>
           )}
         </View>
       ) : (
-        <AppText variant="labelSmall" color="onSurfaceSubtle" style={styles.idleTaskText}>
-          Fokus Mandiri (Tanpa Tautan Tugas)
-        </AppText>
+        <View style={styles.idleTaskPill}>
+          <AppText variant="labelSmall" color="onSurfaceSubtle">
+            Fokus Mandiri
+          </AppText>
+        </View>
       )}
 
-      {/* Big Timer Digits */}
+      {/* Angka Timer Besar & Ramah */}
       <View style={styles.digitsWrapper}>
-        <AppText variant="timer" color="onSurface" align="center" tabularNums>
+        <AppText variant="timer" color="onSurface" align="center" tabularNums style={styles.timerDigits}>
           {formattedTime}
         </AppText>
       </View>
 
-      {/* Progress Bar indicator */}
+      {/* Indikator Progres Berbentuk Pil Lembut */}
       {mode !== 'STOPWATCH' && (
         <ProgressBar
           progress={progressRatio * 100}
           color={isRunning ? colors.primary : colors.surfaceContainerHighest}
-          height={6}
+          height={8}
           style={styles.progressBar}
         />
       )}
 
-      {/* Timer Controls (min 48dp touch targets) */}
+      {/* Tombol Kontrol: Reset Bundar & CTA Pil Lebar */}
       <View style={styles.controlsRow}>
-        {/* Reset Button */}
         <Pressable
           onPress={onReset}
           accessibilityRole="button"
           accessibilityLabel="Reset timer"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={styles.secondaryButton}
+          style={styles.resetButton}
         >
-          <RotateCcw size={20} color={colors.onSurfaceVariant} />
+          <RotateCcw size={18} color={colors.onSurfaceVariant} />
         </Pressable>
 
-        {/* Start / Pause Button (CTA filled) */}
-        <Button
-          title={isRunning ? 'Jeda' : 'Mulai Fokus'}
-          variant={isRunning ? 'tonal' : 'filled'}
-          size="cta"
-          leftIcon={
-            isRunning ? (
-              <Pause size={20} color={colors.onSurface} />
-            ) : (
-              <Play size={20} color={colors.onPrimary} />
-            )
-          }
+        <Pressable
           onPress={isRunning ? onPause : onStart}
-          style={styles.mainCtaButton}
-        />
+          accessibilityRole="button"
+          accessibilityLabel={isRunning ? 'Jeda sesi fokus' : 'Mulai sesi fokus'}
+          style={({ pressed }) => [
+            styles.ctaPill,
+            isRunning ? styles.ctaPillRunning : styles.ctaPillIdle,
+            pressed && styles.ctaPressed,
+          ]}
+        >
+          {isRunning ? (
+            <Pause size={18} color={colors.onSurface} style={styles.ctaIcon} />
+          ) : (
+            <Play size={18} color={colors.onPrimary} style={styles.ctaIcon} />
+          )}
+          <AppText
+            variant="titleMedium"
+            color={isRunning ? 'onSurface' : 'onPrimary'}
+            style={styles.ctaText}
+          >
+            {isRunning ? 'Jeda' : 'Mulai Fokus'}
+          </AppText>
+        </Pressable>
       </View>
     </Card>
   );
@@ -185,58 +208,85 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: space[4],
     marginBottom: space[4],
+    borderRadius: radius.xxl,
   },
-  modeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: space[2],
-    marginBottom: space[3],
-  },
-  modeChip: {
-    flex: 1,
+  topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[3],
+  },
+  titleBadge: {
+    backgroundColor: colors.primaryContainer,
+    paddingHorizontal: space[3],
+    paddingVertical: space[1],
+    borderRadius: radius.pill,
+  },
+  minimizeBtn: {
+    width: 36,
     height: 36,
     borderRadius: radius.pill,
     backgroundColor: colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  modeChipSelected: {
-    backgroundColor: colors.primaryContainer,
-    borderColor: colors.primary,
+  modeRow: {
+    flexDirection: 'row',
+    gap: space[2],
+    marginBottom: space[3],
+  },
+  modePill: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 38,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceContainerLow,
+  },
+  modePillActive: {
+    backgroundColor: colors.primary,
+    ...elevation.level1,
   },
   modeText: {
-    marginLeft: 4,
+    letterSpacing: 0.2,
   },
-  activeTaskBadge: {
+  activeTaskPill: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surfaceContainerHigh,
-    paddingVertical: space[1],
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 6,
     paddingHorizontal: space[3],
     borderRadius: radius.pill,
     alignSelf: 'center',
     marginBottom: space[2],
-    maxWidth: '90%',
+    maxWidth: '92%',
     gap: space[2],
   },
   activeTaskText: {
-    fontWeight: '600',
     flexShrink: 1,
   },
-  idleTaskText: {
-    textAlign: 'center',
+  clearBtn: {
+    padding: 2,
+  },
+  idleTaskPill: {
+    alignSelf: 'center',
+    backgroundColor: colors.surfaceContainerLow,
+    paddingVertical: 4,
+    paddingHorizontal: space[3],
+    borderRadius: radius.pill,
     marginBottom: space[2],
   },
   digitsWrapper: {
-    paddingVertical: space[2],
+    paddingVertical: space[1],
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  timerDigits: {
+    fontSize: 52,
+    lineHeight: 58,
+    letterSpacing: -1,
   },
   progressBar: {
     marginVertical: space[3],
@@ -248,16 +298,39 @@ const styles = StyleSheet.create({
     gap: space[3],
     marginTop: space[2],
   },
-  secondaryButton: {
-    width: touchTarget.min, // 48
-    height: touchTarget.min, // 48
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceContainerHigh,
+  resetButton: {
+    width: touchTarget.min,
+    height: touchTarget.min,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mainCtaButton: {
+  ctaPill: {
     flex: 1,
-    maxWidth: 220,
+    maxWidth: 240,
+    height: touchTarget.min,
+    borderRadius: radius.pill,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: space[5],
+  },
+  ctaPillIdle: {
+    backgroundColor: colors.primary,
+    ...elevation.level2,
+  },
+  ctaPillRunning: {
+    backgroundColor: colors.surfaceContainerHigh,
+  },
+  ctaPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.98 }],
+  },
+  ctaIcon: {
+    marginRight: space[2],
+  },
+  ctaText: {
+    letterSpacing: 0.2,
   },
 });

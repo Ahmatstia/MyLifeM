@@ -1,71 +1,85 @@
 /**
  * MyLife Mobile Design System - Color Tokens
- * Palette: "Deep Obsidian Teal" (#081013 with Teal #14b8a6 and Warm Amber accents)
- * Offline-First Personal Life OS
+ * Sumber kebenaran: docs/DESIGN.md Bagian 3.2 (tema light, primary indigo #4C4DCC).
+ * Nama key lama dipertahankan agar seluruh layar otomatis mengikuti tema baru.
  */
 
 export const colors = {
-  // Base Obsidian Surfaces
-  background: '#081013',
-  surface: '#081013',
-  surfaceContainerLow: '#0f1b20',
-  surfaceContainer: '#15242b',
-  surfaceContainerHigh: '#1c3039',
-  surfaceContainerHighest: '#243c44',
-  surfaceContainerLowest: '#050a0c',
+  // Surfaces: Warm porcelain & marshmallow whites
+  background: '#FAF8FE',
+  surface: '#FAF8FE',
+  surfaceContainerLowest: '#FFFFFF',
+  surfaceContainerLow: '#F4F1FA',
+  surfaceContainer: '#EEEBF6',
+  surfaceContainerHigh: '#E7E3F0',
+  surfaceContainerHighest: '#E0DCEB',
 
-  // Brand / Teal Accents
-  primary: '#14b8a6',
-  primaryHover: '#0d9488',
-  primaryContainer: '#134e4a',
-  onPrimary: '#042f2e',
-  onPrimaryContainer: '#ccfbf1',
+  // Brand: Soft Sweet Periwinkle Indigo
+  primary: '#5C54E5',
+  primaryHover: '#4E46D8',
+  primaryContainer: '#ECEAFE',
+  onPrimary: '#FFFFFF',
+  onPrimaryContainer: '#28208C',
 
-  // Secondary Accents
-  secondary: '#2dd4bf',
-  secondaryContainer: '#0f766e',
-  onSecondary: '#081013',
-  onSecondaryContainer: '#f0fdfa',
+  // Secondary: Warm Soft Coral Peach (Cute accent)
+  secondary: '#FF8A65',
+  secondaryContainer: '#FFF0EB',
+  onSecondary: '#FFFFFF',
+  onSecondaryContainer: '#8C2B0D',
 
-  // Warm Canvas / Streak Highlight
-  highlight: '#f59e0b',
-  highlightContainer: '#78350f',
-  onHighlight: '#1f1300',
-  onHighlightContainer: '#fef3c7',
+  // Tertiary (aksen hangat untuk teks/ikon)
+  tertiary: '#38A169',
+  tertiaryContainer: '#E6F9EE',
+  onTertiary: '#FFFFFF',
+  onTertiaryContainer: '#144F2E',
 
-  // Typography & Text
-  onSurface: '#f1f5f9',
-  onSurfaceVariant: '#94a3b8',
-  onSurfaceSubtle: '#64748b',
+  // Highlight (hanya sebagai isi untuk momen spesial, mis. streak)
+  highlight: '#FF9F43',
+  highlightContainer: '#FFF3E6',
+  onHighlight: '#6B3800',
+  onHighlightContainer: '#6B3800',
 
-  // Borders & Dividers
-  outline: '#243c44',
-  outlineVariant: '#16282e',
-  border: '#243c44',
+  // Teks: Soft Deep Slate (not harsh pure black)
+  onSurface: '#242132',
+  onSurfaceVariant: '#68637B',
+  onSurfaceSubtle: '#9E99B0',
 
-  // Status & Feedback
-  success: '#10b981',
-  successContainer: '#064e3b',
-  onSuccess: '#ffffff',
-  onSuccessContainer: '#a7f3d0',
+  // Border & divider: Whisper-soft borders (no harsh wireframe outlines)
+  outline: '#E8E3F2',
+  outlineVariant: '#EFEBF7',
+  border: '#EFEBF7',
 
-  error: '#ef4444',
-  errorContainer: '#7f1d1d',
-  onError: '#ffffff',
-  onErrorContainer: '#fecaca',
+  // Status
+  success: '#38A169',
+  successContainer: '#E6F9EE',
+  onSuccess: '#FFFFFF',
+  onSuccessContainer: '#144F2E',
 
-  warning: '#f59e0b',
-  warningContainer: '#78350f',
-  onWarning: '#ffffff',
-  onWarningContainer: '#fef3c7',
+  error: '#E53E3E',
+  errorContainer: '#FFEBEB',
+  onError: '#FFFFFF',
+  onErrorContainer: '#741515',
 
-  // 5 Life Pillars Colors
+  warning: '#D69E2E',
+  warningContainer: '#FEFCBF',
+  onWarning: '#FFFFFF',
+  onWarningContainer: '#744210',
+
+  // Inverse (snackbar)
+  inverseSurface: '#313034',
+  inverseOnSurface: '#F3EFF4',
+  inversePrimary: '#C1C1FF',
+
+  // Scrim modal (hitam 32%)
+  scrim: 'rgba(36, 33, 50, 0.40)',
+
+  // Warna kategori untuk 5 Pilar Kehidupan (Cute Pastel Tinted)
   pillars: {
-    career: '#14b8a6',
-    finance: '#f59e0b',
-    health: '#ef4444',
-    growth: '#8b5cf6',
-    personal: '#3b82f6',
+    career: '#2EA39B', // soft teal
+    finance: '#E28743', // warm honey apricot
+    health: '#E25252', // soft coral red
+    growth: '#8A5BE0', // soft purple lavender
+    personal: '#3A7BD5', // soft sky blue
   },
 } as const;
 

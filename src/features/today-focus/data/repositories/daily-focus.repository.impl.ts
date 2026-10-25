@@ -4,7 +4,6 @@ import {
   dailyFocusItems,
   tasks,
   focusSessions,
-  type DailyFocusItem,
   type Task,
   type FocusSession,
 } from '@/db/schema';

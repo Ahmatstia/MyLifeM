@@ -21,7 +21,6 @@ export function useSettings() {
 
   const loadData = useCallback(async () => {
     try {
-      setIsLoading(true);
       const [currentSettings, currentStats] = await Promise.all([
         settingsRepository.getSettings(),
         settingsRepository.getDatabaseStats(),
@@ -34,6 +33,12 @@ export function useSettings() {
       setIsLoading(false);
     }
   }, []);
+
+  // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
+  const refresh = useCallback(async () => {
+    setIsLoading(true);
+    await loadData();
+  }, [loadData]);
 
   useEffect(() => {
     loadData();
@@ -75,6 +80,6 @@ export function useSettings() {
     setBackupJson,
     updateSetting,
     exportBackup: handleExportBackup,
-    refresh: loadData,
+    refresh,
   };
 }

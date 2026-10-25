@@ -15,8 +15,6 @@ export function useTargets() {
 
   const loadData = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
 
       const [loadedPillars, loadedTargets] = await Promise.all([
         targetRepository.getPillars(),
@@ -27,6 +25,7 @@ export function useTargets() {
 
       setPillars(loadedPillars);
       setTargets(loadedTargets);
+      setError(null);
     } catch (err: any) {
       console.error('[useTargets] Load error:', err);
       setError('Gagal memuat daftar target. Silakan coba lagi.');
@@ -34,6 +33,13 @@ export function useTargets() {
       setIsLoading(false);
     }
   }, [selectedPillarId]);
+
+  // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
+  const refresh = useCallback(async () => {
+    setError(null);
+    setIsLoading(true);
+    await loadData();
+  }, [loadData]);
 
   useEffect(() => {
     loadData();
@@ -75,7 +81,7 @@ export function useTargets() {
     setSelectedPillarId,
     isLoading,
     error,
-    refresh: loadData,
+    refresh,
     addTarget,
     updateProgress,
     removeTarget,

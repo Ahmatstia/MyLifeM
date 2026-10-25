@@ -13,20 +13,26 @@ export function useProjects() {
 
   const loadData = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
 
       const items = await projectRepository.getProjects(
         statusFilter ? { status: statusFilter } : undefined
       );
       setProjects(items);
+      setError(null);
     } catch (err: any) {
       console.error('[useProjects] Load error:', err);
       setError('Gagal memuat daftar proyek. Silakan coba lagi.');
-    } finally {``
+    } finally {
       setIsLoading(false);
     }
   }, [statusFilter]);
+
+  // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
+  const refresh = useCallback(async () => {
+    setError(null);
+    setIsLoading(true);
+    await loadData();
+  }, [loadData]);
 
   useEffect(() => {
     loadData();
@@ -58,7 +64,7 @@ export function useProjects() {
     setStatusFilter,
     isLoading,
     error,
-    refresh: loadData,
+    refresh,
     addProject,
     removeProject,
   };

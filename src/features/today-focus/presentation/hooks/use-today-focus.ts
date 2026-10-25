@@ -17,8 +17,6 @@ export function useTodayFocus() {
 
   const loadData = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
 
       const [items, totalMins, allTasks] = await Promise.all([
         dailyFocusRepository.getTodayFocusItems(todayDate),
@@ -29,6 +27,7 @@ export function useTodayFocus() {
       setFocusItems(items);
       setCompletedMinutes(totalMins);
       setAvailableTasks(allTasks);
+      setError(null);
     } catch (err: any) {
       console.error('[useTodayFocus] Load error:', err);
       setError('Gagal memuat fokus hari ini. Silakan coba lagi.');
@@ -36,6 +35,13 @@ export function useTodayFocus() {
       setIsLoading(false);
     }
   }, [todayDate]);
+
+  // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
+  const refresh = useCallback(async () => {
+    setError(null);
+    setIsLoading(true);
+    await loadData();
+  }, [loadData]);
 
   useEffect(() => {
     loadData();
@@ -99,7 +105,7 @@ export function useTodayFocus() {
     availableTasks,
     isLoading,
     error,
-    refresh: loadData,
+    refresh,
     toggleTask,
     addQuickTask,
     addTaskToToday,

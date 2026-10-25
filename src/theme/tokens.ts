@@ -19,13 +19,50 @@ export const space = {
 
 export const radius = {
   none: 0,
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  pill: 28,
+  xs: 6,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 24,
+  xxl: 30,
+  pill: 9999,
   full: 9999,
+} as const;
+
+/**
+ * Elevasi ultra-lembut bergaya marshmallow pastel.
+ * Menggunakan tint indigo-lavender halus (#534685) agar tidak ada bercak bayangan hitam kaku.
+ */
+export const elevation = {
+  level1: {
+    shadowColor: '#534685',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
+  },
+  level2: {
+    shadowColor: '#534685',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.10,
+    shadowRadius: 20,
+    elevation: 4,
+  },
+  level3: {
+    shadowColor: '#5C54E5',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
+    elevation: 5,
+  },
+} as const;
+
+/** Plus Jakarta Sans statis per bobot (DESIGN.md Bagian 4.2). */
+export const fontFamily = {
+  regular: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semibold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
 } as const;
 
 export const touchTarget = {

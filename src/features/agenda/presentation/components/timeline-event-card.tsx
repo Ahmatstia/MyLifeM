@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Pressable, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
-import { CheckCircle2, Circle, Clock, MapPin, Trash2 } from 'lucide-react-native';
+import { Check, MoreHorizontal } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget } from '@/theme/tokens';
+import { radius, space } from '@/theme/tokens';
 import { Card } from '@/shared/ui/card';
 import { AppText } from '@/shared/ui/app-text';
 import type { AgendaEventEntity, AgendaEventType } from '../../domain/entities/agenda.entity';
@@ -28,6 +28,12 @@ const EVENT_TYPE_LABELS: Record<AgendaEventType, string> = {
   PERSONAL: 'Pribadi',
 };
 
+/**
+ * TimelineEventCard: Desain Cute Marshmallow Minimal.
+ * - Tanpa tumpukan icon (clock, map pin, trash).
+ * - Checkbox bundar tactile 28dp.
+ * - Pil pastel lembut untuk waktu dan tipe kegiatan.
+ */
 export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
   event,
   onToggleComplete,
@@ -56,39 +62,37 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
   return (
     <Card
       variant={isCompleted ? 'filled' : 'elevated'}
-      padding={space[3]}
+      padding={space[4]}
       style={[styles.container, style]}
     >
       <View style={styles.row}>
-        {/* Check button on left (>= 48dp hit area per DESIGN.md 9.2) */}
+        {/* Checkbox Bundar Tactile */}
         <Pressable
           onPress={onToggleComplete}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: isCompleted }}
+          accessibilityLabel={`Tandai ${event.title} ${isCompleted ? 'belum selesai' : 'selesai'}`}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={styles.checkButton}
         >
-          {isCompleted ? (
-            <CheckCircle2 size={24} color={colors.success} />
-          ) : (
-            <Circle size={24} color={colors.outline} />
-          )}
+          <View style={[styles.stampCircle, isCompleted && styles.stampCircleDone]}>
+            {isCompleted && <Check size={16} color={colors.onPrimary} strokeWidth={3} />}
+          </View>
         </Pressable>
 
         {/* Event Content */}
         <View style={styles.contentCol}>
-          {/* Header Row: Time and Type Badge */}
+          {/* Header Row: Pil Waktu & Pil Tipe Pastel */}
           <View style={styles.metaHeader}>
-            <View style={styles.timeBadge}>
-              <Clock size={12} color={colors.onSurfaceVariant} />
-              <AppText variant="labelSmall" color="onSurfaceVariant" tabularNums style={styles.timeText}>
+            <View style={styles.timePill}>
+              <AppText variant="labelSmall" color="onSurfaceVariant" tabularNums>
                 {timeLabel}
               </AppText>
             </View>
 
-            <View style={[styles.typeBadge, { borderColor: typeColor }]}>
+            <View style={styles.typePill}>
               <View style={[styles.typeDot, { backgroundColor: typeColor }]} />
-              <AppText variant="badge" style={{ color: typeColor }}>
+              <AppText variant="labelSmall" style={{ color: typeColor }}>
                 {EVENT_TYPE_LABELS[eventType]}
               </AppText>
             </View>
@@ -96,40 +100,33 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
 
           {/* Title */}
           <AppText
-            variant="titleSmall"
+            variant="titleMedium"
             color={isCompleted ? 'onSurfaceSubtle' : 'onSurface'}
             numberOfLines={2}
-            style={[styles.title, isCompleted && styles.completedText]}
+            style={[styles.title, isCompleted && styles.completedTitle]}
           >
             {event.title}
           </AppText>
 
-          {/* Description & Location */}
-          {event.description ? (
-            <AppText variant="bodySmall" color="onSurfaceSubtle" numberOfLines={2}>
-              {event.description}
-            </AppText>
-          ) : null}
-
+          {/* Location text if available */}
           {event.location ? (
             <View style={styles.locationRow}>
-              <MapPin size={12} color={colors.onSurfaceSubtle} />
-              <AppText variant="labelSmall" color="onSurfaceSubtle" numberOfLines={1}>
+              <AppText variant="bodySmall" color="onSurfaceSubtle" numberOfLines={1}>
                 {event.location}
               </AppText>
             </View>
           ) : null}
         </View>
 
-        {/* Delete action */}
+        {/* Delete option (discreet menu trigger) */}
         <Pressable
           onPress={onDelete}
           accessibilityRole="button"
-          accessibilityLabel="Hapus agenda"
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={styles.deleteButton}
+          accessibilityLabel="Hapus agenda ini"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.moreButton}
         >
-          <Trash2 size={16} color={colors.onSurfaceSubtle} />
+          <MoreHorizontal size={18} color={colors.onSurfaceSubtle} />
         </Pressable>
       </View>
     </Card>
@@ -138,23 +135,37 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    minHeight: 72,
     marginBottom: space[3],
+    borderRadius: radius.xl,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   checkButton: {
-    width: touchTarget.compact,
-    height: touchTarget.compact,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: space[2],
   },
+  stampCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: '#D4CEF2',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stampCircleDone: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
   contentCol: {
     flex: 1,
-    marginRight: space[2],
+    paddingRight: space[2],
   },
   metaHeader: {
     flexDirection: 'row',
@@ -162,42 +173,39 @@ const styles = StyleSheet.create({
     gap: space[2],
     marginBottom: space[1],
   },
-  timeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  timeText: {
-    marginLeft: 2,
-  },
-  typeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 1,
+  timePill: {
+    backgroundColor: colors.surfaceContainerLow,
+    paddingVertical: 2,
     paddingHorizontal: space[2],
     borderRadius: radius.pill,
-    borderWidth: 1,
+  },
+  typePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primaryContainer,
+    paddingVertical: 2,
+    paddingHorizontal: space[2],
+    borderRadius: radius.pill,
     gap: 4,
   },
   typeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
+    width: 6,
+    height: 6,
+    borderRadius: radius.pill,
   },
   title: {
-    marginBottom: 2,
+    lineHeight: 22,
   },
-  completedText: {
+  completedTitle: {
     textDecorationLine: 'line-through',
+    opacity: 0.6,
   },
   locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
+    marginTop: 2,
   },
-  deleteButton: {
-    padding: space[2],
+  moreButton: {
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },

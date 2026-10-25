@@ -3,7 +3,7 @@
 > **Status:** Active Project Definition & Single Source of Truth Alignment  
 > **Platform:** Android APK (Primary) / Mobile (React Native + Expo SDK 58)  
 > **Arsitektur:** 100% Offline-First / Local-First (SQLite via Drizzle ORM)  
-> **Design Language:** Deep Obsidian Teal (#081013, Teal #14b8a6, Warm Amber #f59e0b) sesuai `docs/DESIGN.md`  
+> **Design Language:** Light, Indigo Puffy (primary #4C4DCC, highlight #FFA268, latar #FCF8FD, Plus Jakarta Sans, radius 16/28) sesuai `docs/DESIGN.md` dan referensi UI "Kawan Tracker" (tanpa maskot)  
 
 ---
 
