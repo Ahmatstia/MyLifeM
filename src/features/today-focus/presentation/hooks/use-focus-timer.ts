@@ -42,6 +42,8 @@ export function useFocusTimer(options?: UseFocusTimerOptions) {
     }
   }, []);
 
+  useEffect(() => () => { void setKeepAwakeState(false); }, [setKeepAwakeState]);
+
   // Set mode & reset time
   const changeMode = useCallback((newMode: FocusTimerMode, minutes?: number) => {
     setIsRunning(false);

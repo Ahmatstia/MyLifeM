@@ -16,7 +16,7 @@ Module._load = function (id, ...args) {
   return originalLoad.call(this, id, ...args);
 };
 const icons = new Proxy({}, { get(_, name) {
-  const aliases = { CheckCircle: 'circle-check-big', CheckCircle2: 'circle-check', AlertOctagon: 'octagon-alert', AlertCircle: 'circle-alert', Trash2: 'trash', MoreHorizontal: 'ellipsis' };
+  const aliases = { CheckCircle: 'circle-check-big', CheckCircle2: 'circle-check', AlertOctagon: 'octagon-alert', AlertCircle: 'circle-alert', AlertTriangle: 'triangle-alert', Trash2: 'trash', MoreHorizontal: 'ellipsis' };
   const file = aliases[name] || name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/([a-z])(\d)/g, '$1-$2').toLowerCase();
   return require(path.join(root, 'node_modules/lucide-react-native/dist/cjs/icons', file + '.js')).default;
 } });
@@ -52,7 +52,7 @@ const stubs = {
   '@/features/targets/presentation/hooks/use-target-detail': { useTargetDetail: () => ({ ...base, target, stages: [stage] }) },
   '@/features/projects/presentation/hooks/use-project-detail': { useProjectDetail: () => ({ ...base, project, stages: [stage] }) },
   '@/features/agenda/presentation/hooks/use-agenda': { useAgenda: () => ({ ...base, selectedDate: '2026-10-26', setSelectedDate: noop, events, addEvent: noop, toggleEvent: noop, removeEvent: noop }) },
-  '@/features/settings/presentation/hooks/use-settings': { useSettings: () => ({ ...base, settings: { pomodoroMinutes: 25, deepFlowMinutes: 50, hapticsEnabled: true, keepAwakeEnabled: true }, stats: { targetsCount: 1, projectsCount: 1, tasksCount: 8, focusSessionsCount: 2, agendaEventsCount: 1 }, backupJson: null, setBackupJson: noop, updateSetting: noop, exportBackup: noop }) },
+  '@/features/settings/presentation/hooks/use-settings': { useSettings: () => ({ ...base, settings: { pomodoroMinutes: 25, deepFlowMinutes: 50, hapticsEnabled: true, keepAwakeEnabled: true }, stats: { targetsCount: 1, projectsCount: 1, tasksCount: 8, focusSessionsCount: 2, agendaEventsCount: 1 }, backupBusy: null, pendingBackup: null, closeBackup: noop, updateSetting: noop, exportBackup: noop, inspectBackup: noop, restoreBackup: noop, exportRecovery: noop }) },
   '@/features/categories/presentation/hooks/use-categories': { useCategories: () => ({ ...base, categories, addCategory: noop, editCategory: noop, removeCategory: noop }) },
   '@/features/targets/data/repositories/target.repository.impl': { targetRepository: { getTargets: async () => [target] } },
 };
@@ -148,6 +148,20 @@ form = renderForm();
 assert.ok(descendants(form).some(element => element.type === native.TextInput && element.props.value === 'My draft goal'));
 assert.ok(form.props.footer, 'Form actions must remain outside the scroll content.');
 
+state.length = 0;
+const settingsFixture = stubs['@/features/settings/presentation/hooks/use-settings'].useSettings();
+const { SettingsScreen: RestoreSettings } = createLoader({ react: fakeReact,
+  '@/features/settings/presentation/hooks/use-settings': { useSettings: () => ({ ...settingsFixture,
+    pendingBackup: { summary: { exportedAt: now, total: 11, targets: 1, projects: 1, tasks: 1, categories: 1, stages: 1, sessions: 1, agenda: 1 } },
+  }) },
+})('src/features/settings/presentation/screens/settings-screen.tsx');
+const renderRestore = () => { stateIndex = 0; return RestoreSettings(); };
+let restoreDialog = descendants(renderRestore()).find(element => element.props?.title === 'Pulihkan cadangan?');
+assert.equal(restoreDialog.props.footer.props.disabled, true, 'Replacement requires explicit typed confirmation.');
+descendants(restoreDialog).find(element => element.type === native.TextInput).props.onChangeText('PULIHKAN');
+restoreDialog = descendants(renderRestore()).find(element => element.props?.title === 'Pulihkan cadangan?');
+assert.equal(restoreDialog.props.footer.props.disabled, false);
+
 const screenSpecs = [
   ['today', 'today-focus', 'today-focus-screen', 'TodayFocusScreen', {}],
   ['targets', 'targets', 'target-list-screen', 'TargetListScreen', {}],
@@ -186,6 +200,16 @@ const forms = [
   ['form-task', 'stages/presentation/components/add-edit-task-modal.tsx', 'AddEditTaskModal', { stageId: 'stage', stageName: 'Bangun baseline' }],
   ['form-agenda', 'agenda/presentation/components/add-event-modal.tsx', 'AddEventModal', { selectedDate: '2026-10-26' }],
 ];
+const restorePreviewElement = () => {
+  state.length = 0; stateIndex = 0;
+  const PreviewSettings = createLoader({ react: fakeReact,
+  '@/features/settings/presentation/hooks/use-settings': { useSettings: () => ({ ...settingsFixture,
+    pendingBackup: { summary: { exportedAt: now, total: 11, targets: 1, projects: 1, tasks: 1, categories: 1, stages: 1, sessions: 1, agenda: 1 } },
+  }) },
+  })('src/features/settings/presentation/screens/settings-screen.tsx').SettingsScreen;
+  // Native Modal portals out of the screen; isolate its sheet in this SSR fixture too.
+  return descendants(PreviewSettings()).find(element => element.props?.title === 'Pulihkan cadangan?');
+};
 for (const scale of [1, 2]) {
   fontScale = scale;
   for (const [name, file, exported, props] of forms) {
@@ -195,6 +219,9 @@ for (const scale of [1, 2]) {
     assert.ok(html.includes('button'), name);
     previews.push([name + (scale === 2 ? '-large-text' : ''), 320, html]);
   }
+  const restoreHtml = renderToStaticMarkup(restorePreviewElement());
+  assert.ok(restoreHtml.includes('Pulihkan cadangan?') && restoreHtml.includes('Ganti data &amp; pulihkan'));
+  previews.push(['form-restore' + (scale === 2 ? '-large-text' : ''), 320, restoreHtml]);
 }
 fontScale = 1;
 todayState = { ...focus, focusItems: [], error: 'Load failed' };
@@ -242,4 +269,28 @@ async function checkReflection() {
   await dialog.props.footer.props.onPress();
   assert.equal(closed, true, 'Only a completed save closes reflection.');
 }
-checkReflection().then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle, error state, async reflection retry, 42 screen renders (3 widths, simulated text 100/200%) and 10 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });
+async function checkStartup() {
+  state.length = 0; dependencies.length = 0; effects.length = 0;
+  let fails = true;
+  const Stack = () => null; Stack.Screen = () => null;
+  const { default: RootLayout } = createLoader({
+    react: { ...fakeReact, useMemo: work => work(), useCallback: work => work },
+    'expo-router': { Stack, ThemeProvider: () => null, DefaultTheme: { colors: {} } },
+    'expo-splash-screen': { preventAutoHideAsync: async () => {}, hideAsync: async () => {} },
+    '@expo-google-fonts/plus-jakarta-sans': { useFonts: () => [true, null] },
+    '@/db/client': { initDatabase: async () => { if (fails) throw new Error('Relasi legacy bermasalah'); } },
+    '@/db/data-revision': { useDataRevision: () => 0 },
+    '@/features/settings/data/services/backup-file.service': {},
+  })('src/app/_layout.tsx');
+  const render = () => { stateIndex = 0; effectIndex = 0; return RootLayout(); };
+  render(); while (effects.length) effects.shift()();
+  await Promise.resolve(); await Promise.resolve();
+  const blocked = render();
+  assert.ok(!descendants(blocked).some(element => element.type === Stack), 'Failed migration must never mount CRUD navigation.');
+  assert.ok(descendants(blocked).some(element => element.props?.children === 'Relasi legacy bermasalah'));
+  assert.ok(descendants(blocked).some(element => element.props?.title === 'Simpan salinan pemulihan'));
+  fails = false;
+  await descendants(blocked).find(element => element.props?.title === 'Coba lagi').props.onPress();
+  assert.ok(descendants(render()).some(element => element.type === Stack), 'Successful retry opens navigation.');
+}
+checkReflection().then(checkStartup).then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle, error state, async reflection retry, restore confirmation, startup migration failure/retry, 42 screen renders (3 widths, simulated text 100/200%) and 12 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });

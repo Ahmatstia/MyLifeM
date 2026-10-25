@@ -83,6 +83,7 @@ export function useTargetDetail(targetId: string) {
       return true;
     } catch (err) {
       console.error('[useTargetDetail] Delete stage error:', err);
+      setError('Perubahan belum tersimpan. Data tetap dipertahankan. Coba lagi.');
       return false;
     }
   };
@@ -93,6 +94,7 @@ export function useTargetDetail(targetId: string) {
       await loadData();
     } catch (err) {
       console.error('[useTargetDetail] Reorder stage error:', err);
+      setError('Perubahan belum tersimpan. Data tetap dipertahankan. Coba lagi.');
     }
   };
 
@@ -126,6 +128,7 @@ export function useTargetDetail(targetId: string) {
       return true;
     } catch (err) {
       console.error('[useTargetDetail] Delete task error:', err);
+      setError('Perubahan belum tersimpan. Data tetap dipertahankan. Coba lagi.');
       return false;
     }
   };
@@ -146,6 +149,7 @@ export function useTargetDetail(targetId: string) {
       return true;
     } catch (err) {
       console.error('[useTargetDetail] Delete target error:', err);
+      setError('Target belum dapat dihapus. Data tetap dipertahankan. Coba lagi.');
       return false;
     }
   };

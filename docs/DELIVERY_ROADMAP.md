@@ -6,11 +6,15 @@ Tanggal: 26 Oktober 2026. R0 dan R2/R3 belum selesai. Pemilik meminta implementa
 
 ### R0.1 Backup lengkap sebelum migrasi [A02]
 
+Status 26 Oktober 2026: implementasi cadangan/restore berkas, validasi 11 tabel, staging, salinan pengaman dan rollback tersedia. Cakupan, pengujian, serta gerbang native yang masih terbuka dicatat di [implementasi backup](./BACKUP_IMPLEMENTATION_2026-10-26.md). Sebagian perbaikan startup yang diperlukan untuk mempertahankan hasil restore ikut diterapkan; R0.2 secara keseluruhan belum selesai.
+
 Sentuh repository/settings hook/screen, tipe format backup, dan uji SQLite. Ekspor categories/stages bersama sembilan tabel lainnya dalam snapshot konsisten. Definisikan formatVersion/schemaVersion; siapkan restore validasi+transaksi pada database sementara dan ekspor berkas lewat modul Expo yang kompatibel.
 
 Selesai bila fixture dengan kategori custom, stage, task, proyek, agenda, sesi, dan pengaturan dapat diekspor lalu dipulihkan dengan nilai/relasi utuh. Import rusak atau versi tidak didukung harus gagal sebelum DB aktif berubah. Preview JSON saja belum selesai.
 
 ### R0.2 Migrasi dan integrity [A01, A03, A12]
+
+Status 26 Oktober 2026: FK nyata, kepemilikan tahapan/tugas, kebijakan hapus dan preservasi histori, migrasi user_version 0→1 dengan arsip pengaman/rollback, serta transaksi jalur tulis majemuk telah diimplementasikan. Lihat [implementasi integritas](./INTEGRITY_IMPLEMENTATION_2026-10-26.md). Pengujian perangkat native dan penghentian proses masih merupakan gerbang rilis; konsolidasi legacy/status dijadwalkan terpisah.
 
 Sentuh schema/client/migrations, seluruh jalur hapus/reorder/quick-create/session, startup error state. Tentukan kebijakan orphan/legacy terlebih dahulu, pasang FK nyata dan transaksi, lalu jalankan fixture upgrade sesuai ARCHITECTURE_V2.
 

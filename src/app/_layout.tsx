@@ -1,9 +1,12 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Stack, ThemeProvider, DefaultTheme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ScrollView, ActivityIndicator } from 'react-native';
 import { initDatabase } from '@/db/client';
+import { useDataRevision } from '@/db/data-revision';
 import { colors } from '@/theme/colors';
+import { AppText, Button } from '@/shared/ui';
+import { readMigrationBackup, saveBackupFile } from '@/features/settings/data/services/backup-file.service';
 import {
   useFonts,
   PlusJakartaSans_400Regular,
@@ -16,21 +19,24 @@ import {
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
+  const dataRevision = useDataRevision();
   const [isReady, setIsReady] = useState(false);
+  const [databaseError, setDatabaseError] = useState<string | null>(null);
+  const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function setupApp() {
-      try {
-        await initDatabase();
-      } catch (error) {
-        console.error('[RootLayout] Database initialization failed:', error);
-      } finally {
-        setIsReady(true);
-      }
+  const setupApp = useCallback(async () => {
+    setDatabaseError(null);
+    try {
+      await initDatabase();
+      setIsReady(true);
+    } catch (error) {
+      console.error('[RootLayout] Database initialization failed:', error);
+      setDatabaseError(error instanceof Error ? error.message : 'Database gagal diinisialisasi.');
     }
-
-    setupApp();
   }, []);
+  useEffect(() => {
+    setupApp();
+  }, [setupApp]);
 
   const [fontsLoaded, fontError] = useFonts({
     PlusJakartaSans_400Regular,
@@ -40,10 +46,10 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (isReady && (fontsLoaded || fontError)) {
+    if ((isReady || databaseError) && (fontsLoaded || fontError)) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [isReady, fontsLoaded, fontError]);
+  }, [isReady, databaseError, fontsLoaded, fontError]);
 
   const navigationTheme = useMemo(
     () => ({
@@ -62,6 +68,23 @@ export default function RootLayout() {
     []
   );
 
+  if (databaseError && (fontsLoaded || fontError)) {
+    return <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, gap: 16 }}>
+      <AppText variant="headlineSmall">Data belum dapat dibuka</AppText>
+      <AppText>Inisialisasi database gagal. Data tidak dihapus. Coba buka kembali sebelum melanjutkan.</AppText>
+      <AppText>{databaseError}</AppText>
+      <Button title="Coba lagi" onPress={setupApp} />
+      <Button title="Simpan salinan pemulihan" variant="outlined" onPress={async () => {
+        try {
+          const json = await readMigrationBackup();
+          if (!json) { setRecoveryMessage('Salinan pra-migrasi belum tersedia. Database asli tetap dipertahankan.'); return; }
+          await saveBackupFile(json);
+          setRecoveryMessage('Arsip pra-migrasi disiapkan. Data yang valid dapat dipulihkan lewat Pengaturan; data bermasalah perlu diperiksa terlebih dahulu.');
+        } catch { setRecoveryMessage('Salinan belum dapat diekspor. Database asli tetap dipertahankan.'); }
+      }} />
+      {recoveryMessage && <AppText>{recoveryMessage}</AppText>}
+    </ScrollView>;
+  }
   if (!isReady || !(fontsLoaded || fontError)) {
     return (
       <View
@@ -80,6 +103,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={navigationTheme}>
       <Stack
+        key={dataRevision}
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.background },

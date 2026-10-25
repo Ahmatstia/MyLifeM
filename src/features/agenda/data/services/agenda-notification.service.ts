@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import type { AgendaEvent } from '@/db/schema';
 
 let notificationsModule: any = null;
 let isLoaded = false;
@@ -33,6 +34,22 @@ function getNotifications() {
 }
 
 export class AgendaNotificationService {
+  static async reconcileAfterRestore(events: Pick<AgendaEvent, 'id' | 'title' | 'isCompleted' | 'isAllDay' | 'reminderMinutes' | 'startTime'>[]): Promise<boolean> {
+    const notifications = getNotifications();
+    if (!notifications) return false;
+    const scheduled: { identifier: string }[] = await notifications.getAllScheduledNotificationsAsync();
+    for (const item of scheduled) {
+      if (item.identifier.startsWith('agenda-')) await notifications.cancelScheduledNotificationAsync(item.identifier);
+    }
+    let complete = true;
+    for (const event of events) {
+      if (event.isCompleted || event.isAllDay || event.reminderMinutes === null) continue;
+      const trigger = Date.parse(event.startTime) - event.reminderMinutes * 60_000;
+      if (trigger <= Date.now()) continue;
+      if (!await this.scheduleReminder(event.id, event.title, event.startTime, event.reminderMinutes)) complete = false;
+    }
+    return complete;
+  }
   /**
    * Request notification permissions for Android/iOS
    */
@@ -62,7 +79,7 @@ export class AgendaNotificationService {
     startTimeIso: string,
     reminderMinutes: number
   ): Promise<string | null> {
-    if (reminderMinutes <= 0) return null;
+    if (reminderMinutes < 0) return null;
 
     const Notifications = getNotifications();
     if (!Notifications) return null;

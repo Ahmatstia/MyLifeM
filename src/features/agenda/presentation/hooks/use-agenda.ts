@@ -43,7 +43,7 @@ export function useAgenda() {
   const addEvent = async (input: CreateAgendaInput): Promise<boolean> => {
     try {
       const created = await agendaRepository.createEvent(input);
-      if (input.reminderMinutes && input.reminderMinutes > 0 && !input.isAllDay) {
+      if (input.reminderMinutes !== undefined && input.reminderMinutes !== null && input.reminderMinutes >= 0 && !input.isAllDay) {
         await AgendaNotificationService.scheduleReminder(
           created.id,
           created.title,

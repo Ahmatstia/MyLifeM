@@ -70,7 +70,7 @@ export const StageCard: React.FC<StageCardProps> = ({
           <Button title="Pindah ke bawah" variant="outlined" disabled={isLast} onPress={() => { setStageMenu(false); onMoveDown(); }} />
           <Button title="Hapus tahapan" variant="danger" onPress={() => {
             setStageMenu(false);
-            Alert.alert('Hapus tahapan?', 'Tahap ini dan ' + stage.totalTasks + ' tugas di dalamnya akan dihapus.', [
+            Alert.alert('Hapus tahapan?', 'Tahap ini, ' + stage.totalTasks + ' tugas, dan prioritas hariannya akan dihapus. Sesi fokus dan agenda tetap disimpan dengan tautan yang dilepas.', [
               { text: 'Batal', style: 'cancel' }, { text: 'Hapus tahapan', style: 'destructive', onPress: onDeleteStage },
             ]);
           }} />
@@ -83,7 +83,7 @@ export const StageCard: React.FC<StageCardProps> = ({
             if (!taskMenu) return;
             const task = taskMenu;
             setTaskMenu(null);
-            Alert.alert('Hapus tugas?', task.name, [{ text: 'Batal', style: 'cancel' }, { text: 'Hapus tugas', style: 'destructive', onPress: () => onDeleteTask(task) }]);
+            Alert.alert('Hapus tugas?', task.name + '\nPrioritas harian ikut dihapus. Sesi fokus dan agenda tetap disimpan dengan tautan yang dilepas.', [{ text: 'Batal', style: 'cancel' }, { text: 'Hapus tugas', style: 'destructive', onPress: () => onDeleteTask(task) }]);
           }} />
         </View>
       </AppBottomSheet>

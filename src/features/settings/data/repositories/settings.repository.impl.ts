@@ -1,4 +1,5 @@
-import { db } from '@/db/client';
+import * as SQLite from 'expo-sqlite';
+import { db, getSqliteDb, TABLES_DDL, INDEXES_DDL } from '@/db/client';
 import {
   userSettings,
   targets,
@@ -6,9 +7,6 @@ import {
   tasks,
   focusSessions,
   agendaEvents,
-  lifePillars,
-  milestones,
-  dailyFocusItems,
 } from '@/db/schema';
 import type { SettingsRepository } from '../../domain/repositories/settings.repository';
 import {
@@ -16,6 +14,9 @@ import {
   DEFAULT_SETTINGS,
   DatabaseStats,
 } from '../../domain/entities/settings.entity';
+import { parseBackup, serializeBackup } from '../backup-format';
+import { readBackupData, replaceBackupData, replaceIfUnchanged } from '../backup-store';
+import { INTEGRITY_DDL } from '@/db/integrity';
 
 export class SettingsRepositoryImpl implements SettingsRepository {
   async getSettings(): Promise<UserSettingsEntity> {
@@ -60,78 +61,81 @@ export class SettingsRepositoryImpl implements SettingsRepository {
     try {
       const now = new Date().toISOString();
 
-      if (partial.pomodoroMinutes !== undefined) {
-        await db
-          .insert(userSettings)
-          .values({
-            key: 'pomodoro_minutes',
-            value: partial.pomodoroMinutes.toString(),
-            updatedAt: now,
-          })
-          .onConflictDoUpdate({
-            target: userSettings.key,
-            set: {
+      db.transaction(tx => {
+        if (partial.pomodoroMinutes !== undefined) {
+          tx
+            .insert(userSettings)
+            .values({
+              key: 'pomodoro_minutes',
               value: partial.pomodoroMinutes.toString(),
               updatedAt: now,
-            },
-          });
-      }
+            })
+            .onConflictDoUpdate({
+              target: userSettings.key,
+              set: {
+                value: partial.pomodoroMinutes.toString(),
+                updatedAt: now,
+              },
+            }).run();
+        }
 
-      if (partial.deepFlowMinutes !== undefined) {
-        await db
-          .insert(userSettings)
-          .values({
-            key: 'deep_flow_minutes',
-            value: partial.deepFlowMinutes.toString(),
-            updatedAt: now,
-          })
-          .onConflictDoUpdate({
-            target: userSettings.key,
-            set: {
+        if (partial.deepFlowMinutes !== undefined) {
+          tx
+            .insert(userSettings)
+            .values({
+              key: 'deep_flow_minutes',
               value: partial.deepFlowMinutes.toString(),
               updatedAt: now,
-            },
-          });
-      }
+            })
+            .onConflictDoUpdate({
+              target: userSettings.key,
+              set: {
+                value: partial.deepFlowMinutes.toString(),
+                updatedAt: now,
+              },
+            }).run();
+        }
 
-      if (partial.hapticsEnabled !== undefined) {
-        await db
-          .insert(userSettings)
-          .values({
-            key: 'haptics_enabled',
-            value: partial.hapticsEnabled ? 'true' : 'false',
-            updatedAt: now,
-          })
-          .onConflictDoUpdate({
-            target: userSettings.key,
-            set: {
+        if (partial.hapticsEnabled !== undefined) {
+          tx
+            .insert(userSettings)
+            .values({
+              key: 'haptics_enabled',
               value: partial.hapticsEnabled ? 'true' : 'false',
               updatedAt: now,
-            },
-          });
-      }
+            })
+            .onConflictDoUpdate({
+              target: userSettings.key,
+              set: {
+                value: partial.hapticsEnabled ? 'true' : 'false',
+                updatedAt: now,
+              },
+            }).run();
+        }
 
-      if (partial.keepAwakeEnabled !== undefined) {
-        await db
-          .insert(userSettings)
-          .values({
-            key: 'keep_awake_enabled',
-            value: partial.keepAwakeEnabled ? 'true' : 'false',
-            updatedAt: now,
-          })
-          .onConflictDoUpdate({
-            target: userSettings.key,
-            set: {
+        if (partial.keepAwakeEnabled !== undefined) {
+          tx
+            .insert(userSettings)
+            .values({
+              key: 'keep_awake_enabled',
               value: partial.keepAwakeEnabled ? 'true' : 'false',
               updatedAt: now,
-            },
-          });
-      }
+            })
+            .onConflictDoUpdate({
+              target: userSettings.key,
+              set: {
+                value: partial.keepAwakeEnabled ? 'true' : 'false',
+                updatedAt: now,
+              },
+            }).run();
+        }
+
+      });
 
       return await this.getSettings();
     } catch (error) {
       console.error('[SettingsRepositoryImpl] saveSettings error:', error);
-      return await this.getSettings();
+      throw error;
     }
   }
 
@@ -163,39 +167,24 @@ export class SettingsRepositoryImpl implements SettingsRepository {
   }
 
   async exportBackupJson(): Promise<string> {
+    const connection = getSqliteDb();
+    let json = '';
+    connection.withTransactionSync(() => { json = serializeBackup(readBackupData(connection)); });
+    return json;
+  }
+
+  async restoreBackupJson(json: string, safetyJson: string): Promise<void> {
+    const backup = parseBackup(json);
+    const staging = SQLite.openDatabaseSync(':memory:', { useNewConnection: true });
     try {
-      const pillarsData = await db.select().from(lifePillars);
-      const targetsData = await db.select().from(targets);
-      const projectsData = await db.select().from(projects);
-      const milestonesData = await db.select().from(milestones);
-      const tasksData = await db.select().from(tasks);
-      const dailyFocusData = await db.select().from(dailyFocusItems);
-      const focusData = await db.select().from(focusSessions);
-      const agendaData = await db.select().from(agendaEvents);
-      const settingsData = await db.select().from(userSettings);
-
-      const backup = {
-        version: '1.0.0',
-        exportedAt: new Date().toISOString(),
-        database: 'mylife.db',
-        data: {
-          lifePillars: pillarsData,
-          targets: targetsData,
-          projects: projectsData,
-          milestones: milestonesData,
-          tasks: tasksData,
-          dailyFocusItems: dailyFocusData,
-          focusSessions: focusData,
-          agendaEvents: agendaData,
-          userSettings: settingsData,
-        },
-      };
-
-      return JSON.stringify(backup, null, 2);
-    } catch (error) {
-      console.error('[SettingsRepositoryImpl] exportBackupJson error:', error);
-      throw new Error('Gagal mengekspor data cadangan JSON.');
+      staging.execSync('PRAGMA foreign_keys = ON;');
+      staging.execSync(TABLES_DDL + INDEXES_DDL);
+      staging.withTransactionSync(() => replaceBackupData(staging, backup.data));
+      staging.execSync(INTEGRITY_DDL);
+    } finally {
+      staging.closeSync();
     }
+    replaceIfUnchanged(getSqliteDb(), backup.data, safetyJson);
   }
 }
 

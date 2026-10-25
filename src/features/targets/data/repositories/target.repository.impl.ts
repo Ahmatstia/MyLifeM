@@ -1,6 +1,6 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '@/db/client';
-import { categories, lifePillars, targets, stages, tasks, type LifePillar } from '@/db/schema';
+import { categories, lifePillars, targets, projects, stages, tasks, type LifePillar } from '@/db/schema';
 import {
   type TargetEntity,
   type LifePillarEntity,
@@ -73,6 +73,7 @@ export class TargetRepositoryImpl implements TargetRepository {
     // Load stages and tasks to calculate task-based progress
     const allStages = await db.select().from(stages).where(eq(stages.parentType, 'TARGET'));
     const allTasks = await db.select().from(tasks);
+    const projectTargets = new Map((await db.select({ id: projects.id, targetId: projects.targetId }).from(projects)).map(project => [project.id, project.targetId]));
 
     // Map stages to targets
     const targetStagesMap = new Map<string, string[]>();
@@ -87,6 +88,7 @@ export class TargetRepositoryImpl implements TargetRepository {
       const targetTasks = allTasks.filter((task) => {
         if (task.stageId && stageIds.includes(task.stageId)) return true;
         if (task.targetId === t.id) return true;
+        if (task.projectId && projectTargets.get(task.projectId) === t.id) return true;
         return false;
       });
 
@@ -187,26 +189,6 @@ export class TargetRepositoryImpl implements TargetRepository {
   }
 
   async deleteTarget(id: string): Promise<void> {
-    // Find all stages of this target
-    const targetStages = await db.select({ id: stages.id }).from(stages).where(
-      and(eq(stages.parentType, 'TARGET'), eq(stages.parentId, id))
-    );
-    const stageIds = targetStages.map((s) => s.id);
-
-    // Delete tasks in stages
-    for (const sid of stageIds) {
-      await db.delete(tasks).where(eq(tasks.stageId, sid));
-    }
-
-    // Delete direct tasks
-    await db.delete(tasks).where(eq(tasks.targetId, id));
-
-    // Delete stages
-    await db.delete(stages).where(
-      and(eq(stages.parentType, 'TARGET'), eq(stages.parentId, id))
-    );
-
-    // Finally delete target
     await db.delete(targets).where(eq(targets.id, id));
   }
 }

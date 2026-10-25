@@ -56,7 +56,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
   const handleDeleteTarget = () => {
     Alert.alert(
       'Hapus Target',
-      `Apakah kamu yakin ingin menghapus target "${target?.title}" beserta seluruh tahapan dan tugas di dalamnya?`,
+      `Hapus target "${target?.title}" beserta tahapan, tugas langsung, dan prioritas hariannya? Proyek terkait tetap disimpan. Sesi fokus dan agenda dipertahankan dengan tautan yang dilepas.`,
       [
         { text: 'Batal', style: 'cancel' },
         {

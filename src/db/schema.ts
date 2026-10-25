@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   sqliteTable,
   text,
@@ -6,6 +6,7 @@ import {
   real,
   index,
   uniqueIndex,
+  check,
 } from 'drizzle-orm/sqlite-core';
 
 // ==========================================
@@ -14,7 +15,7 @@ import {
 export const categories = sqliteTable(
   'categories',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().notNull(),
     name: text('name').notNull(),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull(),
@@ -32,7 +33,7 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
 // 2. LIFE PILLARS (Legacy / Compatibility)
 // ==========================================
 export const lifePillars = sqliteTable('life_pillars', {
-  id: text('id').primaryKey(),
+  id: text('id').primaryKey().notNull(),
   name: text('name').notNull(),
   icon: text('icon').notNull(),
   color: text('color').notNull(),
@@ -49,7 +50,7 @@ export const lifePillarsRelations = relations(lifePillars, ({ many }) => ({
 export const targets = sqliteTable(
   'targets',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().notNull(),
     categoryId: text('category_id').references(() => categories.id, {
       onDelete: 'restrict',
     }),
@@ -98,7 +99,7 @@ export const targetsRelations = relations(targets, ({ one, many }) => ({
 export const projects = sqliteTable(
   'projects',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().notNull(),
     targetId: text('target_id').references(() => targets.id, {
       onDelete: 'set null',
     }),
@@ -134,9 +135,11 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
 export const stages = sqliteTable(
   'stages',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().notNull(),
     parentType: text('parent_type').notNull(), // 'TARGET' | 'PROJECT'
     parentId: text('parent_id').notNull(),
+    targetId: text('target_id').references(() => targets.id, { onDelete: 'cascade' }),
+    projectId: text('project_id').references(() => projects.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     description: text('description'),
     sortOrder: integer('sort_order').notNull().default(0),
@@ -145,6 +148,9 @@ export const stages = sqliteTable(
   },
   (table) => [
     index('idx_stages_parent').on(table.parentType, table.parentId, table.sortOrder),
+    index('idx_stages_target_id').on(table.targetId),
+    index('idx_stages_project_id').on(table.projectId),
+    check('stage_owner', sql`(${table.parentType} = 'TARGET' AND ${table.targetId} IS NOT NULL AND ${table.parentId} = ${table.targetId} AND ${table.projectId} IS NULL) OR (${table.parentType} = 'PROJECT' AND ${table.projectId} IS NOT NULL AND ${table.parentId} = ${table.projectId} AND ${table.targetId} IS NULL)`),
   ]
 );
 
@@ -158,7 +164,7 @@ export const stagesRelations = relations(stages, ({ many }) => ({
 export const milestones = sqliteTable(
   'milestones',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().notNull(),
     projectId: text('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
@@ -187,7 +193,7 @@ export const milestonesRelations = relations(milestones, ({ one, many }) => ({
 export const tasks = sqliteTable(
   'tasks',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().notNull(),
     stageId: text('stage_id').references(() => stages.id, {
       onDelete: 'cascade',
     }),
@@ -195,7 +201,7 @@ export const tasks = sqliteTable(
       onDelete: 'cascade',
     }),
     targetId: text('target_id').references(() => targets.id, {
-      onDelete: 'set null',
+      onDelete: 'cascade',
     }),
     milestoneId: text('milestone_id').references(() => milestones.id, {
       onDelete: 'set null',
@@ -222,6 +228,9 @@ export const tasks = sqliteTable(
     index('idx_tasks_milestone_id').on(table.milestoneId),
     index('idx_tasks_status').on(table.status),
     index('idx_tasks_due_date').on(table.dueDate),
+    check('task_owner', sql`${table.projectId} IS NULL OR ${table.targetId} IS NULL`),
+    check('task_minutes', sql`${table.estimatedMinutes} >= 0 AND ${table.actualMinutes} >= 0`),
+    check('task_completed', sql`${table.isCompleted} IN (0,1)`),
   ]
 );
 
@@ -253,7 +262,7 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
 export const dailyFocusItems = sqliteTable(
   'daily_focus_items',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().notNull(),
     date: text('date').notNull(), // 'YYYY-MM-DD'
     taskId: text('task_id')
       .notNull()
@@ -265,6 +274,7 @@ export const dailyFocusItems = sqliteTable(
   (table) => [
     uniqueIndex('idx_daily_focus_unique').on(table.date, table.taskId),
     index('idx_daily_focus_date').on(table.date),
+    index('idx_daily_focus_task').on(table.taskId),
   ]
 );
 
@@ -281,10 +291,11 @@ export const dailyFocusItemsRelations = relations(dailyFocusItems, ({ one }) => 
 export const focusSessions = sqliteTable(
   'focus_sessions',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().notNull(),
     taskId: text('task_id').references(() => tasks.id, {
       onDelete: 'set null',
     }),
+    taskTitle: text('task_title'),
     mode: text('mode').notNull().default('POMODORO'), // 'POMODORO' | 'DEEP_FLOW' | 'STOPWATCH'
     startedAt: text('started_at').notNull(),
     endedAt: text('ended_at'),
@@ -313,7 +324,7 @@ export const focusSessionsRelations = relations(focusSessions, ({ one }) => ({
 export const agendaEvents = sqliteTable(
   'agenda_events',
   {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().notNull(),
     targetId: text('target_id').references(() => targets.id, {
       onDelete: 'set null',
     }),
@@ -337,6 +348,9 @@ export const agendaEvents = sqliteTable(
   },
   (table) => [
     index('idx_agenda_time_range').on(table.startTime, table.endTime),
+    index('idx_agenda_task').on(table.taskId),
+    index('idx_agenda_project').on(table.projectId),
+    index('idx_agenda_target').on(table.targetId),
   ]
 );
 
@@ -359,7 +373,7 @@ export const agendaEventsRelations = relations(agendaEvents, ({ one }) => ({
 // 9. USER SETTINGS (Key-Value)
 // ==========================================
 export const userSettings = sqliteTable('user_settings', {
-  key: text('key').primaryKey(),
+  key: text('key').primaryKey().notNull(),
   value: text('value').notNull(),
   updatedAt: text('updated_at').notNull(),
 });

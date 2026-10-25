@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Pressable, Switch, TextInput, StyleSheet, Alert } from 'react-native';
+import { View, Pressable, Switch, TextInput, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, ChevronRight, Tags, Vibrate, Eye, Timer, Flame, Download, ShieldCheck } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, radius } from '@/theme/tokens';
-import { Screen, AppText, Card, Button, AppBottomSheet } from '@/shared/ui';
+import { Screen, AppText, Card, Button, AppBottomSheet, Banner } from '@/shared/ui';
 import { CategoryManagerModal } from '@/features/categories/presentation/components/category-manager-modal';
 import { useSettings } from '../hooks/use-settings';
 
@@ -24,13 +24,12 @@ function SettingRow({ title, description, icon, trailing, onPress }: {
 }
 
 export const SettingsScreen: React.FC = () => {
-  const { settings, stats, isLoading, isExporting, backupJson, setBackupJson, updateSetting, exportBackup } = useSettings();
+  const { settings, stats, isLoading, backupBusy, backupError, backupNotice, pendingBackup, recoveryAvailable,
+    closeBackup, updateSetting, exportBackup, inspectBackup, restoreBackup, exportRecovery } = useSettings();
+  const [confirmation, setConfirmation] = useState('');
   const [isCategoryManagerVisible, setIsCategoryManagerVisible] = useState(false);
   const [durationPicker, setDurationPicker] = useState<'POMODORO' | 'DEEP_FLOW' | null>(null);
   const durationOptions = durationPicker === 'POMODORO' ? POMODORO_OPTIONS : DEEP_FLOW_OPTIONS;
-  const handleExport = async () => {
-    if (!await exportBackup()) Alert.alert('Belum dapat menampilkan data', 'Coba lagi beberapa saat.');
-  };
 
   return (
     <Screen withBottomPadding={false}>
@@ -70,9 +69,15 @@ export const SettingsScreen: React.FC = () => {
         </View>
       </Card>}
       <View style={styles.dataActions}>
-        <SettingRow title="Pratinjau data JSON" description="Untuk inspeksi lokal. Pemulihan data belum tersedia."
+        <SettingRow title={backupBusy === 'export' ? 'Menyiapkan cadangan…' : 'Buat cadangan'} description="Simpan seluruh catatan, kategori, tahapan, dan preferensi sebagai berkas JSON."
           icon={<Download size={20} color={colors.primary} />}
-          trailing={<ChevronRight size={18} color={colors.primary} />} onPress={isExporting ? undefined : handleExport} />
+          trailing={<ChevronRight size={18} color={colors.primary} />} onPress={backupBusy ? undefined : exportBackup} />
+        <SettingRow title={backupBusy === 'pick' ? 'Memeriksa berkas…' : 'Pulihkan dari berkas'} description="Tinjau isi cadangan sebelum mengganti data di perangkat ini."
+          icon={<ShieldCheck size={20} color={colors.primary} />} onPress={backupBusy ? undefined : async () => { setConfirmation(''); await inspectBackup(); }} />
+        {recoveryAvailable && <SettingRow title="Cadangan sebelum pemulihan" description="Simpan salinan data sebelum pemulihan terakhir."
+          icon={<Download size={20} color={colors.primary} />} onPress={backupBusy ? undefined : exportRecovery} />}
+        {backupError && !pendingBackup && <Banner variant="error" message={backupError} />}
+        {backupNotice && <Banner variant="info" message={backupNotice} />}
       </View>
       <SettingRow title="Penyimpanan lokal" description="Catatan aplikasi disimpan di perangkat ini."
         icon={<ShieldCheck size={20} color={colors.primary} />} />
@@ -91,10 +96,17 @@ export const SettingsScreen: React.FC = () => {
           </Pressable>;
         })}</View>
       </AppBottomSheet>
-      <AppBottomSheet visible={backupJson !== null} onClose={() => setBackupJson(null)}
-        title="Pratinjau data" subtitle="Snapshot untuk inspeksi. Bukan pemulihan lengkap."
-        footer={<Button title="Tutup pratinjau" onPress={() => setBackupJson(null)} />}>
-        <TextInput accessibilityLabel="Isi snapshot JSON" value={backupJson || ''} multiline editable={false} selectTextOnFocus style={styles.json} />
+      <AppBottomSheet visible={!!pendingBackup} onClose={closeBackup}
+        title="Pulihkan cadangan?" subtitle="Seluruh data saat ini akan diganti, bukan digabung."
+        footer={<Button title="Ganti data & pulihkan" variant="danger" loading={backupBusy === 'restore'} disabled={confirmation !== 'PULIHKAN' || !!backupBusy} onPress={restoreBackup} />}>
+        {pendingBackup && <View style={styles.durationOptions}>
+          <AppText variant="bodyMedium">Cadangan dibuat {new Date(pendingBackup.summary.exportedAt).toLocaleString('id-ID')}.</AppText>
+          <AppText variant="bodyMedium">{pendingBackup.summary.total} catatan: {pendingBackup.summary.targets} target, {pendingBackup.summary.projects} proyek, {pendingBackup.summary.tasks} tugas, {pendingBackup.summary.categories} kategori, {pendingBackup.summary.stages} tahapan, {pendingBackup.summary.sessions} sesi fokus, dan {pendingBackup.summary.agenda} agenda. Pilar, prioritas harian, dan preferensi ikut dipulihkan.</AppText>
+          <Banner variant="warning" message="Sesi fokus yang sedang berjalan akan dihentikan. Salinan data saat ini disimpan sebelum penggantian. Jangan tutup aplikasi selama proses berlangsung." />
+          <AppText variant="labelLarge">Ketik PULIHKAN untuk melanjutkan</AppText>
+          <TextInput accessibilityLabel="Ketik PULIHKAN untuk mengonfirmasi penggantian data" value={confirmation} onChangeText={setConfirmation} autoCapitalize="characters" autoCorrect={false} editable={!backupBusy} style={styles.confirmation} />
+          {backupError && <Banner variant="error" message={backupError} />}
+        </View>}
       </AppBottomSheet>
     </Screen>
   );
@@ -116,5 +128,5 @@ const styles = StyleSheet.create({
   durationOptions: { gap: space[3] },
   duration: { minHeight: 56, padding: space[4], borderRadius: radius.md, backgroundColor: colors.surfaceContainerLow },
   selectedDuration: { backgroundColor: colors.primary },
-  json: { minHeight: 240, color: colors.onSurface, backgroundColor: colors.surfaceContainerLow, padding: space[4], borderRadius: radius.md, fontFamily: 'monospace', fontSize: 12, textAlignVertical: 'top' },
+  confirmation: { minHeight: 56, color: colors.onSurface, backgroundColor: colors.surfaceContainerLow, padding: space[4], borderRadius: radius.md, fontSize: 16 },
 });

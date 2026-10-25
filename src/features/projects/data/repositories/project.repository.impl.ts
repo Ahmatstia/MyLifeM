@@ -214,29 +214,6 @@ export class ProjectRepositoryImpl implements ProjectRepository {
   }
 
   async deleteProject(id: string): Promise<void> {
-    // Find all stages of this project
-    const projectStages = await db.select({ id: stages.id }).from(stages).where(
-      and(eq(stages.parentType, 'PROJECT'), eq(stages.parentId, id))
-    );
-    const stageIds = projectStages.map((s) => s.id);
-
-    // Delete tasks in stages
-    for (const sid of stageIds) {
-      await db.delete(tasks).where(eq(tasks.stageId, sid));
-    }
-
-    // Delete direct tasks
-    await db.delete(tasks).where(eq(tasks.projectId, id));
-
-    // Delete stages
-    await db.delete(stages).where(
-      and(eq(stages.parentType, 'PROJECT'), eq(stages.parentId, id))
-    );
-
-    // Delete milestones
-    await db.delete(milestones).where(eq(milestones.projectId, id));
-
-    // Delete project
     await db.delete(projects).where(eq(projects.id, id));
   }
 
@@ -300,13 +277,10 @@ export class ProjectRepositoryImpl implements ProjectRepository {
     const id = generateId();
     const now = new Date().toISOString();
 
-    const projRows = await db.select({ targetId: projects.targetId }).from(projects).where(eq(projects.id, projectId));
-    const targetId = projRows[0]?.targetId || null;
-
     const newRow = {
       id,
       projectId,
-      targetId,
+      targetId: null,
       milestoneId: milestoneId || null,
       title: title.trim(),
       name: title.trim(),

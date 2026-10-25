@@ -6,6 +6,10 @@ Tanggal: 26 Oktober 2026. Bahasa produk: Indonesia. Platform utama: Android; ars
 
 Audit awal menyelesaikan perencanaan sebelum perubahan kode aplikasi. Setelah pemilik mengarahkan agar implementasi dimulai dari UI, Botanical Pop diterapkan pada layar dan komponen aplikasi. Cakupan, hasil pemeriksaan, dan batasnya dicatat di [implementasi UI](./UI_IMPLEMENTATION_2026-10-26.md). Fitur R2 dan perbaikan database R0 belum otomatis tersedia.
 
+Tahap berikutnya sudah mengimplementasikan R0.1: ekspor dan pemulihan berkas lengkap melalui Pengaturan, dengan salinan pengaman dan transaksi. Lihat [implementasi backup](./BACKUP_IMPLEMENTATION_2026-10-26.md) untuk perilaku, verifikasi, batas format, dan pengujian native yang belum dilakukan. Integritas seluruh jalur tulis R0.2 tetap pekerjaan berikutnya.
+
+Pembaruan berikutnya mengimplementasikan fondasi R0.2: constraint FK dan kepemilikan, migrasi berversi dengan arsip pengaman, transaksi majemuk dan penghapusan yang menjaga histori. [Catatan R0.2](./INTEGRITY_IMPLEMENTATION_2026-10-26.md) menjadi acuan keadaan kode terbaru dan batas QA; agenda/tanggal serta konsolidasi status masih menunggu tahap selanjutnya.
+
 ## Urutan membaca
 
 1. [Audit sistem](./SYSTEM_AUDIT_2026-10-26.md): keadaan kode, bukti masalah, risiko, batas pemeriksaan.

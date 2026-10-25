@@ -47,6 +47,7 @@ export interface DailyFocusItemEntity {
 export interface FocusSessionEntity {
   id: string;
   taskId: string | null;
+  taskTitle: string | null;
   mode: FocusTimerMode;
   startedAt: string;
   endedAt: string | null;

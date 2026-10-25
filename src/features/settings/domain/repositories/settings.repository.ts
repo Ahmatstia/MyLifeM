@@ -8,4 +8,5 @@ export interface SettingsRepository {
   saveSettings(settings: Partial<UserSettingsEntity>): Promise<UserSettingsEntity>;
   getDatabaseStats(): Promise<DatabaseStats>;
   exportBackupJson(): Promise<string>;
+  restoreBackupJson(json: string, safetyJson: string): Promise<void>;
 }

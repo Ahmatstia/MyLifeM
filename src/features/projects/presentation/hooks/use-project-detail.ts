@@ -84,6 +84,7 @@ export function useProjectDetail(projectId: string) {
       return true;
     } catch (err) {
       console.error('[useProjectDetail] Delete stage error:', err);
+      setError('Perubahan belum tersimpan. Data tetap dipertahankan. Coba lagi.');
       return false;
     }
   };
@@ -94,6 +95,7 @@ export function useProjectDetail(projectId: string) {
       await loadData();
     } catch (err) {
       console.error('[useProjectDetail] Reorder stage error:', err);
+      setError('Perubahan belum tersimpan. Data tetap dipertahankan. Coba lagi.');
     }
   };
 
@@ -127,6 +129,7 @@ export function useProjectDetail(projectId: string) {
       return true;
     } catch (err) {
       console.error('[useProjectDetail] Delete task error:', err);
+      setError('Perubahan belum tersimpan. Data tetap dipertahankan. Coba lagi.');
       return false;
     }
   };
@@ -142,7 +145,13 @@ export function useProjectDetail(projectId: string) {
   };
 
   const deleteThisProject = async () => {
-    await projectRepository.deleteProject(projectId);
+    try {
+      await projectRepository.deleteProject(projectId);
+      return true;
+    } catch {
+      setError('Proyek belum dapat dihapus. Data tetap dipertahankan. Coba lagi.');
+      return false;
+    }
   };
 
   return {

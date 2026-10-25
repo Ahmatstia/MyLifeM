@@ -111,6 +111,8 @@ export class StageRepositoryImpl implements StageRepository {
       id,
       parentType: input.parentType,
       parentId: input.parentId,
+      targetId: input.parentType === 'TARGET' ? input.parentId : null,
+      projectId: input.parentType === 'PROJECT' ? input.parentId : null,
       name: cleanName,
       description: input.description?.trim() || null,
       sortOrder: nextSort,
@@ -163,37 +165,36 @@ export class StageRepositoryImpl implements StageRepository {
   }
 
   async deleteStage(id: string): Promise<void> {
-    // Delete all tasks in this stage first
-    await db.delete(tasks).where(eq(tasks.stageId, id));
-    // Then delete the stage
     await db.delete(stages).where(eq(stages.id, id));
   }
 
   async reorderStage(id: string, direction: 'UP' | 'DOWN'): Promise<void> {
-    const current = await db.select().from(stages).where(eq(stages.id, id));
-    if (current.length === 0) return;
-    const target = current[0];
+    db.transaction(tx => {
+      const current = tx.select().from(stages).where(eq(stages.id, id)).all();
+      if (current.length === 0) return;
+      const target = current[0];
 
-    const allInParent = await db
-      .select()
-      .from(stages)
-      .where(and(eq(stages.parentType, target.parentType), eq(stages.parentId, target.parentId)))
-      .orderBy(asc(stages.sortOrder), asc(stages.createdAt));
+      const allInParent = tx
+        .select()
+        .from(stages)
+        .where(and(eq(stages.parentType, target.parentType), eq(stages.parentId, target.parentId)))
+        .orderBy(asc(stages.sortOrder), asc(stages.createdAt)).all();
 
-    const currentIndex = allInParent.findIndex((s) => s.id === id);
-    if (currentIndex === -1) return;
+      const currentIndex = allInParent.findIndex((s) => s.id === id);
+      if (currentIndex === -1) return;
 
-    const swapIndex = direction === 'UP' ? currentIndex - 1 : currentIndex + 1;
-    if (swapIndex < 0 || swapIndex >= allInParent.length) return;
+      const swapIndex = direction === 'UP' ? currentIndex - 1 : currentIndex + 1;
+      if (swapIndex < 0 || swapIndex >= allInParent.length) return;
 
-    const other = allInParent[swapIndex];
+      const other = allInParent[swapIndex];
 
-    // Swap sortOrders
-    const targetOrder = target.sortOrder;
-    const otherOrder = other.sortOrder;
+      // Swap sortOrders
+      const targetOrder = target.sortOrder;
+      const otherOrder = other.sortOrder;
 
-    await db.update(stages).set({ sortOrder: otherOrder }).where(eq(stages.id, target.id));
-    await db.update(stages).set({ sortOrder: targetOrder }).where(eq(stages.id, other.id));
+      tx.update(stages).set({ sortOrder: otherOrder }).where(eq(stages.id, target.id)).run();
+      tx.update(stages).set({ sortOrder: targetOrder }).where(eq(stages.id, other.id)).run();
+    });
   }
 
   async createTask(input: CreateTaskInput): Promise<TaskItemEntity> {

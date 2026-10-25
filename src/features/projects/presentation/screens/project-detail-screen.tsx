@@ -58,15 +58,14 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
   const handleDeleteProject = () => {
     Alert.alert(
       'Hapus Proyek',
-      `Apakah kamu yakin ingin menghapus proyek "${project?.title}" beserta seluruh tahapan dan tugas di dalamnya?`,
+      `Hapus proyek "${project?.title}" beserta tahapan, tugas, dan prioritas hariannya? Sesi fokus dan agenda tetap disimpan dengan tautan yang dilepas.`,
       [
         { text: 'Batal', style: 'cancel' },
         {
           text: 'Hapus Selamanya',
           style: 'destructive',
           onPress: async () => {
-            await deleteThisProject();
-            router.back();
+            if (await deleteThisProject()) router.back();
           },
         },
       ]

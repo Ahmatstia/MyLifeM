@@ -50,6 +50,7 @@ function mapToSessionEntity(row: FocusSession): FocusSessionEntity {
   return {
     id: row.id,
     taskId: row.taskId,
+    taskTitle: row.taskTitle,
     mode: row.mode as FocusSessionEntity['mode'],
     startedAt: row.startedAt,
     endedAt: row.endedAt,
@@ -59,6 +60,36 @@ function mapToSessionEntity(row: FocusSession): FocusSessionEntity {
     nextAction: row.nextAction,
     createdAt: row.createdAt,
   };
+}
+
+function addPriority(tx: Pick<typeof db, 'select' | 'insert'>, date: string, taskId: string): void {
+    const existing = tx
+      .select()
+      .from(dailyFocusItems)
+      .where(
+        and(eq(dailyFocusItems.date, date), eq(dailyFocusItems.taskId, taskId))
+      ).all();
+
+    if (existing.length > 0) return;
+
+    const countRows = tx
+      .select({ count: sql<number>`count(*)` })
+      .from(dailyFocusItems)
+      .where(eq(dailyFocusItems.date, date)).all();
+
+    const currentCount = countRows[0]?.count || 0;
+    if (currentCount >= 5) {
+      throw new Error('Maksimal 5 fokus tugas per hari (Rule of 3-5 Priorities).');
+    }
+
+    tx.insert(dailyFocusItems).values({
+      id: generateId(),
+      date,
+      taskId,
+      sortOrder: currentCount + 1,
+      isCompleted: 0,
+      createdAt: new Date().toISOString(),
+    }).run();
 }
 
 export class DailyFocusRepositoryImpl implements DailyFocusRepository {
@@ -95,33 +126,7 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   }
 
   async addFocusItem(date: string, taskId: string): Promise<void> {
-    const existing = await db
-      .select()
-      .from(dailyFocusItems)
-      .where(
-        and(eq(dailyFocusItems.date, date), eq(dailyFocusItems.taskId, taskId))
-      );
-
-    if (existing.length > 0) return;
-
-    const countRows = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(dailyFocusItems)
-      .where(eq(dailyFocusItems.date, date));
-
-    const currentCount = countRows[0]?.count || 0;
-    if (currentCount >= 5) {
-      throw new Error('Maksimal 5 fokus tugas per hari (Rule of 3-5 Priorities).');
-    }
-
-    await db.insert(dailyFocusItems).values({
-      id: generateId(),
-      date,
-      taskId,
-      sortOrder: currentCount + 1,
-      isCompleted: 0,
-      createdAt: new Date().toISOString(),
-    });
+    db.transaction(tx => addPriority(tx, date, taskId));
   }
 
   async removeFocusItem(id: string): Promise<void> {
@@ -131,8 +136,9 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   async toggleTaskCompletion(taskId: string, isCompleted: boolean): Promise<void> {
     const now = new Date().toISOString();
 
+    db.transaction(tx => {
     // Update task table
-    await db
+    tx
       .update(tasks)
       .set({
         isCompleted: isCompleted ? 1 : 0,
@@ -140,15 +146,16 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
         completedAt: isCompleted ? now : null,
         updatedAt: now,
       })
-      .where(eq(tasks.id, taskId));
+      .where(eq(tasks.id, taskId)).run();
 
     // Update daily focus table
-    await db
+    tx
       .update(dailyFocusItems)
       .set({
         isCompleted: isCompleted ? 1 : 0,
       })
-      .where(eq(dailyFocusItems.taskId, taskId));
+      .where(eq(dailyFocusItems.taskId, taskId)).run();
+    });
   }
 
   async createQuickTask(
@@ -177,11 +184,12 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
       updatedAt: now,
     };
 
-    await db.insert(tasks).values(newTaskRow);
-    await this.addFocusItem(date, taskId);
-
-    const created = await db.select().from(tasks).where(eq(tasks.id, taskId));
-    return mapToTaskEntity(created[0]);
+    if (!newTaskRow.title) throw new Error('Nama tugas wajib diisi.');
+    return db.transaction(tx => {
+      tx.insert(tasks).values(newTaskRow).run();
+      addPriority(tx, date, taskId);
+      return mapToTaskEntity(tx.select().from(tasks).where(eq(tasks.id, taskId)).get()!);
+    });
   }
 
   async getAvailableTasks(): Promise<TaskEntity[]> {
@@ -211,32 +219,21 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
       createdAt: now,
     };
 
-    await db.insert(focusSessions).values(newRow);
-
-    if (input.taskId && input.durationMinutes > 0) {
-      await this.incrementTaskActualMinutes(input.taskId, input.durationMinutes);
-    }
-
-    const created = await db
-      .select()
-      .from(focusSessions)
-      .where(eq(focusSessions.id, id));
-
-    return mapToSessionEntity(created[0]);
+    if (!Number.isSafeInteger(input.durationMinutes) || input.durationMinutes < 0) throw new Error('Durasi sesi tidak valid.');
+    return db.transaction(tx => {
+      const taskTitle = input.taskId ? tx.select({ title: tasks.title }).from(tasks).where(eq(tasks.id, input.taskId)).get()?.title ?? null : null;
+      tx.insert(focusSessions).values({ ...newRow, taskTitle }).run();
+      if (input.taskId && input.durationMinutes > 0) {
+        tx.update(tasks).set({ actualMinutes: sql`${tasks.actualMinutes} + ${input.durationMinutes}`, updatedAt: now })
+          .where(eq(tasks.id, input.taskId)).run();
+      }
+      return mapToSessionEntity(tx.select().from(focusSessions).where(eq(focusSessions.id, id)).get()!);
+    });
   }
 
   async incrementTaskActualMinutes(taskId: string, minutes: number): Promise<void> {
-    const taskRows = await db.select().from(tasks).where(eq(tasks.id, taskId));
-    if (taskRows.length === 0) return;
-
-    const currentActual = taskRows[0].actualMinutes || 0;
-    await db
-      .update(tasks)
-      .set({
-        actualMinutes: currentActual + minutes,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(tasks.id, taskId));
+    if (!Number.isSafeInteger(minutes) || minutes < 0) throw new Error('Durasi tugas tidak valid.');
+    await db.update(tasks).set({ actualMinutes: sql`${tasks.actualMinutes} + ${minutes}`, updatedAt: new Date().toISOString() }).where(eq(tasks.id, taskId));
   }
 
   async getTodayCompletedMinutes(date: string): Promise<number> {
