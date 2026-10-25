@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, type TextProps, type TextStyle } from 'react-native';
+import { Text, StyleSheet, type TextProps, type TextStyle } from 'react-native';
 import { colors } from '@/theme/colors';
 import { fontFamily, typography, type TypographyVariant } from '@/theme/tokens';
 
@@ -33,17 +33,21 @@ export const AppText: React.FC<AppTextProps> = ({
       ? (colors as Record<string, any>)[color]
       : color;
 
+  const flattenedStyle = (StyleSheet.flatten(style) || {}) as TextStyle;
+  const finalColor = flattenedStyle.color || resolvedColor || colors.onSurface;
+
   const combinedStyle: TextStyle = {
     fontSize: typoStyle.fontSize,
     lineHeight: typoStyle.lineHeight,
     fontFamily: FAMILY_BY_WEIGHT[typoStyle.fontWeight] ?? fontFamily.regular,
-    color: resolvedColor,
     textAlign: align,
     ...(tabularNums ? { fontVariant: ['tabular-nums'] } : {}),
+    ...flattenedStyle,
+    color: finalColor,
   };
 
   return (
-    <Text style={[combinedStyle, style]} {...props}>
+    <Text style={combinedStyle} {...props}>
       {children}
     </Text>
   );

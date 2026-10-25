@@ -42,7 +42,7 @@ export const colors = {
   // Teks: Soft Deep Slate (not harsh pure black)
   onSurface: '#242132',
   onSurfaceVariant: '#68637B',
-  onSurfaceSubtle: '#9E99B0',
+  onSurfaceSubtle: '#736E85',
 
   // Border & divider: Whisper-soft borders (no harsh wireframe outlines)
   outline: '#E8E3F2',

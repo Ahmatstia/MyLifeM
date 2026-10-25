@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
   View,
   TextInput,
-  ScrollView,
   Pressable,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { X } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
+import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
 import type {
   TaskItemEntity,
   TaskPriority,
@@ -97,192 +93,140 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.modalOverlay}
-      >
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.sheetHeader}>
-            <View>
-              <AppText variant="titleLarge">
-                {initialData ? 'Ubah Tugas' : 'Tambah Tugas'}
-              </AppText>
-              <AppText variant="bodySmall" color="onSurfaceVariant">
-                Tahap: {stageName}
-              </AppText>
-            </View>
-
-            <Pressable
-              onPress={onClose}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={styles.closeButton}
-            >
-              <X size={20} color={colors.onSurfaceVariant} />
-            </Pressable>
-          </View>
-
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-            {errorMessage && (
-              <View style={styles.errorBox}>
-                <AppText variant="bodySmall" color="onErrorContainer">
-                  {errorMessage}
-                </AppText>
-              </View>
-            )}
-
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Nama Tugas
-            </AppText>
-            <TextInput
-              value={name}
-              onChangeText={(text) => {
-                setName(text);
-                if (errorMessage) setErrorMessage(null);
-              }}
-              placeholder="Contoh: Memahami Konsep AI"
-              placeholderTextColor={colors.onSurfaceSubtle}
-              style={styles.textInput}
-            />
-
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Deskripsi (Opsional)
-            </AppText>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Detail pekerjaan atau kriteria selesai..."
-              placeholderTextColor={colors.onSurfaceSubtle}
-              multiline
-              numberOfLines={2}
-              style={[styles.textInput, styles.textArea]}
-            />
-
-            {/* Prioritas: Rendah / Sedang / Tinggi */}
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Prioritas
-            </AppText>
-            <View style={styles.choiceRow}>
-              {(
-                [
-                  { key: 'LOW', label: 'Rendah' },
-                  { key: 'MEDIUM', label: 'Sedang' },
-                  { key: 'HIGH', label: 'Tinggi' },
-                ] as const
-              ).map((p) => {
-                const isSelected = priority === p.key;
-                return (
-                  <Pressable
-                    key={p.key}
-                    onPress={() => setPriority(p.key)}
-                    style={[styles.choiceChip, isSelected && styles.choiceChipSelected]}
-                  >
-                    <AppText
-                      variant="labelMedium"
-                      color={isSelected ? 'onPrimaryContainer' : 'onSurface'}
-                    >
-                      {p.label}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* Estimasi Waktu (Jam) */}
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Estimasi Waktu (Jam)
-            </AppText>
-            <TextInput
-              value={estimatedHours}
-              onChangeText={setEstimatedHours}
-              placeholder="Contoh: 1 atau 1.5"
-              placeholderTextColor={colors.onSurfaceSubtle}
-              keyboardType="decimal-pad"
-              style={styles.textInput}
-            />
-
-            {/* Status Pengerjaan */}
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Status Pengerjaan
-            </AppText>
-            <View style={styles.choiceRow}>
-              {(
-                [
-                  { key: 'TODO', label: 'Belum dimulai' },
-                  { key: 'IN_PROGRESS', label: 'Sedang dikerjakan' },
-                  { key: 'DONE', label: 'Selesai' },
-                ] as const
-              ).map((s) => {
-                const isSelected = status === s.key;
-                return (
-                  <Pressable
-                    key={s.key}
-                    onPress={() => setStatus(s.key)}
-                    style={[styles.choiceChip, isSelected && styles.choiceChipSelected]}
-                  >
-                    <AppText
-                      variant="labelSmall"
-                      color={isSelected ? 'onPrimaryContainer' : 'onSurface'}
-                    >
-                      {s.label}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <View style={styles.actionRow}>
-              <Button
-                title="Batal"
-                variant="tonal"
-                onPress={onClose}
-                style={styles.cancelBtn}
-              />
-              <Button
-                title={initialData ? 'Simpan Perubahan' : 'Buat Tugas'}
-                variant="filled"
-                onPress={handleSubmit}
-                loading={isSubmitting}
-                style={styles.submitBtn}
-              />
-            </View>
-          </ScrollView>
+    <AppBottomSheet
+      visible={visible}
+      onClose={onClose}
+      title={initialData ? 'Ubah Tugas' : 'Tambah Tugas'}
+      subtitle={`Tahap: ${stageName}`}
+    >
+      {errorMessage && (
+        <View style={styles.errorBox}>
+          <AppText variant="bodySmall" color="onErrorContainer">
+            {errorMessage}
+          </AppText>
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+      )}
+
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Nama Tugas
+      </AppText>
+      <TextInput
+        value={name}
+        onChangeText={(text) => {
+          setName(text);
+          if (errorMessage) setErrorMessage(null);
+        }}
+        placeholder="Contoh: Memahami Konsep AI"
+        placeholderTextColor={colors.onSurfaceSubtle}
+        style={styles.textInput}
+      />
+
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Deskripsi (Opsional)
+      </AppText>
+      <TextInput
+        value={description}
+        onChangeText={setDescription}
+        placeholder="Detail pekerjaan atau kriteria selesai..."
+        placeholderTextColor={colors.onSurfaceSubtle}
+        multiline
+        numberOfLines={2}
+        style={[styles.textInput, styles.textArea]}
+      />
+
+      {/* Prioritas: Rendah / Sedang / Tinggi */}
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Prioritas
+      </AppText>
+      <View style={styles.choiceRow}>
+        {(
+          [
+            { key: 'LOW', label: 'Rendah' },
+            { key: 'MEDIUM', label: 'Sedang' },
+            { key: 'HIGH', label: 'Tinggi' },
+          ] as const
+        ).map((p) => {
+          const isSelected = priority === p.key;
+          return (
+            <Pressable
+              key={p.key}
+              onPress={() => setPriority(p.key)}
+              style={[styles.choiceChip, isSelected && styles.choiceChipSelected]}
+            >
+              <AppText
+                variant="labelMedium"
+                color={isSelected ? 'onPrimaryContainer' : 'onSurface'}
+              >
+                {p.label}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* Estimasi Waktu (Jam) */}
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Estimasi Waktu (Jam)
+      </AppText>
+      <TextInput
+        value={estimatedHours}
+        onChangeText={setEstimatedHours}
+        placeholder="Contoh: 1 atau 1.5"
+        placeholderTextColor={colors.onSurfaceSubtle}
+        keyboardType="decimal-pad"
+        style={styles.textInput}
+      />
+
+      {/* Status Pengerjaan */}
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Status Pengerjaan
+      </AppText>
+      <View style={styles.choiceRow}>
+        {(
+          [
+            { key: 'TODO', label: 'Belum dimulai' },
+            { key: 'IN_PROGRESS', label: 'Sedang dikerjakan' },
+            { key: 'DONE', label: 'Selesai' },
+          ] as const
+        ).map((s) => {
+          const isSelected = status === s.key;
+          return (
+            <Pressable
+              key={s.key}
+              onPress={() => setStatus(s.key)}
+              style={[styles.choiceChip, isSelected && styles.choiceChipSelected]}
+            >
+              <AppText
+                variant="labelSmall"
+                color={isSelected ? 'onPrimaryContainer' : 'onSurface'}
+              >
+                {s.label}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.actionRow}>
+        <Button
+          title="Batal"
+          variant="tonal"
+          onPress={onClose}
+          style={styles.cancelBtn}
+        />
+        <Button
+          title={initialData ? 'Simpan Perubahan' : 'Buat Tugas'}
+          variant="filled"
+          onPress={handleSubmit}
+          loading={isSubmitting}
+          style={styles.submitBtn}
+        />
+      </View>
+    </AppBottomSheet>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: colors.scrim,
-    justifyContent: 'flex-end',
-  },
-  sheetContainer: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    maxHeight: '90%',
-    paddingBottom: space[8],
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: space[4],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
-  },
-  closeButton: {
-    padding: space[2],
-  },
-  content: {
-    padding: space[4],
-  },
   errorBox: {
     backgroundColor: colors.errorContainer,
     borderRadius: radius.lg,

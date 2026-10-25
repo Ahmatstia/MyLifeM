@@ -6,3 +6,4 @@ export * from './banner';
 export * from './empty-state';
 export * from './progress-bar';
 export * from './progress-ring';
+export * from './app-bottom-sheet';

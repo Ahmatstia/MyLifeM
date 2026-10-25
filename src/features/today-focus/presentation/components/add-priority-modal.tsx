@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 import {
-  Modal,
   View,
   TextInput,
-  ScrollView,
   Pressable,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { X, Plus } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
+import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
 import type { TaskEntity } from '../../domain/entities/daily-focus.entity';
 
 export interface AddPriorityModalProps {
@@ -73,142 +70,84 @@ export const AddPriorityModal: React.FC<AddPriorityModalProps> = ({
   };
 
   return (
-    <Modal
+    <AppBottomSheet
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      onClose={onClose}
+      title="Tambah Prioritas Hari Ini"
+      subtitle={`Maksimal 5 tugas pilihan (${currentCount}/5 terisi)`}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.modalOverlay}
-      >
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.sheetHeader}>
-            <View>
-              <AppText variant="titleLarge">Tambah Prioritas Hari Ini</AppText>
-              <AppText variant="bodySmall" color="onSurfaceVariant">
-                Maksimal 5 tugas pilihan ({currentCount}/5 terisi)
-              </AppText>
-            </View>
-
-            <Pressable
-              onPress={onClose}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={styles.closeButton}
-            >
-              <X size={20} color={colors.onSurfaceVariant} />
-            </Pressable>
-          </View>
-
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.content}
-          >
-            {/* Error notice */}
-            {errorMessage && (
-              <View style={styles.errorBox}>
-                <AppText variant="bodySmall" color="onErrorContainer">
-                  {errorMessage}
-                </AppText>
-              </View>
-            )}
-
-            {/* Quick Add Section */}
-            <AppText variant="labelLarge" style={styles.sectionLabel}>
-              Buat Tugas Cepat Baru
-            </AppText>
-
-            <View style={styles.quickAddRow}>
-              <TextInput
-                value={quickTitle}
-                onChangeText={setQuickTitle}
-                placeholder="Tulis tugas prioritas..."
-                placeholderTextColor={colors.onSurfaceSubtle}
-                style={styles.textInput}
-              />
-              <Button
-                title="Tambah"
-                onPress={handleQuickAdd}
-                variant="filled"
-                size="standard"
-                loading={isSubmitting}
-                disabled={currentCount >= 5}
-                leftIcon={<Plus size={16} color={colors.onPrimary} />}
-                style={styles.addButton}
-              />
-            </View>
-
-            {/* Existing Tasks from DB */}
-            {availableTasks.length > 0 && (
-              <>
-                <AppText variant="labelLarge" style={styles.sectionLabel}>
-                  Atau Pilih Dari Tugas Tersimpan
-                </AppText>
-
-                <View style={styles.tasksList}>
-                  {availableTasks.map((t) => (
-                    <Pressable
-                      key={t.id}
-                      onPress={() => handleSelectTask(t.id)}
-                      accessibilityRole="button"
-                      disabled={currentCount >= 5}
-                      style={styles.taskOptionItem}
-                    >
-                      <View style={styles.taskOptionTextCol}>
-                        <AppText variant="bodyMedium" numberOfLines={1}>
-                          {t.title}
-                        </AppText>
-                        <AppText variant="labelSmall" color="onSurfaceSubtle">
-                          Estimasi: {t.estimatedMinutes} menit
-                        </AppText>
-                      </View>
-
-                      <View style={styles.selectBadge}>
-                        <Plus size={16} color={colors.primary} />
-                      </View>
-                    </Pressable>
-                  ))}
-                </View>
-              </>
-            )}
-          </ScrollView>
+      {/* Error notice */}
+      {errorMessage && (
+        <View style={styles.errorBox}>
+          <AppText variant="bodySmall" color="onErrorContainer">
+            {errorMessage}
+          </AppText>
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+      )}
+
+      {/* Quick Add Section */}
+      <AppText variant="labelLarge" style={styles.sectionLabel}>
+        Buat Tugas Cepat Baru
+      </AppText>
+
+      <View style={styles.quickAddRow}>
+        <TextInput
+          value={quickTitle}
+          onChangeText={setQuickTitle}
+          placeholder="Tulis tugas prioritas..."
+          placeholderTextColor={colors.onSurfaceSubtle}
+          style={styles.textInput}
+        />
+        <Button
+          title="Tambah"
+          onPress={handleQuickAdd}
+          variant="filled"
+          size="standard"
+          loading={isSubmitting}
+          disabled={currentCount >= 5}
+          leftIcon={<Plus size={16} color={colors.onPrimary} />}
+          style={styles.addButton}
+        />
+      </View>
+
+      {/* Existing Tasks from DB */}
+      {availableTasks.length > 0 && (
+        <>
+          <AppText variant="labelLarge" style={styles.sectionLabel}>
+            Atau Pilih Dari Tugas Tersimpan
+          </AppText>
+
+          <View style={styles.tasksList}>
+            {availableTasks.map((t) => (
+              <Pressable
+                key={t.id}
+                onPress={() => handleSelectTask(t.id)}
+                accessibilityRole="button"
+                disabled={currentCount >= 5}
+                style={styles.taskOptionItem}
+              >
+                <View style={styles.taskOptionTextCol}>
+                  <AppText variant="bodyMedium" numberOfLines={1}>
+                    {t.title}
+                  </AppText>
+                  <AppText variant="labelSmall" color="onSurfaceSubtle">
+                    Estimasi: {t.estimatedMinutes} menit
+                  </AppText>
+                </View>
+
+                <View style={styles.selectBadge}>
+                  <Plus size={16} color={colors.primary} />
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      )}
+    </AppBottomSheet>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: colors.scrim,
-    justifyContent: 'flex-end',
-  },
-  sheetContainer: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    maxHeight: '85%',
-    paddingBottom: space[8],
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: space[4],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
-  },
-  closeButton: {
-    padding: space[2],
-  },
-  content: {
-    padding: space[4],
-  },
   errorBox: {
     backgroundColor: colors.errorContainer,
     borderRadius: radius.lg,

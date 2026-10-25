@@ -64,19 +64,16 @@ export const db = drizzle(sqliteDb, { schema });
 
 
 /**
- * SQL DDL Statements for 9 tables and their indexes
+ * SQL DDL Statements for 9 tables
  * Ensures the database schema is created cleanly on first launch
  */
-const INITIAL_DDL = `
-PRAGMA foreign_keys = ON;
-
+const TABLES_DDL = `
 CREATE TABLE IF NOT EXISTS categories (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name_unique ON categories(name);
 
 CREATE TABLE IF NOT EXISTS life_pillars (
     id TEXT PRIMARY KEY,
@@ -88,8 +85,8 @@ CREATE TABLE IF NOT EXISTS life_pillars (
 
 CREATE TABLE IF NOT EXISTS targets (
     id TEXT PRIMARY KEY,
-    category_id TEXT REFERENCES categories(id) ON DELETE RESTRICT,
-    pillar_id TEXT REFERENCES life_pillars(id) ON DELETE SET NULL,
+    category_id TEXT,
+    pillar_id TEXT,
     title TEXT NOT NULL,
     description TEXT,
     type TEXT NOT NULL DEFAULT 'MILESTONE_BASED',
@@ -107,7 +104,7 @@ CREATE TABLE IF NOT EXISTS targets (
 
 CREATE TABLE IF NOT EXISTS projects (
     id TEXT PRIMARY KEY,
-    target_id TEXT REFERENCES targets(id) ON DELETE SET NULL,
+    target_id TEXT,
     title TEXT NOT NULL,
     description TEXT,
     status TEXT NOT NULL DEFAULT 'ACTIVE',
@@ -128,11 +125,10 @@ CREATE TABLE IF NOT EXISTS stages (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_stages_parent ON stages(parent_type, parent_id, sort_order);
 
 CREATE TABLE IF NOT EXISTS milestones (
     id TEXT PRIMARY KEY,
-    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    project_id TEXT NOT NULL,
     title TEXT NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
     is_completed INTEGER NOT NULL DEFAULT 0,
@@ -142,10 +138,10 @@ CREATE TABLE IF NOT EXISTS milestones (
 
 CREATE TABLE IF NOT EXISTS tasks (
     id TEXT PRIMARY KEY,
-    stage_id TEXT REFERENCES stages(id) ON DELETE CASCADE,
-    project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
-    target_id TEXT REFERENCES targets(id) ON DELETE SET NULL,
-    milestone_id TEXT REFERENCES milestones(id) ON DELETE SET NULL,
+    stage_id TEXT,
+    project_id TEXT,
+    target_id TEXT,
+    milestone_id TEXT,
     title TEXT NOT NULL,
     name TEXT,
     description TEXT,
@@ -165,7 +161,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE TABLE IF NOT EXISTS daily_focus_items (
     id TEXT PRIMARY KEY,
     date TEXT NOT NULL,
-    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    task_id TEXT NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
     is_completed INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
@@ -173,7 +169,7 @@ CREATE TABLE IF NOT EXISTS daily_focus_items (
 
 CREATE TABLE IF NOT EXISTS focus_sessions (
     id TEXT PRIMARY KEY,
-    task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+    task_id TEXT,
     mode TEXT NOT NULL DEFAULT 'POMODORO',
     started_at TEXT NOT NULL,
     ended_at TEXT,
@@ -186,9 +182,9 @@ CREATE TABLE IF NOT EXISTS focus_sessions (
 
 CREATE TABLE IF NOT EXISTS agenda_events (
     id TEXT PRIMARY KEY,
-    target_id TEXT REFERENCES targets(id) ON DELETE SET NULL,
-    project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
-    task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+    target_id TEXT,
+    project_id TEXT,
+    task_id TEXT,
     title TEXT NOT NULL,
     description TEXT,
     start_time TEXT NOT NULL,
@@ -207,8 +203,11 @@ CREATE TABLE IF NOT EXISTS user_settings (
     value TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+`;
 
--- Indexes for 60 FPS performance
+const INDEXES_DDL = `
+CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name_unique ON categories(name);
+CREATE INDEX IF NOT EXISTS idx_stages_parent ON stages(parent_type, parent_id, sort_order);
 CREATE INDEX IF NOT EXISTS idx_targets_pillar_status ON targets(pillar_id, status);
 CREATE INDEX IF NOT EXISTS idx_targets_updated_at ON targets(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_projects_target_id ON projects(target_id);
@@ -261,16 +260,16 @@ export async function initDatabase(): Promise<void> {
   try {
     const rawDb = getSqliteDb();
 
-    // Enable Foreign Keys
-    rawDb.execSync('PRAGMA foreign_keys = ON;');
-    
-    // Execute DDL batch
-    rawDb.execSync(INITIAL_DDL);
-    
-    // Safe Column Migrations for Existing Database instances
+    // 1. Temporarily turn off foreign keys during table creation & migration
+    rawDb.execSync('PRAGMA foreign_keys = OFF;');
+
+    // 2. Create tables if not existing
+    rawDb.execSync(TABLES_DDL);
+
+    // 3. Safe column migrations for existing database instances (before indexes are created!)
     const migrations = [
-      'ALTER TABLE targets ADD COLUMN category_id TEXT REFERENCES categories(id) ON DELETE RESTRICT;',
-      'ALTER TABLE tasks ADD COLUMN stage_id TEXT REFERENCES stages(id) ON DELETE CASCADE;',
+      'ALTER TABLE targets ADD COLUMN category_id TEXT;',
+      'ALTER TABLE tasks ADD COLUMN stage_id TEXT;',
       'ALTER TABLE tasks ADD COLUMN name TEXT;',
       'ALTER TABLE tasks ADD COLUMN estimated_hours REAL DEFAULT 1.0;',
       'ALTER TABLE tasks ADD COLUMN sort_order INTEGER DEFAULT 0;',
@@ -279,15 +278,21 @@ export async function initDatabase(): Promise<void> {
       try {
         rawDb.execSync(sql);
       } catch {
-        // Column already exists or table was freshly created with DDL
+        // Column already exists
       }
     }
 
-    // Seed default categories and pillars if empty
+    // 4. Create all indexes safely now that all columns are guaranteed to exist
+    rawDb.execSync(INDEXES_DDL);
+
+    // 5. Re-enable foreign keys
+    rawDb.execSync('PRAGMA foreign_keys = ON;');
+
+    // 6. Seed default categories and pillars if empty
     rawDb.execSync(SEED_CATEGORIES_SQL);
     rawDb.execSync(SEED_PILLARS_SQL);
 
-    // Ensure data backfill for existing records
+    // 7. Ensure data backfill for existing records
     try {
       rawDb.execSync("UPDATE targets SET category_id = 'cat-karier' WHERE category_id IS NULL;");
       rawDb.execSync('UPDATE tasks SET name = title WHERE name IS NULL;');

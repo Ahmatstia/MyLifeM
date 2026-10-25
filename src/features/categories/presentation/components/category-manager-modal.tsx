@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import {
-  Modal,
   View,
   TextInput,
-  ScrollView,
   Pressable,
   StyleSheet,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { X, Plus, Pencil, Trash2, Check } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
+import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
 import { useCategories } from '../hooks/use-categories';
 
 export interface CategoryManagerModalProps {
@@ -103,182 +100,132 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.modalOverlay}
-      >
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.sheetHeader}>
-            <View>
-              <AppText variant="titleLarge">Kelola Kategori Target</AppText>
-              <AppText variant="bodySmall" color="onSurfaceVariant">
-                Label pengelompokan untuk target pengembangan dirimu
-              </AppText>
-            </View>
-
-            <Pressable
-              onPress={onClose}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={styles.closeButton}
-            >
-              <X size={20} color={colors.onSurfaceVariant} />
-            </Pressable>
-          </View>
-
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-            {/* Error Message */}
-            {errorMessage && (
-              <View style={styles.errorBox}>
-                <AppText variant="bodySmall" color="onErrorContainer">
-                  {errorMessage}
-                </AppText>
-              </View>
-            )}
-
-            {/* Input Tambah Kategori */}
-            <View style={styles.addCategoryBox}>
-              <TextInput
-                value={newCategoryName}
-                onChangeText={(text) => {
-                  setNewCategoryName(text);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                placeholder="Nama kategori baru (cth: Belajar)..."
-                placeholderTextColor={colors.onSurfaceSubtle}
-                style={styles.textInput}
-              />
-              <Button
-                title="Tambah"
-                onPress={handleAddCategory}
-                variant="filled"
-                size="standard"
-                loading={isSubmitting}
-                leftIcon={<Plus size={16} color={colors.onPrimary} />}
-                style={styles.addButton}
-              />
-            </View>
-
-            {/* List Kategori */}
-            <AppText variant="labelLarge" style={styles.listTitle}>
-              Daftar Kategori ({categories.length})
-            </AppText>
-
-            {categories.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <AppText variant="bodyMedium" color="onSurfaceSubtle" align="center">
-                  Belum ada kategori. Buat kategori pertamamu di atas.
-                </AppText>
-              </View>
-            ) : (
-              <View style={styles.categoryList}>
-                {categories.map((cat) => {
-                  const isEditing = editingId === cat.id;
-
-                  if (isEditing) {
-                    return (
-                      <View key={cat.id} style={styles.editRow}>
-                        <TextInput
-                          value={editingName}
-                          onChangeText={setEditingName}
-                          autoFocus
-                          style={styles.editInput}
-                        />
-                        <Pressable
-                          onPress={handleSaveEdit}
-                          style={styles.actionIconButton}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        >
-                          <Check size={18} color={colors.primary} />
-                        </Pressable>
-                        <Pressable
-                          onPress={() => setEditingId(null)}
-                          style={styles.actionIconButton}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        >
-                          <X size={18} color={colors.onSurfaceVariant} />
-                        </Pressable>
-                      </View>
-                    );
-                  }
-
-                  return (
-                    <View key={cat.id} style={styles.categoryCard}>
-                      <Pressable
-                        onPress={() => {
-                          if (onSelectCategory) {
-                            onSelectCategory(cat.id);
-                            onClose();
-                          }
-                        }}
-                        style={styles.categoryTextCol}
-                      >
-                        <AppText variant="titleMedium">{cat.name}</AppText>
-                        <View style={styles.targetCountBadge}>
-                          <AppText variant="labelSmall" color="onSurfaceVariant">
-                            {cat.targetCount} target
-                          </AppText>
-                        </View>
-                      </Pressable>
-
-                      <View style={styles.actionButtonsCol}>
-                        <Pressable
-                          onPress={() => startEdit(cat.id, cat.name)}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          style={styles.actionIconButton}
-                        >
-                          <Pencil size={16} color={colors.primary} />
-                        </Pressable>
-                        <Pressable
-                          onPress={() => handleDelete(cat.id, cat.name, cat.targetCount)}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          style={styles.actionIconButton}
-                        >
-                          <Trash2 size={16} color={cat.targetCount > 0 ? colors.outline : colors.error} />
-                        </Pressable>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-          </ScrollView>
+    <AppBottomSheet
+      visible={visible}
+      onClose={onClose}
+      title="Kelola Kategori Target"
+      subtitle="Label pengelompokan untuk target pengembangan dirimu"
+    >
+      {/* Error Message */}
+      {errorMessage && (
+        <View style={styles.errorBox}>
+          <AppText variant="bodySmall" color="onErrorContainer">
+            {errorMessage}
+          </AppText>
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+      )}
+
+      {/* Input Tambah Kategori */}
+      <View style={styles.addCategoryBox}>
+        <TextInput
+          value={newCategoryName}
+          onChangeText={(text) => {
+            setNewCategoryName(text);
+            if (errorMessage) setErrorMessage(null);
+          }}
+          placeholder="Nama kategori baru (cth: Belajar)..."
+          placeholderTextColor={colors.onSurfaceSubtle}
+          style={styles.textInput}
+        />
+        <Button
+          title="Tambah"
+          onPress={handleAddCategory}
+          variant="filled"
+          size="standard"
+          loading={isSubmitting}
+          leftIcon={<Plus size={16} color={colors.onPrimary} />}
+          style={styles.addButton}
+        />
+      </View>
+
+      {/* List Kategori */}
+      <AppText variant="labelLarge" style={styles.listTitle}>
+        Daftar Kategori ({categories.length})
+      </AppText>
+
+      {categories.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <AppText variant="bodyMedium" color="onSurfaceSubtle" align="center">
+            Belum ada kategori. Buat kategori pertamamu di atas.
+          </AppText>
+        </View>
+      ) : (
+        <View style={styles.categoryList}>
+          {categories.map((cat) => {
+            const isEditing = editingId === cat.id;
+
+            if (isEditing) {
+              return (
+                <View key={cat.id} style={styles.editRow}>
+                  <TextInput
+                    value={editingName}
+                    onChangeText={setEditingName}
+                    autoFocus
+                    style={styles.editInput}
+                  />
+                  <Pressable
+                    onPress={handleSaveEdit}
+                    style={styles.actionIconButton}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Check size={18} color={colors.primary} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setEditingId(null)}
+                    style={styles.actionIconButton}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <X size={18} color={colors.onSurfaceVariant} />
+                  </Pressable>
+                </View>
+              );
+            }
+
+            return (
+              <View key={cat.id} style={styles.categoryCard}>
+                <Pressable
+                  onPress={() => {
+                    if (onSelectCategory) {
+                      onSelectCategory(cat.id);
+                      onClose();
+                    }
+                  }}
+                  style={styles.categoryTextCol}
+                >
+                  <AppText variant="titleMedium">{cat.name}</AppText>
+                  <View style={styles.targetCountBadge}>
+                    <AppText variant="labelSmall" color="onSurfaceVariant">
+                      {cat.targetCount} target
+                    </AppText>
+                  </View>
+                </Pressable>
+
+                <View style={styles.actionButtonsCol}>
+                  <Pressable
+                    onPress={() => startEdit(cat.id, cat.name)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    style={styles.actionIconButton}
+                  >
+                    <Pencil size={16} color={colors.primary} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleDelete(cat.id, cat.name, cat.targetCount)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    style={styles.actionIconButton}
+                  >
+                    <Trash2 size={16} color={cat.targetCount > 0 ? colors.outline : colors.error} />
+                  </Pressable>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </AppBottomSheet>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: colors.scrim,
-    justifyContent: 'flex-end',
-  },
-  sheetContainer: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    maxHeight: '85%',
-    paddingBottom: space[8],
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: space[4],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
-  },
-  closeButton: {
-    padding: space[2],
-  },
-  content: {
-    padding: space[4],
-  },
   errorBox: {
     backgroundColor: colors.errorContainer,
     borderRadius: radius.lg,

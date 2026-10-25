@@ -106,7 +106,7 @@ export const StageCard: React.FC<StageCardProps> = ({
             style={[styles.iconTouch, isFirst && styles.iconDisabled]}
             accessibilityLabel="Pindah ke atas"
           >
-            <ChevronUp size={18} color={isFirst ? colors.outlineVariant : colors.onSurface} />
+            <ChevronUp size={18} color={isFirst ? colors.onSurfaceSubtle : colors.onSurface} />
           </Pressable>
 
           <Pressable
@@ -116,7 +116,7 @@ export const StageCard: React.FC<StageCardProps> = ({
             style={[styles.iconTouch, isLast && styles.iconDisabled]}
             accessibilityLabel="Pindah ke bawah"
           >
-            <ChevronDown size={18} color={isLast ? colors.outlineVariant : colors.onSurface} />
+            <ChevronDown size={18} color={isLast ? colors.onSurfaceSubtle : colors.onSurface} />
           </Pressable>
 
           <Pressable
@@ -276,7 +276,7 @@ export const StageCard: React.FC<StageCardProps> = ({
                         hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                         style={styles.taskActionBtn}
                       >
-                        <Trash2 size={14} color={colors.outline} />
+                        <Trash2 size={14} color={colors.onSurfaceVariant} />
                       </Pressable>
                     </View>
                   </View>

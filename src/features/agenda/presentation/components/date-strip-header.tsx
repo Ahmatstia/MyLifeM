@@ -69,7 +69,7 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
             >
               <AppText
                 variant="labelSmall"
-                color={isSelected ? 'onPrimary' : 'onSurfaceSubtle'}
+                color={isSelected ? 'onPrimary' : 'onSurfaceVariant'}
                 style={styles.dayName}
               >
                 {item.dayName}

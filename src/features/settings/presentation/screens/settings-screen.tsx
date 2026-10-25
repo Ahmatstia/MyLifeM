@@ -20,14 +20,14 @@ import {
   Download,
   Smartphone,
   ShieldCheck,
-  X,
-  } from 'lucide-react-native';
+} from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, radius, touchTarget } from '@/theme/tokens';
+import { space, radius, touchTarget, elevation } from '@/theme/tokens';
 import { Screen } from '@/shared/ui/screen';
 import { AppText } from '@/shared/ui/app-text';
 import { Card } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
+import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
 import { useSettings } from '../hooks/use-settings';
 
 const POMODORO_OPTIONS = [15, 25, 45, 60];
@@ -295,9 +295,16 @@ export const SettingsScreen: React.FC = () => {
         visible={activeDurationPicker !== null}
         transparent
         animationType="fade"
+        statusBarTranslucent
         onRequestClose={() => setActiveDurationPicker(null)}
       >
         <View style={styles.pickerModalOverlay}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setActiveDurationPicker(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Tutup dialog pemilih durasi"
+          />
           <View style={styles.pickerModalContent}>
             <AppText variant="titleLarge" style={styles.pickerTitle}>
               Pilih Durasi {activeDurationPicker === 'POMODORO' ? 'Pomodoro' : 'Deep Flow'}
@@ -351,45 +358,27 @@ export const SettingsScreen: React.FC = () => {
       </Modal>
 
       {/* Modal Preview Cadangan JSON */}
-      <Modal
+      <AppBottomSheet
         visible={backupJson !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setBackupJson(null)}
+        onClose={() => setBackupJson(null)}
+        title="Data Cadangan JSON"
+        subtitle="Salin data JSON berikut sebagai arsip offline cadanganmu"
       >
-        <View style={styles.backupModalOverlay}>
-          <View style={styles.backupModalContent}>
-            <View style={styles.backupHeader}>
-              <AppText variant="titleLarge">Data Cadangan JSON</AppText>
-              <Pressable
-                onPress={() => setBackupJson(null)}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              >
-                <X size={20} color={colors.onSurfaceVariant} />
-              </Pressable>
-            </View>
+        <TextInput
+          value={backupJson || ''}
+          multiline
+          editable={false}
+          selectTextOnFocus
+          style={styles.backupTextInput}
+        />
 
-            <AppText variant="bodySmall" color="onSurfaceVariant" style={styles.backupSub}>
-              Salin data JSON berikut sebagai arsip offline cadanganmu.
-            </AppText>
-
-            <TextInput
-              value={backupJson || ''}
-              multiline
-              editable={false}
-              selectTextOnFocus
-              style={styles.backupTextInput}
-            />
-
-            <Button
-              title="Tutup Preview"
-              variant="filled"
-              onPress={() => setBackupJson(null)}
-              style={styles.backupCloseBtn}
-            />
-          </View>
-        </View>
-      </Modal>
+        <Button
+          title="Tutup Preview"
+          variant="filled"
+          onPress={() => setBackupJson(null)}
+          style={styles.backupCloseBtn}
+        />
+      </AppBottomSheet>
     </Screen>
   );
 };
@@ -498,11 +487,12 @@ const styles = StyleSheet.create({
   pickerModalContent: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.xxl,
     padding: space[5],
     borderWidth: 1,
     borderColor: colors.outlineVariant,
+    ...elevation.level3,
   },
   pickerTitle: {
     marginBottom: space[4],
@@ -527,30 +517,6 @@ const styles = StyleSheet.create({
   },
   pickerCloseBtn: {
     marginTop: space[2],
-  },
-  backupModalOverlay: {
-    flex: 1,
-    backgroundColor: colors.scrim,
-    justifyContent: 'flex-end',
-  },
-  backupModalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    maxHeight: '90%',
-    padding: space[4],
-    paddingBottom: space[8],
-  },
-  backupHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: space[2],
-  },
-  backupSub: {
-    marginBottom: space[3],
   },
   backupTextInput: {
     height: 300,

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Star, CheckCircle, Award } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { radius, space, elevation } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 
@@ -56,29 +56,39 @@ export const SessionReflectionModal: React.FC<SessionReflectionModalProps> = ({
       visible={visible}
       transparent
       animationType="fade"
+      statusBarTranslucent
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.modalOverlay}
-      >
-        <View style={styles.dialogCard}>
-          {/* Header celebration */}
-          <View style={styles.header}>
-            <View style={styles.awardCircle}>
-              <Award size={32} color={colors.primary} />
-            </View>
-            <AppText variant="titleLarge" align="center">
-              Sesi Fokus Selesai!
-            </AppText>
-            <AppText variant="bodyMedium" color="onSurfaceVariant" align="center" style={styles.subtitle}>
-              Hebat! Kamu telah fokus selama{' '}
-              <AppText variant="titleSmall" color="primary">
-                {durationMinutes} menit
+      <View style={styles.modalOverlay}>
+        {/* Full-screen backdrop touch to dismiss */}
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Tutup dialog"
+        />
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardAvoid}
+        >
+          <View style={styles.dialogCard}>
+            {/* Header celebration */}
+            <View style={styles.header}>
+              <View style={styles.awardCircle}>
+                <Award size={32} color={colors.primary} />
+              </View>
+              <AppText variant="titleLarge" align="center">
+                Sesi Fokus Selesai!
               </AppText>
-              {taskTitle ? ` untuk "${taskTitle}"` : '.'}
-            </AppText>
-          </View>
+              <AppText variant="bodyMedium" color="onSurfaceVariant" align="center" style={styles.subtitle}>
+                Hebat! Kamu telah fokus selama{' '}
+                <AppText variant="titleSmall" color="primary">
+                  {durationMinutes} menit
+                </AppText>
+                {taskTitle ? ` untuk "${taskTitle}"` : '.'}
+              </AppText>
+            </View>
 
           {/* Star Rating (1 - 5) */}
           <View style={styles.ratingSection}>
@@ -140,7 +150,8 @@ export const SessionReflectionModal: React.FC<SessionReflectionModalProps> = ({
           />
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </View>
+  </Modal>
   );
 };
 
@@ -152,6 +163,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: space[4],
   },
+  keyboardAvoid: {
+    width: '100%',
+    alignItems: 'center',
+  },
   dialogCard: {
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.xxl,
@@ -160,6 +175,7 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
+    ...elevation.level3,
   },
   header: {
     alignItems: 'center',

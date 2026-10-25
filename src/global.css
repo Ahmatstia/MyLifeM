@@ -1,10 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
-  --background: #081013;
-  --surface: #0f1b20;
-  --primary: #14b8a6;
-  --text: #f1f5f9;
+  --background: #FAF8FE;
+  --surface: #FFFFFF;
+  --primary: #5C54E5;
+  --text: #242132;
 }

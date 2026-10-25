@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 import {
-  Modal,
   View,
   TextInput,
-  ScrollView,
   Pressable,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { X, CalendarPlus, Clock, MapPin, Bell } from 'lucide-react-native';
+import { CalendarPlus, Clock, MapPin, Bell } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
+import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
 import type {
   CreateAgendaInput,
   AgendaEventType,
@@ -124,288 +121,213 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
   };
 
   return (
-    <Modal
+    <AppBottomSheet
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleClose}
+      onClose={handleClose}
+      title="Jadwalkan Agenda"
+      subtitle={selectedDate}
+      icon={<CalendarPlus size={20} color={colors.primary} />}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.modalOverlay}
-      >
-        <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.sheetHeader}>
-            <View style={styles.headerTitleRow}>
-              <View style={styles.iconCircle}>
-                <CalendarPlus size={20} color={colors.primary} />
-              </View>
-              <View>
-                <AppText variant="titleLarge">Jadwalkan Agenda</AppText>
-                <AppText variant="labelSmall" color="onSurfaceVariant">
-                  {selectedDate}
-                </AppText>
-              </View>
-            </View>
+      {/* Error Message */}
+      {errorMessage && (
+        <View style={styles.errorBox}>
+          <AppText variant="bodySmall" color="onErrorContainer">
+            {errorMessage}
+          </AppText>
+        </View>
+      )}
 
+      {/* Input: Judul Agenda */}
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Judul Kegiatan *
+      </AppText>
+      <TextInput
+        value={title}
+        onChangeText={setTitle}
+        placeholder="Contoh: Diskusi Arsitektur Sistem"
+        placeholderTextColor={colors.onSurfaceSubtle}
+        style={styles.textInput}
+      />
+
+      {/* Event Type / Category */}
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Kategori Kegiatan
+      </AppText>
+      <View style={styles.typeRow}>
+        {EVENT_TYPES.map((item) => {
+          const isSelected = eventType === item.type;
+          return (
             <Pressable
-              onPress={handleClose}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={styles.closeButton}
+              key={item.type}
+              onPress={() => setEventType(item.type)}
+              style={[
+                styles.typeChip,
+                isSelected && {
+                  backgroundColor: colors.primaryContainer,
+                  borderColor: item.color,
+                },
+              ]}
             >
-              <X size={20} color={colors.onSurfaceVariant} />
+              <View
+                style={[styles.typeDot, { backgroundColor: item.color }]}
+              />
+              <AppText
+                variant="labelSmall"
+                color={isSelected ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+              >
+                {item.label}
+              </AppText>
             </Pressable>
+          );
+        })}
+      </View>
+
+      {/* Time / All-Day Selector */}
+      <View style={styles.timeSectionHeader}>
+        <AppText variant="labelLarge">Waktu Pelaksanaan</AppText>
+        <Pressable
+          onPress={() => setIsAllDay(!isAllDay)}
+          style={[
+            styles.allDayToggle,
+            isAllDay && styles.allDayToggleActive,
+          ]}
+        >
+          <AppText
+            variant="labelSmall"
+            color={isAllDay ? 'onPrimaryContainer' : 'onSurfaceSubtle'}
+          >
+            Bebas Jam (All Day)
+          </AppText>
+        </Pressable>
+      </View>
+
+      {!isAllDay ? (
+        <View style={styles.timeInputsRow}>
+          <View style={styles.timeCol}>
+            <AppText variant="labelSmall" color="onSurfaceSubtle" style={styles.subLabel}>
+              Mulai (JJ:MM)
+            </AppText>
+            <View style={styles.timeInputContainer}>
+              <Clock size={16} color={colors.onSurfaceVariant} />
+              <TextInput
+                value={startTimeStr}
+                onChangeText={setStartTimeStr}
+                placeholder="09:00"
+                placeholderTextColor={colors.onSurfaceSubtle}
+                keyboardType="numbers-and-punctuation"
+                maxLength={5}
+                style={styles.timeInput}
+              />
+            </View>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.formContent}
-          >
-            {/* Error Message */}
-            {errorMessage && (
-              <View style={styles.errorBox}>
-                <AppText variant="bodySmall" color="onErrorContainer">
-                  {errorMessage}
-                </AppText>
-              </View>
-            )}
+          <View style={styles.timeSeparator}>
+            <AppText variant="bodySmall" color="onSurfaceSubtle">-</AppText>
+          </View>
 
-            {/* Input: Judul Agenda */}
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Judul Kegiatan *
+          <View style={styles.timeCol}>
+            <AppText variant="labelSmall" color="onSurfaceSubtle" style={styles.subLabel}>
+              Selesai (JJ:MM)
             </AppText>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Contoh: Diskusi Arsitektur Sistem"
-              placeholderTextColor={colors.onSurfaceSubtle}
-              style={styles.textInput}
-            />
-
-            {/* Event Type / Category */}
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Kategori Kegiatan
-            </AppText>
-            <View style={styles.typeRow}>
-              {EVENT_TYPES.map((item) => {
-                const isSelected = eventType === item.type;
-                return (
-                  <Pressable
-                    key={item.type}
-                    onPress={() => setEventType(item.type)}
-                    style={[
-                      styles.typeChip,
-                      isSelected && {
-                        backgroundColor: colors.primaryContainer,
-                        borderColor: item.color,
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[styles.typeDot, { backgroundColor: item.color }]}
-                    />
-                    <AppText
-                      variant="labelSmall"
-                      color={isSelected ? 'onPrimaryContainer' : 'onSurfaceVariant'}
-                    >
-                      {item.label}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* Time / All-Day Selector */}
-            <View style={styles.timeSectionHeader}>
-              <AppText variant="labelLarge">Waktu Pelaksanaan</AppText>
-              <Pressable
-                onPress={() => setIsAllDay(!isAllDay)}
-                style={[
-                  styles.allDayToggle,
-                  isAllDay && styles.allDayToggleActive,
-                ]}
-              >
-                <AppText
-                  variant="labelSmall"
-                  color={isAllDay ? 'onPrimaryContainer' : 'onSurfaceSubtle'}
-                >
-                  Bebas Jam (All Day)
-                </AppText>
-              </Pressable>
-            </View>
-
-            {!isAllDay ? (
-              <View style={styles.timeInputsRow}>
-                <View style={styles.timeCol}>
-                  <AppText variant="labelSmall" color="onSurfaceSubtle" style={styles.subLabel}>
-                    Mulai (JJ:MM)
-                  </AppText>
-                  <View style={styles.timeInputContainer}>
-                    <Clock size={16} color={colors.onSurfaceVariant} />
-                    <TextInput
-                      value={startTimeStr}
-                      onChangeText={setStartTimeStr}
-                      placeholder="09:00"
-                      placeholderTextColor={colors.onSurfaceSubtle}
-                      keyboardType="numbers-and-punctuation"
-                      maxLength={5}
-                      style={styles.timeInput}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.timeSeparator}>
-                  <AppText variant="bodySmall" color="onSurfaceSubtle">-</AppText>
-                </View>
-
-                <View style={styles.timeCol}>
-                  <AppText variant="labelSmall" color="onSurfaceSubtle" style={styles.subLabel}>
-                    Selesai (JJ:MM)
-                  </AppText>
-                  <View style={styles.timeInputContainer}>
-                    <Clock size={16} color={colors.onSurfaceVariant} />
-                    <TextInput
-                      value={endTimeStr}
-                      onChangeText={setEndTimeStr}
-                      placeholder="10:00"
-                      placeholderTextColor={colors.onSurfaceSubtle}
-                      keyboardType="numbers-and-punctuation"
-                      maxLength={5}
-                      style={styles.timeInput}
-                    />
-                  </View>
-                </View>
-              </View>
-            ) : null}
-
-            {/* Location */}
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Lokasi / Media
-            </AppText>
-            <View style={styles.iconInputContainer}>
-              <MapPin size={16} color={colors.onSurfaceVariant} />
+            <View style={styles.timeInputContainer}>
+              <Clock size={16} color={colors.onSurfaceVariant} />
               <TextInput
-                value={location}
-                onChangeText={setLocation}
-                placeholder="Google Meet, Kantor, atau Rumah"
+                value={endTimeStr}
+                onChangeText={setEndTimeStr}
+                placeholder="10:00"
                 placeholderTextColor={colors.onSurfaceSubtle}
-                style={styles.flexInput}
+                keyboardType="numbers-and-punctuation"
+                maxLength={5}
+                style={styles.timeInput}
               />
             </View>
-
-            {/* Reminder */}
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Pengingat Waktu
-            </AppText>
-            <View style={styles.reminderRow}>
-              {REMINDER_OPTIONS.map((item) => {
-                const isSelected = reminderMinutes === item.minutes;
-                return (
-                  <Pressable
-                    key={item.minutes}
-                    onPress={() => setReminderMinutes(item.minutes)}
-                    style={[
-                      styles.reminderChip,
-                      isSelected && styles.reminderChipSelected,
-                    ]}
-                  >
-                    <Bell
-                      size={12}
-                      color={
-                        isSelected ? colors.onPrimaryContainer : colors.onSurfaceSubtle
-                      }
-                    />
-                    <AppText
-                      variant="labelSmall"
-                      color={isSelected ? 'onPrimaryContainer' : 'onSurfaceVariant'}
-                    >
-                      {item.label}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* Catatan / Deskripsi */}
-            <AppText variant="labelLarge" style={styles.inputLabel}>
-              Catatan Agenda (Opsional)
-            </AppText>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Tambahkan agenda rapat atau catatan persiapan..."
-              placeholderTextColor={colors.onSurfaceSubtle}
-              multiline
-              numberOfLines={2}
-              style={[styles.textInput, styles.textArea]}
-            />
-
-            {/* Sticky Action Button Row (Template C) */}
-            <View style={styles.actionRow}>
-              <Button
-                title="Batal"
-                onPress={handleClose}
-                variant="tonal"
-                style={styles.cancelButton}
-              />
-              <Button
-                title="Jadwalkan"
-                onPress={handleSubmit}
-                variant="filled"
-                loading={isSubmitting}
-                style={styles.saveButton}
-              />
-            </View>
-          </ScrollView>
+          </View>
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+      ) : null}
+
+      {/* Location */}
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Lokasi / Media
+      </AppText>
+      <View style={styles.iconInputContainer}>
+        <MapPin size={16} color={colors.onSurfaceVariant} />
+        <TextInput
+          value={location}
+          onChangeText={setLocation}
+          placeholder="Google Meet, Kantor, atau Rumah"
+          placeholderTextColor={colors.onSurfaceSubtle}
+          style={styles.flexInput}
+        />
+      </View>
+
+      {/* Reminder */}
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Pengingat Waktu
+      </AppText>
+      <View style={styles.reminderRow}>
+        {REMINDER_OPTIONS.map((item) => {
+          const isSelected = reminderMinutes === item.minutes;
+          return (
+            <Pressable
+              key={item.minutes}
+              onPress={() => setReminderMinutes(item.minutes)}
+              style={[
+                styles.reminderChip,
+                isSelected && styles.reminderChipSelected,
+              ]}
+            >
+              <Bell
+                size={12}
+                color={
+                  isSelected ? colors.onPrimaryContainer : colors.onSurfaceSubtle
+                }
+              />
+              <AppText
+                variant="labelSmall"
+                color={isSelected ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+              >
+                {item.label}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* Catatan / Deskripsi */}
+      <AppText variant="labelLarge" style={styles.inputLabel}>
+        Catatan Agenda (Opsional)
+      </AppText>
+      <TextInput
+        value={description}
+        onChangeText={setDescription}
+        placeholder="Tambahkan agenda rapat atau catatan persiapan..."
+        placeholderTextColor={colors.onSurfaceSubtle}
+        multiline
+        numberOfLines={2}
+        style={[styles.textInput, styles.textArea]}
+      />
+
+      {/* Sticky Action Button Row (Template C) */}
+      <View style={styles.actionRow}>
+        <Button
+          title="Batal"
+          onPress={handleClose}
+          variant="tonal"
+          style={styles.cancelButton}
+        />
+        <Button
+          title="Jadwalkan"
+          onPress={handleSubmit}
+          variant="filled"
+          loading={isSubmitting}
+          style={styles.saveButton}
+        />
+      </View>
+    </AppBottomSheet>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: colors.scrim,
-    justifyContent: 'flex-end',
-  },
-  sheetContainer: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    maxHeight: '92%',
-    paddingBottom: space[6],
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: space[4],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
-  },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-  },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.pill,
-    backgroundColor: colors.primaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeButton: {
-    padding: space[2],
-  },
-  formContent: {
-    padding: space[4],
-  },
   errorBox: {
     backgroundColor: colors.errorContainer,
     borderRadius: radius.lg,
