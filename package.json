@@ -59,7 +59,8 @@
     "lint": "expo lint",
     "test:ui": "node scripts/check-ui.cjs",
     "test:backup": "node scripts/check-backup.cjs",
-    "test:integrity": "node scripts/check-integrity.cjs"
+    "test:integrity": "node scripts/check-integrity.cjs",
+    "test:calendar": "node scripts/check-calendar.cjs"
   },
   "private": true
 }

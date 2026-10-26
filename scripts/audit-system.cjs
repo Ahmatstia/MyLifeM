@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 // Audit-only reproduction: runs production repositories against disposable in-memory SQLite.
 const assert = require('node:assert/strict');
 const { environment } = require('./check-integrity.cjs');
 const env = environment();
 const { sqlite, load } = env;
+const originalTZ = process.env.TZ;
+process.env.TZ = 'Asia/Jakarta';
 
 const observed = [];
 function finding(id, message, actual, expected) {
@@ -16,8 +17,8 @@ async function main() {
   const tables = sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
   finding('A01', 'FIXED: fresh database has enforced foreign keys', tables.reduce((count, table) =>
     count + sqlite.prepare(`PRAGMA foreign_key_list(${table.name})`).all().length, 0), 15);
-  finding('A04', '00:30 WIB is assigned to yesterday by UTC date slicing',
-    new Date('2026-10-26T00:30:00+07:00').toISOString().split('T')[0], '2026-10-25');
+  finding('A04', 'FIXED: 00:30 WIB uses the local calendar day',
+    load('src/shared/utils/local-date.ts').formatLocalDate(new Date('2026-10-26T00:30:00+07:00')), '2026-10-26');
 
   const { targetRepository } = load('src/features/targets/data/repositories/target.repository.impl.ts');
   const { projectRepository } = load('src/features/projects/data/repositories/project.repository.impl.ts');
@@ -49,14 +50,14 @@ async function main() {
     sqlite.prepare('SELECT count(*) AS n FROM daily_focus_items WHERE task_id = ?').get(task.id).n, 0);
   await agendaRepository.createEvent({ title: 'Audit midnight event',
     startTime: '2026-10-25T23:30:00.000Z', endTime: '2026-10-26T01:30:00.000Z' });
-  finding('A09-overlap', 'An ongoing timed event is absent from the next UTC day query',
-    (await agendaRepository.getEventsForDate('2026-10-26')).length, 0);
-  const empty = await agendaRepository.createEvent({ title: '   ',
-    startTime: '2026-10-26T11:00:00', endTime: '2026-10-26T09:00:00' });
-  finding('A09-validation', 'Repository accepts blank title and reversed times', empty.title, '');
+  finding('A09-overlap', 'FIXED: overlapping event is visible on the selected local day',
+    (await agendaRepository.getEventsForDate('2026-10-26')).length, 1);
+  await assert.rejects(agendaRepository.createEvent({ title: '   ',
+    startTime: '2026-10-26T11:00:00', endTime: '2026-10-26T09:00:00' }));
+  finding('A09-validation', 'FIXED: blank/reversed agenda rejected before insert', sqlite.prepare('SELECT count(*) n FROM agenda_events').get().n, 1);
 
   console.log(JSON.stringify({ purpose: 'Baseline bugs plus fixed regressions, NOT a healthy-system test suite',
     storage: ':memory: only', tableCount: tables.length, reproduced: observed }, null, 2));
 }
 
-main().catch((error) => { console.error(error); process.exitCode = 1; }).finally(() => sqlite.close());
+main().catch((error) => { console.error(error); process.exitCode = 1; }).finally(() => { sqlite.close(); if (originalTZ === undefined) delete process.env.TZ; else process.env.TZ = originalTZ; });

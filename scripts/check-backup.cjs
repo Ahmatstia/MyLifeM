@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+/* global __dirname */
 // Production backup code, disposable SQLite only. Never opens mylife.db on disk.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -118,6 +118,8 @@ async function main() {
   invalid('unknown status', input => { input.data.tasks[0].status = 'MAGIC'; });
   invalid('rating outside range', input => { input.data.focusSessions[0].rating = 6; });
   invalid('reversed session', input => { input.data.focusSessions[0].endedAt = '2025-10-26T03:00:00Z'; });
+  invalid('session without a clock', input => { input.data.focusSessions[0].startedAt = '2026-10-26'; });
+  invalid('timed agenda without a clock', input => { input.data.agendaEvents[0].startTime = '2099-10-26'; });
   invalid('reversed agenda', input => { input.data.agendaEvents[0].endTime = input.data.agendaEvents[0].startTime; });
   invalid('empty label', input => { input.data.tasks[0].title = ' '; });
   invalid('invalid preferences', input => { input.data.userSettings[0].value = '0'; });
@@ -218,9 +220,14 @@ async function fileChecks(json) {
 async function notificationChecks(events) {
   const canceled = [], scheduled = [];
   const notifications = {
+    setNotificationHandler: () => {},
+    setNotificationChannelAsync: async () => {},
+    AndroidImportance: { DEFAULT: 3 },
+    SchedulableTriggerInputTypes: { DATE: 'date' },
     getAllScheduledNotificationsAsync: async () => [{ identifier: 'agenda-old' }, { identifier: 'unrelated' }],
     cancelScheduledNotificationAsync: async id => canceled.push(id),
     getPermissionsAsync: async () => ({ status: 'granted' }),
+    getExactAlarmPermissionsAsync: async () => ({ granted: true }),
     scheduleNotificationAsync: async input => { scheduled.push(input); return input.identifier; },
   };
   const { AgendaNotificationService: service } = loader({ 'react-native': { Platform: { OS: 'android' } }, expo: { isRunningInExpoGo: () => false }, 'expo-notifications': notifications })('src/features/agenda/data/services/agenda-notification.service.ts');
@@ -257,6 +264,7 @@ async function hookChecks(json) {
       restoreBackupJson: async () => { calls.push('commit'); if (failRestore) throw new Error('disk full'); },
     } },
   })('src/features/settings/presentation/hooks/use-settings.ts');
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- Drives the hook with an isolated React state mock.
   const render = () => { index = 0; return useSettings(); };
   await render().inspectBackup();
   await render().restoreBackup();

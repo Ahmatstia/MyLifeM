@@ -1,5 +1,7 @@
 import { getTableColumns, getTableName } from 'drizzle-orm';
 import * as schema from '@/db/schema';
+import { parseInstant } from '@/shared/utils/local-date';
+import { allDayDates } from '@/features/agenda/domain/agenda-time';
 
 export const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
 export const MAX_BACKUP_ROWS = 50_000;
@@ -162,12 +164,16 @@ export function parseBackup(json: string): BackupDocument {
   for (const row of typed.focusSessions) {
     ref(row, 'taskId', 'tasks'); choice(row, 'mode', ['POMODORO', 'DEEP_FLOW', 'STOPWATCH']);
     nonnegative(row, ['durationMinutes']);
+    try { parseInstant(row.startedAt); if (row.endedAt !== null) parseInstant(row.endedAt); }
+    catch { return invalid('sesi fokus memerlukan tanggal dan jam lengkap yang valid.'); }
     if (row.rating !== null && (Number(row.rating) < 1 || Number(row.rating) > 5)) return invalid('rating fokus harus 1–5.');
     if (row.endedAt !== null && Date.parse(String(row.endedAt)) < Date.parse(String(row.startedAt))) return invalid('waktu selesai sesi mendahului mulai.');
   }
   for (const row of typed.agendaEvents) {
     ref(row, 'targetId', 'targets'); ref(row, 'projectId', 'projects'); ref(row, 'taskId', 'tasks');
     choice(row, 'eventType', ['WORK', 'PERSONAL', 'LEARNING', 'MEETING']);
+    try { if (row.isAllDay) allDayDates(row.startTime, row.endTime); else { parseInstant(row.startTime); parseInstant(row.endTime); } }
+    catch { return invalid('waktu agenda tidak sesuai jenisnya.'); }
     if (!String(row.title).trim() || Date.parse(String(row.endTime)) <= Date.parse(String(row.startTime))) return invalid('judul/rentang waktu agenda tidak benar.');
     nonnegative(row, ['reminderMinutes']);
   }

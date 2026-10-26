@@ -17,7 +17,7 @@ export interface AgendaEventEntity {
   isAllDay: boolean;
   eventType: AgendaEventType;
   location: string | null;
-  reminderMinutes: number;
+  reminderMinutes: number | null;
   isCompleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -31,7 +31,7 @@ export interface CreateAgendaInput {
   isAllDay?: boolean;
   eventType?: AgendaEventType;
   location?: string;
-  reminderMinutes?: number;
+  reminderMinutes?: number | null;
   targetId?: string | null;
   projectId?: string | null;
 }

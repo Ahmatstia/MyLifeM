@@ -6,12 +6,12 @@ import { radius, space } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { formatLocalDate } from '@/shared/utils/local-date';
 
-export interface DateStripHeaderProps { selectedDate: string; onSelectDate: (date: string) => void; style?: ViewStyle; }
+export interface DateStripHeaderProps { selectedDate: string; todayDate?: string; onSelectDate: (date: string) => void; style?: ViewStyle; }
 
-export const DateStripHeader: React.FC<DateStripHeaderProps> = ({ selectedDate, onSelectDate, style }) => {
+export const DateStripHeader: React.FC<DateStripHeaderProps> = ({ selectedDate, todayDate, onSelectDate, style }) => {
   const [year, month, day] = selectedDate.split('-').map(Number);
   const selected = new Date(year, month - 1, day);
-  const today = formatLocalDate();
+  const today = todayDate || formatLocalDate();
   const monday = new Date(selected);
   monday.setDate(selected.getDate() - (selected.getDay() + 6) % 7);
   const days = Array.from({ length: 7 }, (_, offset) => {

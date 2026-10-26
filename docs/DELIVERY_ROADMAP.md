@@ -22,6 +22,8 @@ Selesai bila rollback teruji, foreign_key_check bersih, versi tidak maju saat mi
 
 ### R0.3 Tanggal dan agenda [A04, A09, A10]
 
+Status 26 Oktober 2026: tanggal lokal/instant, query overlap lintas malam, validasi form/repository/import, lifecycle kalender, dan rekonsiliasi pengingat telah diimplementasikan. Lihat [implementasi kalender](./CALENDAR_IMPLEMENTATION_2026-10-26.md) untuk aturan legacy, batas 50 pengingat, verifikasi, dan gerbang native yang masih terbuka. Pengiriman notifikasi OS belum diuji di perangkat; R0.3 belum melewati gerbang rilis native.
+
 Sentuh helper tanggal bersama, hook Today/Agenda, date strip, query sesi/event, form agenda dan scheduler. Standarkan date-only vs instant, validasi jam dan overlap, pisahkan reminder null/0/positif.
 
 Selesai bila 00:30 WIB/WITA/WIT masuk hari benar; lintas tengah malam tetap terlihat; jam salah tidak diganti diam-diam; tepat-waktu terjadwal ketika izin tersedia; izin ditolak dijelaskan; kembali aktif setelah tengah malam memperbarui tanggal. Native reminder diuji di development build.

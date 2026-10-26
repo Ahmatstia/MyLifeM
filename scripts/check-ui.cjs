@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+/* global __dirname */
 // Runs UI regressions against production components, using isolated fixture hooks (no database).
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -124,6 +124,7 @@ let stateIndex = 0, effectIndex = 0;
 const effects = [];
 const fakeReact = { ...React,
   useState(initial) { const index = stateIndex++; if (!(index in state)) state[index] = initial; return [state[index], value => { state[index] = typeof value === 'function' ? value(state[index]) : value; }]; },
+  useRef(initial) { const index = stateIndex++; return state[index] ??= { current: initial }; },
   useEffect(callback, next) { const index = effectIndex++; if (!dependencies[index] || next.some((value, i) => value !== dependencies[index][i])) effects.push(callback); dependencies[index] = next; },
 };
 const formLoader = createLoader({ react: fakeReact });
@@ -224,6 +225,22 @@ for (const scale of [1, 2]) {
   previews.push(['form-restore' + (scale === 2 ? '-large-text' : ''), 320, restoreHtml]);
 }
 fontScale = 1;
+for (const scale of [1, 2]) {
+  fontScale = scale; width = 320;
+  const specialEvents = [...events,
+    { ...events[0], id: 'overnight', title: 'Sesi lintas malam', startTime: '2026-10-25T23:30:00', endTime: '2026-10-26T01:00:00' },
+    { ...events[0], id: 'overlap', title: 'Waktu yang bertumpuk', startTime: '2026-10-26T00:30:00', endTime: '2026-10-26T02:00:00' },
+    { ...events[0], id: 'all-day', title: 'Sepanjang hari', isAllDay: true, startTime: '2026-10-26', endTime: '2026-10-27' },
+  ];
+  const AgendaWarning = createLoader({ '@/features/agenda/presentation/hooks/use-agenda': { useAgenda: () => ({ ...base,
+    selectedDate: '2026-10-26', todayDate: '2026-10-26', timeZone: 'Asia/Jakarta', setSelectedDate: noop, events: specialEvents,
+    reminderWarning: 'Agenda tetap tersimpan. Pengingat belum aktif; periksa izin notifikasi.', retryReminders: noop, addEvent: noop, toggleEvent: noop, removeEvent: noop,
+  }) } })('src/features/agenda/presentation/screens/agenda-screen.tsx').AgendaScreen;
+  const html = renderToStaticMarkup(React.createElement(AgendaWarning));
+  assert.ok(html.includes('Waktu bertumpuk') && html.includes('Berlanjut dari hari sebelumnya') && html.includes('Periksa izin pengingat'));
+  previews.push(['agenda-overlap-warning' + (scale === 2 ? '-large-text' : ''), 320, html]);
+}
+fontScale = 1;
 todayState = { ...focus, focusItems: [], error: 'Load failed' };
 const { TodayFocusScreen } = load('src/features/today-focus/presentation/screens/today-focus-screen.tsx');
 const errorHtml = renderToStaticMarkup(React.createElement(TodayFocusScreen));
@@ -272,10 +289,10 @@ async function checkReflection() {
 async function checkStartup() {
   state.length = 0; dependencies.length = 0; effects.length = 0;
   let fails = true;
-  const Stack = () => null; Stack.Screen = () => null;
+  const Stack = () => null; Stack.Screen = function TestStackScreen() { return null; };
   const { default: RootLayout } = createLoader({
     react: { ...fakeReact, useMemo: work => work(), useCallback: work => work },
-    'expo-router': { Stack, ThemeProvider: () => null, DefaultTheme: { colors: {} } },
+    'expo-router': { Stack, ThemeProvider: function TestThemeProvider() { return null; }, DefaultTheme: { colors: {} } },
     'expo-splash-screen': { preventAutoHideAsync: async () => {}, hideAsync: async () => {} },
     '@expo-google-fonts/plus-jakarta-sans': { useFonts: () => [true, null] },
     '@/db/client': { initDatabase: async () => { if (fails) throw new Error('Relasi legacy bermasalah'); } },
@@ -293,4 +310,29 @@ async function checkStartup() {
   await descendants(blocked).find(element => element.props?.title === 'Coba lagi').props.onPress();
   assert.ok(descendants(render()).some(element => element.type === Stack), 'Successful retry opens navigation.');
 }
-checkReflection().then(checkStartup).then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle, error state, async reflection retry, restore confirmation, startup migration failure/retry, 42 screen renders (3 widths, simulated text 100/200%) and 12 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });
+async function checkAgendaForm() {
+  state.length = 0; dependencies.length = 0; effects.length = 0;
+  let closed = false, attempts = 0, lastInput, fail = true, release;
+  const { AddEventModal } = formLoader('src/features/agenda/presentation/components/add-event-modal.tsx');
+  const render = () => { stateIndex = 0; effectIndex = 0; return AddEventModal({ visible: true, selectedDate: '2026-10-26', onClose: () => { closed = true; },
+    onSubmit: async input => { attempts++; lastInput = input; if (release) await new Promise(resolve => { release = resolve; }); if (fail) throw new Error('Storage unavailable'); return true; } }); };
+  const field = (dialog, label) => descendants(dialog).find(element => element.type === native.TextInput && element.props.accessibilityLabel === label);
+  const submit = dialog => React.Children.toArray(dialog.props.footer.props.children).find(element => element.props.title === 'Jadwalkan').props.onPress();
+  let dialog = render(); field(dialog, 'Judul agenda').props.onChangeText('Keep this agenda');
+  field(dialog, 'Jam mulai').props.onChangeText('29:00'); dialog = render(); await submit(dialog);
+  assert.equal(attempts, 0); assert.equal(closed, false); assert.ok(descendants(render()).some(element => element.props?.children?.includes?.('Jam harus valid')));
+  dialog = render(); field(dialog, 'Jam mulai').props.onChangeText('23:30'); field(dialog, 'Jam selesai').props.onChangeText('01:00');
+  dialog = render(); await submit(dialog); assert.equal(attempts, 0, 'End before start is never silently moved.');
+  dialog = render(); descendants(dialog).find(element => element.props?.accessibilityLabel === 'Selesai besok').props.onPress();
+  const off = descendants(render()).find(element => element.props?.accessibilityRole === 'button' && descendants(element).some(child => child.props?.children === 'Nonaktif'));
+  off.props.onPress(); await submit(render());
+  assert.equal(closed, false); assert.equal(lastInput.reminderMinutes, null);
+  assert.equal(lastInput.endTime, new Date('2026-10-27T01:00:00').toISOString());
+  assert.equal(field(render(), 'Judul agenda').props.value, 'Keep this agenda');
+  fail = false; release = true;
+  const pending = submit(render());
+  await submit(render()); assert.equal(attempts, 2, 'Double tap must not create a second agenda.');
+  render().props.onClose(); assert.equal(closed, false, 'Saving cannot be dismissed while awaiting completion.');
+  release(); await pending; assert.equal(closed, true);
+}
+checkReflection().then(checkAgendaForm).then(checkStartup).then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle, error state, async reflection retry, agenda validation/overnight/off reminder/save retry/double tap, restore confirmation, startup migration failure/retry, 42 screen renders + 2 agenda warning scenarios (simulated text 100/200%) and 12 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });

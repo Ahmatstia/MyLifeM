@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { localTimeToIso, shiftDate } from '@/shared/utils/local-date';
 import {
   View,
   TextInput,
@@ -31,6 +32,7 @@ const EVENT_TYPES: { type: AgendaEventType; label: string; color: string }[] = [
 ];
 
 const REMINDER_OPTIONS = [
+  { minutes: null, label: 'Nonaktif' },
   { minutes: 0, label: 'Tepat Waktu' },
   { minutes: 10, label: '10 mnt' },
   { minutes: 30, label: '30 mnt' },
@@ -47,10 +49,13 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
   const [description, setDescription] = useState('');
   const [eventType, setEventType] = useState<AgendaEventType>('WORK');
   const [isAllDay, setIsAllDay] = useState(false);
+  const [endsTomorrow, setEndsTomorrow] = useState(false);
+  const [formDate] = useState(selectedDate);
+  const submitting = useRef(false);
   const [startTimeStr, setStartTimeStr] = useState('09:00');
   const [endTimeStr, setEndTimeStr] = useState('10:00');
   const [location, setLocation] = useState('');
-  const [reminderMinutes, setReminderMinutes] = useState(10);
+  const [reminderMinutes, setReminderMinutes] = useState<number | null>(10);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -59,6 +64,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
     setDescription('');
     setEventType('WORK');
     setIsAllDay(false);
+    setEndsTomorrow(false);
     setStartTimeStr('09:00');
     setEndTimeStr('10:00');
     setLocation('');
@@ -67,65 +73,52 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
   };
 
   const handleClose = () => {
+    if (submitting.current) return;
     resetForm();
     onClose();
   };
 
   const handleSubmit = async () => {
+    if (submitting.current) return;
     if (!title.trim()) {
       setErrorMessage('Judul agenda tidak boleh kosong.');
       return;
     }
 
-    setErrorMessage(null);
-    setIsSubmitting(true);
-
-    let startIso: string;
-    let endIso: string;
-
-    if (isAllDay) {
-      startIso = `${selectedDate}T00:00:00.000Z`;
-      endIso = `${selectedDate}T23:59:59.000Z`;
-    } else {
-      // Validate time format (HH:mm)
-      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-      const validStart = timeRegex.test(startTimeStr.trim()) ? startTimeStr.trim() : '09:00';
-      const validEnd = timeRegex.test(endTimeStr.trim()) ? endTimeStr.trim() : '10:00';
-
-      const paddedStart = validStart.length === 4 ? `0${validStart}` : validStart;
-      const paddedEnd = validEnd.length === 4 ? `0${validEnd}` : validEnd;
-
-      startIso = `${selectedDate}T${paddedStart}:00`;
-      endIso = `${selectedDate}T${paddedEnd}:00`;
-    }
-
-    const success = await onSubmit({
-      title: title.trim(),
-      description: description.trim() || undefined,
-      startTime: startIso,
-      endTime: endIso,
-      isAllDay,
-      eventType,
-      location: location.trim() || undefined,
-      reminderMinutes,
-    });
-
-    setIsSubmitting(false);
-
-    if (success) {
-      resetForm();
-      onClose();
-    } else {
-      setErrorMessage('Gagal menyimpan agenda. Silakan coba lagi.');
-    }
+    try {
+      const startIso = isAllDay ? formDate : localTimeToIso(formDate, startTimeStr);
+      const endIso = isAllDay ? shiftDate(formDate, 1) : localTimeToIso(endsTomorrow ? shiftDate(formDate, 1) : formDate, endTimeStr);
+      if (endIso <= startIso) throw new Error('Waktu selesai harus setelah mulai. Untuk lintas malam, pilih selesai besok.');
+      setErrorMessage(null);
+      submitting.current = true;
+      setIsSubmitting(true);
+      const success = await onSubmit({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        startTime: startIso,
+        endTime: endIso,
+        isAllDay,
+        eventType,
+        location: location.trim() || undefined,
+        reminderMinutes: isAllDay ? null : reminderMinutes,
+      });
+      if (success) {
+        resetForm();
+        onClose();
+      } else {
+        setErrorMessage('Gagal menyimpan agenda. Silakan coba lagi.');
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Agenda belum tersimpan. Silakan coba lagi.');
+    } finally { submitting.current = false; setIsSubmitting(false); }
   };
 
   return (
     <AppBottomSheet
       visible={visible}
       onClose={handleClose}
-      title="Jadwalkan Agenda"
-      subtitle={selectedDate}
+      title="Agenda baru"
+      subtitle={formDate}
       icon={<CalendarPlus size={20} color={colors.primary} />}
       footer={
         <View style={styles.actionRow}>
@@ -133,6 +126,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             title="Batal"
             onPress={handleClose}
             variant="tonal"
+            disabled={isSubmitting}
             style={styles.cancelButton}
           />
           <Button
@@ -159,6 +153,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
         Judul Kegiatan *
       </AppText>
       <TextInput
+        editable={!isSubmitting}
+        accessibilityLabel="Judul agenda"
         value={title}
         onChangeText={setTitle}
         placeholder="Contoh: Diskusi Arsitektur Sistem"
@@ -175,7 +171,10 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
           const isSelected = eventType === item.type;
           return (
             <Pressable
+              disabled={isSubmitting}
               key={item.type}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
               onPress={() => setEventType(item.type)}
               style={[
                 styles.typeChip,
@@ -203,6 +202,10 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       <View style={styles.timeSectionHeader}>
         <AppText variant="labelLarge">Waktu Pelaksanaan</AppText>
         <Pressable
+          disabled={isSubmitting}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: isAllDay }}
+          accessibilityLabel="Agenda sepanjang hari"
           onPress={() => setIsAllDay(!isAllDay)}
           style={[
             styles.allDayToggle,
@@ -227,6 +230,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             <View style={styles.timeInputContainer}>
               <Clock size={16} color={colors.onSurfaceVariant} />
               <TextInput
+                editable={!isSubmitting}
+                accessibilityLabel="Jam mulai"
                 value={startTimeStr}
                 onChangeText={setStartTimeStr}
                 placeholder="09:00"
@@ -249,6 +254,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             <View style={styles.timeInputContainer}>
               <Clock size={16} color={colors.onSurfaceVariant} />
               <TextInput
+                editable={!isSubmitting}
+                accessibilityLabel="Jam selesai"
                 value={endTimeStr}
                 onChangeText={setEndTimeStr}
                 placeholder="10:00"
@@ -261,6 +268,11 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
           </View>
         </View>
       ) : null}
+      {!isAllDay && <Pressable disabled={isSubmitting} onPress={() => setEndsTomorrow(value => !value)} accessibilityRole="checkbox"
+        accessibilityState={{ checked: endsTomorrow }} accessibilityLabel="Selesai besok" style={styles.nextDay}>
+        <AppText variant="bodySmall" color="primary">{endsTomorrow ? '✓ ' : '○ '}Selesai besok ({shiftDate(formDate, 1)})</AppText>
+      </Pressable>}
+      <AppText variant="bodySmall" color="onSurfaceVariant">{isAllDay ? 'Mengikuti tanggal kalender, tanpa pengingat berjam.' : 'Jam mengikuti zona perangkat (' + Intl.DateTimeFormat().resolvedOptions().timeZone + '). Jadwal berjam tetap pada waktu yang sama saat berpindah zona.'}</AppText>
 
       {/* Location */}
       <AppText variant="labelLarge" style={styles.inputLabel}>
@@ -269,6 +281,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       <View style={styles.iconInputContainer}>
         <MapPin size={16} color={colors.onSurfaceVariant} />
         <TextInput
+          editable={!isSubmitting}
           value={location}
           onChangeText={setLocation}
           placeholder="Google Meet, Kantor, atau Rumah"
@@ -282,11 +295,14 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
         Pengingat Waktu
       </AppText>
       <View style={styles.reminderRow}>
-        {REMINDER_OPTIONS.map((item) => {
+        {!isAllDay && REMINDER_OPTIONS.map((item) => {
           const isSelected = reminderMinutes === item.minutes;
           return (
             <Pressable
-              key={item.minutes}
+              disabled={isSubmitting}
+              key={String(item.minutes)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
               onPress={() => setReminderMinutes(item.minutes)}
               style={[
                 styles.reminderChip,
@@ -315,6 +331,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
         Catatan Agenda (Opsional)
       </AppText>
       <TextInput
+        editable={!isSubmitting}
         value={description}
         onChangeText={setDescription}
         placeholder="Tambahkan agenda rapat atau catatan persiapan..."
@@ -384,12 +401,16 @@ const styles = StyleSheet.create({
   },
   timeSectionHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space[2],
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: space[3],
     marginBottom: space[2],
   },
   allDayToggle: {
+    minHeight: 48,
+    justifyContent: 'center',
     paddingVertical: 4,
     paddingHorizontal: space[3],
     borderRadius: radius.pill,
@@ -408,6 +429,7 @@ const styles = StyleSheet.create({
   },
   timeCol: {
     flex: 1,
+    minWidth: 0,
   },
   timeSeparator: {
     paddingTop: 20,
@@ -427,6 +449,7 @@ const styles = StyleSheet.create({
   },
   timeInput: {
     flex: 1,
+    minWidth: 0,
     color: colors.onSurface,
     fontSize: 14,
     fontFamily: fontFamily.regular,
@@ -444,16 +467,19 @@ const styles = StyleSheet.create({
   },
   flexInput: {
     flex: 1,
+    minWidth: 0,
     color: colors.onSurface,
     fontSize: 14,
     fontFamily: fontFamily.regular,
   },
   reminderRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: space[2],
   },
   reminderChip: {
     flex: 1,
+    minWidth: 90,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -468,6 +494,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryContainer,
     borderColor: colors.primary,
   },
+  nextDay: { minHeight: 48, justifyContent: 'center', paddingVertical: space[2] },
   actionRow: {
     flexDirection: 'row',
     gap: space[3],

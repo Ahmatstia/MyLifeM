@@ -2,6 +2,8 @@
 
 Implementasi 26 Oktober 2026. Pengujian menggunakan SQLite sementara di memori; database pengguna tidak dibuka atau dimigrasikan oleh skrip pengembangan.
 
+Pembaruan setelah tahap ini: [R0.3 kalender/agenda](./CALENDAR_IMPLEMENTATION_2026-10-26.md) memperbaiki tanggal dan validasi agenda serta menambah regresi backup menjadi 45 pemeriksaan. Angka dan batas di bawah mencatat keadaan saat R0.2 diselesaikan.
+
 ## Perubahan yang berlaku
 
 SQLite kini memiliki 15 foreign key nyata. `schema-sql.ts` berisi DDL instalasi/migrasi; `schema.ts` mencerminkan kolom, relasi, indeks, dan CHECK yang sama untuk Drizzle. `integrity.ts` menegakkan kepemilikan lintas row dengan trigger. Koneksi mengaktifkan foreign key; startup memeriksa aktivasi, versi, relasi, kolom yang diperlukan, dan keberadaan constraint/trigger sebelum membuka navigasi.
@@ -50,6 +52,8 @@ Pembuatan tugas cepat + prioritas, pemeriksaan batas lima prioritas + insert, to
 - `npm run test:backup`: 43 pemeriksaan, termasuk kompatibilitas snapshot lengkap versi sebelumnya.
 - `npm run test:ui`: 42 render layar dan 12 render form, plus pemeriksaan startup gagal tidak memasang navigasi CRUD, pesan pemulihan, dan retry berhasil. Layar pemulihan dapat digulir untuk teks besar.
 - Harness audit lama kini menandai perbaikan FK, orphan/delete, backup, serta kontribusi tugas proyek. Bukti audit awal tidak ditulis ulang. Masalah checkbox lintas jalur, tanggal, dan validasi agenda masih direproduksi; exit 0 harness audit bukan berarti aplikasi bebas bug.
+
+Pemeriksaan akhir: typecheck berhasil, lint aplikasi dan skrip diperiksa langsung dengan ESLint, dan ekspor web penuh berhasil ke `.expo/ui-export`. Pada lingkungan lanjutan `npm/npx` tidak tersedia di PATH; skrip uji dijalankan langsung dengan Node dan lint memakai `eslint src scripts`, mencakup sumber aplikasi yang diperiksa `expo lint` serta harness pengujian. Ekspor pertama sempat gagal menulis aset karena sandbox (`EPERM`); pengulangan melalui persetujuan resmi berhasil. Bundel hasil ekspor memuat guard migrasi terbaru.
 
 QA migrasi pada Android/iOS, disk penuh sebenarnya, penghentian proses/kehabisan daya saat rebuild, kecepatan database mendekati batas, dan berkas berbagi perangkat belum diuji. Jangan menganggap uji SQLite memori sebagai sertifikasi rilis native. Tidak ada dependensi baru pada tahap ini.
 

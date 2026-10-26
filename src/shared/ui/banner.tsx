@@ -54,7 +54,7 @@ export const Banner: React.FC<BannerProps> = ({
     borderRadius: radius.lg,
     padding: space[4], // 16 dp
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   };
 
   return (
@@ -69,9 +69,7 @@ export const Banner: React.FC<BannerProps> = ({
         <AppText variant="bodyMedium" style={{ color: onContainerColor }}>
           {message}
         </AppText>
-      </View>
-
-      {/* Optional action text button */}
+      {/* Keep actions below the message so large text retains readable line widths. */}
       {actionText && onActionPress && (
         <Pressable
           onPress={onActionPress}
@@ -86,6 +84,7 @@ export const Banner: React.FC<BannerProps> = ({
           </AppText>
         </Pressable>
       )}
+      </View>
     </View>
   );
 };
@@ -98,9 +97,13 @@ const styles = StyleSheet.create({
   },
   textWrapper: {
     flex: 1,
+    minWidth: 0,
   },
   actionButton: {
-    marginLeft: space[3],
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    minHeight: 48,
+    justifyContent: 'center',
     paddingVertical: space[1],
     paddingHorizontal: space[2],
   },

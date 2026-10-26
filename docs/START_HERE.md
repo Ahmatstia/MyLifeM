@@ -12,6 +12,8 @@ Pembaruan berikutnya mengimplementasikan fondasi R0.2: constraint FK dan kepemil
 
 ## Urutan membaca
 
+Keadaan implementasi terbaru: R0.3 memperbaiki tanggal lokal, agenda lintas malam, validasi waktu, dan rekonsiliasi pengingat. [Catatan kalender](./CALENDAR_IMPLEMENTATION_2026-10-26.md) menjelaskan perilaku, kompatibilitas legacy, batas penjadwalan, dan QA native yang belum selesai. Tahap implementasi berikutnya adalah R0.4 status, progres, dan refresh; timer tetap R0.5.
+
 1. [Audit sistem](./SYSTEM_AUDIT_2026-10-26.md): keadaan kode, bukti masalah, risiko, batas pemeriksaan.
 2. [Riset kebutuhan dan referensi](./RESEARCH_2026-10-26.md): temuan sumber, konteks manusia, asumsi yang belum diuji.
 3. [PRD v2](./PRD_V2.md): arah, pengguna prioritas, aturan bisnis, contoh AI Engineer, batas rilis.

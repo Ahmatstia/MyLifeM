@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
-import { formatLocalDate } from '@/shared/utils/local-date';
-import { useState, useCallback } from 'react';
+import { useDeviceCalendar } from '@/shared/hooks/use-device-calendar';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type {
   DailyFocusItemEntity,
   TaskEntity,
@@ -9,7 +9,12 @@ import type {
 import { dailyFocusRepository } from '../../data/repositories/daily-focus.repository.impl';
 
 export function useTodayFocus() {
-  const todayDate = formatLocalDate();
+  const calendar = useDeviceCalendar();
+  const todayDate = calendar.date;
+  const viewKey = calendar.key;
+  const currentView = useRef(viewKey);
+  const request = useRef(0);
+  useEffect(() => { currentView.current = viewKey; request.current++; }, [viewKey]);
 
   const [focusItems, setFocusItems] = useState<DailyFocusItemEntity[]>([]);
   const [completedMinutes, setCompletedMinutes] = useState<number>(0);
@@ -18,6 +23,8 @@ export function useTodayFocus() {
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
+    if (currentView.current !== viewKey) return;
+    const version = ++request.current;
     try {
 
       const [items, totalMins, allTasks] = await Promise.all([
@@ -26,17 +33,19 @@ export function useTodayFocus() {
         dailyFocusRepository.getAvailableTasks(),
       ]);
 
+      if (version !== request.current || currentView.current !== viewKey) return;
       setFocusItems(items);
       setCompletedMinutes(totalMins);
       setAvailableTasks(allTasks);
       setError(null);
     } catch (err: any) {
+      if (version !== request.current || currentView.current !== viewKey) return;
       console.error('[useTodayFocus] Load error:', err);
       setError('Gagal memuat fokus hari ini. Silakan coba lagi.');
     } finally {
-      setIsLoading(false);
+      if (version === request.current && currentView.current === viewKey) setIsLoading(false);
     }
-  }, [todayDate]);
+  }, [todayDate, viewKey]);
 
   // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
   const refresh = useCallback(async () => {
@@ -46,7 +55,9 @@ export function useTodayFocus() {
   }, [loadData]);
 
   useFocusEffect(useCallback(() => {
+    setIsLoading(true);
     void loadData();
+    return () => { request.current++; };
   }, [loadData]));
 
   const toggleTask = async (taskId: string, currentCompleted: boolean) => {

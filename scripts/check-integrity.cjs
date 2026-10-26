@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+/* global __dirname */
 // Real production migrations and Drizzle Expo repositories; every database is disposable memory.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

@@ -1,4 +1,6 @@
-import { eq, desc, sql, asc } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
+import { localDayBounds, parseInstant } from '@/shared/utils/local-date';
+import { allDayDates, occursOnDate, validateAgenda } from '../../domain/agenda-time';
 import { db } from '@/db/client';
 import { agendaEvents, type AgendaEvent } from '@/db/schema';
 import type {
@@ -19,6 +21,7 @@ function generateId(): string {
 }
 
 function mapToAgendaEntity(row: AgendaEvent): AgendaEventEntity {
+  if (!row.isAllDay && parseInstant(row.endTime) <= parseInstant(row.startTime)) throw new Error('Agenda ' + row.id + ' memiliki rentang waktu lama yang tidak valid. Catatan asli tidak diubah.');
   return {
     id: row.id,
     targetId: row.targetId,
@@ -26,12 +29,12 @@ function mapToAgendaEntity(row: AgendaEvent): AgendaEventEntity {
     taskId: row.taskId,
     title: row.title,
     description: row.description,
-    startTime: row.startTime,
-    endTime: row.endTime,
+    startTime: row.isAllDay ? allDayDates(row.startTime, row.endTime).start : parseInstant(row.startTime).toISOString(),
+    endTime: row.isAllDay ? allDayDates(row.startTime, row.endTime).end : parseInstant(row.endTime).toISOString(),
     isAllDay: row.isAllDay === 1,
     eventType: row.eventType as AgendaEventEntity['eventType'],
     location: row.location,
-    reminderMinutes: row.reminderMinutes ?? 10,
+    reminderMinutes: row.isAllDay ? null : row.reminderMinutes,
     isCompleted: row.isCompleted === 1,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -40,23 +43,28 @@ function mapToAgendaEntity(row: AgendaEvent): AgendaEventEntity {
 
 export class AgendaRepositoryImpl implements AgendaRepository {
   async getEventsForDate(dateStr: string): Promise<AgendaEventEntity[]> {
-    // Matches start of day to end of day in ISO strings
-    const startOfDay = `${dateStr}T00:00:00.000Z`;
-    const endOfDay = `${dateStr}T23:59:59.999Z`;
+    const { start, end } = localDayBounds(dateStr);
+    // shortcut: mixed legacy timestamps require computed predicates; index normalization needs an explicit timezone migration.
 
     const rows = await db
       .select()
       .from(agendaEvents)
       .where(
-        sql`(${agendaEvents.startTime} >= ${startOfDay} AND ${agendaEvents.startTime} <= ${endOfDay})
-            OR (${agendaEvents.isAllDay} = 1 AND ${agendaEvents.startTime} <= ${endOfDay} AND ${agendaEvents.endTime} >= ${startOfDay})`
-      )
-      .orderBy(desc(agendaEvents.isAllDay), asc(agendaEvents.startTime));
+        sql`(julianday(${agendaEvents.startTime}) < julianday(${end.toISOString()}) AND julianday(${agendaEvents.endTime}) > julianday(${start.toISOString()}))
+          OR (substr(${agendaEvents.startTime},1,10) <= ${dateStr} AND substr(${agendaEvents.endTime},1,10) >= ${dateStr})`
+      );
 
+    // The calendar-date branch also includes offset-less legacy wall times and old all-day values.
+    return rows.map(mapToAgendaEntity).filter(event => occursOnDate(event, dateStr)).sort((a, b) => Number(b.isAllDay) - Number(a.isAllDay) || a.startTime.localeCompare(b.startTime));
+  }
+
+  async getReminderEvents(): Promise<AgendaEventEntity[]> {
+    const rows = await db.select().from(agendaEvents).where(sql`${agendaEvents.isCompleted} = 0 AND ${agendaEvents.isAllDay} = 0 AND ${agendaEvents.reminderMinutes} IS NOT NULL`);
     return rows.map(mapToAgendaEntity);
   }
 
   async createEvent(input: CreateAgendaInput): Promise<AgendaEventEntity> {
+    input = validateAgenda(input);
     const id = generateId();
     const now = new Date().toISOString();
 
@@ -72,15 +80,14 @@ export class AgendaRepositoryImpl implements AgendaRepository {
       isAllDay: input.isAllDay ? 1 : 0,
       eventType: input.eventType || 'WORK',
       location: input.location?.trim() || null,
-      reminderMinutes: input.reminderMinutes ?? 10,
+      reminderMinutes: input.reminderMinutes === undefined ? 10 : input.reminderMinutes,
       isCompleted: 0,
       createdAt: now,
       updatedAt: now,
     };
 
     await db.insert(agendaEvents).values(newRow);
-    const created = await db.select().from(agendaEvents).where(eq(agendaEvents.id, id));
-    return mapToAgendaEntity(created[0]);
+    return mapToAgendaEntity(newRow);
   }
 
   async toggleEventCompletion(id: string, isCompleted: boolean): Promise<void> {

@@ -5,15 +5,18 @@ import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
 import { AppText } from '@/shared/ui';
 import type { AgendaEventEntity, AgendaEventType } from '../../domain/entities/agenda.entity';
+import { formatLocalDate, shiftDate } from '@/shared/utils/local-date';
 
 export interface TimelineEventCardProps {
-  event: AgendaEventEntity; onToggleComplete: () => void; onDelete: () => void; style?: StyleProp<ViewStyle>;
+  event: AgendaEventEntity; selectedDate?: string; hasConflict?: boolean; onToggleComplete: () => void; onDelete: () => void; style?: StyleProp<ViewStyle>;
 }
 const LABELS: Record<AgendaEventType, string> = { WORK: 'Kerja', PERSONAL: 'Pribadi', LEARNING: 'Belajar', MEETING: 'Rapat' };
 const formatTime = (value: string) => new Date(value).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onToggleComplete, onDelete, style }) => {
+export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, selectedDate, hasConflict, onToggleComplete, onDelete, style }) => {
   const { fontScale } = useWindowDimensions();
+  const dateAndTime = (value: string) => new Date(value).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+  const crossesDay = !event.isAllDay && formatLocalDate(new Date(event.startTime)) !== formatLocalDate(new Date(event.endTime));
   return (
   <View style={[styles.row, style]}>
     {!event.isAllDay && fontScale <= 1.3 && <View style={styles.timeColumn}><AppText variant="labelMedium" color="onSurfaceVariant" tabularNums>{formatTime(event.startTime)}</AppText><View style={styles.rail} /></View>}
@@ -29,7 +32,10 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onT
         </Pressable>
         <View style={styles.text}>
           <AppText variant="titleSmall" style={event.isCompleted ? styles.completed : undefined}>{event.title}</AppText>
-          {!event.isAllDay && <AppText variant="bodySmall" color="onSurfaceVariant" tabularNums>{formatTime(event.startTime)}–{formatTime(event.endTime)}</AppText>}
+          {!event.isAllDay && <AppText variant="bodySmall" color="onSurfaceVariant" tabularNums>{crossesDay ? dateAndTime(event.startTime) + ' – ' + dateAndTime(event.endTime) : formatTime(event.startTime) + '–' + formatTime(event.endTime)}</AppText>}
+          {selectedDate && !event.isAllDay && formatLocalDate(new Date(event.startTime)) < selectedDate && <AppText variant="bodySmall" color="primary">Berlanjut dari hari sebelumnya</AppText>}
+          {event.isAllDay && <AppText variant="bodySmall" color="onSurfaceVariant">{event.startTime} – {shiftDate(event.endTime, -1)}</AppText>}
+          {hasConflict && <AppText variant="labelSmall" color="primary">Waktu bertumpuk</AppText>}
           {event.location && <AppText variant="bodySmall" color="onSurfaceVariant">{event.location}</AppText>}
         </View>
       </View>

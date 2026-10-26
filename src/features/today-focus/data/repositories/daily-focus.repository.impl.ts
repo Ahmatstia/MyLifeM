@@ -1,5 +1,6 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '@/db/client';
+import { isDateOnly, localDayBounds, parseInstant } from '@/shared/utils/local-date';
 import {
   dailyFocusItems,
   tasks,
@@ -63,6 +64,7 @@ function mapToSessionEntity(row: FocusSession): FocusSessionEntity {
 }
 
 function addPriority(tx: Pick<typeof db, 'select' | 'insert'>, date: string, taskId: string): void {
+    if (!isDateOnly(date)) throw new Error('Tanggal prioritas harus valid dalam format TTTT-BB-HH.');
     const existing = tx
       .select()
       .from(dailyFocusItems)
@@ -205,13 +207,16 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   async saveFocusSession(input: SaveSessionInput): Promise<FocusSessionEntity> {
     const id = generateId();
     const now = new Date().toISOString();
+    const startedAt = parseInstant(input.startedAt).toISOString();
+    const endedAt = parseInstant(input.endedAt).toISOString();
+    if (endedAt < startedAt) throw new Error('Waktu selesai sesi tidak boleh mendahului mulai.');
 
     const newRow = {
       id,
       taskId: input.taskId || null,
       mode: input.mode,
-      startedAt: input.startedAt,
-      endedAt: input.endedAt,
+      startedAt,
+      endedAt,
       durationMinutes: input.durationMinutes,
       rating: input.rating ?? null,
       obstacle: input.obstacle ?? null,
@@ -237,19 +242,18 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   }
 
   async getTodayCompletedMinutes(date: string): Promise<number> {
-    const startOfDay = `${date}T00:00:00.000Z`;
-    const endOfDay = `${date}T23:59:59.999Z`;
+    const { start, end } = localDayBounds(date);
 
     const rows = await db
       .select({
-        totalMinutes: sql<number>`coalesce(sum(duration_minutes), 0)`,
+        startedAt: focusSessions.startedAt, durationMinutes: focusSessions.durationMinutes,
       })
       .from(focusSessions)
       .where(
-        sql`started_at >= ${startOfDay} AND started_at <= ${endOfDay}`
+        sql`(julianday(${focusSessions.startedAt}) >= julianday(${start.toISOString()}) AND julianday(${focusSessions.startedAt}) < julianday(${end.toISOString()})) OR substr(${focusSessions.startedAt},1,10) = ${date}`
       );
 
-    return rows[0]?.totalMinutes || 0;
+    return rows.reduce((sum, row) => { const time = parseInstant(row.startedAt); return sum + (time >= start && time < end ? row.durationMinutes : 0); }, 0);
   }
 }
 
