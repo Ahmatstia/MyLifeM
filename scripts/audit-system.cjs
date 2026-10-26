@@ -32,12 +32,12 @@ async function main() {
   const stage = await stageRepository.createStage({ name: 'Audit stage', parentType: 'PROJECT', parentId: project.id });
   const task = await stageRepository.createTask({ stageId: stage.id, name: 'Audit task', estimatedHours: 1 });
   await dailyFocusRepository.addFocusItem('2026-10-26', task.id);
-  await stageRepository.setTaskStatus(task.id, 'DONE');
+  await stageRepository.setTaskStatus(task.id, 'COMPLETED');
   finding('A05', 'FIXED: project-stage task contributes to target progress',
     (await targetRepository.getTargetById(target.id)).totalTasks, 1);
   const focus = await dailyFocusRepository.getTodayFocusItems('2026-10-26');
-  finding('A06', 'Today checkbox disagrees with the completed task',
-    { focus: focus[0].isCompleted, task: focus[0].task.isCompleted }, { focus: false, task: true });
+  finding('A06', 'FIXED: Today checkbox follows the completed task status',
+    { focus: focus[0].isCompleted, task: focus[0].task.isCompleted }, { focus: true, task: true });
   await assert.rejects(dailyFocusRepository.addFocusItem('2026-10-26', 'audit-missing-task'));
   finding('A01-orphan', 'FIXED: invalid task reference rejected',
     sqlite.prepare('SELECT count(*) AS n FROM daily_focus_items WHERE task_id = ?').get('audit-missing-task').n, 0);

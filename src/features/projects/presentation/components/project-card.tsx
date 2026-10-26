@@ -14,7 +14,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, styl
     <AppText variant="headlineSmall" style={styles.title} numberOfLines={3}>{project.title}</AppText>
     <AppText variant="bodySmall" color="primary" style={styles.target} numberOfLines={2}>{project.targetTitle || 'Proyek mandiri'}</AppText>
     {project.description && <AppText variant="bodyMedium" color="onSurfaceVariant" numberOfLines={2} style={styles.description}>{project.description}</AppText>}
-    <View style={styles.metric}><AppText variant="bodySmall" color="onSurfaceVariant" style={styles.label}>{project.taskSummary.completedTasks}/{project.taskSummary.totalTasks} tugas rencana · {project.stagesCount || project.milestonesCount} tahap</AppText><AppText variant="titleMedium" color="primary" tabularNums>{project.taskSummary.progressPercent}%</AppText></View>
+    <View style={styles.metric}><AppText variant="bodySmall" color="onSurfaceVariant" style={styles.label}>{project.taskSummary.completedTasks}/{project.taskSummary.totalTasks} tugas rencana · {project.stagesCount || project.milestonesCount} tahap</AppText><AppText variant="titleMedium" color="primary" tabularNums>{project.taskSummary.totalTasks ? `${project.taskSummary.progressPercent}%` : 'Belum ada rencana'}</AppText></View>
     <ProgressBar progress={project.taskSummary.progressPercent} height={6} />
   </Card>
 );
@@ -25,6 +25,6 @@ const styles = StyleSheet.create({
   title: { marginTop: space[4], marginBottom: space[2] },
   target: { marginBottom: space[3] },
   description: { marginBottom: space[3] },
-  metric: { flexDirection: 'row', alignItems: 'center', gap: space[3], marginVertical: space[3] },
-  label: { flex: 1 },
+  metric: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space[3], marginVertical: space[3] },
+  label: { flex: 1, minWidth: 100 },
 });

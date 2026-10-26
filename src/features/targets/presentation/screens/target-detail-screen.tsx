@@ -165,7 +165,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
               Progres rencana
             </AppText>
             <AppText variant="headlineLarge" color="primary" tabularNums style={styles.statValue}>
-              {target.progressPercent}%
+              {target.totalTasks ? `${target.progressPercent}%` : 'Belum ada rencana'}
             </AppText>
             <ProgressBar
               progress={target.progressPercent}
@@ -186,6 +186,8 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
             </AppText>
           </Card>
         </View>
+
+        <AppText variant="bodySmall" color="onSurfaceVariant">Mencakup tugas langsung dan proyek terkait. Tugas dibatalkan tidak dihitung. Persen menunjukkan progres rencana, bukan penguasaan keterampilan atau pencapaian hasil akhir.</AppText>
 
         {/* Section Header: Tahapan */}
         <View style={styles.sectionHeaderRow}>

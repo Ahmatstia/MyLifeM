@@ -60,7 +60,9 @@
     "test:ui": "node scripts/check-ui.cjs",
     "test:backup": "node scripts/check-backup.cjs",
     "test:integrity": "node scripts/check-integrity.cjs",
-    "test:calendar": "node scripts/check-calendar.cjs"
+    "test:calendar": "node scripts/check-calendar.cjs",
+    "test:progress": "node scripts/check-progress.cjs",
+    "test:timer": "node scripts/check-timer.cjs"
   },
   "private": true
 }

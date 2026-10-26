@@ -44,16 +44,16 @@ export const StageCard: React.FC<StageCardProps> = ({
       {expanded && <View style={styles.content}>
         {stage.description && <AppText variant="bodyMedium" color="onSurfaceVariant" style={styles.description}>{stage.description}</AppText>}
         {stage.tasks.map(task => {
-          const done = task.status === 'DONE';
+          const done = task.status === 'COMPLETED';
           return <View key={task.id} style={styles.taskRow}>
             <Pressable onPress={() => onToggleTaskStatus(task.id, task.status)} accessibilityRole="checkbox"
-              accessibilityState={{ checked: done }} accessibilityLabel={(done ? 'Buka kembali ' : 'Selesaikan ') + task.name} style={styles.checkTouch}>
+              aria-checked={done} accessibilityState={{ checked: done }} accessibilityLabel={(done || task.status === 'CANCELLED' ? 'Buka kembali ' : 'Selesaikan ') + task.name} style={styles.checkTouch}>
               <View style={[styles.checkbox, done && styles.checked]}>{done && <Check size={16} color={colors.onPrimary} />}</View>
             </Pressable>
             <View style={styles.taskText}>
               <AppText variant="bodyMedium" style={done ? styles.strike : undefined}>{task.name}</AppText>
               {task.description && <AppText variant="bodySmall" color="onSurfaceVariant" numberOfLines={2}>{task.description}</AppText>}
-              <AppText variant="bodySmall" color="onSurfaceVariant">{task.estimatedHours} jam · {done ? 'Selesai' : task.status === 'IN_PROGRESS' ? 'Sedang dikerjakan' : task.priority === 'HIGH' ? 'Prioritas tinggi' : task.priority === 'LOW' ? 'Prioritas rendah' : 'Belum dimulai'}</AppText>
+              <AppText variant="bodySmall" color="onSurfaceVariant">{task.estimatedHours} jam · {task.status === 'CANCELLED' ? 'Dibatalkan' : done ? 'Selesai' : task.status === 'IN_PROGRESS' ? 'Sedang dikerjakan' : task.priority === 'HIGH' ? 'Prioritas tinggi' : task.priority === 'LOW' ? 'Prioritas rendah' : 'Belum dimulai'}</AppText>
             </View>
             <Pressable onPress={() => setTaskMenu(task)} accessibilityRole="button" accessibilityLabel={'Opsi tugas ' + task.name} style={styles.menuButton}>
               <MoreHorizontal size={20} color={colors.onSurfaceVariant} />

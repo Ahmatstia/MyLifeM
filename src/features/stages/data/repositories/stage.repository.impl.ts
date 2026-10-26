@@ -1,4 +1,6 @@
-import { eq, and, asc, desc } from 'drizzle-orm';
+import { normalizeTaskStatus, summarizeTasks, taskStatusFields } from '@/shared/domain/task-status';
+import { writeTaskStatus } from '@/shared/data/task-status';
+import { eq, and, asc, desc, inArray } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { stages, tasks } from '@/db/schema';
 import type { StageRepository } from '../../domain/repositories/stage.repository';
@@ -31,18 +33,11 @@ export class StageRepositoryImpl implements StageRepository {
       const taskRows = await db
         .select()
         .from(tasks)
+        .where(inArray(tasks.stageId, stageIds))
         .orderBy(asc(tasks.sortOrder), asc(tasks.createdAt));
 
       for (const t of taskRows) {
         if (t.stageId && stageIds.includes(t.stageId)) {
-          // Normalize status
-          let normStatus: TaskStatus = 'TODO';
-          if (t.status === 'IN_PROGRESS') {
-            normStatus = 'IN_PROGRESS';
-          } else if (t.status === 'COMPLETED' || t.status === 'DONE' || t.isCompleted === 1) {
-            normStatus = 'DONE';
-          }
-
           let normPriority: TaskPriority = 'MEDIUM';
           if (t.priority === 'LOW' || t.priority === 'HIGH') {
             normPriority = t.priority;
@@ -55,7 +50,7 @@ export class StageRepositoryImpl implements StageRepository {
             description: t.description,
             priority: normPriority,
             estimatedHours: t.estimatedHours ? Number(t.estimatedHours) : Math.max(1, Math.round((t.estimatedMinutes || 60) / 60)),
-            status: normStatus,
+            status: normalizeTaskStatus(t.status),
             orderIndex: t.sortOrder || 0,
             createdAt: t.createdAt,
             updatedAt: t.updatedAt,
@@ -67,10 +62,7 @@ export class StageRepositoryImpl implements StageRepository {
     return stageRows.map((s) => {
       const stageTasks = allTasks.filter((t) => t.stageId === s.id);
       const stageStatus = calculateStageStatus(stageTasks);
-      const completedTasks = stageTasks.filter((t) => t.status === 'DONE').length;
-      const totalEstimatedHours = Math.round(
-        stageTasks.reduce((acc, curr) => acc + (curr.estimatedHours || 0), 0) * 10
-      ) / 10;
+      const summary = summarizeTasks(stageTasks);
 
       return {
         id: s.id,
@@ -83,9 +75,9 @@ export class StageRepositoryImpl implements StageRepository {
         updatedAt: s.updatedAt,
         tasks: stageTasks,
         status: stageStatus,
-        totalTasks: stageTasks.length,
-        completedTasks,
-        totalEstimatedHours,
+        totalTasks: summary.totalTasks,
+        completedTasks: summary.completedTasks,
+        totalEstimatedHours: summary.totalEstimatedHours,
       };
     });
   }
@@ -232,9 +224,7 @@ export class StageRepositoryImpl implements StageRepository {
       name: cleanName,
       description: input.description?.trim() || null,
       priority,
-      status: status === 'DONE' ? 'COMPLETED' : status,
-      isCompleted: status === 'DONE' ? 1 : 0,
-      completedAt: status === 'DONE' ? now : null,
+      ...taskStatusFields(status, now),
       estimatedHours: hours,
       estimatedMinutes: Math.round(hours * 60),
       sortOrder: 0,
@@ -288,23 +278,14 @@ export class StageRepositoryImpl implements StageRepository {
       updates.estimatedMinutes = Math.round(hours * 60);
     }
 
-    if (input.status !== undefined) {
-      updates.status = input.status === 'DONE' ? 'COMPLETED' : input.status;
-      updates.isCompleted = input.status === 'DONE' ? 1 : 0;
-      updates.completedAt = input.status === 'DONE' ? new Date().toISOString() : null;
-    }
-
-    await db.update(tasks).set(updates).where(eq(tasks.id, id));
+    db.transaction(tx => {
+      tx.update(tasks).set(updates).where(eq(tasks.id, id)).run();
+      if (input.status !== undefined) writeTaskStatus(tx, id, input.status, updates.updatedAt);
+    });
 
     const updated = await db.select().from(tasks).where(eq(tasks.id, id));
     const res = updated[0];
 
-    let normStatus: TaskStatus = 'TODO';
-    if (res.status === 'IN_PROGRESS') {
-      normStatus = 'IN_PROGRESS';
-    } else if (res.status === 'COMPLETED' || res.status === 'DONE' || res.isCompleted === 1) {
-      normStatus = 'DONE';
-    }
 
     return {
       id: res.id,
@@ -313,7 +294,7 @@ export class StageRepositoryImpl implements StageRepository {
       description: res.description,
       priority: (res.priority as TaskPriority) || 'MEDIUM',
       estimatedHours: Number(res.estimatedHours || 1.0),
-      status: normStatus,
+      status: normalizeTaskStatus(res.status),
       orderIndex: res.sortOrder || 0,
       createdAt: res.createdAt,
       updatedAt: res.updatedAt,

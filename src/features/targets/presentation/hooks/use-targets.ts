@@ -1,54 +1,25 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusedResource } from '@/shared/hooks/use-focused-resource';
 import { useState, useCallback } from 'react';
 import type {
-  TargetEntity,
-  LifePillarEntity,
   CreateTargetInput,
   UpdateTargetInput,
 } from '../../domain/entities/target.entity';
 import { targetRepository } from '../../data/repositories/target.repository.impl';
 import { categoryRepository } from '@/features/categories/data/repositories/category.repository.impl';
-import type { CategoryWithCount } from '@/features/categories/domain/entities/category.entity';
 
 export function useTargets() {
-  const [targets, setTargets] = useState<TargetEntity[]>([]);
-  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
-  const [pillars, setPillars] = useState<LifePillarEntity[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
-    try {
-      const [loadedCats, loadedPillars, loadedTargets] = await Promise.all([
-        categoryRepository.getAll(),
-        targetRepository.getPillars(),
-        targetRepository.getTargets(
-          selectedCategoryId ? { categoryId: selectedCategoryId } : undefined
-        ),
-      ]);
-
-      setCategories(loadedCats);
-      setPillars(loadedPillars);
-      setTargets(loadedTargets);
-      setError(null);
-    } catch (err: any) {
-      console.error('[useTargets] Load error:', err);
-      setError('Gagal memuat daftar target. Silakan coba lagi.');
-    } finally {
-      setIsLoading(false);
-    }
+  const read = useCallback(async () => {
+    const [categories, pillars, targets] = await Promise.all([
+      categoryRepository.getAll(), targetRepository.getPillars(),
+      targetRepository.getTargets(selectedCategoryId ? { categoryId: selectedCategoryId } : undefined),
+    ]);
+    return { categories, pillars, targets };
   }, [selectedCategoryId]);
-
-  const refresh = useCallback(async () => {
-    setError(null);
-    setIsLoading(true);
-    await loadData();
-  }, [loadData]);
-
-  useFocusEffect(useCallback(() => {
-    void loadData();
-  }, [loadData]));
+  const { data, isLoading, error, refresh, setError } = useFocusedResource(`category:${selectedCategoryId ?? ''}`, read, 'Gagal memuat daftar target.');
+  const { categories = [], pillars = [], targets = [] } = data || {};
+  const loadData = refresh;
 
   const addTarget = async (input: CreateTargetInput): Promise<boolean> => {
     try {
@@ -78,6 +49,7 @@ export function useTargets() {
       await loadData();
     } catch (err) {
       console.error('[useTargets] Delete error:', err);
+      setError('Data belum dapat dihapus. Coba lagi.');
     }
   };
 

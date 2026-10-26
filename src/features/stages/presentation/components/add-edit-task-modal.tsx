@@ -205,13 +205,17 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
           [
             { key: 'TODO', label: 'Belum dimulai' },
             { key: 'IN_PROGRESS', label: 'Sedang dikerjakan' },
-            { key: 'DONE', label: 'Selesai' },
+            { key: 'COMPLETED', label: 'Selesai' },
+            { key: 'CANCELLED', label: 'Dibatalkan' },
           ] as const
         ).map((s) => {
           const isSelected = status === s.key;
           return (
             <Pressable
               key={s.key}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: isSelected }}
+              aria-checked={isSelected}
               onPress={() => setStatus(s.key)}
               style={[styles.choiceChip, isSelected && styles.choiceChipSelected]}
             >
@@ -261,10 +265,13 @@ const styles = StyleSheet.create({
   },
   choiceRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: space[2],
   },
   choiceChip: {
     flex: 1,
+    minWidth: 110,
+    padding: space[2],
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 48,

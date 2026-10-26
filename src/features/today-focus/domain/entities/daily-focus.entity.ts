@@ -1,3 +1,4 @@
+import type { TaskStatus } from '@/shared/domain/task-status';
 /**
  * Today & Focus Domain Entities
  * Pure domain models and timer state representations.
@@ -24,7 +25,7 @@ export interface TaskEntity {
   title: string;
   description: string | null;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  status: 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  status: TaskStatus;
   estimatedMinutes: number;
   actualMinutes: number;
   dueDate: string | null;

@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, Pressable, StyleSheet, type ViewStyle } from 'react-native';
-import { Play, Pause, RotateCcw, X, ChevronUp } from 'lucide-react-native';
+import { View, Pressable, StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
+import { Play, Pause, RotateCcw, X, ChevronUp, Check } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space, touchTarget, elevation } from '@/theme/tokens';
+import type { UserSettingsEntity } from '@/features/settings/domain/entities/settings.entity';
+import { DEFAULT_SETTINGS } from '@/features/settings/domain/entities/settings.entity';
+import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { AppText } from '@/shared/ui/app-text';
 import { ProgressBar } from '@/shared/ui/progress-bar';
@@ -12,10 +15,11 @@ import type {
 } from '../../domain/entities/daily-focus.entity';
 
 export interface FocusTimerWidgetProps {
+  ready?: boolean; hasSession?: boolean; selectedMinutes?: number; preferences?: UserSettingsEntity; onFinish?: () => void;
   mode: FocusTimerMode;
   formattedTime: string;
   isRunning: boolean;
-  activeTask: TaskEntity | null;
+  activeTask: Pick<TaskEntity, 'id' | 'title'> | null;
   progressRatio: number;
   onChangeMode: (mode: FocusTimerMode, minutes?: number) => void;
   onStart: () => void;
@@ -33,6 +37,7 @@ export interface FocusTimerWidgetProps {
  * - Angka timer besar dengan tipografi Plus Jakarta Sans yang ramah.
  */
 export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
+  ready = true, hasSession = false, selectedMinutes, preferences = DEFAULT_SETTINGS, onFinish,
   mode,
   formattedTime,
   isRunning,
@@ -46,6 +51,8 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   onMinimize,
   style,
 }) => {
+  const { width, fontScale } = useWindowDimensions();
+  const digitSize = Math.min(52, (width - 4 * space[5] - 4) / (Math.max(5, formattedTime.length) * 0.66 * Math.max(1, fontScale)));
   return (
     <Card variant="elevated" padding={space[5]} style={[styles.container, style]}>
       {/* Top Header: Mode Title & Optional Minimize */}
@@ -72,10 +79,10 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
       {/* Mode Selector: 3 Pil Pastel Tanpa Ikon Berlebih */}
       <View style={styles.modeRow}>
         <Pressable
-          onPress={() => onChangeMode('POMODORO', 25)}
-          disabled={isRunning}
+          onPress={() => onChangeMode('POMODORO')}
+          disabled={hasSession || !ready}
           accessibilityRole="button"
-          accessibilityState={{ selected: mode === 'POMODORO', disabled: isRunning }}
+          accessibilityState={{ selected: mode === 'POMODORO', disabled: hasSession || !ready }}
           style={[
             styles.modePill,
             mode === 'POMODORO' && styles.modePillActive,
@@ -86,15 +93,15 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
             color={mode === 'POMODORO' ? 'onPrimary' : 'onSurfaceVariant'}
             style={styles.modeText}
           >
-            Pomodoro 25m
+            Pomodoro {hasSession && mode === 'POMODORO' ? selectedMinutes : preferences.pomodoroMinutes}m
           </AppText>
         </Pressable>
 
         <Pressable
-          onPress={() => onChangeMode('DEEP_FLOW', 50)}
-          disabled={isRunning}
+          onPress={() => onChangeMode('DEEP_FLOW')}
+          disabled={hasSession || !ready}
           accessibilityRole="button"
-          accessibilityState={{ selected: mode === 'DEEP_FLOW', disabled: isRunning }}
+          accessibilityState={{ selected: mode === 'DEEP_FLOW', disabled: hasSession || !ready }}
           style={[
             styles.modePill,
             mode === 'DEEP_FLOW' && styles.modePillActive,
@@ -105,15 +112,15 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
             color={mode === 'DEEP_FLOW' ? 'onPrimary' : 'onSurfaceVariant'}
             style={styles.modeText}
           >
-            Deep Flow 50m
+            Deep Flow {hasSession && mode === 'DEEP_FLOW' ? selectedMinutes : preferences.deepFlowMinutes}m
           </AppText>
         </Pressable>
 
         <Pressable
           onPress={() => onChangeMode('STOPWATCH')}
-          disabled={isRunning}
+          disabled={hasSession || !ready}
           accessibilityRole="button"
-          accessibilityState={{ selected: mode === 'STOPWATCH', disabled: isRunning }}
+          accessibilityState={{ selected: mode === 'STOPWATCH', disabled: hasSession || !ready }}
           style={[
             styles.modePill,
             mode === 'STOPWATCH' && styles.modePillActive,
@@ -129,13 +136,14 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         </Pressable>
       </View>
 
+      <AppText variant="bodySmall" color="onSurfaceVariant">{hasSession ? 'Mode dan tugas dikunci sampai sesi dicatat. Jeda tidak dihitung.' : mode === 'STOPWATCH' ? 'Akhiri sesi untuk mencatat durasi aktif.' : `Durasi sesi berikutnya: ${selectedMinutes ?? (mode === 'POMODORO' ? preferences.pomodoroMinutes : preferences.deepFlowMinutes)} menit.`}</AppText>
       {/* Tautan Tugas yang Sedang Difokuskan */}
       {activeTask ? (
         <View style={styles.activeTaskPill}>
           <AppText variant="labelSmall" color="onPrimaryContainer" style={styles.activeTaskText}>
             Fokus: {activeTask.title}
           </AppText>
-          {onClearActiveTask && !isRunning && (
+          {onClearActiveTask && !hasSession && (
             <Pressable
               onPress={onClearActiveTask}
               accessibilityRole="button"
@@ -157,7 +165,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 
       {/* Angka Timer Besar & Ramah */}
       <View style={styles.digitsWrapper}>
-        <AppText variant="timer" color="onSurface" align="center" tabularNums style={styles.timerDigits}>
+        <AppText variant="timer" color="onSurface" align="center" tabularNums style={[styles.timerDigits, { fontSize: digitSize, lineHeight: digitSize * 1.15 }]}>
           {formattedTime}
         </AppText>
       </View>
@@ -176,6 +184,8 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
       <View style={styles.controlsRow}>
         <Pressable
           onPress={onReset}
+          disabled={hasSession || !ready}
+          accessibilityState={{ disabled: hasSession || !ready }}
           accessibilityRole="button"
           accessibilityLabel="Reset timer"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -185,9 +195,10 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         </Pressable>
 
         <Pressable
+          disabled={!ready}
           onPress={isRunning ? onPause : onStart}
           accessibilityRole="button"
-          accessibilityLabel={isRunning ? 'Jeda sesi fokus' : 'Mulai sesi fokus'}
+          accessibilityLabel={isRunning ? 'Jeda sesi fokus' : hasSession ? 'Lanjutkan sesi fokus' : 'Mulai sesi fokus'}
           style={({ pressed }) => [
             styles.ctaPill,
             isRunning ? styles.ctaPillRunning : styles.ctaPillIdle,
@@ -204,16 +215,19 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
             color={isRunning ? 'onSurface' : 'onPrimary'}
             style={styles.ctaText}
           >
-            {isRunning ? 'Jeda' : 'Mulai Fokus'}
+            {!ready ? 'Memuat…' : isRunning ? 'Jeda' : hasSession ? 'Lanjutkan' : 'Mulai Fokus'}
           </AppText>
         </Pressable>
       </View>
+      {hasSession && onFinish && <Button title="Akhiri & catat" variant="outlined" onPress={onFinish} leftIcon={<Check size={18} color={colors.primary} />} style={{ marginTop: space[3] }} />}
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
+    maxWidth: '100%',
     marginBottom: space[4],
     borderRadius: radius.xxl,
   },

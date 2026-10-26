@@ -33,10 +33,11 @@ export const TargetListScreen: React.FC = () => {
           {targets.length > 0 && <Card variant="highlight" padding={space[5]} style={styles.summary}>
             <AppText variant="labelMedium" color="onPrimaryContainer">{selectedCategory?.name || 'Semua kategori'} · {targets.length} target</AppText>
             <View style={styles.metric}>
-              <AppText variant="headlineLarge" color="onPrimaryContainer" tabularNums>{progress}%</AppText>
+              <AppText variant="headlineLarge" color="onPrimaryContainer" tabularNums>{totalTasks ? `${progress}%` : 'Belum ada rencana'}</AppText>
               <AppText variant="bodySmall" color="onPrimaryContainer" style={styles.metricLabel}>{completedTasks} dari {totalTasks} tugas rencana selesai</AppText>
             </View>
             <ProgressBar progress={progress} />
+            <AppText variant="bodySmall" color="onPrimaryContainer">Tugas langsung dan proyek terkait pada filter ini. Tugas dibatalkan tidak dihitung; persen ini mengukur rencana, bukan penguasaan keterampilan.</AppText>
           </Card>}
           {targets.length === 0 ? <EmptyState
             title={selectedCategoryId ? 'Belum ada target di kategori ini' : 'Apa yang ingin kamu wujudkan?'}

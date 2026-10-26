@@ -30,6 +30,7 @@ export const ProjectListScreen: React.FC = () => {
         <AppText variant="labelMedium" color="onSecondaryContainer">RUANG UNTUK BERKARYA</AppText>
         <AppText variant="headlineMedium" color="onSecondaryContainer" style={styles.summaryTitle}>Bangun sesuatu, selangkah demi selangkah.</AppText>
         {!isLoading && !error && <AppText variant="bodySmall" color="onSecondaryContainer">{projects.length} proyek {statusFilter ? 'pada filter ini' : 'terdaftar'} · {completedTasks}/{totalTasks} tugas rencana selesai</AppText>}
+        <AppText variant="bodySmall" color="onSecondaryContainer">Ringkasan mengikuti filter status. Progres rencana menghitung tugas selesai dari tugas yang tidak dibatalkan.</AppText>
       </Card>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
         {filterTabs.map(tab => <Pressable key={tab.label} onPress={() => setStatusFilter(tab.value)}

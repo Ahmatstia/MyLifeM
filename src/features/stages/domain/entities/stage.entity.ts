@@ -1,3 +1,6 @@
+import { summarizeTasks } from '@/shared/domain/task-status';
+import type { TaskStatus } from '@/shared/domain/task-status';
+export type { TaskStatus } from '@/shared/domain/task-status';
 /**
  * Stage and Task Domain Entities
  * Strictly follows MYLIFE_MOBILE_PRD_MVP.md specifications.
@@ -6,7 +9,7 @@
 export type StageParentType = 'TARGET' | 'PROJECT';
 export type StageStatus = 'NO_TASKS' | 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH';
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
+
 
 export interface TaskItemEntity {
   id: string;
@@ -77,9 +80,10 @@ export interface UpdateTaskInput {
  * - Selesai: semua tugas pada tahapan tersebut berstatus selesai dan jumlah tugas lebih dari 0.
  */
 export function calculateStageStatus(tasks: TaskItemEntity[]): StageStatus {
+  tasks = tasks.filter(task => task.status !== 'CANCELLED');
   if (tasks.length === 0) return 'NO_TASKS';
 
-  const completedCount = tasks.filter((t) => t.status === 'DONE').length;
+  const completedCount = tasks.filter((t) => t.status === 'COMPLETED').length;
   const inProgressCount = tasks.filter((t) => t.status === 'IN_PROGRESS').length;
 
   if (completedCount === tasks.length) return 'COMPLETED';
@@ -93,7 +97,7 @@ export function calculateStageStatus(tasks: TaskItemEntity[]): StageStatus {
 export function getStageStatusLabel(status: StageStatus): string {
   switch (status) {
     case 'NO_TASKS':
-      return 'Belum ada tugas';
+      return 'Belum ada tugas aktif';
     case 'NOT_STARTED':
       return 'Belum dimulai';
     case 'IN_PROGRESS':
@@ -113,19 +117,6 @@ export function calculateOverallProgress(allTasks: TaskItemEntity[]): {
   totalTasks: number;
   totalHours: number;
 } {
-  const totalTasks = allTasks.length;
-  if (totalTasks === 0) {
-    return { percent: 0, completedTasks: 0, totalTasks: 0, totalHours: 0 };
-  }
-
-  const completedTasks = allTasks.filter((t) => t.status === 'DONE').length;
-  const percent = Math.min(100, Math.max(0, Math.round((completedTasks / totalTasks) * 100)));
-  const totalHours = Math.round(allTasks.reduce((acc, t) => acc + (t.estimatedHours || 0), 0) * 10) / 10;
-
-  return {
-    percent,
-    completedTasks,
-    totalTasks,
-    totalHours,
-  };
+  const summary = summarizeTasks(allTasks);
+  return { percent: summary.progressPercent, completedTasks: summary.completedTasks, totalTasks: summary.totalTasks, totalHours: summary.totalEstimatedHours };
 }

@@ -2,6 +2,7 @@ import { getTableColumns, getTableName } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 import { parseInstant } from '@/shared/utils/local-date';
 import { allDayDates } from '@/features/agenda/domain/agenda-time';
+import { TIMER_KEY, parseTimer } from '@/features/today-focus/domain/focus-timer';
 
 export const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
 export const MAX_BACKUP_ROWS = 50_000;
@@ -184,6 +185,13 @@ export function parseBackup(json: string): BackupDocument {
     names.add(name);
   }
   for (const row of typed.userSettings) {
+    if (row.key === TIMER_KEY) {
+      try {
+        const timer = parseTimer(row.value);
+        const session = typed.focusSessions.find(session => session.id === timer.id);
+        if (timer.status === 'COMPLETED' ? !session || session.mode !== timer.mode || session.startedAt !== timer.startedAt || session.endedAt !== timer.endedAt || session.durationMinutes !== Math.floor(timer.elapsedMs / 60_000) : session !== undefined) return invalid('timer dan catatan sesi tidak konsisten.');
+      } catch { return invalid('data timer aktif tidak valid.'); }
+    }
     if (row.key === 'pomodoro_minutes' || row.key === 'deep_flow_minutes') {
       if (!/^\d+$/.test(String(row.value)) || Number(row.value) < 1 || Number(row.value) > 1440) return invalid('durasi pengaturan harus 1–1440 menit.');
     }

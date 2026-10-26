@@ -1,4 +1,6 @@
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { normalizeTaskStatus } from '@/shared/domain/task-status';
+import { writeTaskStatus } from '@/shared/data/task-status';
+import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { isDateOnly, localDayBounds, parseInstant } from '@/shared/utils/local-date';
 import {
@@ -36,11 +38,11 @@ function mapToTaskEntity(row: Task): TaskEntity {
     title: row.title,
     description: row.description,
     priority: row.priority as TaskEntity['priority'],
-    status: row.status as TaskEntity['status'],
+    status: normalizeTaskStatus(row.status),
     estimatedMinutes: row.estimatedMinutes,
     actualMinutes: row.actualMinutes,
     dueDate: row.dueDate,
-    isCompleted: row.isCompleted === 1,
+    isCompleted: normalizeTaskStatus(row.status) === 'COMPLETED',
     completedAt: row.completedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -63,6 +65,20 @@ function mapToSessionEntity(row: FocusSession): FocusSessionEntity {
   };
 }
 
+/** Session insert and task minutes belong to the caller's transaction. */
+export function insertFocusSession(tx: Pick<typeof db, 'select' | 'insert' | 'update'>, id: string, input: SaveSessionInput, taskTitleSnapshot?: string | null): FocusSessionEntity {
+  const startedAt = parseInstant(input.startedAt).toISOString(), endedAt = parseInstant(input.endedAt).toISOString();
+  if (endedAt < startedAt) throw new Error('Waktu selesai sesi tidak boleh mendahului mulai.');
+  if (!Number.isSafeInteger(input.durationMinutes) || input.durationMinutes < 0) throw new Error('Durasi sesi tidak valid.');
+  const now = new Date().toISOString();
+  const row = { id, taskId: input.taskId || null, mode: input.mode, startedAt, endedAt, durationMinutes: input.durationMinutes,
+    rating: input.rating ?? null, obstacle: input.obstacle ?? null, nextAction: input.nextAction ?? null, createdAt: now };
+  const taskTitle = taskTitleSnapshot !== undefined ? taskTitleSnapshot : input.taskId ? tx.select({ title: tasks.title }).from(tasks).where(eq(tasks.id, input.taskId)).get()?.title ?? null : null;
+  tx.insert(focusSessions).values({ ...row, taskTitle }).run();
+  if (input.taskId && input.durationMinutes > 0) tx.update(tasks).set({ actualMinutes: sql`${tasks.actualMinutes} + ${input.durationMinutes}`, updatedAt: now }).where(eq(tasks.id, input.taskId)).run();
+  return mapToSessionEntity({ ...row, taskTitle });
+}
+
 function addPriority(tx: Pick<typeof db, 'select' | 'insert'>, date: string, taskId: string): void {
     if (!isDateOnly(date)) throw new Error('Tanggal prioritas harus valid dalam format TTTT-BB-HH.');
     const existing = tx
@@ -73,6 +89,9 @@ function addPriority(tx: Pick<typeof db, 'select' | 'insert'>, date: string, tas
       ).all();
 
     if (existing.length > 0) return;
+
+    const task = tx.select().from(tasks).where(eq(tasks.id, taskId)).get();
+    if (!task || !['TODO', 'IN_PROGRESS'].includes(normalizeTaskStatus(task.status))) throw new Error('Pilih tugas aktif yang belum selesai.');
 
     const countRows = tx
       .select({ count: sql<number>`count(*)` })
@@ -96,35 +115,11 @@ function addPriority(tx: Pick<typeof db, 'select' | 'insert'>, date: string, tas
 
 export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   async getTodayFocusItems(date: string): Promise<DailyFocusItemEntity[]> {
-    const focusRows = await db
-      .select()
-      .from(dailyFocusItems)
-      .where(eq(dailyFocusItems.date, date))
-      .orderBy(dailyFocusItems.sortOrder);
-
-    if (focusRows.length === 0) return [];
-
-    const result: DailyFocusItemEntity[] = [];
-    for (const item of focusRows) {
-      const taskRows = await db
-        .select()
-        .from(tasks)
-        .where(eq(tasks.id, item.taskId));
-
-      if (taskRows.length > 0) {
-        result.push({
-          id: item.id,
-          date: item.date,
-          taskId: item.taskId,
-          sortOrder: item.sortOrder,
-          isCompleted: item.isCompleted === 1,
-          createdAt: item.createdAt,
-          task: mapToTaskEntity(taskRows[0]),
-        });
-      }
-    }
-
-    return result;
+    if (!isDateOnly(date)) throw new Error('Tanggal prioritas tidak valid.');
+    const rows = await db.select({ item: dailyFocusItems, task: tasks }).from(dailyFocusItems)
+      .innerJoin(tasks, eq(tasks.id, dailyFocusItems.taskId))
+      .where(eq(dailyFocusItems.date, date)).orderBy(dailyFocusItems.sortOrder);
+    return rows.map(({ item, task }) => ({ ...item, isCompleted: normalizeTaskStatus(task.status) === 'COMPLETED', task: mapToTaskEntity(task) }));
   }
 
   async addFocusItem(date: string, taskId: string): Promise<void> {
@@ -136,28 +131,7 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   }
 
   async toggleTaskCompletion(taskId: string, isCompleted: boolean): Promise<void> {
-    const now = new Date().toISOString();
-
-    db.transaction(tx => {
-    // Update task table
-    tx
-      .update(tasks)
-      .set({
-        isCompleted: isCompleted ? 1 : 0,
-        status: isCompleted ? 'COMPLETED' : 'TODO',
-        completedAt: isCompleted ? now : null,
-        updatedAt: now,
-      })
-      .where(eq(tasks.id, taskId)).run();
-
-    // Update daily focus table
-    tx
-      .update(dailyFocusItems)
-      .set({
-        isCompleted: isCompleted ? 1 : 0,
-      })
-      .where(eq(dailyFocusItems.taskId, taskId)).run();
-    });
+    db.transaction(tx => writeTaskStatus(tx, taskId, isCompleted ? 'COMPLETED' : 'TODO', new Date().toISOString()));
   }
 
   async createQuickTask(
@@ -198,42 +172,14 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
     const rows = await db
       .select()
       .from(tasks)
-      .where(eq(tasks.isCompleted, 0))
+      .where(inArray(tasks.status, ['TODO', 'IN_PROGRESS']))
       .orderBy(desc(tasks.updatedAt));
 
     return rows.map(mapToTaskEntity);
   }
 
   async saveFocusSession(input: SaveSessionInput): Promise<FocusSessionEntity> {
-    const id = generateId();
-    const now = new Date().toISOString();
-    const startedAt = parseInstant(input.startedAt).toISOString();
-    const endedAt = parseInstant(input.endedAt).toISOString();
-    if (endedAt < startedAt) throw new Error('Waktu selesai sesi tidak boleh mendahului mulai.');
-
-    const newRow = {
-      id,
-      taskId: input.taskId || null,
-      mode: input.mode,
-      startedAt,
-      endedAt,
-      durationMinutes: input.durationMinutes,
-      rating: input.rating ?? null,
-      obstacle: input.obstacle ?? null,
-      nextAction: input.nextAction ?? null,
-      createdAt: now,
-    };
-
-    if (!Number.isSafeInteger(input.durationMinutes) || input.durationMinutes < 0) throw new Error('Durasi sesi tidak valid.');
-    return db.transaction(tx => {
-      const taskTitle = input.taskId ? tx.select({ title: tasks.title }).from(tasks).where(eq(tasks.id, input.taskId)).get()?.title ?? null : null;
-      tx.insert(focusSessions).values({ ...newRow, taskTitle }).run();
-      if (input.taskId && input.durationMinutes > 0) {
-        tx.update(tasks).set({ actualMinutes: sql`${tasks.actualMinutes} + ${input.durationMinutes}`, updatedAt: now })
-          .where(eq(tasks.id, input.taskId)).run();
-      }
-      return mapToSessionEntity(tx.select().from(focusSessions).where(eq(focusSessions.id, id)).get()!);
-    });
+    return db.transaction(tx => insertFocusSession(tx, generateId(), input));
   }
 
   async incrementTaskActualMinutes(taskId: string, minutes: number): Promise<void> {

@@ -1,9 +1,7 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusedResource } from '@/shared/hooks/use-focused-resource';
 import { useDeviceCalendar } from '@/shared/hooks/use-device-calendar';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import type {
-  DailyFocusItemEntity,
-  TaskEntity,
   SaveSessionInput,
 } from '../../domain/entities/daily-focus.entity';
 import { dailyFocusRepository } from '../../data/repositories/daily-focus.repository.impl';
@@ -11,54 +9,17 @@ import { dailyFocusRepository } from '../../data/repositories/daily-focus.reposi
 export function useTodayFocus() {
   const calendar = useDeviceCalendar();
   const todayDate = calendar.date;
-  const viewKey = calendar.key;
-  const currentView = useRef(viewKey);
-  const request = useRef(0);
-  useEffect(() => { currentView.current = viewKey; request.current++; }, [viewKey]);
-
-  const [focusItems, setFocusItems] = useState<DailyFocusItemEntity[]>([]);
-  const [completedMinutes, setCompletedMinutes] = useState<number>(0);
-  const [availableTasks, setAvailableTasks] = useState<TaskEntity[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    if (currentView.current !== viewKey) return;
-    const version = ++request.current;
-    try {
-
-      const [items, totalMins, allTasks] = await Promise.all([
-        dailyFocusRepository.getTodayFocusItems(todayDate),
-        dailyFocusRepository.getTodayCompletedMinutes(todayDate),
-        dailyFocusRepository.getAvailableTasks(),
-      ]);
-
-      if (version !== request.current || currentView.current !== viewKey) return;
-      setFocusItems(items);
-      setCompletedMinutes(totalMins);
-      setAvailableTasks(allTasks);
-      setError(null);
-    } catch (err: any) {
-      if (version !== request.current || currentView.current !== viewKey) return;
-      console.error('[useTodayFocus] Load error:', err);
-      setError('Gagal memuat fokus hari ini. Silakan coba lagi.');
-    } finally {
-      if (version === request.current && currentView.current === viewKey) setIsLoading(false);
-    }
-  }, [todayDate, viewKey]);
-
-  // refresh eksplisit menyalakan loading; loader sendiri tidak mengubah state sinkron di effect
-  const refresh = useCallback(async () => {
-    setError(null);
-    setIsLoading(true);
-    await loadData();
-  }, [loadData]);
-
-  useFocusEffect(useCallback(() => {
-    setIsLoading(true);
-    void loadData();
-    return () => { request.current++; };
-  }, [loadData]));
+  const read = useCallback(async () => {
+    const [focusItems, completedMinutes, availableTasks] = await Promise.all([
+      dailyFocusRepository.getTodayFocusItems(todayDate),
+      dailyFocusRepository.getTodayCompletedMinutes(todayDate),
+      dailyFocusRepository.getAvailableTasks(),
+    ]);
+    return { focusItems, completedMinutes, availableTasks };
+  }, [todayDate]);
+  const { data, isLoading, error, refresh, setError } = useFocusedResource(calendar.key, read, 'Gagal memuat fokus hari ini.');
+  const { focusItems = [], completedMinutes = 0, availableTasks = [] } = data || {};
+  const loadData = refresh;
 
   const toggleTask = async (taskId: string, currentCompleted: boolean) => {
     try {
@@ -66,6 +27,7 @@ export function useTodayFocus() {
       await loadData();
     } catch (err) {
       console.error('[useTodayFocus] Toggle error:', err);
+      setError('Status tugas belum tersimpan. Coba lagi.');
     }
   };
 
@@ -99,6 +61,7 @@ export function useTodayFocus() {
       await loadData();
     } catch (err) {
       console.error('[useTodayFocus] Remove error:', err);
+      setError('Prioritas belum dapat dilepas. Coba lagi.');
     }
   };
 

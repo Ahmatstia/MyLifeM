@@ -173,6 +173,51 @@ const screenSpecs = [
   ['project-detail', 'projects', 'project-detail-screen', 'ProjectDetailScreen', { projectId: 'project' }],
 ];
 const previews = [];
+for (const scale of [1, 2]) {
+  fontScale = scale; width = 320;
+  const Timer = createLoader()('src/features/today-focus/presentation/components/focus-timer-widget.tsx').FocusTimerWidget;
+  for (const running of [true, false]) {
+    const html = renderToStaticMarkup(React.createElement(Timer, { mode: 'POMODORO', formattedTime: '44:00', isRunning: running,
+      hasSession: true, ready: true, selectedMinutes: 45, preferences: { pomodoroMinutes: 45, deepFlowMinutes: 90 }, activeTask: task, progressRatio: 1 / 45,
+      onFinish: noop, onChangeMode: noop, onStart: noop, onPause: noop, onReset: noop }));
+    assert.ok(html.includes('Pomodoro 45m') && html.includes('Deep Flow 90m') && html.includes('Akhiri &amp; catat'));
+    assert.ok(html.includes('Mode dan tugas dikunci'));
+    previews.push(['timer-' + (running ? 'running' : 'paused') + (scale === 2 ? '-large-text' : ''), 320, html]);
+  }
+  const PausedScreen = createLoader({
+    '@/features/today-focus/presentation/hooks/use-focus-timer': { useFocusTimer: () => ({ mode: 'STOPWATCH', formattedTime: '01:30', hasSession: true, isRunning: false, activeTask: null, ready: true }) },
+    '@/features/today-focus/presentation/hooks/use-today-focus': { useTodayFocus: () => ({ ...focus, focusItems: [], availableTasks: [] }) },
+  })('src/features/today-focus/presentation/screens/today-focus-screen.tsx').TodayFocusScreen;
+  const pausedHtml = renderToStaticMarkup(React.createElement(PausedScreen));
+  assert.ok(pausedHtml.includes('SESI SEDANG DIJEDA') && pausedHtml.includes('Lihat sesi fokus'));
+  previews.push(['timer-paused-independent' + (scale === 2 ? '-large-text' : ''), 320, pausedHtml]);
+}
+fontScale = 1;
+// Exercise cancellation and an empty plan through actual screens, including large text.
+for (const scale of [1, 2]) {
+  fontScale = scale; width = 320;
+  const cancelled = { ...task, status: 'CANCELLED' };
+  const emptySummary = { totalTasks: 0, completedTasks: 0, progressPercent: 0, totalEstimatedHours: 0 };
+  const emptyTarget = { ...target, ...emptySummary };
+  const emptyProject = { ...project, taskSummary: emptySummary };
+  const cancelledStage = { ...stage, status: 'NO_TASKS', tasks: [cancelled], completedTasks: 0, totalTasks: 0 };
+  const scenarios = createLoader({
+    '@/features/targets/presentation/hooks/use-targets': { useTargets: () => ({ ...base, targets: [emptyTarget], categories, selectedCategoryId: 'learning', setSelectedCategoryId: noop }) },
+    '@/features/projects/presentation/hooks/use-projects': { useProjects: () => ({ ...base, projects: [emptyProject], statusFilter: 'ACTIVE', setStatusFilter: noop }) },
+    '@/features/targets/presentation/hooks/use-target-detail': { useTargetDetail: () => ({ ...base, target: emptyTarget, stages: [cancelledStage] }) },
+    '@/features/projects/presentation/hooks/use-project-detail': { useProjectDetail: () => ({ ...base, project: emptyProject, stages: [cancelledStage] }) },
+    '@/features/today-focus/presentation/hooks/use-today-focus': { useTodayFocus: () => ({ ...focus, focusItems: [{ id: 'daily', taskId: task.id, task: cancelled, isCompleted: false }], availableTasks: [] }) },
+  });
+  for (const [name, feature, file, exported, props] of screenSpecs.filter(spec => ['targets', 'projects', 'target-detail', 'project-detail', 'today'].includes(spec[0]))) {
+    const Component = scenarios(`src/features/${feature}/presentation/screens/${file}.tsx`)[exported];
+    const html = renderToStaticMarkup(React.createElement(Component, props));
+    if (name.includes('detail')) assert.ok(html.includes('Dibatalkan') && html.includes('Buka kembali'));
+    if (name.startsWith('target') || name === 'project-detail') assert.ok(html.includes('Belum ada rencana'));
+    if (name === 'today') { assert.ok(html.includes('aria-checked="false"')); assert.ok(html.includes('Dibatalkan') && html.includes('Buka kembali')); assert.ok(!html.includes('Fokus pada tugas ini')); }
+    previews.push([name + '-cancelled-plan' + (scale === 2 ? '-large-text' : ''), 320, html]);
+  }
+}
+fontScale = 1;
 for (const viewport of [320, 360, 412]) {
   width = viewport;
   for (const [name, feature, file, exported, props] of screenSpecs) {
@@ -218,6 +263,7 @@ for (const scale of [1, 2]) {
     const Component = (scale === 1 ? load : largeTextLoader)('src/features/' + file)[exported];
     const html = renderToStaticMarkup(React.createElement(Component, { ...props, visible: true, onClose: noop, onSubmit: noop }));
     assert.ok(html.includes('button'), name);
+    if (name === 'form-task') assert.ok(html.includes('aria-checked="true"'), 'Selected task status must be exposed to web assistive technology.');
     previews.push([name + (scale === 2 ? '-large-text' : ''), 320, html]);
   }
   const restoreHtml = renderToStaticMarkup(restorePreviewElement());
@@ -285,6 +331,13 @@ async function checkReflection() {
   fail = false;
   await dialog.props.footer.props.onPress();
   assert.equal(closed, true, 'Only a completed save closes reflection.');
+  state.length = 0; let release, calls = 0; closed = false;
+  const pending = new Promise(resolve => { release = resolve; });
+  const busyRender = () => { stateIndex = 0; return SessionReflectionModal({ visible: true, durationMinutes: 0,
+    onClose: () => { closed = true; }, onSubmit: async () => { calls++; await pending; } }); };
+  dialog = busyRender(); const first = dialog.props.footer.props.onPress(); const duplicate = dialog.props.footer.props.onPress();
+  busyRender().props.onClose(); assert.equal(closed, false); assert.equal(calls, 1);
+  release(); await Promise.all([first, duplicate]); assert.equal(closed, true);
 }
 async function checkStartup() {
   state.length = 0; dependencies.length = 0; effects.length = 0;
@@ -335,4 +388,4 @@ async function checkAgendaForm() {
   render().props.onClose(); assert.equal(closed, false, 'Saving cannot be dismissed while awaiting completion.');
   release(); await pending; assert.equal(closed, true);
 }
-checkReflection().then(checkAgendaForm).then(checkStartup).then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle, error state, async reflection retry, agenda validation/overnight/off reminder/save retry/double tap, restore confirmation, startup migration failure/retry, 42 screen renders + 2 agenda warning scenarios (simulated text 100/200%) and 12 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });
+checkReflection().then(checkAgendaForm).then(checkStartup).then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle, error state, async reflection retry, agenda validation/overnight/off reminder/save retry/double tap, restore confirmation, startup migration failure/retry, 42 screen renders + 6 timer states + 10 cancellation/empty-plan scenarios + 2 agenda warning scenarios (simulated text 100/200%) and 12 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });

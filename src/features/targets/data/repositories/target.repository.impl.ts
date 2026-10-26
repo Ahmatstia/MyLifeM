@@ -1,3 +1,4 @@
+import { summarizeTasks } from '@/shared/domain/task-status';
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { categories, lifePillars, targets, projects, stages, tasks, type LifePillar } from '@/db/schema';
@@ -6,7 +7,6 @@ import {
   type LifePillarEntity,
   type CreateTargetInput,
   type UpdateTargetInput,
-  calculateTargetProgress,
 } from '../../domain/entities/target.entity';
 import type {
   TargetRepository,
@@ -92,17 +92,7 @@ export class TargetRepositoryImpl implements TargetRepository {
         return false;
       });
 
-      const totalTasks = targetTasks.length;
-      const completedTasks = targetTasks.filter(
-        (task) => task.status === 'COMPLETED' || task.status === 'DONE' || task.isCompleted === 1
-      ).length;
-      const progressPercent = calculateTargetProgress(completedTasks, totalTasks);
-      const totalEstimatedHours = Math.round(
-        targetTasks.reduce(
-          (acc, curr) => acc + (curr.estimatedHours ? Number(curr.estimatedHours) : Math.max(1, Math.round((curr.estimatedMinutes || 60) / 60))),
-          0
-        ) * 10
-      ) / 10;
+      const { totalTasks, completedTasks, progressPercent, totalEstimatedHours } = summarizeTasks(targetTasks);
 
       const catName = t.categoryId ? (catMap.get(t.categoryId) || 'Umum') : 'Umum';
 

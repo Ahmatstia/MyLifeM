@@ -1,3 +1,4 @@
+import { summarizeTasks } from '@/shared/domain/task-status';
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../client';
 import {
@@ -97,9 +98,7 @@ export const projectRepo = {
       .from(tasks)
       .where(eq(tasks.projectId, id));
 
-    const totalTasks = projectTasks.length;
-    const completedTasks = projectTasks.filter((t) => t.isCompleted === 1).length;
-    const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const { totalTasks, completedTasks, progressPercent } = summarizeTasks(projectTasks);
 
     return {
       project,

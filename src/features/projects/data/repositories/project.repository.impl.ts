@@ -1,3 +1,5 @@
+import { normalizeTaskStatus, summarizeTasks } from '@/shared/domain/task-status';
+import { writeTaskStatus } from '@/shared/data/task-status';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
@@ -11,7 +13,6 @@ import {
   type Task,
 } from '@/db/schema';
 import {
-  calculateProjectProgress,
   type ProjectEntity,
   type ProjectWithSummary,
   type MilestoneEntity,
@@ -71,11 +72,11 @@ function mapToTaskEntity(row: Task): TaskEntity {
     title: row.title,
     description: row.description,
     priority: row.priority as TaskEntity['priority'],
-    status: row.status as TaskEntity['status'],
+    status: normalizeTaskStatus(row.status),
     estimatedMinutes: row.estimatedMinutes,
     actualMinutes: row.actualMinutes,
     dueDate: row.dueDate,
-    isCompleted: row.isCompleted === 1,
+    isCompleted: normalizeTaskStatus(row.status) === 'COMPLETED',
     completedAt: row.completedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -142,29 +143,14 @@ export class ProjectRepositoryImpl implements ProjectRepository {
         return false;
       });
 
-      const totalTasks = projectTasks.length;
-      const completedTasks = projectTasks.filter(
-        (t) => t.isCompleted === 1 || t.status === 'DONE' || t.status === 'COMPLETED'
-      ).length;
-      const progressPercent = calculateProjectProgress(completedTasks, totalTasks);
-      const totalEstimatedHours = Math.round(
-        projectTasks.reduce(
-          (acc, curr) => acc + (curr.estimatedHours ? Number(curr.estimatedHours) : Math.max(1, Math.round((curr.estimatedMinutes || 60) / 60))),
-          0
-        ) * 10
-      ) / 10;
+      const taskSummary = summarizeTasks(projectTasks);
 
       result.push({
         ...mapToProjectEntity(p),
         targetTitle,
         milestonesCount,
         stagesCount: pStages.length,
-        taskSummary: {
-          totalTasks,
-          completedTasks,
-          progressPercent,
-          totalEstimatedHours,
-        },
+        taskSummary,
       });
     }
 
@@ -264,7 +250,7 @@ export class ProjectRepositoryImpl implements ProjectRepository {
       .select()
       .from(tasks)
       .where(eq(tasks.projectId, projectId))
-      .orderBy(tasks.isCompleted, desc(tasks.createdAt));
+      .orderBy(sql`CASE WHEN ${tasks.status} IN ('COMPLETED','DONE') THEN 1 WHEN ${tasks.status} = 'CANCELLED' THEN 2 ELSE 0 END`, desc(tasks.createdAt));
 
     return rows.map(mapToTaskEntity);
   }
@@ -302,16 +288,7 @@ export class ProjectRepositoryImpl implements ProjectRepository {
   }
 
   async toggleProjectTask(taskId: string, isCompleted: boolean): Promise<void> {
-    const now = new Date().toISOString();
-    await db
-      .update(tasks)
-      .set({
-        isCompleted: isCompleted ? 1 : 0,
-        status: isCompleted ? 'COMPLETED' : 'TODO',
-        completedAt: isCompleted ? now : null,
-        updatedAt: now,
-      })
-      .where(eq(tasks.id, taskId));
+    db.transaction(tx => writeTaskStatus(tx, taskId, isCompleted ? 'COMPLETED' : 'TODO', new Date().toISOString()));
   }
 
   async deleteProjectTask(taskId: string): Promise<void> {

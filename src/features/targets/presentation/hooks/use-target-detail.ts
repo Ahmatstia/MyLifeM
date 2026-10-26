@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { TargetEntity } from '../../domain/entities/target.entity';
+import { useCallback } from 'react';
+import { useFocusedResource } from '@/shared/hooks/use-focused-resource';
 import { targetRepository } from '../../data/repositories/target.repository.impl';
 import { stageRepository } from '@/features/stages/data/repositories/stage.repository.impl';
 import type {
-  StageWithTasks,
   TaskItemEntity,
   TaskStatus,
   CreateTaskInput,
@@ -11,42 +10,18 @@ import type {
 } from '@/features/stages/domain/entities/stage.entity';
 
 export function useTargetDetail(targetId: string) {
-  const [target, setTarget] = useState<TargetEntity | null>(null);
-  const [stages, setStages] = useState<StageWithTasks[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    try {
-      const [loadedTarget, loadedStages] = await Promise.all([
-        targetRepository.getTargetById(targetId),
-        stageRepository.getStagesWithTasks('TARGET', targetId),
-      ]);
-
-      if (!loadedTarget) {
-        setError('Target tidak ditemukan.');
-        setTarget(null);
-      } else {
-        setTarget(loadedTarget);
-        setStages(loadedStages);
-        setError(null);
-      }
-    } catch (err: any) {
-      console.error('[useTargetDetail] Load error:', err);
-      setError('Gagal memuat detail target.');
-    } finally {
-      setIsLoading(false);
-    }
+  const read = useCallback(async () => {
+    const [item, stages] = await Promise.all([
+      targetRepository.getTargetById(targetId),
+      stageRepository.getStagesWithTasks('TARGET', targetId),
+    ]);
+    if (!item) throw new Error('Target tidak ditemukan.');
+    return { item, stages };
   }, [targetId]);
-
-  const refresh = useCallback(async () => {
-    setIsLoading(true);
-    await loadData();
-  }, [loadData]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const { data, isLoading, error, refresh, setError } = useFocusedResource(targetId, read, 'Gagal memuat detail target.');
+  const target = data?.item ?? null;
+  const stages = data?.stages ?? [];
+  const loadData = refresh;
 
   // Stage Actions
   const addStage = async (name: string, description?: string): Promise<boolean> => {
@@ -135,11 +110,12 @@ export function useTargetDetail(targetId: string) {
 
   const toggleTaskStatus = async (taskId: string, currentStatus: TaskStatus): Promise<void> => {
     try {
-      const nextStatus: TaskStatus = currentStatus === 'DONE' ? 'TODO' : 'DONE';
+      const nextStatus: TaskStatus = currentStatus === 'COMPLETED' || currentStatus === 'CANCELLED' ? 'TODO' : 'COMPLETED';
       await stageRepository.setTaskStatus(taskId, nextStatus);
       await loadData();
     } catch (err) {
       console.error('[useTargetDetail] Toggle task status error:', err);
+      setError('Status tugas belum tersimpan. Coba lagi.');
     }
   };
 

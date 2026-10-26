@@ -166,7 +166,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
               Progres rencana
             </AppText>
             <AppText variant="headlineLarge" color="primary" tabularNums style={styles.statValue}>
-              {project.taskSummary.progressPercent}%
+              {project.taskSummary.totalTasks ? `${project.taskSummary.progressPercent}%` : 'Belum ada rencana'}
             </AppText>
             <ProgressBar
               progress={project.taskSummary.progressPercent}
@@ -187,6 +187,8 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
             </AppText>
           </Card>
         </View>
+
+        <AppText variant="bodySmall" color="onSurfaceVariant">Tugas dibatalkan tidak dihitung. Persen menunjukkan progres rencana, bukan penguasaan keterampilan atau pencapaian hasil akhir.</AppText>
 
         {/* Section Header: Tahapan Proyek */}
         <View style={styles.sectionHeaderRow}>

@@ -11,36 +11,19 @@ import { useFocusTimer } from '../hooks/use-focus-timer';
 import { FocusTimerWidget } from '../components/focus-timer-widget';
 import { PriorityTaskCard } from '../components/priority-task-card';
 import { AddPriorityModal } from '../components/add-priority-modal';
-import { SessionReflectionModal, type SessionReflectionData } from '../components/session-reflection-modal';
+import { SessionReflectionModal } from '../components/session-reflection-modal';
 
 export const TodayFocusScreen: React.FC = () => {
   const { focusItems, completedMinutes, availableTasks, isLoading, error, refresh,
-    toggleTask, addQuickTask, addTaskToToday, removeFromToday, recordSession } = useTodayFocus();
+    toggleTask, addQuickTask, addTaskToToday, removeFromToday } = useTodayFocus();
   const [isTimerExpanded, setIsTimerExpanded] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   useOpenAddFromParam(() => setIsAddModalVisible(true));
-  const [reflectionState, setReflectionState] = useState<{
-    visible: boolean; durationMinutes: number; startedAt: string; endedAt: string;
-    mode: 'POMODORO' | 'DEEP_FLOW' | 'STOPWATCH'; taskId: string | null; taskTitle?: string;
-  }>({ visible: false, durationMinutes: 0, startedAt: '', endedAt: '', mode: 'POMODORO', taskId: null });
-
-  const timer = useFocusTimer({
-    onSessionFinish: (data) => {
-      setReflectionState({ ...data, visible: true, taskTitle: timer.activeTask?.title });
-    },
-  });
-
-  const handleSaveReflection = async (data: SessionReflectionData) => {
-    await recordSession({
-      taskId: reflectionState.taskId, mode: reflectionState.mode,
-      startedAt: reflectionState.startedAt, endedAt: reflectionState.endedAt,
-      durationMinutes: reflectionState.durationMinutes,
-      rating: data.rating, obstacle: data.obstacle, nextAction: data.nextAction,
-    });
-  };
+  const timer = useFocusTimer({ onSessionRecorded: refresh });
 
   const completedCount = focusItems.filter(item => item.isCompleted).length;
-  const nextTask = focusItems.find(item => !item.isCompleted)?.task;
+  const activeItems = focusItems.filter(item => item.task.status !== 'CANCELLED');
+  const nextTask = activeItems.find(item => !item.isCompleted)?.task;
   const todayFormatted = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
@@ -52,12 +35,14 @@ export const TodayFocusScreen: React.FC = () => {
         </Pressable>}
       />
 
+      {timer.error && <Banner variant="error" message={timer.error} actionText="Coba lagi" onActionPress={timer.retry} style={styles.notice} />}
       {error && <Banner variant="error" message={error} actionText="Coba lagi" onActionPress={refresh} style={styles.notice} />}
 
       {isLoading ? <View style={styles.loading}><ActivityIndicator size="large" color={colors.primary} /><AppText color="onSurfaceVariant">Menyiapkan harimu…</AppText></View> : !error && (
         <>
           {isTimerExpanded ? (
             <FocusTimerWidget mode={timer.mode} formattedTime={timer.formattedTime}
+              ready={timer.ready} hasSession={timer.hasSession} preferences={timer.preferences} selectedMinutes={timer.selectedMinutes} onFinish={timer.finishTimer}
               isRunning={timer.isRunning} activeTask={timer.activeTask} progressRatio={timer.progressRatio}
               onChangeMode={timer.changeMode} onStart={timer.startTimer} onPause={timer.pauseTimer}
               onReset={timer.resetTimer} onClearActiveTask={() => timer.setActiveTask(null)}
@@ -65,21 +50,21 @@ export const TodayFocusScreen: React.FC = () => {
           ) : (
             <Card variant="hero" padding={space[6]} style={styles.hero}>
               <AppText variant="labelMedium" color="highlight" style={styles.eyebrow}>
-                {timer.isRunning ? 'SESI SEDANG BERJALAN' : 'RUANG UNTUK YANG PENTING'}
+                {timer.reflection ? 'SESI SUDAH TERCATAT' : timer.isRunning ? 'SESI SEDANG BERJALAN' : timer.hasSession ? 'SESI SEDANG DIJEDA' : 'RUANG UNTUK YANG PENTING'}
               </AppText>
               <AppText variant="headlineLarge" color="onHero" style={styles.heroTitle}>
-                {timer.isRunning ? timer.formattedTime : 'Satu langkah\nlebih dekat.'}
+                {timer.hasSession ? timer.formattedTime : 'Satu langkah\nlebih dekat.'}
               </AppText>
               <AppText variant="bodyMedium" color="onHeroMuted" style={styles.heroDescription}>
                 {timer.activeTask?.title || nextTask?.title || 'Mulai dari satu hal kecil yang ingin kamu tuntaskan hari ini.'}
               </AppText>
-              <Button title={timer.isRunning ? 'Lihat sesi fokus' : nextTask || timer.activeTask ? 'Buka timer fokus' : 'Pilih prioritas'}
+              <Button title={timer.hasSession ? 'Lihat sesi fokus' : nextTask || timer.activeTask ? 'Buka timer fokus' : 'Pilih prioritas'}
                 variant="accent" rightIcon={<ArrowUpRight size={18} color={colors.onHighlight} />}
                 onPress={() => {
-                  if (!nextTask && !timer.activeTask && !timer.isRunning) {
+                  if (!nextTask && !timer.activeTask && !timer.hasSession) {
                     setIsAddModalVisible(true);
                   } else {
-                    if (!timer.activeTask && nextTask) timer.setActiveTask(nextTask);
+                    if (!timer.hasSession && !timer.activeTask && nextTask) timer.setActiveTask(nextTask);
                     setIsTimerExpanded(true);
                   }
                 }}
@@ -89,8 +74,8 @@ export const TodayFocusScreen: React.FC = () => {
 
           <View style={styles.stats}>
             <View style={[styles.stat, styles.sageStat]}>
-              <AppText variant="headlineLarge" tabularNums>{completedCount} / {focusItems.length}</AppText>
-              <AppText variant="bodySmall" color="onPrimaryContainer">prioritas selesai</AppText>
+              <AppText variant="headlineLarge" tabularNums>{completedCount} / {activeItems.length}</AppText>
+              <AppText variant="bodySmall" color="onPrimaryContainer">prioritas aktif selesai</AppText>
             </View>
             <View style={[styles.stat, styles.peachStat]}>
               <AppText variant="headlineLarge" color="onSecondaryContainer" tabularNums>{completedMinutes} mnt</AppText>
@@ -108,9 +93,9 @@ export const TodayFocusScreen: React.FC = () => {
             actionTitle="Pilih prioritas" onActionPress={() => setIsAddModalVisible(true)} /> :
             focusItems.map(item => <PriorityTaskCard key={item.id} item={item}
               isActiveTimerTask={timer.activeTask?.id === item.taskId}
-              onToggleComplete={() => toggleTask(item.taskId, item.isCompleted)}
+              onToggleComplete={() => toggleTask(item.taskId, item.isCompleted || item.task.status === 'CANCELLED')}
               onStartFocus={() => {
-                if (!timer.isRunning) timer.setActiveTask(item.task);
+                if (!timer.hasSession) timer.setActiveTask(item.task);
                 setIsTimerExpanded(true);
               }}
               onRemove={() => removeFromToday(item.id)} />)}
@@ -124,9 +109,9 @@ export const TodayFocusScreen: React.FC = () => {
       <AddPriorityModal visible={isAddModalVisible} availableTasks={availableTasks}
         currentCount={focusItems.length} onClose={() => setIsAddModalVisible(false)}
         onAddQuickTask={addQuickTask} onSelectExistingTask={addTaskToToday} />
-      <SessionReflectionModal visible={reflectionState.visible} durationMinutes={reflectionState.durationMinutes}
-        taskTitle={reflectionState.taskTitle} onClose={() => setReflectionState(prev => ({ ...prev, visible: false }))}
-        onSubmit={handleSaveReflection} />
+      {timer.reflection && <SessionReflectionModal key={timer.reflection.id} visible durationMinutes={Math.floor(timer.reflection.elapsedMs / 60_000)}
+        taskTitle={timer.reflection.taskTitle ?? undefined} onClose={timer.dismissReflection} onSubmit={timer.saveReflection} />}
+
     </Screen>
   );
 };

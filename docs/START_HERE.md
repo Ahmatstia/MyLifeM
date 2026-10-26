@@ -12,7 +12,11 @@ Pembaruan berikutnya mengimplementasikan fondasi R0.2: constraint FK dan kepemil
 
 ## Urutan membaca
 
-Keadaan implementasi terbaru: R0.3 memperbaiki tanggal lokal, agenda lintas malam, validasi waktu, dan rekonsiliasi pengingat. [Catatan kalender](./CALENDAR_IMPLEMENTATION_2026-10-26.md) menjelaskan perilaku, kompatibilitas legacy, batas penjadwalan, dan QA native yang belum selesai. Tahap implementasi berikutnya adalah R0.4 status, progres, dan refresh; timer tetap R0.5.
+Pembaruan terbaru: **R0.5 timer dan refleksi** diimplementasikan pada 27 Oktober 2026. [Catatan timer](./TIMER_IMPLEMENTATION_2026-10-27.md) menjelaskan pemulihan sesi, simpan sebelum refleksi, idempotensi, preferensi, dan batas background/presisi menit. Implementasi fondasi R0 tersedia dengan gerbang rilis native yang masih terbuka; berikutnya QA perangkat dan R2.1 kriteria hasil/tindakan berikutnya.
+
+Pembaruan sebelumnya: **R0.4 status, progres, dan refresh** sudah diterapkan. [Catatan R0.4](./PROGRESS_IMPLEMENTATION_2026-10-27.md) menjadi acuan untuk status tugas, pembatalan, agregasi progres, dan pemuatan ulang antarlayar.
+
+Tahap sebelumnya, R0.3, memperbaiki tanggal lokal, agenda lintas malam, validasi waktu, dan rekonsiliasi pengingat. [Catatan kalender](./CALENDAR_IMPLEMENTATION_2026-10-26.md) menjelaskan perilaku, kompatibilitas legacy, batas penjadwalan, dan QA native yang belum selesai.
 
 1. [Audit sistem](./SYSTEM_AUDIT_2026-10-26.md): keadaan kode, bukti masalah, risiko, batas pemeriksaan.
 2. [Riset kebutuhan dan referensi](./RESEARCH_2026-10-26.md): temuan sumber, konteks manusia, asumsi yang belum diuji.

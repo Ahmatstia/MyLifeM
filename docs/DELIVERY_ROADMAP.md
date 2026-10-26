@@ -30,11 +30,15 @@ Selesai bila 00:30 WIB/WITA/WIT masuk hari benar; lintas tengah malam tetap terl
 
 ### R0.4 Status, progres dan refresh [A05, A06, A11]
 
+Status 27 Oktober 2026: status tugas tunggal, flag kompatibilitas transaksional, progres terdeduplikasi tanpa tugas dibatalkan, serta refresh fokus dengan perlindungan request lama diterapkan pada Target/Proyek/Hari Ini. Lihat [implementasi status dan progres](./PROGRESS_IMPLEMENTATION_2026-10-27.md). Verifikasi otomatis tersedia; alur navigasi dan aksesibilitas native masih memerlukan QA perangkat. Tahap berikutnya R0.5 timer/refleksi.
+
 Sentuh repository target/proyek/stage/daily-focus, domain status/progress, serta hook list/detail. Gunakan status tugas tunggal, rollup tugas proyek melalui relasi proyek, DISTINCT, dan refresh fokus route yang aman dari hasil request lama.
 
 Selesai bila satu tugas proyek yang dicentang dari detail langsung memengaruhi target, daftar proyek, Hari Ini, dan pilihan tugas setelah kembali; tidak ada hitung ganda; reopened/cancelled mempunyai perilaku konsisten. Ringkasan menjelaskan cakupan filter dan arti persen rencana.
 
 ### R0.5 Timer dan refleksi [A07, A08]
+
+Status 27 Oktober 2026: checkpoint timer persisten, durasi aktif tanpa jeda, finalisasi transaksional/idempoten, refleksi opsional, preferensi timer/efek, serta kompatibilitas backup telah diterapkan. Lihat [implementasi timer](./TIMER_IMPLEMENTATION_2026-10-27.md). Uji otomatis dan fixture tersedia; gerbang native/background tetap terbuka. Tidak ada alarm akhir timer baru; pemulihan/finalisasi ketika aplikasi kembali aktif dijelaskan pada catatan implementasi.
 
 Sentuh controller timer, preferensi, schema/repository sesi, widget dan dialog refleksi, efek native. Satu sesi aktif persisten, finalisasi idempoten, preferensi dihormati, refleksi tidak menentukan tersimpannya aktivitas.
 
