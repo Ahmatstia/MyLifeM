@@ -49,6 +49,8 @@ Tahap berikutnya adalah **R0.4 status, progres, dan refresh**. Perluasan monitor
 
 ## Acuan API
 
+Pembaruan native 27 Oktober 2026: pengujian Android pengguna menemukan `ExpoTopicSubscriptionModule` tidak tersedia ketika barrel `expo-notifications` 58.1.6 dievaluasi. Loader sekarang memakai `requireOptionalNativeModule` sebelum memuat barrel pada Android. Jika modul tersebut tidak tersedia, paket tidak dievaluasi dan pengingat dilaporkan tidak aktif tanpa menggagalkan agenda. Ini batas kombinasi paket JS/binary tersebut; bukan pernyataan bahwa semua notifikasi lokal tidak didukung Expo Go. Untuk menguji pengingat pada runtime yang gagal ini, gunakan binary/development build yang cocok. Tidak memakai deep import internal, mengubah node_modules, atau mematikan LogBox. Regresi kalender bertambah menjadi 33 kelompok, termasuk bukti barrel tidak dimuat ketika modul hilang; pengiriman native setelah patch tetap memerlukan pengujian perangkat.
+
 - [Dokumentasi Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/)
 - [Expo Notifications SDK 58](https://docs.expo.dev/versions/v58.0.0/sdk/notifications/)
 - [React Native AppState](https://reactnative.dev/docs/appstate)

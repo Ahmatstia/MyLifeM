@@ -6,6 +6,8 @@ Pembaruan setelah tahap ini: [R0.3 kalender/agenda](./CALENDAR_IMPLEMENTATION_20
 
 ## Perubahan yang berlaku
 
+Pembaruan native 27 Oktober 2026: koneksi/proxy SQLite dipisahkan ke `connection.ts`; `client.ts` tetap mengekspor API yang sama dan migrasi mengimpor koneksi langsung. Siklus `client → migrations → client` dihapus tanpa perubahan data/skema. `test:db-imports` memeriksa graf import runtime statis dari entry database; 29 pemeriksaan integritas/migrasi tetap lulus.
+
 SQLite kini memiliki 15 foreign key nyata. `schema-sql.ts` berisi DDL instalasi/migrasi; `schema.ts` mencerminkan kolom, relasi, indeks, dan CHECK yang sama untuk Drizzle. `integrity.ts` menegakkan kepemilikan lintas row dengan trigger. Koneksi mengaktifkan foreign key; startup memeriksa aktivasi, versi, relasi, kolom yang diperlukan, dan keberadaan constraint/trigger sebelum membuka navigasi.
 
 - Tahapan memiliki satu `target_id` atau `project_id` berupa FK. `parent_type/parent_id` masih dipertahankan untuk kompatibilitas adapter layar, dengan CHECK agar nilainya selalu cocok. Ini masa transisi, bukan dua pilihan induk terpisah.

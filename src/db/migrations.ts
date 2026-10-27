@@ -1,4 +1,4 @@
-import { getSqliteDb } from './client';
+import { getSqliteDb } from './connection';
 import { TABLES_DDL, INDEXES_DDL, SEED_CATEGORIES_SQL, SEED_PILLARS_SQL } from './schema-sql';
 import { INTEGRITY_DDL } from './integrity';
 import { TABLE_SPECS, parseBackup, checkBackupSize } from '@/features/settings/data/backup-format';

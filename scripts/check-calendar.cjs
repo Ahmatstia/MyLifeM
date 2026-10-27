@@ -109,7 +109,7 @@ function nativeMock(status = 'granted', os = 'android') {
     cancelScheduledNotificationAsync: async id => { scheduled.delete(id); calls.push('cancel ' + id); },
     scheduleNotificationAsync: async input => { scheduled.set(input.identifier, input); return input.identifier; },
   };
-  const service = loader({ 'react-native': { Platform: { OS: os } }, 'expo-notifications': notifications })('src/features/agenda/data/services/agenda-notification.service.ts').AgendaNotificationService;
+  const service = loader({ expo: { requireOptionalNativeModule: () => ({}) }, 'react-native': { Platform: { OS: os } }, 'expo-notifications': notifications })('src/features/agenda/data/services/agenda-notification.service.ts').AgendaNotificationService;
   return { service, notifications, scheduled, calls, permission: value => { permission = value; }, exact: value => { exact = value; }, handler: () => handler };
 }
 async function notificationChecks() {
@@ -144,12 +144,22 @@ async function notificationChecks() {
   assert.equal(await mock.service.reconcileReminders(async () => [{ ...event, reminderMinutes: null }, { ...event, isCompleted: true }]), true);
   assert.ok(!mock.scheduled.has('agenda-new'));
   passed('disabled, invalid and past reminders are skipped, completion cancels pending reminders');
-  const web = loader({ 'react-native': { Platform: { OS: 'web' } } })('src/features/agenda/data/services/agenda-notification.service.ts').AgendaNotificationService;
+  const web = loader({ expo: { requireOptionalNativeModule: () => { throw new Error('Web must not probe native modules'); } }, 'react-native': { Platform: { OS: 'web' } } })('src/features/agenda/data/services/agenda-notification.service.ts').AgendaNotificationService;
   assert.equal(await web.reconcileReminders(async () => [event]), false); assert.equal(await web.reconcileReminders(async () => []), true);
-  const unavailable = loader({ 'react-native': { Platform: { OS: 'android' } }, 'expo-notifications': null })('src/features/agenda/data/services/agenda-notification.service.ts').AgendaNotificationService;
+  const unavailable = loader({ expo: { requireOptionalNativeModule: () => ({}) }, 'react-native': { Platform: { OS: 'android' } }, 'expo-notifications': null })('src/features/agenda/data/services/agenda-notification.service.ts').AgendaNotificationService;
   assert.equal(await unavailable.reconcileReminders(async () => [event]), false);
   assert.equal(await mock.service.reconcileReminders(async () => { throw new Error('read failure'); }), false);
   passed('web, unavailable native modules and reconciliation errors report failure without throwing into a save');
+  let probes = 0, barrelLoads = 0;
+  const unsupported = { expo: { requireOptionalNativeModule: name => { assert.equal(name, 'ExpoTopicSubscriptionModule'); probes++; return null; } },
+    'react-native': { Platform: { OS: 'android' } } };
+  Object.defineProperty(unsupported, 'expo-notifications', { get() { barrelLoads++; throw new Error('Incompatible notifications barrel must never be loaded'); } });
+  const guarded = loader(unsupported)('src/features/agenda/data/services/agenda-notification.service.ts').AgendaNotificationService;
+  assert.equal(await guarded.reconcileReminders(async () => [event]), false);
+  assert.equal(await guarded.reconcileReminders(async () => []), true);
+  assert.equal(await guarded.scheduleReminder('blocked', 'saved', event.startTime, 0), null);
+  await guarded.requestExactAlarmPermission(); assert.equal(probes, 1); assert.equal(barrelLoads, 0);
+  passed('missing Android topic module is detected before loading the incompatible barrel; no reminders still succeeds');
   let release; const gate = new Promise(resolve => { release = resolve; });
   const first = mock.service.reconcileReminders(async () => { await gate; return [event]; });
   const second = mock.service.reconcileReminders(async () => []);

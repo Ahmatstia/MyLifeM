@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { requireOptionalNativeModule } from 'expo';
 import { parseInstant } from '@/shared/utils/local-date';
 
 interface ReminderEvent {
@@ -13,7 +14,8 @@ function getNotifications() {
   isLoaded = true;
   if (Platform.OS === 'web') return null;
   try {
-    // Local notifications are supported by SDK 58 Expo Go; remote push is a separate capability.
+    // SDK 58's barrel eagerly imports this Android push module, even for local-only usage.
+    if (Platform.OS === 'android' && !requireOptionalNativeModule('ExpoTopicSubscriptionModule')) return null;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const module: typeof import('expo-notifications') = require('expo-notifications');
     module.setNotificationHandler({ handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }) });

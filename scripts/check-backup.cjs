@@ -230,7 +230,7 @@ async function notificationChecks(events) {
     getExactAlarmPermissionsAsync: async () => ({ granted: true }),
     scheduleNotificationAsync: async input => { scheduled.push(input); return input.identifier; },
   };
-  const { AgendaNotificationService: service } = loader({ 'react-native': { Platform: { OS: 'android' } }, expo: { isRunningInExpoGo: () => false }, 'expo-notifications': notifications })('src/features/agenda/data/services/agenda-notification.service.ts');
+  const { AgendaNotificationService: service } = loader({ 'react-native': { Platform: { OS: 'android' } }, expo: { requireOptionalNativeModule: () => ({}) }, 'expo-notifications': notifications })('src/features/agenda/data/services/agenda-notification.service.ts');
   assert.equal(await service.reconcileAfterRestore(events), true);
   assert.deepEqual(canceled, ['agenda-old']);
   assert.equal(scheduled.length, 1);
