@@ -18,6 +18,8 @@ export const BACKUP_TABLES = {
   focusSessions: schema.focusSessions,
   agendaEvents: schema.agendaEvents,
   userSettings: schema.userSettings,
+  weeklySchedules: schema.weeklySchedules,
+  weeklyScheduleLogs: schema.weeklyScheduleLogs,
 } as const;
 export type BackupTable = keyof typeof BACKUP_TABLES;
 export type BackupRow = Record<string, string | number | null>;
@@ -91,7 +93,7 @@ export function parseBackup(json: string): BackupDocument {
   }
   const data = input.data;
   const allowed = Object.keys(BACKUP_TABLES);
-  if (Object.keys(data).length !== allowed.length || Object.keys(data).some(key => !Object.hasOwn(BACKUP_TABLES, key))) return invalid('harus memuat tepat 11 tabel aplikasi.');
+  if (Object.keys(data).length !== allowed.length || Object.keys(data).some(key => !Object.hasOwn(BACKUP_TABLES, key))) return invalid('harus memuat tepat ' + allowed.length + ' tabel aplikasi.');
   const ids = new Map<BackupTable, Map<string, BackupRow>>();
   let count = 0;
   for (const spec of TABLE_SPECS) {
@@ -109,7 +111,7 @@ export function parseBackup(json: string): BackupDocument {
         if (column.type === 'string' ? typeof value !== 'string' : typeof value !== 'number' || !Number.isFinite(value) || (column.integer && !Number.isInteger(value))) return invalid('tipe nilai ' + location + ' tidak sesuai.');
         if (typeof value === 'number' && !Number.isSafeInteger(value) && column.integer) return invalid(location + ' di luar batas angka aman.');
         if (/^(isCompleted|isAllDay)$/.test(column.key) && value !== 0 && value !== 1) return invalid(location + ' harus 0 atau 1.');
-        if (typeof value === 'string' && /(?:At|Date|Time)$/.test(column.key) && !dateText(value)) return invalid('tanggal ' + location + ' tidak benar.');
+        if (typeof value === 'string' && spec.key !== 'weeklySchedules' && /(?:At|Date|Time)$/.test(column.key) && !dateText(value)) return invalid('tanggal ' + location + ' tidak benar.');
       }
       const id = row[spec.primaryKey];
       const label = row.title ?? row.name;
@@ -197,6 +199,19 @@ export function parseBackup(json: string): BackupDocument {
     }
     if ((row.key === 'haptics_enabled' || row.key === 'keep_awake_enabled') && row.value !== 'true' && row.value !== 'false') return invalid('preferensi harus true/false.');
   }
+  for (const row of typed.weeklySchedules) {
+    choice(row, 'scheduleType', ['COLLEGE', 'WORK', 'STUDY', 'PERSONAL']);
+    if (typeof row.dayOfWeek !== 'number' || row.dayOfWeek < 1 || row.dayOfWeek > 7) return invalid('hari jadwal rutin harus 1–7.');
+    if (typeof row.startTime !== 'string' || typeof row.endTime !== 'string' || !/^\d{2}:\d{2}$/.test(row.startTime) || !/^\d{2}:\d{2}$/.test(row.endTime) || row.startTime >= row.endTime) return invalid('jam mulai dan selesai jadwal rutin tidak valid.');
+    if (row.isActive !== 0 && row.isActive !== 1) return invalid('isActive jadwal rutin harus 0 atau 1.');
+    nonnegative(row, ['reminderMinutes']);
+  }
+  for (const row of typed.weeklyScheduleLogs) {
+    ref(row, 'scheduleId', 'weeklySchedules');
+    if (!dateOnly(String(row.date))) return invalid('tanggal log jadwal harus YYYY-MM-DD.');
+    if (row.isCompleted !== 0 && row.isCompleted !== 1) return invalid('isCompleted log jadwal harus 0 atau 1.');
+    if (row.isCancelled !== 0 && row.isCancelled !== 1) return invalid('isCancelled log jadwal harus 0 atau 1.');
+  }
   return input as unknown as BackupDocument;
 }
 
@@ -217,6 +232,8 @@ export function upgradeLegacyBackup(data: Record<string, unknown>): void {
     const task = data.tasks.find(task => record(task) && task.id === session.taskId);
     session.taskTitle = record(task) && typeof task.title === 'string' ? task.title : null;
   }
+  if (!Array.isArray(data.weeklySchedules)) data.weeklySchedules = [];
+  if (!Array.isArray(data.weeklyScheduleLogs)) data.weeklyScheduleLogs = [];
 }
 
 /** Import only row values from a pre-upgrade archive; archived SQL is never executed. */
@@ -242,5 +259,6 @@ export function summarizeBackup(backup: BackupDocument) {
   return { exportedAt: backup.exportedAt, total: TABLE_SPECS.reduce((sum, spec) => sum + backup.data[spec.key].length, 0),
     targets: backup.data.targets.length, projects: backup.data.projects.length, tasks: backup.data.tasks.length,
     stages: backup.data.stages.length, categories: backup.data.categories.length,
-    sessions: backup.data.focusSessions.length, agenda: backup.data.agendaEvents.length };
+    sessions: backup.data.focusSessions.length, agenda: backup.data.agendaEvents.length,
+    weeklySchedules: backup.data.weeklySchedules.length };
 }

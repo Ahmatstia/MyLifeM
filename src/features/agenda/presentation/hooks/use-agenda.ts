@@ -2,8 +2,10 @@ import { useFocusEffect } from 'expo-router';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDeviceCalendar } from '@/shared/hooks/use-device-calendar';
 import type { AgendaEventEntity, CreateAgendaInput } from '../../domain/entities/agenda.entity';
+import type { ProjectedWeeklyOccurrence } from '../../domain/entities/weekly-schedule.entity';
 import { reminderTrigger } from '../../domain/agenda-time';
 import { agendaRepository } from '../../data/repositories/agenda.repository.impl';
+import { weeklyScheduleRepository } from '../../data/repositories/weekly-schedule.repository.impl';
 import { AgendaNotificationService } from '../../data/services/agenda-notification.service';
 
 export function useAgenda() {
@@ -16,6 +18,7 @@ export function useAgenda() {
     previousToday.current = calendar.date;
   }, [calendar.date]);
   const [events, setEvents] = useState<AgendaEventEntity[]>([]);
+  const [weeklyOccurrences, setWeeklyOccurrences] = useState<ProjectedWeeklyOccurrence[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reminderWarning, setReminderWarning] = useState<string | null>(null);
@@ -28,9 +31,14 @@ export function useAgenda() {
     if (currentView.current !== viewKey) return;
     const version = ++request.current;
     try {
-      const items = await agendaRepository.getEventsForDate(selectedDate);
+      const [items, projected] = await Promise.all([
+        agendaRepository.getEventsForDate(selectedDate),
+        weeklyScheduleRepository.getProjectedSchedulesForDate(selectedDate),
+      ]);
       if (version !== request.current || currentView.current !== viewKey) return;
-      setEvents(items); setError(null);
+      setEvents(items);
+      setWeeklyOccurrences(projected);
+      setError(null);
     } catch (err) {
       if (version === request.current && currentView.current === viewKey) setError(err instanceof Error ? err.message : 'Gagal memuat agenda.');
     } finally {
@@ -73,7 +81,47 @@ export function useAgenda() {
     catch { setError('Agenda belum dapat dihapus. Coba lagi.'); return; }
     await syncReminders(); await loadEvents();
   };
-  return { selectedDate, setSelectedDate, events, isLoading, error, reminderWarning, todayDate: calendar.date,
-    timeZone: calendar.zone, isSelectedDateToday: selectedDate === calendar.date,
-    refresh, addEvent, toggleEvent, removeEvent, retryReminders: async () => { await AgendaNotificationService.requestExactAlarmPermission(); await syncReminders(true); } };
+
+  const toggleWeeklyOccurrence = async (scheduleId: string, currentCompleted: boolean) => {
+    try {
+      await weeklyScheduleRepository.setOccurrenceCompletion(scheduleId, selectedDate, !currentCompleted);
+    } catch {
+      setError('Status jadwal rutin belum tersimpan. Coba lagi.');
+      return;
+    }
+    await loadEvents();
+  };
+
+  const toggleWeeklyOccurrenceCancellation = async (scheduleId: string, currentCancelled: boolean) => {
+    try {
+      await weeklyScheduleRepository.setOccurrenceCancellation(scheduleId, selectedDate, !currentCancelled);
+    } catch {
+      setError('Status pembatalan jadwal belum tersimpan. Coba lagi.');
+      return;
+    }
+    await loadEvents();
+  };
+
+  return {
+    selectedDate,
+    setSelectedDate,
+    events,
+    weeklyOccurrences,
+    isLoading,
+    error,
+    reminderWarning,
+    todayDate: calendar.date,
+    timeZone: calendar.zone,
+    isSelectedDateToday: selectedDate === calendar.date,
+    refresh,
+    addEvent,
+    toggleEvent,
+    removeEvent,
+    toggleWeeklyOccurrence,
+    toggleWeeklyOccurrenceCancellation,
+    retryReminders: async () => {
+      await AgendaNotificationService.requestExactAlarmPermission();
+      await syncReminders(true);
+    },
+  };
 }

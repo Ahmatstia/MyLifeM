@@ -210,6 +210,9 @@ async function hookChecks() {
       createEvent: async input => { if (failsWrite) throw new Error('disk full'); saved++; return { ...input, id: 'new', isCompleted: false, isAllDay: false }; },
       deleteEvent: async () => { calls.push('delete'); }, toggleEventCompletion: async (_id, completed) => { calls.push('toggle ' + completed); },
     } },
+    '../../data/repositories/weekly-schedule.repository.impl': { weeklyScheduleRepository: {
+      getProjectedSchedulesForDate: async () => [], setOccurrenceCompletion: async () => {}, setOccurrenceCancellation: async () => {},
+    } },
     '../../data/services/agenda-notification.service': { AgendaNotificationService: { reconcileReminders: async () => { calls.push('sync'); if (throws) throw new Error('native failure'); return true; } } },
   });
   const agendaHook = a.load('src/features/agenda/presentation/hooks/use-agenda.ts').useAgenda;

@@ -50,6 +50,7 @@ function environment() {
     raw.execSync(legacyDDL);
     for (const spec of format.TABLE_SPECS) {
       const columns = spec.columns.filter(column => raw.getAllSync(`PRAGMA table_info(${spec.name})`).some(existing => existing.name === column.name));
+      if (!columns.length) continue;
       for (const source of data[spec.key]) {
         const row = { ...source };
         if (spec.key === 'tasks' && row.projectId) row.targetId = data.projects.find(project => project.id === row.projectId)?.targetId ?? null;
@@ -81,13 +82,25 @@ async function migrations() {
   assert.equal(env.raw.getFirstSync('SELECT project_id FROM stages').project_id, 'projects');
   assert.equal(env.raw.getFirstSync('SELECT task_title FROM focus_sessions').task_title, fixture().tasks[0].title);
   const expected = fixture(); expected.focusSessions[0].taskTitle = expected.tasks[0].title;
+  expected.weeklySchedules = [];
+  expected.weeklyScheduleLogs = [];
   assert.deepEqual(env.store.readBackupData(env.raw), expected);
   assert.deepEqual(env.raw.getAllSync('PRAGMA foreign_key_check'), []);
   assert.equal(env.version(), 1);
-  for (const spec of env.format.TABLE_SPECS) assert.equal(env.raw.getFirstSync(`SELECT count(*) AS n FROM ${spec.name}`).n, 1);
+  for (const spec of env.format.TABLE_SPECS) {
+    const expectedCount = ['weeklySchedules', 'weeklyScheduleLogs'].includes(spec.key) ? 0 : 1;
+    assert.equal(env.raw.getFirstSync(`SELECT count(*) AS n FROM ${spec.name}`).n, expectedCount);
+  }
   const upgraded = env.state(); await env.retry(); assert.equal(env.state(), upgraded);
   assert.notEqual(before, upgraded);
   passed('v0 full dataset upgrades losslessly; redundant ownership resolves through project, stage FKs and session label survive'); env.close();
+  env = environment(); await env.client.initDatabase(); assert.equal(env.version(), 1);
+  env.raw.execSync('DROP TABLE weekly_schedule_logs; DROP TABLE weekly_schedules;');
+  assert.equal(env.raw.getAllSync("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'weekly_schedules'").length, 0);
+  await env.retry();
+  assert.equal(env.raw.getAllSync("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'weekly_schedules'").length, 1);
+  assert.equal(env.raw.getAllSync("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'weekly_schedule_logs'").length, 1);
+  passed('existing v1 database without weekly tables auto-provisions them cleanly on startup'); env.close();
   env = environment(); env.seedLegacy(); await env.client.initDatabase();
   const settings = env.load('src/features/settings/data/repositories/settings.repository.impl.ts').settingsRepository;
   const archived = JSON.parse(env.archive());

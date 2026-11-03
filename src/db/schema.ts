@@ -378,6 +378,68 @@ export const userSettings = sqliteTable('user_settings', {
   updatedAt: text('updated_at').notNull(),
 });
 
+// ==========================================
+// 10. WEEKLY SCHEDULES (Master KRS & Work Routine)
+// ==========================================
+export const weeklySchedules = sqliteTable(
+  'weekly_schedules',
+  {
+    id: text('id').primaryKey().notNull(),
+    dayOfWeek: integer('day_of_week').notNull(), // 1 = Senin, ..., 7 = Minggu
+    title: text('title').notNull(),
+    startTime: text('start_time').notNull(), // Format 'HH:mm', misal '08:00'
+    endTime: text('end_time').notNull(), // Format 'HH:mm', misal '10:00'
+    scheduleType: text('schedule_type').notNull().default('COLLEGE'), // 'COLLEGE' | 'WORK' | 'STUDY' | 'PERSONAL'
+    location: text('location'),
+    notes: text('notes'),
+    reminderMinutes: integer('reminder_minutes').default(15),
+    isActive: integer('is_active').notNull().default(1),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    index('idx_weekly_schedules_day_time').on(table.dayOfWeek, table.startTime),
+    check('chk_day_of_week', sql`${table.dayOfWeek} BETWEEN 1 AND 7`),
+    check('chk_schedule_time_order', sql`${table.startTime} < ${table.endTime}`),
+    check('chk_schedule_is_active', sql`${table.isActive} IN (0, 1)`),
+  ]
+);
+
+export const weeklySchedulesRelations = relations(weeklySchedules, ({ many }) => ({
+  logs: many(weeklyScheduleLogs),
+}));
+
+// ==========================================
+// 11. WEEKLY SCHEDULE LOGS (Daily Completion / Override)
+// ==========================================
+export const weeklyScheduleLogs = sqliteTable(
+  'weekly_schedule_logs',
+  {
+    id: text('id').primaryKey().notNull(),
+    scheduleId: text('schedule_id')
+      .notNull()
+      .references(() => weeklySchedules.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(), // 'YYYY-MM-DD'
+    isCompleted: integer('is_completed').notNull().default(0),
+    isCancelled: integer('is_cancelled').notNull().default(0),
+    completedAt: text('completed_at'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('idx_schedule_logs_unique').on(table.scheduleId, table.date),
+    index('idx_schedule_logs_date').on(table.date),
+    check('chk_log_is_completed', sql`${table.isCompleted} IN (0, 1)`),
+    check('chk_log_is_cancelled', sql`${table.isCancelled} IN (0, 1)`),
+  ]
+);
+
+export const weeklyScheduleLogsRelations = relations(weeklyScheduleLogs, ({ one }) => ({
+  schedule: one(weeklySchedules, {
+    fields: [weeklyScheduleLogs.scheduleId],
+    references: [weeklySchedules.id],
+  }),
+}));
+
 // Infered TypeScript Types
 export type LifePillar = typeof lifePillars.$inferSelect;
 export type NewLifePillar = typeof lifePillars.$inferInsert;
@@ -411,3 +473,9 @@ export type NewAgendaEvent = typeof agendaEvents.$inferInsert;
 
 export type UserSetting = typeof userSettings.$inferSelect;
 export type NewUserSetting = typeof userSettings.$inferInsert;
+
+export type WeeklySchedule = typeof weeklySchedules.$inferSelect;
+export type NewWeeklySchedule = typeof weeklySchedules.$inferInsert;
+
+export type WeeklyScheduleLog = typeof weeklyScheduleLogs.$inferSelect;
+export type NewWeeklyScheduleLog = typeof weeklyScheduleLogs.$inferInsert;

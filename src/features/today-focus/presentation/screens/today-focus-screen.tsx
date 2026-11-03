@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Settings, ArrowUpRight, Play } from 'lucide-react-native';
+import { Settings, ArrowUpRight, Play, Calendar } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, radius } from '@/theme/tokens';
+import { space, radius, fontFamily } from '@/theme/tokens';
 import { Screen, ScreenHeader, AppText, Card, Button, Banner, EmptyState } from '@/shared/ui';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
+import { useNextSchedule } from '@/features/agenda/presentation/hooks/use-next-schedule';
 import { useTodayFocus } from '../hooks/use-today-focus';
 import { useFocusTimer } from '../hooks/use-focus-timer';
 import { FocusTimerWidget } from '../components/focus-timer-widget';
@@ -18,6 +19,7 @@ export const TodayFocusScreen: React.FC = () => {
     toggleTask, addQuickTask, addTaskToToday, removeFromToday } = useTodayFocus();
   const [isTimerExpanded, setIsTimerExpanded] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const { nextSchedule } = useNextSchedule();
   useOpenAddFromParam(() => setIsAddModalVisible(true));
   const timer = useFocusTimer({ onSessionRecorded: refresh });
 
@@ -72,6 +74,32 @@ export const TodayFocusScreen: React.FC = () => {
             </Card>
           )}
 
+          {nextSchedule && (
+            <Pressable
+              onPress={() => router.push('/agenda' as any)}
+              accessibilityRole="button"
+              accessibilityLabel={`Agenda berikutnya: ${nextSchedule.schedule.title} jam ${nextSchedule.schedule.startTime} sampai ${nextSchedule.schedule.endTime}`}
+              style={styles.nextScheduleCard}
+            >
+              <View style={styles.nextScheduleTag}>
+                <Calendar size={14} color={colors.primary} />
+                <AppText variant="labelSmall" color="primary" style={styles.nextScheduleTagText}>
+                  AGENDA BERIKUTNYA
+                </AppText>
+              </View>
+              <View style={styles.nextScheduleContent}>
+                <AppText variant="titleSmall" numberOfLines={1}>
+                  {nextSchedule.schedule.title}
+                </AppText>
+                <AppText variant="bodySmall" color="onSurfaceVariant" tabularNums>
+                  {nextSchedule.schedule.startTime} – {nextSchedule.schedule.endTime}
+                  {nextSchedule.schedule.location ? ` • ${nextSchedule.schedule.location}` : ''}
+                </AppText>
+              </View>
+              <ArrowUpRight size={18} color={colors.primary} />
+            </Pressable>
+          )}
+
           <View style={styles.stats}>
             <View style={[styles.stat, styles.sageStat]}>
               <AppText variant="headlineLarge" tabularNums>{completedCount} / {activeItems.length}</AppText>
@@ -123,6 +151,34 @@ const styles = StyleSheet.create({
   heroTitle: { marginBottom: space[3], paddingRight: space[4] },
   heroDescription: { marginBottom: space[5], paddingRight: space[3] },
   heroAction: { alignSelf: 'flex-start' },
+  nextScheduleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: radius.lg,
+    padding: space[4],
+    marginBottom: space[4],
+    gap: space[3],
+  },
+  nextScheduleTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primaryContainer,
+    paddingHorizontal: space[2],
+    paddingVertical: 4,
+    borderRadius: radius.md,
+  },
+  nextScheduleTagText: {
+    fontSize: 10,
+    fontFamily: fontFamily.bold,
+  },
+  nextScheduleContent: {
+    flex: 1,
+    gap: 2,
+  },
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3], marginBottom: space[4] },
   stat: { flex: 1, minWidth: 128, padding: space[4], borderRadius: radius.lg, gap: space[1] },
   sageStat: { backgroundColor: colors.primaryContainer },

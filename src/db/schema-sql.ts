@@ -141,6 +141,72 @@ CREATE TABLE IF NOT EXISTS user_settings (
     value TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS weekly_schedules (
+    id TEXT PRIMARY KEY NOT NULL,
+    day_of_week INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
+    schedule_type TEXT NOT NULL DEFAULT 'COLLEGE',
+    location TEXT,
+    notes TEXT,
+    reminder_minutes INTEGER DEFAULT 15,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    CHECK (day_of_week BETWEEN 1 AND 7),
+    CHECK (start_time < end_time),
+    CHECK (is_active IN (0, 1))
+);
+
+CREATE TABLE IF NOT EXISTS weekly_schedule_logs (
+    id TEXT PRIMARY KEY NOT NULL,
+    schedule_id TEXT NOT NULL REFERENCES weekly_schedules(id) ON DELETE CASCADE,
+    date TEXT NOT NULL,
+    is_completed INTEGER NOT NULL DEFAULT 0,
+    is_cancelled INTEGER NOT NULL DEFAULT 0,
+    completed_at TEXT,
+    created_at TEXT NOT NULL,
+    CHECK (is_completed IN (0, 1)),
+    CHECK (is_cancelled IN (0, 1))
+);
+`;
+
+export const WEEKLY_SCHEDULES_DDL = `
+CREATE TABLE IF NOT EXISTS weekly_schedules (
+    id TEXT PRIMARY KEY NOT NULL,
+    day_of_week INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
+    schedule_type TEXT NOT NULL DEFAULT 'COLLEGE',
+    location TEXT,
+    notes TEXT,
+    reminder_minutes INTEGER DEFAULT 15,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    CHECK (day_of_week BETWEEN 1 AND 7),
+    CHECK (start_time < end_time),
+    CHECK (is_active IN (0, 1))
+);
+
+CREATE TABLE IF NOT EXISTS weekly_schedule_logs (
+    id TEXT PRIMARY KEY NOT NULL,
+    schedule_id TEXT NOT NULL REFERENCES weekly_schedules(id) ON DELETE CASCADE,
+    date TEXT NOT NULL,
+    is_completed INTEGER NOT NULL DEFAULT 0,
+    is_cancelled INTEGER NOT NULL DEFAULT 0,
+    completed_at TEXT,
+    created_at TEXT NOT NULL,
+    CHECK (is_completed IN (0, 1)),
+    CHECK (is_cancelled IN (0, 1))
+);
+
+CREATE INDEX IF NOT EXISTS idx_weekly_schedules_day_time ON weekly_schedules(day_of_week, start_time);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_schedule_logs_unique ON weekly_schedule_logs(schedule_id, date);
+CREATE INDEX IF NOT EXISTS idx_schedule_logs_date ON weekly_schedule_logs(date);
 `;
 
 export const INDEXES_DDL = `
@@ -169,6 +235,9 @@ CREATE INDEX IF NOT EXISTS idx_agenda_time_range ON agenda_events(start_time, en
 CREATE INDEX IF NOT EXISTS idx_agenda_task ON agenda_events(task_id);
 CREATE INDEX IF NOT EXISTS idx_agenda_project ON agenda_events(project_id);
 CREATE INDEX IF NOT EXISTS idx_agenda_target ON agenda_events(target_id);
+CREATE INDEX IF NOT EXISTS idx_weekly_schedules_day_time ON weekly_schedules(day_of_week, start_time);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_schedule_logs_unique ON weekly_schedule_logs(schedule_id, date);
+CREATE INDEX IF NOT EXISTS idx_schedule_logs_date ON weekly_schedule_logs(date);
 `;
 
 export const SEED_CATEGORIES_SQL = `

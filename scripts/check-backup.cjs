@@ -72,6 +72,8 @@ function fixture() {
   Object.assign(data.focusSessions[0], { taskId: 'tasks', mode: 'POMODORO', durationMinutes: 25, rating: 4, endedAt: '2026-10-26T04:00:00.000Z' });
   Object.assign(data.agendaEvents[0], { taskId: 'tasks', projectId: 'projects', targetId: 'targets', startTime: '2099-10-26T03:00:00.000Z', endTime: '2099-10-26T04:00:00.000Z', eventType: 'LEARNING', reminderMinutes: 0 });
   Object.assign(data.userSettings[0], { key: 'pomodoro_minutes', value: '45' });
+  Object.assign(data.weeklySchedules[0], { dayOfWeek: 1, startTime: '08:00', endTime: '10:00', scheduleType: 'COLLEGE', isActive: 1, reminderMinutes: 15 });
+  Object.assign(data.weeklyScheduleLogs[0], { scheduleId: 'weeklySchedules', date: '2026-10-26', isCompleted: 1, isCancelled: 0 });
   return data;
 }
 async function main() {
@@ -91,9 +93,9 @@ async function main() {
     assert.equal(upgraded.data.stages[0].projectId, 'projects');
     assert.equal(upgraded.data.focusSessions[0].taskTitle, source.tasks[0].title);
   });
-  check('all 11 tables round trip, including custom labels, nulls, legacy status and quoted SQL text', () => {
+  check('all 13 tables round trip, including custom labels, nulls, legacy status and quoted SQL text', () => {
     assert.deepEqual(format.parseBackup(json).data, JSON.parse(JSON.stringify(source)));
-    assert.equal(Object.keys(format.parseBackup(json).data).length, 11);
+    assert.equal(Object.keys(format.parseBackup(json).data).length, 13);
   });
   const invalid = (name, mutate) => check('reject ' + name, () => {
     const input = JSON.parse(json); mutate(input);

@@ -1,5 +1,5 @@
 import { getSqliteDb } from './connection';
-import { TABLES_DDL, INDEXES_DDL, SEED_CATEGORIES_SQL, SEED_PILLARS_SQL } from './schema-sql';
+import { TABLES_DDL, INDEXES_DDL, SEED_CATEGORIES_SQL, SEED_PILLARS_SQL, WEEKLY_SCHEDULES_DDL } from './schema-sql';
 import { INTEGRITY_DDL } from './integrity';
 import { TABLE_SPECS, parseBackup, checkBackupSize } from '@/features/settings/data/backup-format';
 import { readBackupData, replaceBackupData } from '@/features/settings/data/backup-store';
@@ -25,11 +25,17 @@ async function initialize(): Promise<void> {
   const version = connection.getFirstSync<{ user_version: number }>('PRAGMA user_version')!.user_version;
   if (version > DATABASE_VERSION) throw new Error('Database berasal dari versi aplikasi lebih baru. Gunakan versi aplikasi yang sesuai.');
   if (version === DATABASE_VERSION) {
+    const hasWeeklySchedules = connection.getFirstSync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'weekly_schedules'"
+    );
+    if (!hasWeeklySchedules) {
+      connection.execSync(WEEKLY_SCHEDULES_DDL);
+    }
     if (connection.getAllSync('PRAGMA foreign_key_check').length) throw new Error('Relasi database tidak utuh. Database tidak diubah.');
     // Reading every expected column detects an incomplete/tampered schema before mounting CRUD.
     readBackupData(connection);
     const foreignKeys = TABLE_SPECS.reduce((sum, spec) => sum + connection.getAllSync(`PRAGMA foreign_key_list("${spec.name}")`).length, 0);
-    if (foreignKeys !== 15 || connection.getAllSync("SELECT name FROM sqlite_master WHERE type = 'trigger' AND name IN ('task_owner_insert', 'task_owner_update', 'stage_owner_update', 'milestone_owner_update', 'task_history_delete')").length !== 5) throw new Error('Constraint database belum lengkap. Database tidak diubah.');
+    if (foreignKeys !== 16 || connection.getAllSync("SELECT name FROM sqlite_master WHERE type = 'trigger' AND name IN ('task_owner_insert', 'task_owner_update', 'stage_owner_update', 'milestone_owner_update', 'task_history_delete')").length !== 5) throw new Error('Constraint database belum lengkap. Database tidak diubah.');
     return;
   }
   let before = '';
