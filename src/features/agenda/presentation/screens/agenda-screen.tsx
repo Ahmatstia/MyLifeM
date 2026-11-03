@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Pressable, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { Calendar, Repeat } from 'lucide-react-native';
+import { CalendarHeart, Repeat } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { Screen, ScreenHeader, AppText, Button, Banner, EmptyState } from '@/shared/ui';
@@ -138,7 +138,7 @@ export const AgendaScreen: React.FC = () => {
           accessibilityState={{ selected: viewMode === 'DAILY' }}
           style={[styles.segmentTab, viewMode === 'DAILY' && styles.segmentTabActive]}
         >
-          <Calendar size={16} color={viewMode === 'DAILY' ? colors.onPrimary : colors.onSurface} />
+          <CalendarHeart size={16} color={viewMode === 'DAILY' ? colors.onPrimary : colors.onSurface} strokeWidth={2.4} />
           <AppText
             variant="labelMedium"
             color={viewMode === 'DAILY' ? 'onPrimary' : 'onSurface'}
@@ -154,7 +154,7 @@ export const AgendaScreen: React.FC = () => {
           accessibilityState={{ selected: viewMode === 'WEEKLY_MASTER' }}
           style={[styles.segmentTab, viewMode === 'WEEKLY_MASTER' && styles.segmentTabActive]}
         >
-          <Repeat size={16} color={viewMode === 'WEEKLY_MASTER' ? colors.onPrimary : colors.onSurface} />
+          <Repeat size={16} color={viewMode === 'WEEKLY_MASTER' ? colors.onPrimary : colors.onSurface} strokeWidth={2.4} />
           <AppText
             variant="labelMedium"
             color={viewMode === 'WEEKLY_MASTER' ? 'onPrimary' : 'onSurface'}
@@ -345,7 +345,7 @@ export const AgendaScreen: React.FC = () => {
                 <EmptyState
                   title="Masih ada ruang di harimu"
                   description="Belum ada jadwal tetap atau agenda khusus untuk tanggal ini. Jadwalkan waktu kuliah, kerja, atau istirahat."
-                  customIcon={<Calendar size={32} color={colors.onPrimaryContainer} />}
+                  customIcon={<CalendarHeart size={36} color={colors.onPrimaryContainer} strokeWidth={2.4} />}
                   actionTitle="Jadwalkan kegiatan"
                   onActionPress={() => setIsAddEventModalVisible(true)}
                 />

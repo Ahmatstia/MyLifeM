@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Settings, ArrowUpRight, Play, Calendar } from 'lucide-react-native';
+import { Settings2, ArrowUpRight, Play, CalendarHeart } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, radius, fontFamily } from '@/theme/tokens';
 import { Screen, ScreenHeader, AppText, Card, Button, Banner, EmptyState } from '@/shared/ui';
@@ -33,7 +33,7 @@ export const TodayFocusScreen: React.FC = () => {
       <ScreenHeader title="Hari Ini." subtitle={todayFormatted}
         action={<Pressable onPress={() => router.push('/settings')} accessibilityRole="button"
           accessibilityLabel="Buka Pengaturan" style={styles.settingsButton}>
-          <Settings size={22} color={colors.primary} />
+          <Settings2 size={22} color={colors.primary} strokeWidth={2.4} />
         </Pressable>}
       />
 
@@ -82,7 +82,7 @@ export const TodayFocusScreen: React.FC = () => {
               style={styles.nextScheduleCard}
             >
               <View style={styles.nextScheduleTag}>
-                <Calendar size={14} color={colors.primary} />
+                <CalendarHeart size={14} color={colors.primary} strokeWidth={2.4} />
                 <AppText variant="labelSmall" color="primary" style={styles.nextScheduleTagText}>
                   AGENDA BERIKUTNYA
                 </AppText>

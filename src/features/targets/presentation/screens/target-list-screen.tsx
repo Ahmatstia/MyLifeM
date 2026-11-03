@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
-import { Target as TargetIcon } from 'lucide-react-native';
+import { Sprout } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space } from '@/theme/tokens';
 import { Screen, ScreenHeader, AppText, Card, Button, Banner, EmptyState, ProgressBar } from '@/shared/ui';
@@ -42,7 +42,7 @@ export const TargetListScreen: React.FC = () => {
           {targets.length === 0 ? <EmptyState
             title={selectedCategoryId ? 'Belum ada target di kategori ini' : 'Apa yang ingin kamu wujudkan?'}
             description="Mulai dari satu tujuan, misalnya menjadi AI Engineer. Pecah menjadi tahapan dan tugas yang jelas."
-            customIcon={<TargetIcon size={32} color={colors.onPrimaryContainer} />}
+            customIcon={<Sprout size={36} color={colors.primary} strokeWidth={2.4} />}
             actionTitle="Buat target" onActionPress={() => setIsModalVisible(true)} /> :
             targets.map(target => <TargetCard key={target.id} target={target} onPress={() => router.push({ pathname: '/targets/[id]', params: { id: target.id } })} />)}
         </>

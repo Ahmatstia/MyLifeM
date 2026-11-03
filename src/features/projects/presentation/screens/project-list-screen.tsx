@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { FolderKanban } from 'lucide-react-native';
+import { Shapes } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, radius } from '@/theme/tokens';
 import { Screen, ScreenHeader, AppText, Card, Button, Banner, EmptyState } from '@/shared/ui';
@@ -43,7 +43,7 @@ export const ProjectListScreen: React.FC = () => {
       {isLoading ? <View style={styles.loading}><ActivityIndicator color={colors.primary} /><AppText color="onSurfaceVariant">Memuat proyek…</AppText></View> : !error && (
         projects.length === 0 ? <EmptyState title={statusFilter ? 'Belum ada proyek pada filter ini' : 'Wujudkan ide pertamamu'}
           description="Tentukan hasil yang ingin dibuat, lalu bagi pekerjaanmu menjadi tahapan dan tugas."
-          customIcon={<FolderKanban size={32} color={colors.onPrimaryContainer} />}
+          customIcon={<Shapes size={36} color={colors.secondary} strokeWidth={2.4} />}
           actionTitle="Buat proyek" onActionPress={() => setIsModalVisible(true)} /> :
           projects.map(project => <ProjectCard key={project.id} project={project}
             onPress={() => router.push({ pathname: '/projects/[id]', params: { id: project.id } })} />)

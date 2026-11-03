@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { Clock, MapPin, FileText, Plus, Edit2, Trash2, Calendar, BookOpen, Briefcase, User, Sparkles } from 'lucide-react-native';
+import { Clock, MapPin, FileText, Plus, Edit2, Trash2, Calendar, BookOpen, Briefcase, Sparkles, GraduationCap, Heart } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
@@ -36,31 +36,31 @@ const TYPE_CONFIG: Record<
     label: 'Kuliah',
     color: colors.primary,
     bg: colors.primaryContainer,
-    icon: <BookOpen size={13} color={colors.primary} />,
+    icon: <GraduationCap size={13} color={colors.primary} strokeWidth={2.4} />,
   },
   WORK: {
     label: 'Kerja',
     color: colors.secondary,
     bg: colors.secondaryContainer,
-    icon: <Briefcase size={13} color={colors.secondary} />,
+    icon: <Briefcase size={13} color={colors.secondary} strokeWidth={2.4} />,
   },
   STUDY: {
     label: 'Belajar',
     color: colors.tertiary,
     bg: colors.tertiaryContainer,
-    icon: <Sparkles size={13} color={colors.tertiary} />,
+    icon: <BookOpen size={13} color={colors.tertiary} strokeWidth={2.4} />,
   },
   PERSONAL: {
     label: 'Pribadi',
     color: colors.onSurfaceVariant,
     bg: colors.surfaceContainerHighest,
-    icon: <User size={13} color={colors.onSurfaceVariant} />,
+    icon: <Heart size={13} color={colors.onSurfaceVariant} strokeWidth={2.4} />,
   },
   ROUTINE: {
     label: 'Rutinitas',
     color: colors.primary,
     bg: colors.primaryContainer,
-    icon: <Clock size={13} color={colors.primary} />,
+    icon: <Sparkles size={13} color={colors.primary} strokeWidth={2.4} />,
   },
 };
 

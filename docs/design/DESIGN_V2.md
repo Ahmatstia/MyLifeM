@@ -109,3 +109,32 @@ Warna/radius/typography berasal dari src/theme; hilangkan literal lavender/putih
 ## 9. Gerbang visual sebelum rilis
 
 Uji lebar 320/360/412 dp, font sistem 100/150/200%, judul panjang, form dengan keyboard, data kosong/padat, seluruh state tombol, TalkBack, safe area Android, dan iOS bila target build didukung. Screenshot before/after setiap layar dan modal diperlukan; perbandingan token saja belum membuktikan redesign selesai.
+
+---
+
+## 10. Sistem Ikonografi Lucu & Playful (Botanical Pop Iconography)
+
+Pembaruan: 3 November 2026.
+Untuk memperkuat kepribadian aplikasi yang hangat, menggemaskan (*cute/playful*), dan bernuansa organik **Botanical Pop**, seluruh ikon kaku/korporat digantikan oleh metafora visual yang ramah dan memikat:
+
+### 10.1 Metafora Ikon Navigasi Utama (Bottom Tabs & Quick Add)
+* **Hari Ini**: `Sparkles` ✨ (`strokeWidth={2.4}`) — Kilau energi dan keajaiban fokus hari ini. Menggantikan checklist kaku (`CheckCircle2`).
+* **Target**: `Sprout` 🌱 (`strokeWidth={2.4}`) — Tunas tanaman muda yang tumbuh dari benih. Melambangkan pertumbuhan bertahap yang selaras dengan filosofi Botanical Pop. Menggantikan crosshair/radar militer (`Target`).
+* **Tombol Tambah (FAB)**: `Plus` ➕ (`strokeWidth={3}`) — Ikon tambah yang montok, empuk, dan *bouncy*.
+* **Proyek**: `Shapes` 🔷⚪🔺 (`strokeWidth={2.4}`) — Balok kreasi geometri playful (lingkaran, segitiga, bujur sangkar). Menggantikan folder kanban kantor yang abu-abu (`FolderKanban`).
+* **Agenda**: `CalendarHeart` 🗓️❤️ (`strokeWidth={2.4}`) — Kalender dengan simbol hati manis di tengahnya. Menjadwalkan hidup dengan kepedulian dan cinta diri. Menggantikan kalender kotak formal (`Calendar`).
+
+### 10.2 Ikon Fitur & Pengaturan (Settings & Sections)
+* **Pengaturan (Header Hari Ini)**: `Settings2` 🎛️ (`strokeWidth={2.4}`) — Tombol kenop/slider bulat modern yang manis, menggantikan gear mesin industri.
+* **Kategori Target**: `Palette` 🎨 (`strokeWidth={2.4}`) — Palet warna kreatif.
+* **Layar Tetap Terjaga**: `Sun` ☀️ (`strokeWidth={2.4}`) — Matahari hangat yang menjaga layar tetap bersinar.
+* **Durasi Pomodoro**: `Coffee` ☕ (`strokeWidth={2.4}`) — Secangkir kopi hangat untuk menemani sesi produktivitas santai.
+* **Durasi Deep Flow**: `Flame` 🔥 (`strokeWidth={2.4}`) — Nyala api semangat untuk fokus intensif.
+* **Kuliah (Master KRS)**: `GraduationCap` 🎓 (`strokeWidth={2.4}`) — Topi toga wisuda yang lucu dan membanggakan.
+* **Pribadi**: `Heart` ❤️ (`strokeWidth={2.4}`) — Perhatian untuk diri sendiri.
+* **Rutinitas Keseharian**: `Sparkles` ✨ / `SunMedium` 🌅 (`strokeWidth={2.4}`) — Ritme pagi dan personal lifestyle yang menyenangkan.
+
+### 10.3 Aturan Ketebalan Garis (*Chubby & Rounded Line Rule*)
+* Ikon utama menggunakan `strokeWidth` antara `2.4` hingga `3.0` (bukan default 2.0 yang tipis dan bersudut tajam).
+* Menghasilkan garis tepi membulat, ramah sentuhan, dan serasi dengan token sudut bulat `radius.lg` (20dp) dan `radius.xl` (24dp) Botanical Pop.
+

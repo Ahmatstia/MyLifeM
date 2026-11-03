@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CheckCircle2, Target, FolderKanban, Calendar, ChevronRight, X } from 'lucide-react-native';
+import { Sparkles, Sprout, Shapes, CalendarHeart, ChevronRight, X } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
@@ -19,25 +19,25 @@ const ITEMS: QuickAddItem[] = [
     label: 'Prioritas hari ini',
     description: 'Tugas yang ingin kamu selesaikan hari ini',
     pathname: '/',
-    icon: <CheckCircle2 size={24} color={colors.primary} />,
+    icon: <Sparkles size={24} color={colors.primary} strokeWidth={2.4} />,
   },
   {
     label: 'Target hidup',
     description: 'Arah besar di salah satu pilar kehidupan',
     pathname: '/targets',
-    icon: <Target size={24} color={colors.primary} />,
+    icon: <Sprout size={24} color={colors.primary} strokeWidth={2.4} />,
   },
   {
     label: 'Proyek',
     description: 'Wadah kerja dengan babak dan tugas',
     pathname: '/projects',
-    icon: <FolderKanban size={24} color={colors.primary} />,
+    icon: <Shapes size={24} color={colors.primary} strokeWidth={2.4} />,
   },
   {
     label: 'Agenda',
     description: 'Kegiatan terjadwal atau bebas jam',
     pathname: '/agenda',
-    icon: <Calendar size={24} color={colors.primary} />,
+    icon: <CalendarHeart size={24} color={colors.primary} strokeWidth={2.4} />,
   },
 ];
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Pressable, Switch, TextInput, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
-import { ArrowLeft, ChevronRight, Tags, Vibrate, Eye, Timer, Flame, Download, ShieldCheck } from 'lucide-react-native';
+import { ArrowLeft, ChevronRight, Palette, Vibrate, Sun, Coffee, Flame, Download, ShieldCheck } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, radius } from '@/theme/tokens';
 import { Screen, AppText, Card, Button, AppBottomSheet, Banner } from '@/shared/ui';
@@ -42,21 +42,21 @@ export const SettingsScreen: React.FC = () => {
 
       <AppText variant="headlineSmall" accessibilityRole="header" style={styles.sectionTitle}>Organisasi</AppText>
       <SettingRow title="Kategori target" description="Kelola nama dan pengelompokan tujuanmu."
-        icon={<Tags size={20} color={colors.primary} />} onPress={() => setIsCategoryManagerVisible(true)} />
+        icon={<Palette size={20} color={colors.primary} strokeWidth={2.4} />} onPress={() => setIsCategoryManagerVisible(true)} />
 
       <AppText variant="headlineSmall" accessibilityRole="header" style={styles.sectionTitle}>Fokus & kenyamanan</AppText>
       <SettingRow title="Getaran haptik" description="Preferensi umpan balik sentuh."
-        icon={<Vibrate size={20} color={colors.primary} />}
+        icon={<Vibrate size={20} color={colors.primary} strokeWidth={2.4} />}
         trailing={<Switch accessibilityLabel="Getaran haptik" value={settings.hapticsEnabled} onValueChange={value => updateSetting({ hapticsEnabled: value })}
           trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }} thumbColor={colors.onPrimary} />} />
       <SettingRow title="Layar tetap terjaga" description="Preferensi layar selama sesi fokus."
-        icon={<Eye size={20} color={colors.primary} />}
+        icon={<Sun size={20} color={colors.primary} strokeWidth={2.4} />}
         trailing={<Switch accessibilityLabel="Layar tetap terjaga" value={settings.keepAwakeEnabled} onValueChange={value => updateSetting({ keepAwakeEnabled: value })}
           trackColor={{ false: colors.surfaceContainerHighest, true: colors.primary }} thumbColor={colors.onPrimary} />} />
       <SettingRow title="Durasi Pomodoro" description={settings.pomodoroMinutes + ' menit per sesi'}
-        icon={<Timer size={20} color={colors.primary} />} onPress={() => setDurationPicker('POMODORO')} />
+        icon={<Coffee size={20} color={colors.primary} strokeWidth={2.4} />} onPress={() => setDurationPicker('POMODORO')} />
       <SettingRow title="Durasi Deep Flow" description={settings.deepFlowMinutes + ' menit per sesi'}
-        icon={<Flame size={20} color={colors.primary} />} onPress={() => setDurationPicker('DEEP_FLOW')} />
+        icon={<Flame size={20} color={colors.primary} strokeWidth={2.4} />} onPress={() => setDurationPicker('DEEP_FLOW')} />
 
       <AppText variant="headlineSmall" accessibilityRole="header" style={styles.sectionTitle}>Data & privasi</AppText>
       {!isLoading && <Card variant="highlight" padding={space[5]}>

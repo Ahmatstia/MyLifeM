@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs, router } from 'expo-router';
-import { Target, CheckCircle2, FolderKanban, Calendar } from 'lucide-react-native';
+import { Sparkles, Sprout, Shapes, CalendarHeart } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
 import { fontFamily } from '@/theme/tokens';
@@ -43,7 +43,7 @@ export default function TabLayout() {
         options={{
           title: 'Hari Ini',
           tabBarIcon: ({ color, size }) => (
-            <CheckCircle2 size={size || 22} color={color} />
+            <Sparkles size={size || 22} color={color} strokeWidth={2.4} />
           ),
         }}
       />
@@ -52,7 +52,7 @@ export default function TabLayout() {
         options={{
           title: 'Target',
           tabBarIcon: ({ color, size }) => (
-            <Target size={size || 22} color={color} />
+            <Sprout size={size || 22} color={color} strokeWidth={2.4} />
           ),
         }}
       />
@@ -70,7 +70,7 @@ export default function TabLayout() {
         options={{
           title: 'Proyek',
           tabBarIcon: ({ color, size }) => (
-            <FolderKanban size={size || 22} color={color} />
+            <Shapes size={size || 22} color={color} strokeWidth={2.4} />
           ),
         }}
       />
@@ -79,7 +79,7 @@ export default function TabLayout() {
         options={{
           title: 'Agenda',
           tabBarIcon: ({ color, size }) => (
-            <Calendar size={size || 22} color={color} />
+            <CalendarHeart size={size || 22} color={color} strokeWidth={2.4} />
           ),
         }}
       />
