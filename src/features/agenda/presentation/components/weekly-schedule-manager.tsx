@@ -56,6 +56,12 @@ const TYPE_CONFIG: Record<
     bg: colors.surfaceContainerHighest,
     icon: <User size={13} color={colors.onSurfaceVariant} />,
   },
+  ROUTINE: {
+    label: 'Rutinitas',
+    color: colors.primary,
+    bg: colors.primaryContainer,
+    icon: <Clock size={13} color={colors.primary} />,
+  },
 };
 
 export const WeeklyScheduleManager: React.FC<WeeklyScheduleManagerProps> = ({

@@ -40,6 +40,11 @@ const TYPE_CONFIG: Record<
     color: colors.onSurfaceVariant,
     bg: colors.surfaceContainerHighest,
   },
+  ROUTINE: {
+    label: 'Rutinitas',
+    color: colors.primary,
+    bg: colors.surfaceContainerLow,
+  },
 };
 
 export const WeeklyOccurrenceCard: React.FC<WeeklyOccurrenceCardProps> = ({

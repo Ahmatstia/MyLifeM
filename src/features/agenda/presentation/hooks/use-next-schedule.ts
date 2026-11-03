@@ -13,7 +13,12 @@ export function useNextSchedule() {
       const occurrences = await weeklyScheduleRepository.getProjectedSchedulesForDate(todayStr);
       const active = occurrences.filter((occ) => !occ.isCancelled && !occ.isCompleted);
       const nowIso = new Date().toISOString();
-      const upcoming = active.find((occ) => occ.endIso > nowIso) || active[0];
+      const commitments = active.filter((occ) => occ.schedule.scheduleType !== 'ROUTINE');
+      // Prioritaskan komitmen utama (kuliah/kerja) agar tidak terlewat, fallback ke ritme harian
+      const upcoming = commitments.find((occ) => occ.endIso > nowIso)
+        || commitments[0]
+        || active.find((occ) => occ.endIso > nowIso)
+        || active[0];
       setNextSchedule(upcoming || null);
     } catch {
       // Non-critical background fetch

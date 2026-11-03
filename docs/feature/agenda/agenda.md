@@ -170,3 +170,40 @@ Layar Agenda dilengkapi dengan pengalih tampilan (*Segmented Header*):
 4. **Privasi & Local-First**:
    * Seluruh jadwal KRS dan rutinitas kerja tersimpan 100% lokal di perangkat pengguna dalam SQLite, tanpa sinkronisasi server pihak ketiga.
 
+---
+
+## 7. Ekstensi: Arsitektur *Layered Rhythm* (Agenda Kegiatan vs Ritme Keseharian)
+
+### 7.1 Latar Belakang & Filosofi Desain
+Pengguna membutuhkan dua spektrum pengaturan waktu dalam kesehariannya:
+1. **Komitmen Terjadwal (*Time-bound Commitments*)**: Kuliah (KRS), Shift Kerja, Bimbingan Skripsi, Organisasi. Memiliki konsekuensi eksternal tinggi, butuh detail ruangan/lokasi, dan alarm pengingat aktif.
+2. **Ritme Keseharian (*Personal Flow / Lifestyle*)**: Bangun pagi (05:00), olahraga (08:00), sarapan (09:00), evaluasi malam (21:30), tidur (22:30). Memiliki sifat pembiasaan diri (*habit*), seringkali berulang setiap hari atau di hari kerja.
+
+Jika keduanya digabungkan mentah-mentah dalam satu daftar kartu yang sama, timeline harian menjadi penuh sesak (*cognitive overload*). Jika dipisahkan ke layar yang berbeda, pengguna kehilangan gambaran utuh tentang alur hidupnya dalam sehari.
+
+### 7.2 Spesifikasi *Layered Rhythm*
+Sistem menerapkan prinsip **Unified Data, Layered Presentation**:
+
+1. **Klasifikasi Tipe Jadwal**:
+   * `KOMITMEN_UTAMA`: `COLLEGE` (Kuliah), `WORK` (Kerja), `ORGANIZATION` (Organisasi/Rapat).
+   * `RITME_KESEHARIAN`: `ROUTINE` (Bangun, Olahraga, Makan, Belajar Mandiri, Istirahat).
+
+2. **Kemudahan Input Master (Multi-day Shortcut)**:
+   * Form pembuatan jadwal mendukung pemilihan banyak hari sekaligus:
+     * **Setiap Hari** (Senin s.d. Minggu = 7 hari).
+     * **Hari Kerja** (Senin s.d. Jumat = 5 hari).
+     * **Akhir Pekan** (Sabtu & Minggu = 2 hari).
+     * **Kustom** (memilih hari-hari tertentu).
+   * Sistem secara otomatis menggenerasikan slot master pada hari-hari yang dipilih dalam satu kali aksi simpan.
+
+3. **Presentasi Timeline Harian Berlapis**:
+   * **Blok Ritme Keseharian (*Daily Routine Checklist*)**:
+     * Komponen daftar ringkas terpadu dengan status kemajuan (misal: `"3/5 Selesai"`).
+     * Interaksi cepat: satu ketukan untuk mencentang selesai / membatalkan status selesai.
+     * Dapat dilipat (*collapsible*) untuk menghemat ruang pandang saat fokus pada jam kerja/kuliah.
+   * **Kartu Komitmen Utama (*Prominent Schedule Cards*)**:
+     * Kartu penuh beraksen warna tegas dengan jam mulai-selesai, lokasi/ruang, status kehadiran, dan penanda alarm.
+   * **Filter Cepat Timeline**:
+     * Tab / Chip penyaring: `[ Semua ]`, `[ Komitmen Utama ]`, `[ Ritme Keseharian ]`.
+
+

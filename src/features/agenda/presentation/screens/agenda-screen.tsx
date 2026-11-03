@@ -10,14 +10,17 @@ import { DateStripHeader } from '../components/date-strip-header';
 import { TimelineEventCard } from '../components/timeline-event-card';
 import { AddEventModal } from '../components/add-event-modal';
 import { WeeklyOccurrenceCard } from '../components/weekly-occurrence-card';
+import { DailyRoutineChecklist } from '../components/daily-routine-checklist';
 import { WeeklyScheduleManager } from '../components/weekly-schedule-manager';
 import { AddEditWeeklyScheduleModal } from '../components/add-edit-weekly-schedule-modal';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 import { conflictingEventIds } from '../../domain/agenda-time';
-import type { WeeklyScheduleEntity } from '../../domain/entities/weekly-schedule.entity';
+import type { WeeklyScheduleEntity, WeeklyScheduleType } from '../../domain/entities/weekly-schedule.entity';
+import { getDayOfWeekFromDate } from '../../domain/entities/weekly-schedule.entity';
 
 export const AgendaScreen: React.FC = () => {
   const [viewMode, setViewMode] = useState<'DAILY' | 'WEEKLY_MASTER'>('DAILY');
+  const [timelineFilter, setTimelineFilter] = useState<'ALL' | 'COMMITMENT' | 'ROUTINE'>('ALL');
 
   // Daily Agenda State
   const {
@@ -48,6 +51,7 @@ export const AgendaScreen: React.FC = () => {
     error: weeklyError,
     refresh: refreshWeekly,
     addSchedule,
+    addSchedulesForDays,
     editSchedule,
     removeSchedule,
   } = useWeeklySchedules();
@@ -57,6 +61,7 @@ export const AgendaScreen: React.FC = () => {
   const [isWeeklyModalVisible, setIsWeeklyModalVisible] = useState(false);
   const [editingWeeklySchedule, setEditingWeeklySchedule] = useState<WeeklyScheduleEntity | undefined>(undefined);
   const [weeklyModalDefaultDay, setWeeklyModalDefaultDay] = useState(1);
+  const [weeklyModalInitialType, setWeeklyModalInitialType] = useState<WeeklyScheduleType | undefined>(undefined);
 
   useOpenAddFromParam(() => {
     if (viewMode === 'DAILY') {
@@ -64,6 +69,7 @@ export const AgendaScreen: React.FC = () => {
     } else {
       setEditingWeeklySchedule(undefined);
       setWeeklyModalDefaultDay(selectedDay);
+      setWeeklyModalInitialType(undefined);
       setIsWeeklyModalVisible(true);
     }
   });
@@ -79,21 +85,28 @@ export const AgendaScreen: React.FC = () => {
     ]);
   };
 
-  const handleOpenAddWeekly = (day: number) => {
+  const handleOpenAddWeekly = (day: number, type?: WeeklyScheduleType) => {
     setEditingWeeklySchedule(undefined);
     setWeeklyModalDefaultDay(day);
+    setWeeklyModalInitialType(type);
     setIsWeeklyModalVisible(true);
   };
 
   const handleOpenEditWeekly = (schedule: WeeklyScheduleEntity) => {
     setEditingWeeklySchedule(schedule);
     setWeeklyModalDefaultDay(schedule.dayOfWeek);
+    setWeeklyModalInitialType(schedule.scheduleType);
     setIsWeeklyModalVisible(true);
   };
 
   const activeOccurrences = weeklyOccurrences.filter((occ) => !occ.isCancelled);
   const completedOccurrences = activeOccurrences.filter((occ) => occ.isCompleted).length;
   const completedEvents = events.filter((event) => event.isCompleted).length;
+
+  const routineOccurrences = weeklyOccurrences.filter((occ) => occ.schedule.scheduleType === 'ROUTINE');
+  const commitmentOccurrences = weeklyOccurrences.filter((occ) => occ.schedule.scheduleType !== 'ROUTINE');
+  const activeCommitments = commitmentOccurrences.filter((occ) => !occ.isCancelled);
+  const completedCommitments = activeCommitments.filter((occ) => occ.isCompleted).length;
 
   return (
     <Screen>
@@ -199,22 +212,84 @@ export const AgendaScreen: React.FC = () => {
             </View>
           ) : !agendaError && (
             <>
-              {/* A. Section Jadwal Tetap Hari Ini (Projected from Master KRS) */}
+              {/* Filter Chips: Semua / Komitmen / Ritme */}
               {weeklyOccurrences.length > 0 && (
+                <View style={styles.filterRow}>
+                  <Pressable
+                    onPress={() => setTimelineFilter('ALL')}
+                    accessibilityRole="button"
+                    style={[styles.filterChip, timelineFilter === 'ALL' && styles.filterChipActive]}
+                  >
+                    <AppText
+                      variant="labelSmall"
+                      color={timelineFilter === 'ALL' ? 'onPrimary' : 'onSurfaceVariant'}
+                    >
+                      Semua ({weeklyOccurrences.length + events.length})
+                    </AppText>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setTimelineFilter('COMMITMENT')}
+                    accessibilityRole="button"
+                    style={[styles.filterChip, timelineFilter === 'COMMITMENT' && styles.filterChipActive]}
+                  >
+                    <AppText
+                      variant="labelSmall"
+                      color={timelineFilter === 'COMMITMENT' ? 'onPrimary' : 'onSurfaceVariant'}
+                    >
+                      Komitmen ({commitmentOccurrences.length + events.length})
+                    </AppText>
+                  </Pressable>
+
+                  {routineOccurrences.length > 0 && (
+                    <Pressable
+                      onPress={() => setTimelineFilter('ROUTINE')}
+                      accessibilityRole="button"
+                      style={[styles.filterChip, timelineFilter === 'ROUTINE' && styles.filterChipActive]}
+                    >
+                      <AppText
+                        variant="labelSmall"
+                        color={timelineFilter === 'ROUTINE' ? 'onPrimary' : 'onSurfaceVariant'}
+                      >
+                        Ritme ({routineOccurrences.length})
+                      </AppText>
+                    </Pressable>
+                  )}
+                </View>
+              )}
+
+              {/* 1. Ritme Keseharian (Layered Routine Checklist) */}
+              {timelineFilter !== 'COMMITMENT' && routineOccurrences.length > 0 && (
+                <DailyRoutineChecklist
+                  routines={routineOccurrences}
+                  onToggleComplete={(id, currentCompleted) =>
+                    toggleWeeklyOccurrence(id, currentCompleted)
+                  }
+                  onToggleCancelled={(id, currentCancelled) =>
+                    toggleWeeklyOccurrenceCancellation(id, currentCancelled)
+                  }
+                  onAddRoutine={() =>
+                    handleOpenAddWeekly(getDayOfWeekFromDate(selectedDate), 'ROUTINE')
+                  }
+                />
+              )}
+
+              {/* 2. Komitmen Utama (KRS & Kerja) */}
+              {timelineFilter !== 'ROUTINE' && commitmentOccurrences.length > 0 && (
                 <View style={styles.group}>
                   <View style={styles.groupHeaderRow}>
                     <View style={styles.groupHeaderTag}>
                       <Repeat size={14} color={colors.primary} />
                       <AppText variant="labelMedium" color="primary" style={styles.groupHeaderLabel}>
-                        JADWAL TETAP PEKANAN (KRS & KERJA)
+                        KOMITMEN UTAMA (KRS & KERJA)
                       </AppText>
                     </View>
                     <AppText variant="bodySmall" color="onSurfaceVariant">
-                      {completedOccurrences}/{activeOccurrences.length} selesai
+                      {completedCommitments}/{activeCommitments.length} selesai
                     </AppText>
                   </View>
 
-                  {weeklyOccurrences.map((occ) => (
+                  {commitmentOccurrences.map((occ) => (
                     <WeeklyOccurrenceCard
                       key={occ.schedule.id}
                       occurrence={occ}
@@ -229,8 +304,8 @@ export const AgendaScreen: React.FC = () => {
                 </View>
               )}
 
-              {/* B. All-day Events */}
-              {allDay.length > 0 && (
+              {/* 3. All-day Events */}
+              {timelineFilter !== 'ROUTINE' && allDay.length > 0 && (
                 <View style={styles.group}>
                   <AppText variant="labelMedium" color="onSecondaryContainer" style={styles.allDayLabel}>
                     SEPANJANG HARI
@@ -246,8 +321,8 @@ export const AgendaScreen: React.FC = () => {
                 </View>
               )}
 
-              {/* C. Timed One-Off Events */}
-              {timed.length > 0 && (
+              {/* 4. Timed One-Off Events */}
+              {timelineFilter !== 'ROUTINE' && timed.length > 0 && (
                 <View style={styles.group}>
                   <AppText variant="headlineSmall" accessibilityRole="header" style={styles.sectionTitle}>
                     Agenda Waktu Khusus
@@ -276,7 +351,7 @@ export const AgendaScreen: React.FC = () => {
                 />
               ) : (
                 <AppText variant="bodySmall" color="onSurfaceVariant" style={styles.summaryNote}>
-                  {completedEvents + completedOccurrences}/{events.length + activeOccurrences.length} komitmen selesai hari ini. Sisakan ruang untuk istirahat.
+                  {completedEvents + completedOccurrences}/{events.length + activeOccurrences.length} kegiatan selesai hari ini. Sisakan ruang untuk istirahat.
                 </AppText>
               )}
             </>
@@ -326,13 +401,17 @@ export const AgendaScreen: React.FC = () => {
             visible={isWeeklyModalVisible}
             initialData={editingWeeklySchedule}
             defaultDayOfWeek={weeklyModalDefaultDay}
+            initialScheduleType={weeklyModalInitialType}
             onClose={() => {
               setIsWeeklyModalVisible(false);
               setEditingWeeklySchedule(undefined);
+              setWeeklyModalInitialType(undefined);
             }}
-            onSubmit={async (input) => {
+            onSubmit={async (input, days) => {
               if (editingWeeklySchedule) {
                 return editSchedule(editingWeeklySchedule.id, input);
+              } else if (days && days.length > 1 && addSchedulesForDays) {
+                return addSchedulesForDays(days, input);
               } else {
                 return addSchedule(input);
               }
@@ -368,6 +447,23 @@ const styles = StyleSheet.create({
   },
   segmentTextActive: {
     fontFamily: fontFamily.semibold,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: space[2],
+    marginVertical: space[2],
+  },
+  filterChip: {
+    paddingHorizontal: space[3],
+    paddingVertical: space[1],
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  filterChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   group: {
     marginTop: space[4],

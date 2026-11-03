@@ -3,7 +3,15 @@
  * Represents master repeating schedules (KRS / Work Shifts) and their daily overrides.
  */
 
-export type WeeklyScheduleType = 'COLLEGE' | 'WORK' | 'STUDY' | 'PERSONAL';
+export type WeeklyScheduleType = 'COLLEGE' | 'WORK' | 'STUDY' | 'PERSONAL' | 'ROUTINE';
+
+export function isDailyRoutine(scheduleType: WeeklyScheduleType): boolean {
+  return scheduleType === 'ROUTINE';
+}
+
+export function isCommitment(scheduleType: WeeklyScheduleType): boolean {
+  return scheduleType !== 'ROUTINE';
+}
 
 export interface WeeklyScheduleEntity {
   id: string;

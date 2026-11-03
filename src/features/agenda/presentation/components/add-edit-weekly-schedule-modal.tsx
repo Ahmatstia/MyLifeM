@@ -24,13 +24,15 @@ export interface AddEditWeeklyScheduleModalProps {
   visible: boolean;
   initialData?: WeeklyScheduleEntity;
   defaultDayOfWeek?: number;
+  initialScheduleType?: WeeklyScheduleType;
   onClose: () => void;
-  onSubmit: (input: CreateWeeklyScheduleInput) => Promise<boolean>;
+  onSubmit: (input: CreateWeeklyScheduleInput, days?: number[]) => Promise<boolean>;
 }
 
 const SCHEDULE_TYPES: { type: WeeklyScheduleType; label: string; color: string }[] = [
   { type: 'COLLEGE', label: 'Kuliah', color: colors.primary },
   { type: 'WORK', label: 'Kerja', color: colors.secondary },
+  { type: 'ROUTINE', label: 'Rutinitas', color: colors.primary },
   { type: 'STUDY', label: 'Belajar', color: colors.tertiary },
   { type: 'PERSONAL', label: 'Pribadi', color: colors.onSurfaceVariant },
 ];
@@ -47,14 +49,16 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
   visible,
   initialData,
   defaultDayOfWeek = 1,
+  initialScheduleType,
   onClose,
   onSubmit,
 }) => {
   const [dayOfWeek, setDayOfWeek] = useState(defaultDayOfWeek);
+  const [selectedDays, setSelectedDays] = useState<number[]>([defaultDayOfWeek]);
   const [title, setTitle] = useState('');
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('10:00');
-  const [scheduleType, setScheduleType] = useState<WeeklyScheduleType>('COLLEGE');
+  const [scheduleType, setScheduleType] = useState<WeeklyScheduleType>(initialScheduleType || 'COLLEGE');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [reminderMinutes, setReminderMinutes] = useState<number | null>(15);
@@ -67,6 +71,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
     if (visible) {
       if (initialData) {
         setDayOfWeek(initialData.dayOfWeek);
+        setSelectedDays([initialData.dayOfWeek]);
         setTitle(initialData.title);
         setStartTime(initialData.startTime);
         setEndTime(initialData.endTime);
@@ -77,20 +82,43 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
         setIsActive(initialData.isActive);
       } else {
         setDayOfWeek(defaultDayOfWeek);
+        setSelectedDays([defaultDayOfWeek]);
         setTitle('');
-        setStartTime('08:00');
-        setEndTime('10:00');
-        setScheduleType('COLLEGE');
+        setStartTime(initialScheduleType === 'ROUTINE' ? '05:00' : '08:00');
+        setEndTime(initialScheduleType === 'ROUTINE' ? '06:00' : '10:00');
+        setScheduleType(initialScheduleType || 'COLLEGE');
         setLocation('');
         setNotes('');
-        setReminderMinutes(15);
+        setReminderMinutes(initialScheduleType === 'ROUTINE' ? null : 15);
         setIsActive(true);
       }
       setErrorMessage(null);
     }
-  }, [visible, initialData, defaultDayOfWeek]);
+  }, [visible, initialData, defaultDayOfWeek, initialScheduleType]);
 
   const validateTime = (t: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(t.trim());
+
+  const handleToggleDay = (day: number) => {
+    if (initialData) {
+      setDayOfWeek(day);
+      setSelectedDays([day]);
+      return;
+    }
+    if (selectedDays.includes(day)) {
+      if (selectedDays.length > 1) {
+        setSelectedDays(selectedDays.filter((d) => d !== day));
+      }
+    } else {
+      setSelectedDays([...selectedDays, day].sort((a, b) => a - b));
+    }
+  };
+
+  const handleSelectPreset = (days: number[]) => {
+    setSelectedDays(days);
+    if (!days.includes(dayOfWeek)) {
+      setDayOfWeek(days[0]);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -108,8 +136,8 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
 
     setErrorMessage(null);
     setIsSubmitting(true);
-    const ok = await onSubmit({
-      dayOfWeek,
+    const input: CreateWeeklyScheduleInput = {
+      dayOfWeek: selectedDays[0] || dayOfWeek,
       title: title.trim(),
       startTime: startTime.trim(),
       endTime: endTime.trim(),
@@ -118,7 +146,9 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
       notes: notes.trim() || null,
       reminderMinutes,
       isActive,
-    });
+    };
+
+    const ok = await onSubmit(input, initialData ? undefined : selectedDays);
     setIsSubmitting(false);
 
     if (ok) {
@@ -150,16 +180,54 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
 
         {/* 1. Pilih Hari (Senin - Minggu) */}
         <View style={styles.fieldGroup}>
-          <AppText variant="labelMedium" color="onSurfaceVariant" style={styles.label}>
-            HARI JADWAL RUTIN
-          </AppText>
+          <View style={styles.labelRow}>
+            <AppText variant="labelMedium" color="onSurfaceVariant" style={styles.label}>
+              HARI JADWAL RUTIN
+            </AppText>
+            {!initialData && (
+              <View style={styles.presetRow}>
+                <Pressable
+                  onPress={() => handleSelectPreset([1, 2, 3, 4, 5, 6, 7])}
+                  style={[
+                    styles.presetChip,
+                    selectedDays.length === 7 && styles.presetChipActive,
+                  ]}
+                >
+                  <AppText
+                    variant="labelSmall"
+                    color={selectedDays.length === 7 ? 'onPrimary' : 'onSurfaceVariant'}
+                  >
+                    Setiap Hari
+                  </AppText>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleSelectPreset([1, 2, 3, 4, 5])}
+                  style={[
+                    styles.presetChip,
+                    selectedDays.length === 5 && selectedDays.every((d) => d <= 5) && styles.presetChipActive,
+                  ]}
+                >
+                  <AppText
+                    variant="labelSmall"
+                    color={
+                      selectedDays.length === 5 && selectedDays.every((d) => d <= 5)
+                        ? 'onPrimary'
+                        : 'onSurfaceVariant'
+                    }
+                  >
+                    Hari Kerja
+                  </AppText>
+                </Pressable>
+              </View>
+            )}
+          </View>
           <View style={styles.daySelectorRow}>
             {[1, 2, 3, 4, 5, 6, 7].map((day) => {
-              const selected = day === dayOfWeek;
+              const selected = initialData ? day === dayOfWeek : selectedDays.includes(day);
               return (
                 <Pressable
                   key={day}
-                  onPress={() => setDayOfWeek(day)}
+                  onPress={() => handleToggleDay(day)}
                   accessibilityRole="button"
                   accessibilityLabel={DAY_NAMES[day]}
                   style={[styles.dayChip, selected && styles.dayChipSelected]}
@@ -176,20 +244,30 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
             })}
           </View>
           <AppText variant="bodySmall" color="primary" style={styles.dayHint}>
-            Jadwal berlaku setiap hari {DAY_NAMES[dayOfWeek]}
+            {initialData
+              ? `Jadwal berlaku setiap hari ${DAY_NAMES[dayOfWeek]}`
+              : selectedDays.length === 7
+              ? 'Jadwal berlaku setiap hari (Senin s.d. Minggu)'
+              : selectedDays.length === 5 && selectedDays.every((d) => d <= 5)
+              ? 'Jadwal berlaku setiap hari kerja (Senin s.d. Jumat)'
+              : `Jadwal berlaku pada: ${selectedDays.map((d) => DAY_SHORT_NAMES[d]).join(', ')}`}
           </AppText>
         </View>
 
         {/* 2. Judul Jadwal */}
         <View style={styles.fieldGroup}>
           <AppText variant="labelMedium" color="onSurfaceVariant" style={styles.label}>
-            NAMA KEGIATAN / MATA KULIAH *
+            {scheduleType === 'ROUTINE' ? 'NAMA RUTINITAS KESEHARIAN *' : 'NAMA KEGIATAN / MATA KULIAH *'}
           </AppText>
           <TextInput
             style={styles.input}
             value={title}
             onChangeText={setTitle}
-            placeholder="misal: Kuliah Algoritma, Shift Siang..."
+            placeholder={
+              scheduleType === 'ROUTINE'
+                ? 'misal: Bangun Pagi & Subuh, Olahraga, Sarapan...'
+                : 'misal: Kuliah Algoritma, Shift Siang...'
+            }
             placeholderTextColor={colors.onSurfaceVariant}
           />
         </View>
@@ -378,8 +456,29 @@ const styles = StyleSheet.create({
   fieldGroup: {
     gap: space[2],
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   label: {
     fontFamily: fontFamily.semibold,
+  },
+  presetRow: {
+    flexDirection: 'row',
+    gap: space[1],
+  },
+  presetChip: {
+    paddingHorizontal: space[2],
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  presetChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   daySelectorRow: {
     flexDirection: 'row',

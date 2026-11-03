@@ -64,6 +64,25 @@ export function useWeeklySchedules() {
     [fetchSchedules]
   );
 
+  const addSchedulesForDays = useCallback(
+    async (days: number[], input: Omit<CreateWeeklyScheduleInput, 'dayOfWeek'>): Promise<boolean> => {
+      try {
+        for (const day of days) {
+          await weeklyScheduleRepository.createWeeklySchedule({
+            ...input,
+            dayOfWeek: day,
+          });
+        }
+        await fetchSchedules();
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Gagal menambah jadwal.');
+        return false;
+      }
+    },
+    [fetchSchedules]
+  );
+
   const editSchedule = useCallback(
     async (id: string, input: UpdateWeeklyScheduleInput): Promise<boolean> => {
       try {
@@ -101,6 +120,7 @@ export function useWeeklySchedules() {
     error,
     refresh: fetchSchedules,
     addSchedule,
+    addSchedulesForDays,
     editSchedule,
     removeSchedule,
   };
