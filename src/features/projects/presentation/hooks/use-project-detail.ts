@@ -119,6 +119,18 @@ export function useProjectDetail(projectId: string) {
     }
   };
 
+  const updateStatus = async (status: 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED'): Promise<boolean> => {
+    try {
+      await projectRepository.updateProject(projectId, { status });
+      await loadData();
+      return true;
+    } catch (err) {
+      console.error('[useProjectDetail] Update status error:', err);
+      setError('Status proyek belum tersimpan. Coba lagi.');
+      return false;
+    }
+  };
+
   const deleteThisProject = async () => {
     try {
       await projectRepository.deleteProject(projectId);
@@ -143,6 +155,7 @@ export function useProjectDetail(projectId: string) {
     editTask,
     removeTask,
     toggleTaskStatus,
+    updateStatus,
     deleteThisProject,
   };
 }

@@ -40,6 +40,7 @@ const focus = { ...base, focusItems: [{ id: 'daily', taskId: task.id, task, isCo
 todayState = focus;
 const events = [{ id: 'event', title: 'Ruang belajar Python', eventType: 'LEARNING', startTime: '2026-10-26T19:30:00', endTime: '2026-10-26T20:00:00', isAllDay: false, isCompleted: false, location: 'Rumah' }];
 const stubs = {
+  'expo-haptics': { selectionAsync: noop, impactAsync: noop, notificationAsync: noop, ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' } },
   'expo-router': { router: { push: noop, back: noop, navigate: noop, setParams: noop }, useFocusEffect: noop, useLocalSearchParams: () => ({}) },
   'expo-status-bar': { StatusBar: () => null },
   'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) },

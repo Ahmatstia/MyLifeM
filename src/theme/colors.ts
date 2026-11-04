@@ -78,6 +78,43 @@ export const colors = {
   // Scrim modal (hitam 32%)
   scrim: 'rgba(20, 38, 30, 0.48)',
 
+  // Neo-Bento Pop Palette (High-Contrast, Playful & Vibrant)
+  bento: {
+    canvas: '#F8F7FC',
+    surface: '#FFFFFF',
+    obsidian: '#161722',
+    obsidianCard: '#1E202B',
+    obsidianMuted: '#2B2D3C',
+    lilac: '#9E86FF',
+    lilacSoft: '#ECE8FF',
+    tangerine: '#FFA834',
+    tangerineSoft: '#FFF3E0',
+    coral: '#FF4582',
+    coralSoft: '#FFE8EF',
+    mint: '#2DD4BF',
+    mintSoft: '#E6FAF7',
+    sky: '#82B1FF',
+    skySoft: '#E8F1FF',
+    lemon: '#FFE066',
+    pillBorder: '#E6E4F0',
+    textDark: '#161722',
+    textMuted: '#64748B',
+    textLight: '#FFFFFF',
+    textLightMuted: '#C2C0D4',
+
+    // Exact Google Stitch Tokens
+    stitchCanvas: '#F6F4EE',
+    stitchLavender: '#A5A6F6',
+    stitchLavenderDark: '#7577EC',
+    stitchLavenderLight: '#ECEBFE',
+    stitchTangerine: '#FF9E44',
+    stitchTangerineLight: '#FFF1E5',
+    stitchForest: '#13352C',
+    stitchCitron: '#DCF763',
+    stitchObsidian: '#151718',
+    stitchSoftGray: '#F0EFEA',
+  },
+
   // Legacy pillar labels remain readable on light containers.
   pillars: {
     career: '#125B50',

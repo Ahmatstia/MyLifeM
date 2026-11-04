@@ -1,16 +1,14 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Plus } from 'lucide-react-native';
-import { colors } from '@/theme/colors';
-import { elevation, radius } from '@/theme/tokens';
 
 export interface TabFabButtonProps {
   onPress: () => void;
 }
 
 /**
- * Tombol tambah di tengah nav bar (referensi UI). FAB 56x56, primary, ikon onPrimary 24.
- * Menjorok 16 dp ke atas dari nav bar agar menjadi satu aksi utama yang jelas.
+ * Tombol tambah di tengah nav bar (Exact Google Stitch Tangerine FAB).
+ * Menjorok ke atas dari floating dock agar menjadi aksi utama yang playful.
  */
 export const TabFabButton: React.FC<TabFabButtonProps> = ({ onPress }) => {
   return (
@@ -21,7 +19,7 @@ export const TabFabButton: React.FC<TabFabButtonProps> = ({ onPress }) => {
         accessibilityLabel="Tambah baru"
         style={({ pressed }) => [styles.fab, pressed && styles.pressed]}
       >
-        <Plus size={26} color={colors.onHighlight} strokeWidth={3} />
+        <Plus size={24} color="#FFFFFF" strokeWidth={3} />
       </Pressable>
     </View>
   );
@@ -34,17 +32,23 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   fab: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.lg,
-    backgroundColor: colors.highlight,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FF9E44',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -12,
-    ...elevation.level1,
+    marginTop: -16,
+    borderWidth: 3,
+    borderColor: '#F7F5EF',
+    shadowColor: '#FF9E44',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
   },
   pressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.96 }],
+    transform: [{ scale: 0.94 }],
   },
 });

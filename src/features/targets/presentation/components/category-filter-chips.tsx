@@ -6,8 +6,8 @@ import {
   StyleSheet,
   type ViewStyle,
 } from 'react-native';
-import { colors } from '@/theme/colors';
-import { radius, space, elevation } from '@/theme/tokens';
+import { Sparkles } from 'lucide-react-native';
+import { fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import type { CategoryWithCount } from '@/features/categories/domain/entities/category.entity';
 
@@ -19,7 +19,7 @@ export interface CategoryFilterChipsProps {
 }
 
 /**
- * CategoryFilterChips: Pil filter marshmallow untuk kategori Target.
+ * CategoryFilterChips: Pil filter bergaya Neo-Playful Google Stitch untuk kategori Target.
  */
 export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
   categories,
@@ -47,9 +47,18 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
             pressed && styles.pressed,
           ]}
         >
+          <Sparkles
+            size={13}
+            color={isAllSelected ? '#FFFFFF' : 'rgba(18, 20, 23, 0.6)'}
+            strokeWidth={2.5}
+            style={styles.icon}
+          />
           <AppText
             variant="labelMedium"
-            color={isAllSelected ? 'onPrimary' : 'onSurfaceVariant'}
+            style={[
+              styles.chipText,
+              isAllSelected ? styles.chipTextSelected : styles.chipTextUnselected,
+            ]}
           >
             Semua
           </AppText>
@@ -73,14 +82,16 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
             >
               <AppText
                 variant="labelMedium"
-                color={isSelected ? 'onPrimary' : 'onSurfaceVariant'}
+                style={[
+                  styles.chipText,
+                  isSelected ? styles.chipTextSelected : styles.chipTextUnselected,
+                ]}
               >
                 {cat.name}
               </AppText>
             </Pressable>
           );
         })}
-
       </ScrollView>
     </View>
   );
@@ -88,31 +99,48 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: space[3],
+    marginVertical: 10,
   },
   scrollContent: {
-    paddingHorizontal: space[1],
-    gap: space[2],
+    paddingHorizontal: 2,
+    gap: 8,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 48,
-    paddingVertical: space[3],
-    paddingHorizontal: space[4],
-    borderRadius: radius.pill,
+    minHeight: 40,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
   },
   chipSelected: {
-    backgroundColor: colors.primary,
-    ...elevation.level1,
+    backgroundColor: '#173C36',
+    shadowColor: '#173C36',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   chipUnselected: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: '#E6E3DB',
+  },
+  chipText: {
+    fontSize: 12,
+    fontFamily: fontFamily.bold,
+  },
+  chipTextSelected: {
+    color: '#FFFFFF',
+  },
+  chipTextUnselected: {
+    color: 'rgba(18, 20, 23, 0.75)',
+  },
+  icon: {
+    marginRight: 6,
   },
   pressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.97 }],
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }],
   },
 });

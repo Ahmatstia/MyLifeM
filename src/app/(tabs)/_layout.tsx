@@ -2,39 +2,50 @@ import React from 'react';
 import { Tabs, router } from 'expo-router';
 import { Sparkles, Sprout, Shapes, CalendarHeart } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '@/theme/colors';
 import { fontFamily } from '@/theme/tokens';
 import { TabFabButton } from '@/shared/ui/tab-fab-button';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(16, insets.bottom + 6);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: colors.surfaceContainerLowest,
-          borderTopColor: colors.outlineVariant,
-          borderTopWidth: 1,
-          height: 64 + insets.bottom,
-          paddingBottom: 8 + insets.bottom,
-          paddingTop: 8,
-          overflow: 'visible',
-          shadowColor: colors.hero,
-          shadowOffset: { width: 0, height: -3 },
-          shadowOpacity: 0.05,
-          shadowRadius: 10,
-          elevation: 4,
-        },
-        tabBarActiveTintColor: colors.primary,
-        tabBarActiveBackgroundColor: colors.primaryContainer,
-        tabBarItemStyle: { borderRadius: 16, marginHorizontal: 2 },
         tabBarHideOnKeyboard: true,
-        tabBarInactiveTintColor: colors.onSurfaceVariant,
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: bottomInset,
+          left: 16,
+          right: 16,
+          height: 64,
+          backgroundColor: '#151718',
+          borderRadius: 32,
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          paddingBottom: 6,
+          paddingTop: 6,
+          paddingHorizontal: 6,
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.35,
+          shadowRadius: 20,
+          elevation: 12,
+        },
+        tabBarActiveTintColor: '#151718',
+        tabBarActiveBackgroundColor: '#DCF763',
+        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.7)',
+        tabBarItemStyle: {
+          borderRadius: 24,
+          marginVertical: 4,
+          marginHorizontal: 3,
+          paddingVertical: 2,
+        },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontFamily: fontFamily.medium,
+          fontSize: 10,
+          fontFamily: fontFamily.bold,
+          marginTop: -2,
         },
       }}
     >
@@ -43,7 +54,7 @@ export default function TabLayout() {
         options={{
           title: 'Hari Ini',
           tabBarIcon: ({ color, size }) => (
-            <Sparkles size={size || 22} color={color} strokeWidth={2.4} />
+            <Sparkles size={size || 20} color={color} strokeWidth={2.4} />
           ),
         }}
       />
@@ -52,7 +63,7 @@ export default function TabLayout() {
         options={{
           title: 'Target',
           tabBarIcon: ({ color, size }) => (
-            <Sprout size={size || 22} color={color} strokeWidth={2.4} />
+            <Sprout size={size || 20} color={color} strokeWidth={2.4} />
           ),
         }}
       />
@@ -70,7 +81,7 @@ export default function TabLayout() {
         options={{
           title: 'Proyek',
           tabBarIcon: ({ color, size }) => (
-            <Shapes size={size || 22} color={color} strokeWidth={2.4} />
+            <Shapes size={size || 20} color={color} strokeWidth={2.4} />
           ),
         }}
       />
@@ -79,7 +90,7 @@ export default function TabLayout() {
         options={{
           title: 'Agenda',
           tabBarIcon: ({ color, size }) => (
-            <CalendarHeart size={size || 22} color={color} strokeWidth={2.4} />
+            <CalendarHeart size={size || 20} color={color} strokeWidth={2.4} />
           ),
         }}
       />
