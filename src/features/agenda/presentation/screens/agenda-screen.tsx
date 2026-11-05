@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { View, Pressable, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import {
-  CalendarHeart,
+  CalendarDays,
   Repeat,
   Plus,
-  CircleUserRound,
   Sparkles,
   School,
   Flame,
@@ -25,8 +25,10 @@ import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 import { conflictingEventIds } from '../../domain/agenda-time';
 import type { WeeklyScheduleEntity, WeeklyScheduleType } from '../../domain/entities/weekly-schedule.entity';
 import { getDayOfWeekFromDate } from '../../domain/entities/weekly-schedule.entity';
+import { isDateOnly } from '@/shared/utils/local-date';
 
 export const AgendaScreen: React.FC = () => {
+  const { date: routeDate } = useLocalSearchParams<{ date?: string }>();
   const [viewMode, setViewMode] = useState<'DAILY' | 'WEEKLY_MASTER'>('DAILY');
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | 'COMMITMENT' | 'ROUTINE'>('ALL');
 
@@ -49,6 +51,10 @@ export const AgendaScreen: React.FC = () => {
     toggleWeeklyOccurrence,
     toggleWeeklyOccurrenceCancellation,
   } = useAgenda();
+
+  useEffect(() => {
+    if (typeof routeDate === 'string' && isDateOnly(routeDate)) setSelectedDate(routeDate);
+  }, [routeDate, setSelectedDate]);
 
   // Weekly Master Schedule State
   const {
@@ -119,24 +125,16 @@ export const AgendaScreen: React.FC = () => {
   const currentTimeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   return (
-    <Screen style={styles.screenBg}>
-      {/* TOP HEADER (Exact Stitch: Avatar Sandra + "Halo, Sandra ✨" + Action Pill) */}
+    <Screen scrollable={false} withBottomPadding={false} style={styles.screenBg}>
       <View style={styles.header}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatarWrapper}>
-            <View style={styles.avatarCircle}>
-              <CircleUserRound size={24} color="#121417" strokeWidth={2.4} />
-            </View>
-            <View style={styles.onlineDot} />
-          </View>
-          <View style={styles.titleColumn}>
-            <AppText variant="bodySmall" style={styles.subtitleGreeting}>
-              Halo, Sandra ✨
-            </AppText>
-            <AppText variant="headlineLarge" style={styles.headerTitle}>
-              Agenda.
+        <View style={styles.titleColumn}>
+          <View style={styles.badgeCapsule}>
+            <CalendarDays size={11} color="#E06B52" strokeWidth={2.6} />
+            <AppText variant="labelSmall" style={styles.badgeText}>
+              JADWAL & AGENDA
             </AppText>
           </View>
+          <AppText variant="headlineSmall" style={styles.headerTitle}>Agenda</AppText>
         </View>
 
         {viewMode === 'DAILY' ? (
@@ -144,9 +142,12 @@ export const AgendaScreen: React.FC = () => {
             onPress={() => setIsAddEventModalVisible(true)}
             accessibilityRole="button"
             accessibilityLabel="Tambah Agenda Baru"
-            style={styles.actionBtn}
+            style={({ pressed }) => [
+              styles.actionBtn,
+              pressed && styles.actionBtnPressed,
+            ]}
           >
-            <Plus size={16} color="#FFFFFF" strokeWidth={3} />
+            <Plus size={15} color="#FAF5EB" strokeWidth={3} />
             <AppText variant="labelMedium" style={styles.actionBtnText}>
               Agenda
             </AppText>
@@ -156,9 +157,12 @@ export const AgendaScreen: React.FC = () => {
             onPress={() => handleOpenAddWeekly(selectedDay)}
             accessibilityRole="button"
             accessibilityLabel="Tambah Jadwal Tetap Baru"
-            style={styles.actionBtn}
+            style={({ pressed }) => [
+              styles.actionBtn,
+              pressed && styles.actionBtnPressed,
+            ]}
           >
-            <Plus size={16} color="#FFFFFF" strokeWidth={3} />
+            <Plus size={15} color="#FAF5EB" strokeWidth={3} />
             <AppText variant="labelMedium" style={styles.actionBtnText}>
               Jadwal
             </AppText>
@@ -178,9 +182,9 @@ export const AgendaScreen: React.FC = () => {
             accessibilityState={{ selected: viewMode === 'DAILY' }}
             style={[styles.segmentTab, viewMode === 'DAILY' && styles.segmentTabActive]}
           >
-            <CalendarHeart
+            <CalendarDays
               size={15}
-              color={viewMode === 'DAILY' ? '#FFFFFF' : 'rgba(18, 20, 23, 0.7)'}
+              color={viewMode === 'DAILY' ? '#1E1E2E' : '#504535'}
               strokeWidth={2.4}
             />
             <AppText
@@ -202,7 +206,7 @@ export const AgendaScreen: React.FC = () => {
           >
             <Repeat
               size={15}
-              color={viewMode === 'WEEKLY_MASTER' ? '#FFFFFF' : 'rgba(18, 20, 23, 0.7)'}
+              color={viewMode === 'WEEKLY_MASTER' ? '#1E1E2E' : '#504535'}
               strokeWidth={2.4}
             />
             <AppText
@@ -279,7 +283,7 @@ export const AgendaScreen: React.FC = () => {
                       >
                         <Sparkles
                           size={12}
-                          color={timelineFilter === 'ALL' ? '#FFFFFF' : 'rgba(18, 20, 23, 0.6)'}
+                          color={timelineFilter === 'ALL' ? colors.onPrimary : colors.onSurfaceVariant}
                           strokeWidth={2.2}
                         />
                         <AppText
@@ -303,7 +307,7 @@ export const AgendaScreen: React.FC = () => {
                       >
                         <School
                           size={12}
-                          color={timelineFilter === 'COMMITMENT' ? '#FFFFFF' : 'rgba(18, 20, 23, 0.6)'}
+                          color={timelineFilter === 'COMMITMENT' ? colors.onPrimary : colors.onSurfaceVariant}
                           strokeWidth={2.2}
                         />
                         <AppText
@@ -328,7 +332,7 @@ export const AgendaScreen: React.FC = () => {
                         >
                           <Flame
                             size={12}
-                            color={timelineFilter === 'ROUTINE' ? '#FFFFFF' : 'rgba(18, 20, 23, 0.6)'}
+                            color={timelineFilter === 'ROUTINE' ? colors.onPrimary : colors.onSurfaceVariant}
                             strokeWidth={2.2}
                           />
                           <AppText
@@ -382,7 +386,7 @@ export const AgendaScreen: React.FC = () => {
                     <View style={styles.groupSection}>
                       <View style={styles.groupHeaderRow}>
                         <View style={styles.groupHeaderTag}>
-                          <Repeat size={13} color="#7577EC" strokeWidth={2.4} />
+                          <Repeat size={13} color={colors.primary} strokeWidth={2.4} />
                           <AppText variant="labelSmall" style={styles.groupHeaderLabel}>
                             KOMITMEN UTAMA (KRS & KERJA)
                           </AppText>
@@ -451,7 +455,7 @@ export const AgendaScreen: React.FC = () => {
                       title="Masih ada ruang di harimu"
                       description="Belum ada jadwal tetap atau agenda khusus untuk tanggal ini. Jadwalkan waktu kuliah, kerja, atau istirahat."
                       customIcon={
-                        <CalendarHeart size={36} color="#7577EC" strokeWidth={2.4} />
+                        <CalendarDays size={30} color={colors.primary} strokeWidth={2.2} />
                       }
                       actionTitle="Jadwalkan kegiatan"
                       onActionPress={() => setIsAddEventModalVisible(true)}
@@ -535,102 +539,73 @@ export const AgendaScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  screenBg: {
-    backgroundColor: '#F7F5EF',
-    flex: 1,
-  },
+  screenBg: { backgroundColor: '#FCF8FF' },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
+    paddingTop: space[2],
+    paddingBottom: space[2],
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  profileSection: {
+  titleColumn: {
+    gap: 4,
+  },
+  badgeCapsule: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 5,
+    backgroundColor: '#FFEBD9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
-  avatarWrapper: {
-    position: 'relative',
-  },
-  avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFF2E6',
-    borderWidth: 1.5,
-    borderColor: '#FF9B42',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  onlineDot: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#DCF763',
-    borderWidth: 2,
-    borderColor: '#F7F5EF',
-  },
-  titleColumn: {
-    gap: 1,
-  },
-  subtitleGreeting: {
-    fontSize: 12,
-    fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.6)',
-  },
+  badgeText: { fontSize: 11, fontFamily: fontFamily.bold, color: '#A23D28', letterSpacing: 0.6 },
   headerTitle: {
     fontSize: 22,
     fontFamily: fontFamily.bold,
-    color: '#121417',
-    lineHeight: 26,
+    color: '#1E1E2E',
+    lineHeight: 28,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#121417',
+    minHeight: 40,
+    backgroundColor: '#E06B52',
     paddingHorizontal: 14,
-    paddingVertical: 8,
     borderRadius: 999,
-    shadowColor: '#121417',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
+  },
+  actionBtnPressed: {
+    transform: [{ translateX: 1 }, { translateY: 1 }],
+    boxShadow: '0px 0px 0px #1E1E2E',
   },
   actionBtnText: {
-    color: '#FFFFFF',
+    color: '#FAF5EB',
     fontFamily: fontFamily.bold,
     fontSize: 12,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 110,
-    gap: space[2],
+    paddingBottom: 90,
+    gap: space[3],
   },
 
   /* SEGMENT MODE SWITCHER */
   segmentContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAF5EB',
     borderRadius: 999,
     padding: 4,
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
-    marginTop: 4,
-    marginBottom: 8,
-    shadowColor: '#121417',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
+    marginTop: space[2],
+    marginBottom: space[3],
   },
   segmentTab: {
     flex: 1,
@@ -642,23 +617,24 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   segmentTabActive: {
-    backgroundColor: '#121417',
+    backgroundColor: '#E8A838', // Custard Gold
+    boxShadow: '1.5px 1.5px 0px #1E1E2E',
   },
   segmentText: {
     fontSize: 12,
     fontFamily: fontFamily.bold,
   },
   segmentTextActive: {
-    color: '#FFFFFF',
+    color: '#1E1E2E',
   },
   segmentTextInactive: {
-    color: 'rgba(18, 20, 23, 0.65)',
+    color: '#504535',
   },
 
   timezoneText: {
     fontSize: 11,
     fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.5)',
+    color: '#504535',
     paddingVertical: 2,
     paddingHorizontal: 2,
   },
@@ -684,21 +660,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 999,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
+    backgroundColor: '#FAF5EB',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
   },
   filterChipActive: {
-    backgroundColor: '#121417',
-    borderColor: '#121417',
+    backgroundColor: '#E8A838',
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
   filterChipText: {
     fontSize: 11,
     fontFamily: fontFamily.bold,
-    color: 'rgba(18, 20, 23, 0.75)',
+    color: '#504535',
   },
   filterChipTextActive: {
-    color: '#FFFFFF',
+    color: '#1E1E2E',
   },
 
   /* LIVE TIME MARKER */
@@ -712,22 +689,22 @@ const styles = StyleSheet.create({
   liveTimeDigits: {
     fontSize: 12,
     fontFamily: fontFamily.bold,
-    color: '#FF9E44',
+    color: colors.primary,
   },
   liveTimeDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FF9E44',
+    backgroundColor: colors.primary,
   },
   liveTimeTrack: {
     flex: 1,
     height: 2,
-    backgroundColor: 'rgba(255, 158, 68, 0.35)',
+    backgroundColor: colors.primaryContainer,
     borderRadius: 1,
   },
   liveTimeBadge: {
-    backgroundColor: '#FFF1E5',
+    backgroundColor: colors.primaryContainer,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 999,
@@ -735,7 +712,7 @@ const styles = StyleSheet.create({
   liveTimeBadgeText: {
     fontSize: 10,
     fontFamily: fontFamily.bold,
-    color: '#C25E00',
+    color: colors.onPrimaryContainer,
   },
 
   /* GROUPS */
@@ -756,17 +733,17 @@ const styles = StyleSheet.create({
   groupHeaderLabel: {
     fontFamily: fontFamily.bold,
     fontSize: 11,
-    color: '#7577EC',
+    color: colors.primary,
     letterSpacing: 0.6,
   },
   groupCountSubtext: {
     fontSize: 11,
     fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.5)',
+    color: colors.onSurfaceVariant,
   },
   allDayBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FFE7D6',
+    backgroundColor: colors.warningContainer,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 999,
@@ -775,13 +752,13 @@ const styles = StyleSheet.create({
   allDayBadgeText: {
     fontSize: 10,
     fontFamily: fontFamily.bold,
-    color: '#9A5B00',
+    color: colors.onWarningContainer,
     letterSpacing: 0.6,
   },
   sectionHeading: {
     fontSize: 15,
     fontFamily: fontFamily.bold,
-    color: '#121417',
+    color: colors.onSurface,
     marginBottom: 8,
   },
   summaryNote: {
@@ -789,6 +766,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.55)',
+    color: colors.onSurfaceVariant,
   },
 });

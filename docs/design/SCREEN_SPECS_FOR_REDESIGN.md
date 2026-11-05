@@ -9,22 +9,24 @@ Dokumen ini adalah **spesifikasi desain resmi (design brief & screen architectur
 Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (*playful*), dan tenang untuk fokus membaca.
 
 ### 1.1 Palet Warna Utama (Wajib Dipertahankan)
-| Nama Token | Kode HEX | Peran & Penggunaan |
-| :--- | :--- | :--- |
-| **Ivory Canvas** | `#F7F5EF` | Background dasar seluruh layar aplikasi (hangat, bukan putih silau). |
-| **Pure White** | `#FFFFFF` | Background kartu konten utama (*surface card*), field input, bottom bar. |
-| **Deep Teal** | `#125B50` | Warna aksi utama / Primary CTA, header brand, checkbox aktif, ikon terpilih. |
-| **Dark Petrol** | `#173C36` | Background Hero Card (kartu fokus utama hari ini, berwibawa & fokus). |
-| **Citron Glow** | `#D5F478` | Warna aksen pop/highlight (tombol "Mulai Fokus" di Hero Card, badge status aktif). |
-| **Sage Green** | `#DDEDE5` | Container sekunder tenang (kartu ringkasan selesai, tag kategori teal, chip non-aktif). |
-| **Warm Peach** | `#FFE3D5` | Container waktu/refleksi (kartu menit fokus, highlight sesi santai). |
-| **Coral Terracotta**| `#F2786D` | Aksen perhatian hangat (notifikasi penting, penanda batas waktu). |
-| **Deep Charcoal** | `#262D29` | Teks judul utama (kontras tinggi, mudah dibaca, bukan hitam pekat kaku). |
-| **Muted Slate** | `#5D6861` | Teks sekunder, deskripsi, placeholder, jam & metadata. |
-| **Soft Border** | `#DEE3D8` | Garis tepi (*outline/divider*) halus antar kartu dan pemisah jam. |
-| **Soft Red/Error** | `#A83030` (`#FFE4E0`) | Status pembatalan, bentrok waktu, dan aksi destruktif. |
+
+| Nama Token                 | Kode HEX                  | Peran & Penggunaan                                                                      |
+| :------------------------- | :------------------------ | :-------------------------------------------------------------------------------------- |
+| **Ivory Canvas**     | `#F7F5EF`               | Background dasar seluruh layar aplikasi (hangat, bukan putih silau).                    |
+| **Pure White**       | `#FFFFFF`               | Background kartu konten utama (*surface card*), field input, bottom bar.              |
+| **Deep Teal**        | `#125B50`               | Warna aksi utama / Primary CTA, header brand, checkbox aktif, ikon terpilih.            |
+| **Dark Petrol**      | `#173C36`               | Background Hero Card (kartu fokus utama hari ini, berwibawa & fokus).                   |
+| **Citron Glow**      | `#D5F478`               | Warna aksen pop/highlight (tombol "Mulai Fokus" di Hero Card, badge status aktif).      |
+| **Sage Green**       | `#DDEDE5`               | Container sekunder tenang (kartu ringkasan selesai, tag kategori teal, chip non-aktif). |
+| **Warm Peach**       | `#FFE3D5`               | Container waktu/refleksi (kartu menit fokus, highlight sesi santai).                    |
+| **Coral Terracotta** | `#F2786D`               | Aksen perhatian hangat (notifikasi penting, penanda batas waktu).                       |
+| **Deep Charcoal**    | `#262D29`               | Teks judul utama (kontras tinggi, mudah dibaca, bukan hitam pekat kaku).                |
+| **Muted Slate**      | `#5D6861`               | Teks sekunder, deskripsi, placeholder, jam & metadata.                                  |
+| **Soft Border**      | `#DEE3D8`               | Garis tepi (*outline/divider*) halus antar kartu dan pemisah jam.                     |
+| **Soft Red/Error**   | `#A83030` (`#FFE4E0`) | Status pembatalan, bentrok waktu, dan aksi destruktif.                                  |
 
 ### 1.2 Geometri & Bentuk (*Soft & Friendly*)
+
 * **Corner Radius Hero**: `28dp – 32dp` (kartu hero sangat melengkung ramah).
 * **Corner Radius Kartu Konten**: `20dp – 24dp` (kartu isi lembut).
 * **Corner Radius Tombol & Chip**: `16dp – 20dp` / Full Pill `999dp`.
@@ -37,14 +39,16 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
 ---
 
 ### LAYAR 1: Hari Ini (`TodayFocusScreen`) — Rute: `/(tabs)/index`
+
 > **Tujuan Layar**: Pusat komando harian pengguna. Menjawab pertanyaan: *"Apa satu hal terpenting yang perlu saya tuntaskan hari ini, kapan jadwal berikutnya, dan bagaimana progres fokus saya?"*
 
 #### A. Arsitektur Komponen (Urutan dari Atas ke Bawah):
+
 1. **Top Bar Header**:
    - Tanggal lokal Indonesia berukuran sedang di atas (contoh: *"Rabu, 4 November"* — warna Muted Slate).
    - Judul utama tebal: `"Hari Ini."` (28pt, Charcoal).
    - Tombol Aksi Kanan: Tombol Pengaturan `Settings2` 🎛️ berlatar putih bulat (48x48dp) menuju halaman Settings.
-2. **Hero Card Utama (Dark Petrol `#173C36`)**:
+2. **Hero Card Utama:**
    - *Eyebrow Tag*: Teks kecil Citron kapital (`RUANG UNTUK YANG PENTING` atau `SESI SEDANG BERJALAN`).
    - *Headline*: Teks putih besar `"Satu langkah lebih dekat."` atau angka countdown timer (`24:59`).
    - *Subtext*: Tugas aktif yang sedang dijalankan atau kalimat motivasi tenang.
@@ -71,9 +75,11 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
 ---
 
 ### LAYAR 2: Target Hidup (`TargetListScreen`) — Rute: `/(tabs)/targets`
+
 > **Tujuan Layar**: Tempat merawat tujuan hidup jangka menengah/panjang (contoh: *"Menjadi AI Engineer"*, *"Skripsi Selesai"*, *"Kemandirian Finansial"*).
 
 #### A. Arsitektur Komponen:
+
 1. **Top Bar Header**:
    - Subtitle: *"Untuk hidup yang kamu pilih"*.
    - Judul utama: `"Target Hidup."`.
@@ -99,9 +105,11 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
 ---
 
 ### LAYAR 3: Detail Target & Roadmap Tahapan (`TargetDetailScreen`) — Rute: `/targets/[id]`
+
 > **Tujuan Layar**: Memecah satu tujuan besar menjadi fase/tahapan nyata (*roadmap*) dan tugas-tugas konkret.
 
 #### A. Arsitektur Komponen:
+
 1. **Top Navigation Bar**:
    - Tombol Kembali (`ArrowLeft`).
    - Judul target (terpotong rapi dengan ellipsis jika panjang).
@@ -124,9 +132,11 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
 ---
 
 ### LAYAR 4: Proyek & Portofolio (`ProjectListScreen`) — Rute: `/(tabs)/projects`
+
 > **Tujuan Layar**: Mengelola hasil kerja nyata (*deliverables*) yang memiliki batasan waktu atau output konkret (contoh: *"Aplikasi Mobile MyLife"*, *"Desain UI Dashboard"*).
 
 #### A. Arsitektur Komponen:
+
 1. **Top Bar Header**:
    - Subtitle: *"Ide menjadi sesuatu yang nyata"*.
    - Judul: `"Proyek."`.
@@ -148,9 +158,11 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
 ---
 
 ### LAYAR 5: Detail Proyek (`ProjectDetailScreen`) — Rute: `/projects/[id]`
+
 > **Tujuan Layar**: Ruang eksekusi proyek dengan rincian deliverable, status lifecycle, dan daftar milestone pekerjaan.
 
 #### A. Arsitektur Komponen:
+
 1. **Top Bar**: Tombol kembali, judul proyek, tombol edit status / hapus.
 2. **Info Card Deliverable**: Penjelasan luaran konkret yang sedang dibangun.
 3. **Status Selector**: Pengubah status instan (`Aktif` $\leftrightarrow$ `Selesai` $\leftrightarrow$ `Ditunda`).
@@ -159,9 +171,11 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
 ---
 
 ### LAYAR 6: Agenda & Ritme Keseharian (`AgendaScreen`) — Rute: `/(tabs)/agenda`
+
 > **Tujuan Layar**: Mengintegrasikan jadwal komitmen mutlak mingguan (seperti KRS Kuliah / Jadwal Kerja Shift) dengan ritme rutinitas keseharian (bangun subuh, workout, sarapan) dalam satu tampilan waktu yang rapi.
 
 #### A. Arsitektur Komponen:
+
 1. **Top Bar & Segment Mode Switcher**:
    - Judul: `"Agenda."`.
    - Tombol toggle 2 mode di atas layar:
@@ -193,9 +207,11 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
 ---
 
 ### LAYAR 7: Modal Tambah Cepat (`QuickAddScreen`) — Rute: `/quick-add`
+
 > **Tujuan Layar**: Antarmuka sentuhan cepat dari tombol Floating Action Button (+) di tengah navigasi bawah.
 
 #### A. Arsitektur Komponen:
+
 1. **Header Modal**: Judul *"Tambah Cepat"* + Tombol Tutup Silang.
 2. **Grid / Selector 4 Kategori (Ikon Lucu & Ramah)**:
    - Tombol 1: `Sparkles` ✨ **"Prioritas Hari Ini"** — Tugas kilat untuk hari ini.
@@ -210,9 +226,11 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
 ---
 
 ### LAYAR 8: Pengaturan (`SettingsScreen`) — Rute: `/settings`
+
 > **Tujuan Layar**: Pengelolaan preferensi personal, kategori, sesi fokus, serta cadangan data offline-first.
 
 #### A. Arsitektur Komponen:
+
 1. **Top Bar**: Tombol kembali + Judul *"Pengaturan"*.
 2. **Grup 1: Organisasi & Kategori**:
    - Baris menu `Palette` 🎨 **"Kategori Target"**: Menampilkan palet warna dan nama-nama kategori.
@@ -233,6 +251,7 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
 ## 3. Komponen Mengambang Tetap (*Persistent Global Bar*)
 
 ### Bottom Navigation Bar (Bilah Navigasi Bawah)
+
 - Latar belakang: Pure White `#FFFFFF` dengan garis batas atas halus `#DEE3D8` dan bayangan lembut.
 - 4 Tab Utama + 1 FAB Tengah:
   1. **Hari Ini**: Ikon `Sparkles` ✨
@@ -241,4 +260,3 @@ Aplikasi menggunakan tema **Botanical Pop**: hangat, membumi (*earthy*), ceria (
   4. **Proyek**: Ikon `Shapes` 🔷
   5. **Agenda**: Ikon `CalendarHeart` 🗓️❤️
 - Indikator Tab Terpilih: Ikon dan label berwarna Deep Teal `#125B50` dengan titik aksen Citron kecil di bawahnya.
-

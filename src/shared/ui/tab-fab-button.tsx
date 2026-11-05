@@ -6,10 +6,6 @@ export interface TabFabButtonProps {
   onPress: () => void;
 }
 
-/**
- * Tombol tambah di tengah nav bar (Exact Google Stitch Tangerine FAB).
- * Menjorok ke atas dari floating dock agar menjadi aksi utama yang playful.
- */
 export const TabFabButton: React.FC<TabFabButtonProps> = ({ onPress }) => {
   return (
     <View style={styles.slot} pointerEvents="box-none">
@@ -19,36 +15,29 @@ export const TabFabButton: React.FC<TabFabButtonProps> = ({ onPress }) => {
         accessibilityLabel="Tambah baru"
         style={({ pressed }) => [styles.fab, pressed && styles.pressed]}
       >
-        <Plus size={24} color="#FFFFFF" strokeWidth={3} />
+        <Plus size={22} color="#FAF5EB" strokeWidth={3} />
       </Pressable>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  slot: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
+  slot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   fab: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FF9E44',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#E06B52', // Terracotta Coral
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -16,
-    borderWidth: 3,
-    borderColor: '#F7F5EF',
-    shadowColor: '#FF9E44',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 8,
+    borderWidth: 2,
+    borderColor: '#1E1E2E', // Deep Blueberry Ink
+    boxShadow: '2px 2px 0px #1E1E2E',
+    elevation: 3,
   },
   pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.94 }],
+    transform: [{ scale: 0.94 }, { translateX: 1 }, { translateY: 1 }],
+    boxShadow: '0px 0px 0px #1E1E2E',
   },
 });
+

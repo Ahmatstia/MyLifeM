@@ -160,11 +160,12 @@ export const DailyRoutineChecklist: React.FC<DailyRoutineChecklistProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    marginBottom: space[3],
+    backgroundColor: '#FAF5EB',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
+    marginBottom: 12,
   },
   header: {
     flexDirection: 'row',
@@ -224,10 +225,12 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: space[2],
-    paddingHorizontal: space[2],
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceContainerLowest,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: '#FFFDF9',
+    borderWidth: 1,
+    borderColor: 'rgba(30, 30, 46, 0.12)',
     gap: space[3],
   },
   itemRowCompleted: {
@@ -238,20 +241,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLow,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: radius.full,
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     borderWidth: 2,
-    borderColor: colors.primary,
+    borderColor: '#1E1E2E',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FAF5EB',
   },
   checkboxCompleted: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: '#76A284',
+    borderColor: '#1E1E2E',
   },
   checkboxDisabled: {
-    borderColor: colors.outlineVariant,
+    borderColor: 'rgba(30, 30, 46, 0.2)',
   },
   itemContent: {
     flex: 1,
@@ -263,11 +267,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   timeText: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: fontFamily.medium,
   },
   itemTitle: {
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
+    color: '#1E1E2E',
   },
   titleCompleted: {
     textDecorationLine: 'line-through',

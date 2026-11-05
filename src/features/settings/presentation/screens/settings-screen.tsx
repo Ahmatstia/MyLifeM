@@ -6,7 +6,6 @@ import {
   TextInput,
   StyleSheet,
   ScrollView,
-  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -19,15 +18,13 @@ import {
   Flame,
   Download,
   ShieldCheck,
-  Check,
   Lock,
-  Sparkles,
   RefreshCw,
   Heart,
   Star,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, radius, fontFamily } from '@/theme/tokens';
+import { space, fontFamily } from '@/theme/tokens';
 import {
   Screen,
   AppText,
@@ -69,7 +66,7 @@ export const SettingsScreen: React.FC = () => {
     durationPicker === 'POMODORO' ? POMODORO_OPTIONS : DEEP_FLOW_OPTIONS;
 
   return (
-    <Screen withBottomPadding={false} style={styles.screenRoot}>
+    <Screen scrollable={false} withBottomPadding={false} style={styles.screenRoot}>
       {/* 1. Header Bar */}
       <View style={styles.topBar}>
         <View style={styles.topBarLeft}>
@@ -87,55 +84,17 @@ export const SettingsScreen: React.FC = () => {
           </AppText>
         </View>
 
-        <View style={styles.headerAvatarMini}>
-          <Sparkles size={16} color="#FFFFFF" />
-        </View>
       </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* 2. Top Profile Summary Card (Botanical Bento) */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileGlowPrimary} />
-          <View style={styles.profileGlowSecondary} />
-
-          <View style={styles.profileCardInner}>
-            <View style={styles.avatarRingOuter}>
-              <View style={styles.avatarContainer}>
-                <Image
-                  source={{
-                    uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80',
-                  }}
-                  style={styles.avatarImage}
-                />
-              </View>
-              <View style={styles.avatarBadge}>
-                <Sparkles size={10} color="#FFFFFF" />
-              </View>
-            </View>
-
-            <View style={styles.profileMeta}>
-              <View style={styles.profileNameRow}>
-                <AppText variant="headlineSmall" style={styles.profileName}>
-                  Alexandra Jacob
-                </AppText>
-                <Check size={16} color="#5052BA" />
-              </View>
-              <View style={styles.personalEditionPill}>
-                <View style={styles.greenDot} />
-                <AppText variant="labelSmall" style={styles.personalEditionText}>
-                  Edisi Personal Offline
-                </AppText>
-              </View>
-              <View style={styles.localSyncRow}>
-                <Lock size={12} color="#8F4E00" />
-                <AppText variant="bodySmall" color="onSurfaceVariant">
-                  Tersimpan Lokal di Perangkat
-                </AppText>
-              </View>
-            </View>
+        <View style={styles.introRow}>
+          <View style={styles.introIcon}><Lock size={16} color={colors.primary} /></View>
+          <View style={styles.introCopy}>
+            <AppText variant="titleSmall">Pengaturan MyLife</AppText>
+            <AppText variant="bodySmall" color="onSurfaceVariant">Preferensi dan data aplikasi tersimpan lokal di perangkat.</AppText>
           </View>
         </View>
 
@@ -165,7 +124,7 @@ export const SettingsScreen: React.FC = () => {
             ]}
           >
             <View style={styles.iconLavender}>
-              <Palette size={20} color="#3838A1" />
+              <Palette size={20} color={colors.primary} />
             </View>
             <View style={styles.settingItemContent}>
               <AppText variant="titleSmall" style={styles.settingItemTitle}>
@@ -174,18 +133,8 @@ export const SettingsScreen: React.FC = () => {
               <AppText variant="bodySmall" color="onSurfaceVariant">
                 Kelola nama dan pengelompokan tujuanmu.
               </AppText>
-              {/* Category Color Dots */}
-              <View style={styles.categoryDotsRow}>
-                <View style={[styles.categoryDot, { backgroundColor: '#8B8DF9' }]} />
-                <View style={[styles.categoryDot, { backgroundColor: '#5052BA' }]} />
-                <View style={[styles.categoryDot, { backgroundColor: '#8F4E00' }]} />
-                <View style={[styles.categoryDot, { backgroundColor: '#FFA858' }]} />
-                <AppText variant="labelSmall" style={styles.categoryCountLabel}>
-                  4 Aktif
-                </AppText>
-              </View>
             </View>
-            <ChevronRight size={18} color="#777684" />
+            <ChevronRight size={18} color={colors.onSurfaceVariant} />
           </Pressable>
         </View>
 
@@ -198,14 +147,14 @@ export const SettingsScreen: React.FC = () => {
           >
             FOKUS & KENYAMANAN
           </AppText>
-          <Coffee size={15} color="#5052BA" />
+          <Coffee size={15} color={colors.primary} />
         </View>
 
         <View style={styles.cardGroup}>
           {/* Toggle 1: Layar tetap terjaga */}
           <View style={styles.settingItemRow}>
             <View style={styles.iconWarmPeach}>
-              <Sun size={20} color="#733E00" />
+              <Sun size={20} color={colors.warning} />
             </View>
             <View style={styles.settingItemContent}>
               <AppText variant="titleSmall" style={styles.settingItemTitle}>
@@ -222,8 +171,8 @@ export const SettingsScreen: React.FC = () => {
                 updateSetting({ keepAwakeEnabled: value })
               }
               trackColor={{
-                false: '#EEEDF2',
-                true: '#5052BA',
+                false: colors.surfaceContainerHigh,
+                true: colors.primary,
               }}
               thumbColor="#FFFFFF"
             />
@@ -233,7 +182,7 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.chipSettingBlock}>
             <View style={styles.chipSettingHeader}>
               <View style={styles.iconPeach}>
-                <Coffee size={18} color="#6C3A00" />
+                <Coffee size={18} color={colors.primary} />
               </View>
               <View style={styles.chipSettingText}>
                 <AppText variant="titleSmall" style={styles.settingItemTitle}>
@@ -267,7 +216,7 @@ export const SettingsScreen: React.FC = () => {
                     >
                       {mins}m
                     </AppText>
-                    {isSelected && <Star size={11} color="#FFFFFF" />}
+                    {isSelected && <Star size={11} color={colors.onPrimary} />}
                   </Pressable>
                 );
               })}
@@ -278,7 +227,7 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.chipSettingBlock}>
             <View style={styles.chipSettingHeader}>
               <View style={styles.iconTertiary}>
-                <Flame size={18} color="#8C1038" />
+                <Flame size={18} color={colors.primary} />
               </View>
               <View style={styles.chipSettingText}>
                 <AppText variant="titleSmall" style={styles.settingItemTitle}>
@@ -312,7 +261,7 @@ export const SettingsScreen: React.FC = () => {
                     >
                       {mins}m
                     </AppText>
-                    {isSelected && <Star size={11} color="#FFFFFF" />}
+                    {isSelected && <Star size={11} color={colors.onPrimary} />}
                   </Pressable>
                 );
               })}
@@ -322,7 +271,7 @@ export const SettingsScreen: React.FC = () => {
           {/* Toggle 2: Getaran haptik */}
           <View style={styles.settingItemRow}>
             <View style={styles.iconNeutral}>
-              <Vibrate size={20} color="#1A1C1F" />
+              <Vibrate size={20} color={colors.onSurface} />
             </View>
             <View style={styles.settingItemContent}>
               <AppText variant="titleSmall" style={styles.settingItemTitle}>
@@ -337,8 +286,8 @@ export const SettingsScreen: React.FC = () => {
               value={settings.hapticsEnabled}
               onValueChange={(value) => updateSetting({ hapticsEnabled: value })}
               trackColor={{
-                false: '#EEEDF2',
-                true: '#5052BA',
+                false: colors.surfaceContainerHigh,
+                true: colors.primary,
               }}
               thumbColor="#FFFFFF"
             />
@@ -354,12 +303,12 @@ export const SettingsScreen: React.FC = () => {
           >
             DATA & PRIVASI
           </AppText>
-          <Lock size={15} color="#8F4E00" />
+          <Lock size={15} color={colors.warning} />
         </View>
 
         {/* 100% On-Device Banner */}
         <View style={styles.onDeviceBanner}>
-          <ShieldCheck size={22} color="#5052BA" />
+          <ShieldCheck size={22} color={colors.primary} />
           <View style={styles.onDeviceBannerContent}>
             <AppText variant="labelMedium" style={styles.onDeviceBannerTitle}>
               100% On-Device Storage
@@ -418,7 +367,7 @@ export const SettingsScreen: React.FC = () => {
             ]}
           >
             <View style={styles.iconLavender}>
-              <Download size={20} color="#3838A1" />
+              <Download size={20} color={colors.primary} />
             </View>
             <View style={styles.settingItemContent}>
               <AppText variant="titleSmall" style={styles.settingItemTitle}>
@@ -454,7 +403,7 @@ export const SettingsScreen: React.FC = () => {
             ]}
           >
             <View style={styles.iconPeach}>
-              <RefreshCw size={20} color="#6C3A00" />
+              <RefreshCw size={20} color={colors.warning} />
             </View>
             <View style={styles.settingItemContent}>
               <AppText variant="titleSmall" style={styles.settingItemTitle}>
@@ -484,7 +433,7 @@ export const SettingsScreen: React.FC = () => {
               ]}
             >
               <View style={styles.iconLavender}>
-                <Download size={20} color="#3838A1" />
+                <Download size={20} color={colors.primary} />
               </View>
               <View style={styles.settingItemContent}>
                 <AppText variant="titleSmall" style={styles.settingItemTitle}>
@@ -494,7 +443,7 @@ export const SettingsScreen: React.FC = () => {
                   Simpan salinan data sebelum pemulihan terakhir.
                 </AppText>
               </View>
-              <ChevronRight size={18} color="#777684" />
+              <ChevronRight size={18} color={colors.onSurfaceVariant} />
             </Pressable>
           )}
 
@@ -507,7 +456,7 @@ export const SettingsScreen: React.FC = () => {
         {/* 6. Footer Philosophy Card */}
         <View style={styles.footerPhilosophyCard}>
           <View style={styles.footerIconCircle}>
-            <Heart size={20} color="#5052BA" />
+            <Heart size={20} color={colors.primary} />
           </View>
           <View style={styles.footerBadge}>
             <AppText variant="labelSmall" style={styles.footerBadgeText}>
@@ -640,453 +589,61 @@ export const SettingsScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  screenRoot: {
-    backgroundColor: '#F9F9FD',
-  },
-  topBar: {
-    minHeight: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space[4],
-    marginBottom: space[2],
-  },
-  topBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-    flex: 1,
-  },
-  topBarTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 20,
-    color: '#151718',
-  },
-  circleButton: {
-    width: 42,
-    height: 42,
-    borderRadius: radius.pill,
-    backgroundColor: '#EEEDF2',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerAvatarMini: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.pill,
-    backgroundColor: '#5052BA',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollContent: {
-    paddingHorizontal: space[4],
-    paddingBottom: space[16],
-  },
-  profileCard: {
-    position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    padding: space[4],
-    marginBottom: space[4],
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  profileGlowPrimary: {
-    position: 'absolute',
-    right: -20,
-    bottom: -20,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#E1DFFF',
-    opacity: 0.5,
-  },
-  profileGlowSecondary: {
-    position: 'absolute',
-    left: -20,
-    top: -20,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FFDCC1',
-    opacity: 0.5,
-  },
-  profileCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[4],
-    zIndex: 1,
-  },
-  avatarRingOuter: {
-    position: 'relative',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#FFA858',
-    padding: 3,
-  },
-  avatarContainer: {
-    flex: 1,
-    borderRadius: 27,
-    overflow: 'hidden',
-    backgroundColor: '#E2E2E6',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  avatarBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#5052BA',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  profileMeta: {
-    flex: 1,
-  },
-  profileNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  profileName: {
-    fontFamily: fontFamily.bold,
-    fontSize: 18,
-    color: '#151718',
-  },
-  personalEditionPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#EEEDF2',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-    alignSelf: 'flex-start',
-    marginTop: 4,
-  },
-  greenDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#5052BA',
-  },
-  personalEditionText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    color: '#464552',
-  },
-  localSyncRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: space[3],
-    marginBottom: space[2],
-    paddingHorizontal: 4,
-  },
-  sectionHeaderTag: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    letterSpacing: 0.8,
-    color: '#777684',
-  },
-  sectionHeaderSub: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#5052BA',
-  },
-  cardGroup: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    padding: space[2],
-    marginBottom: space[3],
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  settingItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-    padding: space[3],
-    borderRadius: radius.lg,
-  },
-  pressedRow: {
-    backgroundColor: '#F3F3F7',
-  },
-  settingItemContent: {
-    flex: 1,
-  },
-  settingItemTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: '#151718',
-    marginBottom: 2,
-  },
-  categoryDotsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 6,
-  },
-  categoryDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  categoryCountLabel: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    color: '#777684',
-    marginLeft: 4,
-  },
-  iconLavender: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: '#E1DFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconPeach: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: '#FFDCC1',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconWarmPeach: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: '#FFA858',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconTertiary: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: '#FFD9DD',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconNeutral: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: '#E8E8EC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chipSettingBlock: {
-    padding: space[3],
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#F3F3F7',
-  },
-  chipSettingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-    marginBottom: space[2],
-  },
-  chipSettingText: {
-    flex: 1,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    gap: space[2],
-    marginTop: space[1],
-  },
-  durationChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    backgroundColor: '#EEEDF2',
-  },
-  durationChipActivePrimary: {
-    backgroundColor: '#5052BA',
-    shadowColor: '#5052BA',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  durationChipActiveSecondary: {
-    backgroundColor: '#8F4E00',
-    shadowColor: '#8F4E00',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  durationChipText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#464552',
-  },
-  durationChipTextActive: {
-    color: '#FFFFFF',
-  },
-  onDeviceBanner: {
-    flexDirection: 'row',
-    gap: space[3],
-    backgroundColor: '#E1DFFF',
-    borderRadius: radius.xl,
-    padding: space[4],
-    marginBottom: space[3],
-    alignItems: 'flex-start',
-  },
-  onDeviceBannerContent: {
-    flex: 1,
-  },
-  onDeviceBannerTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 13,
-    color: '#1F1D8A',
-    marginBottom: 2,
-  },
-  onDeviceBannerDesc: {
-    fontSize: 11,
-    lineHeight: 16,
-    color: '#3838A1',
-  },
-  statsCard: {
-    marginBottom: space[3],
-    borderRadius: radius.xl,
-  },
-  statsCardTitle: {
-    fontFamily: fontFamily.bold,
-    letterSpacing: 0.6,
-    marginBottom: space[2],
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: space[3],
-  },
-  statBox: {
-    minWidth: 64,
-    flexGrow: 1,
-  },
-  statValue: {
-    fontFamily: fontFamily.bold,
-    fontSize: 22,
-    lineHeight: 26,
-  },
-  actionPillPrimary: {
-    backgroundColor: '#8B8DF9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-  },
-  actionPillPrimaryText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#1F1D8A',
-  },
-  actionPillNeutral: {
-    backgroundColor: '#E8E8EC',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-  },
-  actionPillNeutralText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#1A1C1F',
-  },
-  footerPhilosophyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    padding: space[4],
-    alignItems: 'center',
-    marginTop: space[3],
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  footerIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.pill,
-    backgroundColor: '#E1DFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: space[2],
-  },
-  footerBadge: {
-    backgroundColor: '#EEEDF2',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    marginBottom: space[3],
-  },
-  footerBadgeText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#464552',
-  },
-  quoteBox: {
-    backgroundColor: '#F3F3F7',
-    padding: space[3],
-    borderRadius: radius.lg,
-    width: '100%',
-  },
-  quoteText: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    color: '#1A1C1F',
-  },
-  durationOptions: {
-    gap: space[3],
-  },
-  durationSheetRow: {
-    minHeight: 52,
-    padding: space[3],
-    borderRadius: radius.md,
-    backgroundColor: '#F3F3F7',
-    justifyContent: 'center',
-  },
-  selectedDurationSheetRow: {
-    backgroundColor: '#5052BA',
-  },
-  confirmationInput: {
-    minHeight: 54,
-    color: '#1A1C1F',
-    backgroundColor: '#F3F3F7',
-    paddingHorizontal: space[4],
-    borderRadius: radius.md,
-    fontSize: 16,
-    fontFamily: fontFamily.bold,
-  },
+  screenRoot: { backgroundColor: colors.background },
+  topBar: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space[2] },
+  topBarLeft: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
+  topBarTitle: { fontFamily: fontFamily.semibold, fontSize: 16, color: colors.onSurface },
+  circleButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.surfaceContainerLowest, borderWidth: 1, borderColor: colors.outlineVariant, alignItems: 'center', justifyContent: 'center' },
+  scrollContent: { paddingBottom: space[4], gap: space[2] },
+  introRow: { flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[3], backgroundColor: colors.surfaceContainerLowest, borderWidth: 1, borderColor: colors.outlineVariant, borderRadius: 14 },
+  introIcon: { width: 36, height: 36, borderRadius: 11, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center' },
+  introCopy: { flex: 1, gap: 2 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space[3], marginBottom: space[1] },
+  sectionHeaderTag: { fontFamily: fontFamily.bold, fontSize: 11, letterSpacing: 0.5, color: colors.onSurfaceVariant },
+  sectionHeaderSub: { fontFamily: fontFamily.medium, fontSize: 11, color: colors.primary },
+  cardGroup: { backgroundColor: colors.surfaceContainerLowest, borderRadius: 14, padding: 4, borderWidth: 1, borderColor: colors.outlineVariant },
+  settingItemRow: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[2], borderRadius: 11 },
+  pressedRow: { backgroundColor: colors.surfaceContainerLow },
+  settingItemContent: { flex: 1 },
+  settingItemTitle: { fontFamily: fontFamily.semibold, fontSize: 13, color: colors.onSurface, marginBottom: 2 },
+  categoryDotsRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5 },
+  categoryDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
+  categoryCountLabel: { fontFamily: fontFamily.semibold, fontSize: 10, color: colors.onSurfaceVariant, marginLeft: 4 },
+  iconLavender: { width: 36, height: 36, borderRadius: 11, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center' },
+  iconPeach: { width: 36, height: 36, borderRadius: 11, backgroundColor: colors.secondaryContainer, alignItems: 'center', justifyContent: 'center' },
+  iconWarmPeach: { width: 36, height: 36, borderRadius: 11, backgroundColor: colors.surfaceContainerLow, alignItems: 'center', justifyContent: 'center' },
+  iconTertiary: { width: 36, height: 36, borderRadius: 11, backgroundColor: colors.tertiaryContainer, alignItems: 'center', justifyContent: 'center' },
+  iconNeutral: { width: 36, height: 36, borderRadius: 11, backgroundColor: colors.surfaceContainerLow, alignItems: 'center', justifyContent: 'center' },
+  chipSettingBlock: { padding: space[2], borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.outlineVariant },
+  chipSettingHeader: { flexDirection: 'row', alignItems: 'center', gap: space[2], marginBottom: space[2] },
+  chipSettingText: { flex: 1 },
+  chipsRow: { flexDirection: 'row', gap: space[2], marginTop: space[1] },
+  durationChip: { minHeight: 40, flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 6, borderRadius: 10, backgroundColor: colors.surfaceContainerLow },
+  durationChipActivePrimary: { backgroundColor: colors.primary },
+  durationChipActiveSecondary: { backgroundColor: colors.primary },
+  durationChipText: { fontFamily: fontFamily.semibold, fontSize: 11, color: colors.onSurfaceVariant },
+  durationChipTextActive: { color: colors.onPrimary },
+  onDeviceBanner: { flexDirection: 'row', gap: space[3], backgroundColor: colors.primaryContainer, borderRadius: 14, padding: space[3], marginBottom: space[2], alignItems: 'flex-start' },
+  onDeviceBannerContent: { flex: 1 },
+  onDeviceBannerTitle: { fontFamily: fontFamily.semibold, fontSize: 13, color: colors.onPrimaryContainer, marginBottom: 2 },
+  onDeviceBannerDesc: { fontSize: 12, lineHeight: 17, color: colors.onPrimaryContainer },
+  statsCard: { marginBottom: space[2], borderRadius: 14 },
+  statsCardTitle: { fontFamily: fontFamily.semibold, marginBottom: space[2] },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3] },
+  statBox: { minWidth: 64, flexGrow: 1 },
+  statValue: { fontFamily: fontFamily.bold, fontSize: 20, lineHeight: 24 },
+  actionPillPrimary: { backgroundColor: colors.primaryContainer, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
+  actionPillPrimaryText: { fontFamily: fontFamily.semibold, fontSize: 11, color: colors.onPrimaryContainer },
+  actionPillNeutral: { backgroundColor: colors.surfaceContainerLow, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
+  actionPillNeutralText: { fontFamily: fontFamily.semibold, fontSize: 11, color: colors.onSurface },
+  footerPhilosophyCard: { backgroundColor: colors.surfaceContainerLowest, borderRadius: 14, padding: space[3], alignItems: 'center', marginTop: space[2], borderWidth: 1, borderColor: colors.outlineVariant },
+  footerIconCircle: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center', marginBottom: space[2] },
+  footerBadge: { backgroundColor: colors.surfaceContainerLow, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginBottom: space[2] },
+  footerBadgeText: { fontFamily: fontFamily.semibold, fontSize: 11, color: colors.onSurfaceVariant },
+  quoteBox: { backgroundColor: colors.surfaceContainerLow, padding: space[3], borderRadius: 11, width: '100%' },
+  quoteText: { fontSize: 12, lineHeight: 18, fontStyle: 'italic', textAlign: 'center', color: colors.onSurfaceVariant },
+  durationOptions: { gap: space[2] },
+  durationSheetRow: { minHeight: 48, padding: space[3], borderRadius: 10, backgroundColor: colors.surfaceContainerLow, justifyContent: 'center' },
+  selectedDurationSheetRow: { backgroundColor: colors.primary },
+  confirmationInput: { minHeight: 52, color: colors.onSurface, backgroundColor: colors.surfaceContainerLow, paddingHorizontal: space[3], borderRadius: 10, fontSize: 16, fontFamily: fontFamily.semibold },
 });

@@ -14,14 +14,10 @@ import {
   Plus,
   Target as TargetIcon,
   Calendar,
-  CheckCircle2,
-  Flame,
-  Award,
-  Clock,
   Sparkles,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, fontFamily } from '@/theme/tokens';
+import { space, fontFamily } from '@/theme/tokens';
 import { Screen } from '@/shared/ui/screen';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
@@ -144,7 +140,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
   const currentStatus = project.status;
 
   return (
-    <Screen withBottomPadding={false} style={styles.screenRoot}>
+    <Screen scrollable={false} withBottomPadding={false} style={styles.screenRoot}>
       {/* 1. Header Navigation */}
       <View style={styles.topBar}>
         <View style={styles.topBarLeft}>
@@ -223,31 +219,6 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
           ) : null}
         </View>
 
-        {/* 4. Output / Deliverable Konkret Banner (Neo-Playful Aesthetic) */}
-        <View style={styles.deliverableCard}>
-          <View style={styles.deliverableIconWrapper}>
-            <Award size={20} color="#FFFFFF" />
-          </View>
-          <View style={styles.deliverableContent}>
-            <View style={styles.deliverableHeaderRow}>
-              <AppText
-                variant="labelSmall"
-                style={styles.deliverableTag}
-              >
-                OUTPUT / DELIVERABLE KONKRET
-              </AppText>
-              <View style={styles.versionBadge}>
-                <AppText variant="labelSmall" style={styles.versionText}>
-                  v1.0
-                </AppText>
-              </View>
-            </View>
-            <AppText variant="bodyMedium" style={styles.deliverableText}>
-              Artefak nyata, repositori kerja, atau hasil terukur yang siap dirilis dan diverifikasi saat siklus proyek selesai.
-            </AppText>
-          </View>
-        </View>
-
         {/* 5. Status Lifecycle Selector (Playful Segmented Capsule) */}
         <View style={styles.statusSection}>
           <AppText
@@ -287,79 +258,17 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
           </View>
         </View>
 
-        {/* 6. Twin Summary Bento Cards (Peach & Periwinkle Palette) */}
-        <View style={styles.bentoRow}>
-          {/* Left Bento: Progres Tugas */}
-          <View style={styles.leftBento}>
-            <View style={styles.bentoHeader}>
-              <View style={styles.bentoIconPeach}>
-                <CheckCircle2 size={16} color="#8F4E00" />
-              </View>
-              <AppText variant="labelSmall" style={styles.bentoLabelPeach}>
-                PROGRES
-              </AppText>
-            </View>
-            <View style={styles.bentoBody}>
-              <AppText
-                variant="displayLarge"
-                tabularNums
-                style={styles.bentoNumberPeach}
-              >
-                {project.taskSummary.totalTasks
-                  ? `${project.taskSummary.progressPercent}%`
-                  : 'Belum ada rencana'}
-              </AppText>
-              <AppText variant="bodySmall" style={styles.bentoSubPeach}>
-                {project.taskSummary.completedTasks} dari{' '}
-                {project.taskSummary.totalTasks} tugas selesai
-              </AppText>
-            </View>
-            <View style={styles.bentoProgressTrack}>
-              <ProgressBar
-                progress={project.taskSummary.progressPercent}
-                color="#8F4E00"
-                height={6}
-              />
-            </View>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryTop}>
+            <AppText variant="labelMedium" color="onSurfaceVariant">PROGRES RENCANA</AppText>
+            <AppText variant="titleLarge" style={styles.summaryPercent} tabularNums>
+              {project.taskSummary.totalTasks ? `${project.taskSummary.progressPercent}%` : 'Belum ada rencana'}
+            </AppText>
           </View>
-
-          {/* Right Bento: Waktu Fokus */}
-          <View style={styles.rightBento}>
-            <View style={styles.bentoHeader}>
-              <View style={styles.bentoIconLavender}>
-                <Flame size={16} color="#5052BA" />
-              </View>
-              <AppText variant="labelSmall" style={styles.bentoLabelLavender}>
-                ESTIMASI
-              </AppText>
-            </View>
-            <View style={styles.bentoBody}>
-              <View style={styles.bentoTimeRow}>
-                <AppText
-                  variant="displayLarge"
-                  tabularNums
-                  style={styles.bentoNumberLavender}
-                >
-                  {project.taskSummary.totalEstimatedHours}
-                </AppText>
-                <AppText
-                  variant="headlineSmall"
-                  style={styles.bentoUnitLavender}
-                >
-                  jam
-                </AppText>
-              </View>
-              <AppText variant="bodySmall" style={styles.bentoSubLavender}>
-                {stages.length} tahap terstruktur
-              </AppText>
-            </View>
-            <View style={styles.sparkBadge}>
-              <Clock size={12} color="#5052BA" />
-              <AppText variant="labelSmall" style={styles.sparkBadgeText}>
-                Ritme Terjadwal
-              </AppText>
-            </View>
-          </View>
+          <ProgressBar progress={project.taskSummary.progressPercent} height={5} />
+          <AppText variant="bodySmall" color="onSurfaceVariant">
+            {project.taskSummary.completedTasks}/{project.taskSummary.totalTasks} tugas selesai · {stages.length} tahap · estimasi {project.taskSummary.totalEstimatedHours} jam
+          </AppText>
         </View>
 
         {/* Disclaimer Note (preserves test requirement) */}
@@ -448,33 +357,8 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
           ))
         )}
 
-        <View style={{ height: space[12] }} />
+        <View style={{ height: space[4] }} />
       </ScrollView>
-
-      {/* 8. Sticky Floating Bottom Action Capsule */}
-      <View style={styles.floatingActionContainer} pointerEvents="box-none">
-        <Pressable
-          onPress={() => {
-            setEditingStage(undefined);
-            setStageModalVisible(true);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Tambah Tahapan Baru"
-          style={styles.floatingActionCapsule}
-        >
-          <View style={styles.floatingActionIcon}>
-            <Plus size={18} color="#151718" />
-          </View>
-          <View style={styles.floatingActionText}>
-            <AppText variant="labelLarge" style={styles.floatingActionTitle}>
-              Tambah Tahapan Baru
-            </AppText>
-            <AppText variant="bodySmall" style={styles.floatingActionSub}>
-              Pecah proyek menjadi langkah nyata
-            </AppText>
-          </View>
-        </Pressable>
-      </View>
 
       {/* Add / Edit Stage Modal */}
       <AddEditStageModal
@@ -522,383 +406,100 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  screenRoot: {
-    backgroundColor: '#F9F9FD',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space[3],
-  },
-  loadingText: {
-    letterSpacing: -0.2,
-  },
-  topBar: {
-    minHeight: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space[4],
-    marginBottom: space[2],
-  },
-  topBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-    flex: 1,
-  },
-  topBarTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 18,
-    color: '#151718',
-  },
+  screenRoot: { backgroundColor: '#FCF8FF' },
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space[3] },
+  loadingText: { letterSpacing: -0.2 },
+  topBar: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space[2] },
+  topBarLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space[2] },
+  topBarTitle: { fontFamily: fontFamily.bold, fontSize: 16, color: '#1E1E2E' },
   circleButton: {
     width: 42,
     height: 42,
-    borderRadius: radius.pill,
-    backgroundColor: '#EEEDF2',
+    borderRadius: 12,
+    backgroundColor: '#FAF5EB',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  scrollContent: {
-    paddingHorizontal: space[4],
-    paddingBottom: space[16],
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: space[2],
-    marginVertical: space[2],
-  },
-  targetBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#E1DFFF',
-    paddingHorizontal: space[3],
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-  },
-  targetBadgeText: {
-    color: '#1F1D8A',
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-  },
-  deadlinBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFDCC1',
-    paddingHorizontal: space[3],
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-  },
-  deadlineBadgeText: {
-    color: '#6C3A00',
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-  },
-  headingSection: {
-    marginVertical: space[3],
-  },
-  projectTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 26,
-    letterSpacing: -0.5,
-    color: '#151718',
-    marginBottom: space[1],
-  },
-  projectDesc: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#55585E',
-  },
-  deliverableCard: {
-    flexDirection: 'row',
-    gap: space[3],
-    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#EFEFF4',
-    borderRadius: radius.xl,
-    padding: space[4],
-    marginBottom: space[4],
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    elevation: 2,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  deliverableIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: '#5052BA',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deliverableContent: {
-    flex: 1,
-  },
-  deliverableHeaderRow: {
+  scrollContent: { paddingBottom: space[4], gap: space[2] },
+  badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
+  targetBadge: {
+    minHeight: 28,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
+    gap: 6,
+    backgroundColor: '#FFEBD9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
-  deliverableTag: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    letterSpacing: 0.5,
-    color: '#5052BA',
+  targetBadgeText: { color: '#805600', fontFamily: fontFamily.bold, fontSize: 11 },
+  deadlinBadge: {
+    minHeight: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FAF5EB',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
-  versionBadge: {
-    backgroundColor: '#EEEDF2',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-  },
-  versionText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    color: '#464552',
-  },
-  deliverableText: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: '#2A2C30',
-  },
-  statusSection: {
-    marginBottom: space[4],
-  },
-  statusSectionTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#6A6D74',
-    marginBottom: space[2],
-  },
+  deadlineBadgeText: { color: '#504535', fontFamily: fontFamily.medium, fontSize: 11 },
+  headingSection: { marginVertical: space[2] },
+  projectTitle: { fontFamily: fontFamily.bold, fontSize: 24, lineHeight: 30, letterSpacing: -0.3, color: '#1E1E2E', marginBottom: 4 },
+  projectDesc: { fontSize: 14, lineHeight: 20, color: '#504535' },
+  statusSection: { marginBottom: space[2] },
+  statusSectionTitle: { fontFamily: fontFamily.bold, fontSize: 12, color: '#1E1E2E', marginBottom: space[1] },
   segmentedContainer: {
     flexDirection: 'row',
-    backgroundColor: '#E8E8EC',
-    borderRadius: radius.pill,
-    padding: 4,
-    gap: 4,
-  },
-  segmentButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-  },
-  segmentButtonActive: {
-    backgroundColor: '#151718',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  statusDotActive: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#DCF763',
-  },
-  segmentText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#5A5D66',
-  },
-  segmentTextActive: {
-    color: '#FFFFFF',
-  },
-  bentoRow: {
-    flexDirection: 'row',
-    gap: space[3],
-    marginBottom: space[2],
-  },
-  leftBento: {
-    flex: 1,
-    backgroundColor: '#FFE8DB',
-    borderRadius: radius.xl,
-    padding: space[4],
-    justifyContent: 'space-between',
-  },
-  bentoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  bentoIconPeach: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.pill,
-    backgroundColor: '#FFA858',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bentoLabelPeach: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    letterSpacing: 0.5,
-    color: '#6C3A00',
-  },
-  bentoBody: {
-    marginVertical: space[2],
-  },
-  bentoNumberPeach: {
-    fontFamily: fontFamily.bold,
-    fontSize: 28,
-    lineHeight: 34,
-    color: '#2E1500',
-  },
-  bentoSubPeach: {
-    fontSize: 11,
-    color: '#6C3A00',
-    marginTop: 2,
-  },
-  bentoProgressTrack: {
-    marginTop: space[1],
-  },
-  rightBento: {
-    flex: 1,
-    backgroundColor: '#E8E8FF',
-    borderRadius: radius.xl,
-    padding: space[4],
-    justifyContent: 'space-between',
-  },
-  bentoIconLavender: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.pill,
-    backgroundColor: '#C1C1FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bentoLabelLavender: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    letterSpacing: 0.5,
-    color: '#1F1D8A',
-  },
-  bentoTimeRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-  },
-  bentoNumberLavender: {
-    fontFamily: fontFamily.bold,
-    fontSize: 28,
-    lineHeight: 34,
-    color: '#08006C',
-  },
-  bentoUnitLavender: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: '#08006C',
-  },
-  bentoSubLavender: {
-    fontSize: 11,
-    color: '#3838A1',
-    marginTop: 2,
-  },
-  sparkBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-    alignSelf: 'flex-start',
-    marginTop: space[1],
-  },
-  sparkBadgeText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    color: '#5052BA',
-  },
-  footnoteText: {
-    fontSize: 11,
-    lineHeight: 16,
-    marginVertical: space[2],
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: space[4],
-    marginBottom: space[3],
-  },
-  sectionTitleBlock: {
-    flex: 1,
-  },
-  sectionTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 17,
-    color: '#151718',
-  },
-  emptyStagesCard: {
-    padding: space[6],
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
+    flexWrap: 'wrap',
+    backgroundColor: '#FAF5EB',
+    borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: '#EFEFF4',
+    borderColor: '#1E1E2E',
+    padding: 3,
+    gap: 3,
   },
-  emptyDesc: {
-    marginTop: space[1],
-    marginBottom: space[4],
-    maxWidth: 280,
+  segmentButton: { minHeight: 36, flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 6, borderRadius: 999 },
+  segmentButtonActive: {
+    backgroundColor: '#E8A838', // Custard Gold
+    boxShadow: '1.5px 1.5px 0px #1E1E2E',
   },
-  emptyBtn: {
-    borderRadius: radius.pill,
+  statusDotActive: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#1E1E2E' },
+  segmentText: { fontFamily: fontFamily.bold, fontSize: 11, color: '#504535' },
+  segmentTextActive: { color: '#1E1E2E' },
+  summaryCard: {
+    gap: space[2],
+    backgroundColor: '#FAF5EB',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
+    padding: space[3],
   },
-  floatingActionContainer: {
-    position: 'absolute',
-    bottom: space[4],
-    left: space[4],
-    right: space[4],
-    alignItems: 'center',
-  },
-  floatingActionCapsule: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-    backgroundColor: '#151718',
-    borderRadius: radius.pill,
-    paddingVertical: 10,
-    paddingHorizontal: space[4],
-    width: '100%',
-    maxWidth: 380,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  floatingActionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.pill,
-    backgroundColor: '#DCF763',
+  summaryTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  summaryPercent: { color: '#805600', fontFamily: fontFamily.bold },
+  footnoteText: { fontSize: 11, lineHeight: 16, marginVertical: space[1], color: '#504535' },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space[2], marginTop: space[2], marginBottom: space[1] },
+  sectionTitleBlock: { flex: 1 },
+  sectionTitle: { fontFamily: fontFamily.bold, fontSize: 15, color: '#1E1E2E' },
+  emptyStagesCard: {
+    padding: space[4],
+    gap: space[2],
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FAF5EB',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  floatingActionText: {
-    flex: 1,
-  },
-  floatingActionTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: '#FFFFFF',
-  },
-  floatingActionSub: {
-    fontSize: 11,
-    color: '#9E9EA7',
-  },
+  emptyDesc: { marginBottom: space[2], maxWidth: 280, color: '#504535' },
+  emptyBtn: { borderRadius: 999 },
 });

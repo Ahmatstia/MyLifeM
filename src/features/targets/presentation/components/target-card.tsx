@@ -11,25 +11,7 @@ export interface TargetCardProps {
   style?: StyleProp<ViewStyle>;
 }
 
-const getCategoryStyles = (categoryName?: string | null) => {
-  const name = (categoryName || '').toLowerCase();
-  if (name.includes('karier') || name.includes('karir') || name.includes('career')) {
-    return { bg: 'rgba(166, 164, 249, 0.3)', text: '#6C6AE8', progress: '#6C6AE8' };
-  }
-  if (name.includes('didik') || name.includes('edu') || name.includes('belajar')) {
-    return { bg: '#FFE7D6', text: '#FF9B42', progress: '#FF9B42' };
-  }
-  if (name.includes('uang') || name.includes('finan') || name.includes('money')) {
-    return { bg: 'rgba(220, 247, 99, 0.45)', text: '#173C36', progress: '#173C36' };
-  }
-  if (name.includes('sehat') || name.includes('health') || name.includes('raga')) {
-    return { bg: '#FFE4E6', text: '#E11D48', progress: '#F43F5E' };
-  }
-  return { bg: 'rgba(45, 212, 191, 0.25)', text: '#0F766E', progress: '#0D9488' };
-};
-
 export const TargetCard: React.FC<TargetCardProps> = ({ target, onPress, style }) => {
-  const catStyle = getCategoryStyles(target.categoryName);
   const isCompleted = target.status === 'COMPLETED';
 
   return (
@@ -46,13 +28,13 @@ export const TargetCard: React.FC<TargetCardProps> = ({ target, onPress, style }
       <View style={styles.topRow}>
         <View style={styles.headerTextCol}>
           <View style={styles.badgeRow}>
-            <View style={[styles.categoryBadge, { backgroundColor: catStyle.bg }]}>
-              <AppText variant="labelSmall" style={[styles.categoryText, { color: catStyle.text }]}>
+            <View style={styles.categoryBadge}>
+              <AppText variant="labelSmall" style={styles.categoryText}>
                 {target.categoryName || 'Umum'}
               </AppText>
             </View>
             {target.status === 'ACTIVE' && (
-              <AppText variant="labelSmall" style={styles.stageText}>
+            <AppText variant="labelSmall" style={styles.stageText}>
                 Aktif
               </AppText>
             )}
@@ -71,7 +53,7 @@ export const TargetCard: React.FC<TargetCardProps> = ({ target, onPress, style }
 
         {/* Tactile Circular Arrow Button */}
         <View style={styles.circleArrowBtn}>
-          <ArrowRight size={16} color="#121417" strokeWidth={2.4} />
+          <ArrowRight size={16} color="#1E1E2E" strokeWidth={2.4} />
         </View>
       </View>
 
@@ -83,7 +65,7 @@ export const TargetCard: React.FC<TargetCardProps> = ({ target, onPress, style }
               styles.progressBar,
               {
                 width: `${Math.min(100, Math.max(0, target.progressPercent))}%`,
-                backgroundColor: catStyle.progress,
+                backgroundColor: isCompleted ? '#76A284' : '#E8A838',
               },
             ]}
           />
@@ -105,7 +87,7 @@ export const TargetCard: React.FC<TargetCardProps> = ({ target, onPress, style }
 
           {isCompleted && (
             <View style={styles.completedBadge}>
-              <Check size={12} color="#059669" strokeWidth={2.6} />
+              <Check size={12} color="#FAF5EB" strokeWidth={2.6} />
               <AppText variant="labelSmall" style={styles.completedText}>
                 Selesai
               </AppText>
@@ -119,21 +101,17 @@ export const TargetCard: React.FC<TargetCardProps> = ({ target, onPress, style }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    backgroundColor: '#FAF5EB',
+    borderRadius: 18,
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
     marginBottom: 12,
-    shadowColor: '#121417',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
   },
   pressed: {
-    transform: [{ scale: 0.985 }],
-    opacity: 0.95,
+    transform: [{ translateX: 1 }, { translateY: 1 }],
+    boxShadow: '0px 0px 0px #1E1E2E',
   },
   topRow: {
     flexDirection: 'row',
@@ -152,55 +130,63 @@ const styles = StyleSheet.create({
   },
   categoryBadge: {
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 999,
+    backgroundColor: '#FFEBD9',
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
   categoryText: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: fontFamily.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
+    color: '#805600',
   },
   stageText: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: fontFamily.semibold,
-    color: 'rgba(18, 20, 23, 0.5)',
+    color: '#504535',
   },
   title: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: fontFamily.bold,
-    color: '#121417',
-    lineHeight: 20,
+    color: '#1E1E2E',
+    lineHeight: 22,
   },
   description: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.6)',
+    color: '#504535',
     marginTop: 3,
+    lineHeight: 18,
   },
   circleArrowBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F7F5EF',
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
+    borderRadius: 12,
+    backgroundColor: '#FAF5EB',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '1.5px 1.5px 0px #1E1E2E',
     alignItems: 'center',
     justifyContent: 'center',
   },
   bottomRow: {
-    marginTop: 14,
+    marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(230, 227, 219, 0.6)',
+    borderTopColor: 'rgba(30, 30, 46, 0.12)',
     gap: 6,
   },
   progressTrack: {
     width: '100%',
     height: 7,
-    backgroundColor: '#F7F5EF',
+    backgroundColor: '#E8E3D7',
     borderRadius: 999,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
   progressBar: {
     height: '100%',
@@ -215,25 +201,27 @@ const styles = StyleSheet.create({
   progressPercent: {
     fontSize: 11,
     fontFamily: fontFamily.bold,
-    color: '#121417',
+    color: '#1E1E2E',
   },
   taskCountSub: {
     fontSize: 11,
     fontFamily: fontFamily.regular,
-    color: 'rgba(18, 20, 23, 0.5)',
+    color: '#504535',
   },
   completedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#3D674D',
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
   completedText: {
     fontSize: 10,
     fontFamily: fontFamily.bold,
-    color: '#059669',
+    color: '#FAF5EB',
   },
 });

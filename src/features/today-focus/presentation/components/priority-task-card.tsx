@@ -129,8 +129,8 @@ export const PriorityTaskCard: React.FC<PriorityTaskCardProps> = ({
             >
               <Play
                 size={16}
-                color={isActiveTimerTask ? colors.bento.textLight : colors.bento.obsidian}
-                fill={isActiveTimerTask ? colors.bento.textLight : 'transparent'}
+                color={isActiveTimerTask ? colors.onPrimary : colors.primary}
+                fill={isActiveTimerTask ? colors.onPrimary : 'transparent'}
               />
             </Pressable>
           )}
@@ -158,8 +158,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   cardActiveTimer: {
-    borderColor: colors.bento.lilac,
-    backgroundColor: colors.bento.lilacSoft,
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryContainer,
   },
   mainRow: {
     flexDirection: 'row',
@@ -183,8 +183,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
   },
   checkboxCompleted: {
-    borderColor: colors.bento.mint,
-    backgroundColor: colors.bento.mint,
+    borderColor: colors.success,
+    backgroundColor: colors.success,
   },
   checkboxCancelled: {
     borderColor: colors.error,
@@ -220,10 +220,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
   },
   highPriorityPill: {
-    backgroundColor: colors.bento.coralSoft,
+    backgroundColor: colors.warningContainer,
   },
   highPriorityText: {
-    color: colors.bento.coral,
+    color: colors.onWarningContainer,
     fontFamily: fontFamily.semibold,
   },
   cancelledPill: {
@@ -234,10 +234,10 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.semibold,
   },
   completedPill: {
-    backgroundColor: colors.bento.mintSoft,
+    backgroundColor: colors.successContainer,
   },
   completedText: {
-    color: colors.bento.mint,
+    color: colors.onSuccessContainer,
     fontFamily: fontFamily.semibold,
   },
   actions: {
@@ -246,21 +246,21 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   actionBtn: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
   normalPlayBtn: {
-    backgroundColor: colors.bento.pillBorder,
+    backgroundColor: colors.surfaceContainer,
   },
   activePlayBtn: {
-    backgroundColor: colors.bento.obsidian,
+    backgroundColor: colors.primary,
   },
   removeTouch: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },

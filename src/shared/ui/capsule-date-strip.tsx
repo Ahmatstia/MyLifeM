@@ -1,174 +1,88 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { Star } from 'lucide-react-native';
-import { colors } from '@/theme/colors';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { formatLocalDate, isDateOnly } from '@/shared/utils/local-date';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from './app-text';
-import { formatLocalDate } from '@/shared/utils/local-date';
 
 export interface CapsuleDateStripProps {
-  selectedDate: string; // 'YYYY-MM-DD'
-  onSelectDate: (dateStr: string) => void;
-  /** Number of days before today to show, default 1 */
-  daysBefore?: number;
-  /** Total days to show, default 7 */
-  totalDays?: number;
+  selectedDate: string;
+  todayDate?: string;
+  onSelectDate: (date: string) => void;
 }
 
-const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+const WEEKDAYS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
-export const CapsuleDateStrip: React.FC<CapsuleDateStripProps> = ({
+export function CapsuleDateStrip({
   selectedDate,
+  todayDate = formatLocalDate(),
   onSelectDate,
-  daysBefore = 2,
-  totalDays = 7,
-}) => {
+}: CapsuleDateStripProps) {
   const days = useMemo(() => {
-    const today = new Date();
-    const result: {
-      dateStr: string;
-      dayName: string;
-      dayNumber: number;
-      isToday: boolean;
-      isSelected: boolean;
-    }[] = [];
+    if (!isDateOnly(selectedDate)) return [];
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    const monday = new Date(year, month - 1, day);
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
 
-    const start = new Date(today);
-    start.setDate(today.getDate() - daysBefore);
-
-    for (let i = 0; i < totalDays; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      const dateStr = formatLocalDate(d);
-      const isToday = dateStr === formatLocalDate(today);
-      const isSelected = dateStr === selectedDate;
-
-      result.push({
-        dateStr,
-        dayName: DAY_NAMES[d.getDay()],
-        dayNumber: d.getDate(),
-        isToday,
-        isSelected,
-      });
-    }
-
-    return result;
-  }, [selectedDate, daysBefore, totalDays]);
-
-  const handleSelect = (dateStr: string) => {
-    try {
-      Haptics.selectionAsync();
-    } catch {
-      // Haptics optional on web / unsupported envs
-    }
-    onSelectDate(dateStr);
-  };
+    return WEEKDAYS.map((weekday, index) => {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + index);
+      const value = formatLocalDate(date);
+      return { date: value, weekday, day: date.getDate(), selected: value === selectedDate, today: value === todayDate };
+    });
+  }, [selectedDate, todayDate]);
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {days.map((item) => {
-          const isSelected = item.isSelected;
-          return (
-            <Pressable
-              key={item.dateStr}
-              onPress={() => handleSelect(item.dateStr)}
-              accessibilityRole="button"
-              accessibilityLabel={`${item.dayName}, tanggal ${item.dayNumber}${item.isToday ? ', hari ini' : ''}${isSelected ? ', terpilih' : ''}`}
-              accessibilityState={{ selected: isSelected }}
-              style={[
-                styles.capsule,
-                isSelected ? styles.capsuleActive : styles.capsuleInactive,
-              ]}
-            >
-              {/* Star on top */}
-              <Star
-                size={12}
-                fill={isSelected ? colors.bento.lemon : 'transparent'}
-                color={isSelected ? colors.bento.lemon : colors.outline}
-                strokeWidth={2}
-                style={styles.star}
-              />
-
-              {/* Day name */}
-              <AppText
-                variant="labelSmall"
-                style={[
-                  styles.dayText,
-                  { color: isSelected ? colors.bento.textLightMuted : colors.onSurfaceVariant },
-                ]}
-              >
-                {item.dayName}
-              </AppText>
-
-              {/* Day number */}
-              <AppText
-                variant="titleMedium"
-                tabularNums
-                style={[
-                  styles.numberText,
-                  { color: isSelected ? colors.bento.textLight : colors.onSurface },
-                ]}
-              >
-                {item.dayNumber}
-              </AppText>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </View>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+      {days.map((item) => (
+        <Pressable
+          key={item.date}
+          onPress={() => onSelectDate(item.date)}
+          accessibilityRole="button"
+          accessibilityLabel={`${item.weekday}, ${item.date}${item.today ? ', hari ini' : ''}`}
+          accessibilityState={{ selected: item.selected }}
+          style={({ pressed }) => [styles.day, item.selected && styles.daySelected, pressed && styles.pressed]}
+        >
+          <AppText variant="labelSmall" style={[styles.weekday, item.selected && styles.selectedText]}>
+            {item.weekday}
+          </AppText>
+          <AppText variant="titleSmall" tabularNums style={[styles.date, item.selected && styles.selectedText]}>
+            {item.day}
+          </AppText>
+          <View style={[styles.dot, item.today && styles.todayDot, item.selected && item.today && styles.selectedDot]} />
+        </Pressable>
+      ))}
+    </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    marginVertical: space[3],
-  },
-  scrollContent: {
-    flexDirection: 'row',
-    gap: space[2],
-    paddingHorizontal: 2,
+  row: { gap: space[2], paddingVertical: 4 },
+  day: {
+    minWidth: 46,
+    minHeight: 62,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#FAF5EB',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    minWidth: '100%',
+    justifyContent: 'center',
+    gap: 3,
   },
-  capsule: {
-    width: 48,
-    height: 84,
-    borderRadius: radius.xl,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: space[2] + 2,
+  daySelected: {
+    backgroundColor: '#E8A838', // Custard Gold
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  capsuleInactive: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  capsuleActive: {
-    backgroundColor: colors.bento.obsidian,
-    shadowColor: colors.bento.obsidian,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-    transform: [{ scale: 1.04 }],
-  },
-  star: {
-    marginTop: 2,
-  },
-  dayText: {
-    fontSize: 11,
-    fontFamily: fontFamily.medium,
-  },
-  numberText: {
-    fontSize: 18,
-    fontFamily: fontFamily.bold,
-    marginBottom: 2,
+  weekday: { color: '#504535', fontFamily: fontFamily.bold, fontSize: 11 },
+  date: { color: '#1E1E2E', fontFamily: fontFamily.bold, fontSize: 16 },
+  selectedText: { color: '#1E1E2E' },
+  dot: { width: 5, height: 5, borderRadius: radius.full, backgroundColor: 'transparent', marginTop: 1 },
+  todayDot: { backgroundColor: '#E06B52' },
+  selectedDot: { backgroundColor: '#1E1E2E' },
+  pressed: {
+    transform: [{ translateX: 1 }, { translateY: 1 }],
+    boxShadow: '0px 0px 0px #1E1E2E',
   },
 });

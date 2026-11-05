@@ -19,7 +19,7 @@ export interface CategoryFilterChipsProps {
 }
 
 /**
- * CategoryFilterChips: Pil filter bergaya Neo-Playful Google Stitch untuk kategori Target.
+ * Compact, scrollable filters for target categories.
  */
 export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
   categories,
@@ -49,7 +49,7 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
         >
           <Sparkles
             size={13}
-            color={isAllSelected ? '#FFFFFF' : 'rgba(18, 20, 23, 0.6)'}
+            color="#1E1E2E"
             strokeWidth={2.5}
             style={styles.icon}
           />
@@ -99,7 +99,7 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
+    marginVertical: 4,
   },
   scrollContent: {
     paddingHorizontal: 2,
@@ -108,39 +108,35 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 40,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 999,
+    minHeight: 36,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 999, // Pill capsule
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
   },
   chipSelected: {
-    backgroundColor: '#173C36',
-    shadowColor: '#173C36',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: '#E8A838', // Custard Gold
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
   chipUnselected: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
+    backgroundColor: '#FAF5EB', // Warm Paper
   },
   chipText: {
     fontSize: 12,
     fontFamily: fontFamily.bold,
   },
   chipTextSelected: {
-    color: '#FFFFFF',
+    color: '#1E1E2E',
   },
   chipTextUnselected: {
-    color: 'rgba(18, 20, 23, 0.75)',
+    color: '#504535',
   },
   icon: {
     marginRight: 6,
   },
   pressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.96 }],
+    transform: [{ translateX: 1 }, { translateY: 1 }],
+    boxShadow: '0px 0px 0px #1E1E2E',
   },
 });

@@ -12,15 +12,12 @@ import {
   ArrowLeft,
   Trash2,
   Plus,
-  TrendingUp,
-  Zap,
   Sparkles,
   Calendar,
-  Play,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, fontFamily } from '@/theme/tokens';
-import { Screen, AppText, Banner, Button } from '@/shared/ui';
+import { space, radius, fontFamily } from '@/theme/tokens';
+import { Screen, AppText, Banner, Button, ProgressBar } from '@/shared/ui';
 import { useTargetDetail } from '../hooks/use-target-detail';
 import { StageCard } from '@/features/stages/presentation/components/stage-card';
 import { AddEditStageModal } from '@/features/stages/presentation/components/add-edit-stage-modal';
@@ -117,7 +114,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
   }
 
   return (
-    <Screen style={styles.screenBg} withBottomPadding={false}>
+    <Screen scrollable={false} style={styles.screenBg} withBottomPadding={false}>
       {/* TOP NAVIGATION BAR */}
       <View style={styles.topBar}>
         <Pressable
@@ -126,7 +123,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           accessibilityLabel="Kembali"
           style={styles.circleNavBtn}
         >
-          <ArrowLeft size={18} color="#121417" strokeWidth={2.4} />
+          <ArrowLeft size={18} color={colors.onSurface} strokeWidth={2.4} />
         </Pressable>
 
         <AppText variant="titleMedium" numberOfLines={1} style={styles.topBarTitle}>
@@ -139,7 +136,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           accessibilityLabel="Hapus target"
           style={styles.circleDeleteBtn}
         >
-          <Trash2 size={17} color="#DC2626" strokeWidth={2.2} />
+          <Trash2 size={17} color={colors.error} strokeWidth={2.2} />
         </Pressable>
       </View>
 
@@ -159,7 +156,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
 
             {target.targetDate ? (
               <View style={styles.dateBadge}>
-                <Calendar size={12} color="rgba(18, 20, 23, 0.6)" strokeWidth={2.2} />
+                <Calendar size={12} color={colors.onSurfaceVariant} strokeWidth={2.2} />
                 <AppText variant="labelSmall" style={styles.dateBadgeText}>
                   Target: {target.targetDate}
                 </AppText>
@@ -175,7 +172,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           {target.description ? (
             <View style={styles.whyCard}>
               <View style={styles.whyHeaderRow}>
-                <Sparkles size={14} color="#7577EC" strokeWidth={2.4} />
+                <Sparkles size={14} color={colors.primary} strokeWidth={2.2} />
                 <AppText variant="labelSmall" style={styles.whyLabel}>
                   Komitmen & Motivasi Pribadi
                 </AppText>
@@ -187,57 +184,22 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           ) : null}
         </View>
 
-        {/* 2-COLUMN HIGH-CONTRAST BENTO METRIC CARDS */}
-        <View style={styles.statsGrid}>
-          {/* Left Card: Warm Tangerine / Progres */}
-          <View style={styles.statCardTangerine}>
-            <View style={styles.statCardHeader}>
-              <AppText variant="labelSmall" style={styles.statLabelTangerine}>
-                PROGRES
-              </AppText>
-              <TrendingUp size={16} color="#8F4E00" strokeWidth={2.4} />
-            </View>
-            <View style={styles.statNumberBlock}>
-              <AppText variant="headlineLarge" tabularNums style={styles.statBigNumberTangerine}>
-                {target.totalTasks ? `${target.progressPercent}%` : 'Belum ada rencana'}
-              </AppText>
-              <AppText variant="bodySmall" style={styles.statSubTextTangerine}>
-                {target.completedTasks} dari {target.totalTasks} tugas selesai
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryTop}>
+            <View>
+              <AppText variant="labelMedium" color="onSurfaceVariant">PROGRES RENCANA</AppText>
+              <AppText variant="bodySmall" color="onSurfaceVariant">
+                {target.completedTasks}/{target.totalTasks} tugas · {stages.length} tahap
               </AppText>
             </View>
-            <View style={styles.statProgressTrackTangerine}>
-              <View
-                style={[
-                  styles.statProgressBarTangerine,
-                  { width: `${Math.min(100, Math.max(0, target.progressPercent))}%` },
-                ]}
-              />
-            </View>
+            <AppText variant="titleLarge" style={styles.summaryPercent} tabularNums>
+              {target.totalTasks ? `${target.progressPercent}%` : 'Belum ada rencana'}
+            </AppText>
           </View>
-
-          {/* Right Card: Lavender / Estimasi */}
-          <View style={styles.statCardLavender}>
-            <View style={styles.statCardHeader}>
-              <AppText variant="labelSmall" style={styles.statLabelLavender}>
-                ESTIMASI
-              </AppText>
-              <Zap size={16} color="#5052ba" strokeWidth={2.4} />
-            </View>
-            <View style={styles.statNumberBlock}>
-              <AppText variant="headlineLarge" tabularNums style={styles.statBigNumberLavender}>
-                {target.totalEstimatedHours}h
-              </AppText>
-              <AppText variant="bodySmall" style={styles.statSubTextLavender}>
-                Fokus terakumulasi
-              </AppText>
-            </View>
-            <View style={styles.activeStagesIndicator}>
-              <View style={styles.pulsingLavenderDot} />
-              <AppText variant="labelSmall" style={styles.activeStagesText}>
-                {stages.length} tahap rencana
-              </AppText>
-            </View>
-          </View>
+          <ProgressBar progress={target.progressPercent} height={5} />
+          <AppText variant="bodySmall" color="onSurfaceVariant">
+            Estimasi pekerjaan: {target.totalEstimatedHours} jam
+          </AppText>
         </View>
 
         <AppText variant="bodySmall" style={styles.disclaimerText}>
@@ -271,7 +233,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
             accessibilityLabel="Tambah Tahap Baru"
             style={styles.addStageBtn}
           >
-            <Plus size={14} color="#FFFFFF" strokeWidth={2.8} />
+            <Plus size={14} color={colors.onPrimary} strokeWidth={2.8} />
             <AppText variant="labelSmall" style={styles.addStageText}>
               Tahap Baru
             </AppText>
@@ -328,22 +290,6 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           ))
         )}
 
-        {/* FLOATING ACTION PILL: Mulai Sesi Fokus */}
-        <View style={styles.ctaWrapper}>
-          <Pressable
-            onPress={() => router.push('/(tabs)')}
-            accessibilityRole="button"
-            accessibilityLabel="Mulai Sesi Fokus untuk Target Ini"
-            style={styles.ctaButton}
-          >
-            <View style={styles.ctaPlayCircle}>
-              <Play size={14} color="#121417" fill="#121417" />
-            </View>
-            <AppText variant="labelMedium" style={styles.ctaButtonText}>
-              Mulai Sesi Fokus untuk Target Ini
-            </AppText>
-          </Pressable>
-        </View>
       </ScrollView>
 
       {/* MODAL TAMBAH/EDIT TAHAP */}
@@ -392,363 +338,127 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
 };
 
 const styles = StyleSheet.create({
-  screenBg: {
-    backgroundColor: '#F7F5EF',
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space[3],
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 6,
-  },
+  screenBg: { backgroundColor: '#FCF8FF' },
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space[3] },
+  topBar: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space[2] },
+  topBarTitle: { flex: 1, textAlign: 'center', fontFamily: fontFamily.bold, color: '#1E1E2E', fontSize: 16 },
   circleNavBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#FAF5EB',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
   circleDeleteBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: 'rgba(220, 38, 38, 0.2)',
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#FFDAD6',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  topBarTitle: {
-    fontSize: 16,
-    fontFamily: fontFamily.bold,
-    color: '#121417',
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    gap: space[3],
-  },
-
-  /* HEADER PROFILE */
-  headerProfileSection: {
-    marginTop: 4,
-    gap: 8,
-  },
-  metaBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
+  scrollContent: { paddingBottom: space[4], gap: space[2] },
+  headerProfileSection: { gap: space[2] },
+  metaBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space[2] },
   categoryBadge: {
+    minHeight: 28,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ECEBFE',
+    backgroundColor: '#FFEBD9',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
-  categoryDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#7577EC',
-  },
-  categoryText: {
-    fontSize: 10,
-    fontFamily: fontFamily.bold,
-    color: '#6C6AE8',
-    letterSpacing: 0.6,
-  },
+  categoryDot: { width: 6, height: 6, borderRadius: radius.full, backgroundColor: '#805600' },
+  categoryText: { color: '#805600', fontFamily: fontFamily.bold, fontSize: 11 },
   dateBadge: {
+    minHeight: 28,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
+    gap: 6,
+    backgroundColor: '#FAF5EB',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
-  dateBadgeText: {
-    fontSize: 10,
-    fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.7)',
-  },
-  targetTitleText: {
-    fontSize: 24,
-    fontFamily: fontFamily.bold,
-    color: '#121417',
-    lineHeight: 30,
-  },
+  dateBadgeText: { color: '#504535', fontFamily: fontFamily.medium, fontSize: 11 },
+  targetTitleText: { fontFamily: fontFamily.bold, fontSize: 24, lineHeight: 30, color: '#1E1E2E' },
   whyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
     gap: 6,
-    shadowColor: '#121417',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
+    padding: space[3],
+    backgroundColor: '#FAF5EB',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    borderRadius: 18,
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  whyHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  whyHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  whyLabel: { color: '#805600', fontFamily: fontFamily.bold },
+  whyText: { color: '#504535', lineHeight: 20 },
+  summaryCard: {
+    gap: space[2],
+    padding: space[3],
+    backgroundColor: '#FAF5EB',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    borderRadius: 18,
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  whyLabel: {
-    fontSize: 11,
-    fontFamily: fontFamily.bold,
-    color: '#7577EC',
-  },
-  whyText: {
-    fontSize: 12,
-    fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.75)',
-    fontStyle: 'italic',
-    lineHeight: 18,
-  },
-
-  /* BENTO METRIC CARDS */
-  statsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 2,
-  },
-  statCardTangerine: {
-    flex: 1,
-    backgroundColor: '#FFE7D6',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 155, 66, 0.25)',
-    borderRadius: 24,
-    padding: 14,
-    justifyContent: 'space-between',
-    shadowColor: '#FF9B42',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  statCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  statLabelTangerine: {
-    fontSize: 10,
-    fontFamily: fontFamily.bold,
-    color: '#8F4E00',
-    letterSpacing: 0.6,
-  },
-  statNumberBlock: {
-    marginVertical: 6,
-  },
-  statBigNumberTangerine: {
-    fontSize: 26,
-    fontFamily: fontFamily.bold,
-    color: '#8F4E00',
-    lineHeight: 28,
-  },
-  statSubTextTangerine: {
-    fontSize: 11,
-    fontFamily: fontFamily.medium,
-    color: 'rgba(143, 78, 0, 0.85)',
-    marginTop: 2,
-  },
-  statProgressTrackTangerine: {
-    width: '100%',
-    height: 6,
-    backgroundColor: 'rgba(143, 78, 0, 0.15)',
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  statProgressBarTangerine: {
-    height: '100%',
-    backgroundColor: '#FF9E44',
-    borderRadius: 999,
-  },
-  statCardLavender: {
-    flex: 1,
-    backgroundColor: '#ECEBFE',
-    borderWidth: 1,
-    borderColor: 'rgba(117, 119, 236, 0.25)',
-    borderRadius: 24,
-    padding: 14,
-    justifyContent: 'space-between',
-    shadowColor: '#7577EC',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  statLabelLavender: {
-    fontSize: 10,
-    fontFamily: fontFamily.bold,
-    color: '#5052ba',
-    letterSpacing: 0.6,
-  },
-  statBigNumberLavender: {
-    fontSize: 26,
-    fontFamily: fontFamily.bold,
-    color: '#5052ba',
-    lineHeight: 28,
-  },
-  statSubTextLavender: {
-    fontSize: 11,
-    fontFamily: fontFamily.medium,
-    color: 'rgba(80, 82, 186, 0.85)',
-    marginTop: 2,
-  },
-  activeStagesIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  pulsingLavenderDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#5052ba',
-  },
-  activeStagesText: {
-    fontSize: 10,
-    fontFamily: fontFamily.bold,
-    color: '#5052ba',
-  },
-
-  disclaimerText: {
-    fontSize: 11,
-    fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.5)',
-    lineHeight: 15,
-  },
-
-  /* SECTION HEADER */
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  sectionTitleCol: {
-    gap: 2,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  sectionHeadingBold: {
-    fontSize: 16,
-    fontFamily: fontFamily.bold,
-    color: '#121417',
-  },
+  summaryTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  summaryPercent: { color: '#805600', fontFamily: fontFamily.bold },
+  disclaimerText: { fontSize: 11, lineHeight: 16, color: '#504535' },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[2], marginTop: space[3], marginBottom: space[1] },
+  sectionTitleCol: { flex: 1, gap: 2 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
+  sectionHeadingBold: { color: '#1E1E2E', fontFamily: fontFamily.bold, fontSize: 16 },
+  sectionSubtext: { color: '#504535' },
   stageCountBadge: {
-    backgroundColor: '#ECEBFE',
-    paddingHorizontal: 8,
-    paddingVertical: 1,
+    minWidth: 24,
+    height: 24,
     borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFEBD9',
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
-  stageCountText: {
-    fontSize: 10,
-    fontFamily: fontFamily.bold,
-    color: '#7577EC',
-  },
-  sectionSubtext: {
-    fontSize: 12,
-    fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.55)',
-  },
+  stageCountText: { color: '#805600', fontFamily: fontFamily.bold, fontSize: 11 },
   addStageBtn: {
+    minHeight: 38,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#121417',
     paddingHorizontal: 12,
-    paddingVertical: 7,
     borderRadius: 999,
+    backgroundColor: '#E06B52',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  addStageText: {
-    fontSize: 11,
-    fontFamily: fontFamily.bold,
-    color: '#FFFFFF',
-  },
-
-  /* EMPTY STAGES */
+  addStageText: { color: '#FAF5EB', fontFamily: fontFamily.bold, fontSize: 12 },
   emptyStagesCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
+    padding: space[4],
+    gap: space[2],
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#FAF5EB',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  emptyTitle: {
-    fontSize: 16,
-    fontFamily: fontFamily.bold,
-    color: '#121417',
-  },
-  emptyDesc: {
-    fontSize: 12,
-    fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.6)',
-    marginTop: 6,
-    marginBottom: 16,
-    maxWidth: 280,
-    lineHeight: 18,
-  },
-  emptyBtn: {
-    borderRadius: 999,
-  },
-
-  /* CTA BOTTOM WRAPPER */
-  ctaWrapper: {
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: '#121417',
-    borderRadius: 999,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    shadowColor: '#121417',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  ctaPlayCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#DCF763',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaButtonText: {
-    fontSize: 13,
-    fontFamily: fontFamily.bold,
-    color: '#FFFFFF',
-  },
+  emptyTitle: { color: '#1E1E2E', fontFamily: fontFamily.bold },
+  emptyDesc: { marginBottom: space[2], maxWidth: 280, color: '#504535' },
+  emptyBtn: { borderRadius: 999 },
 });

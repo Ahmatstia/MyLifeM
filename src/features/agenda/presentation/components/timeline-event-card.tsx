@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Pressable, StyleSheet, useWindowDimensions, type ViewStyle, type StyleProp } from 'react-native';
 import { Check, Trash2, AlertTriangle, MapPin } from 'lucide-react-native';
-import { fontFamily } from '@/theme/tokens';
+import { fontFamily, radius } from '@/theme/tokens';
+import { colors } from '@/theme/colors';
 import { AppText } from '@/shared/ui';
 import type { AgendaEventEntity, AgendaEventType } from '../../domain/entities/agenda.entity';
 import { formatLocalDate, shiftDate } from '@/shared/utils/local-date';
@@ -19,10 +20,10 @@ const TYPE_CONFIG: Record<
   AgendaEventType,
   { label: string; bg: string; text: string }
 > = {
-  WORK: { label: 'Kerja', bg: '#FFF4E5', text: '#9A5B00' },
-  PERSONAL: { label: 'Pribadi', bg: '#FCE7F3', text: '#BE185D' },
-  LEARNING: { label: 'Belajar', bg: '#ECEBFE', text: '#6C6AE8' },
-  MEETING: { label: 'Rapat', bg: '#E8F8EE', text: '#1E7D42' },
+  WORK: { label: 'Kerja', bg: colors.primaryContainer, text: colors.onPrimaryContainer },
+  PERSONAL: { label: 'Pribadi', bg: colors.surfaceContainer, text: colors.onSurfaceVariant },
+  LEARNING: { label: 'Belajar', bg: colors.tertiaryContainer, text: colors.onTertiaryContainer },
+  MEETING: { label: 'Rapat', bg: colors.successContainer, text: colors.onSuccessContainer },
 };
 
 const formatTime = (value: string) =>
@@ -86,7 +87,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
 
             {hasConflict && (
               <View style={styles.conflictBadge}>
-                <AlertTriangle size={11} color="#DC2626" strokeWidth={2.4} />
+                <AlertTriangle size={11} color={colors.error} strokeWidth={2.4} />
                 <AppText variant="labelSmall" style={styles.conflictBadgeText}>
                   Waktu bertumpuk
                 </AppText>
@@ -100,7 +101,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
             accessibilityLabel={'Hapus agenda ' + event.title}
             style={styles.deleteTouch}
           >
-            <Trash2 size={15} color="rgba(18, 20, 23, 0.4)" strokeWidth={2} />
+              <Trash2 size={15} color={colors.onSurfaceVariant} strokeWidth={2} />
           </Pressable>
         </View>
 
@@ -114,7 +115,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
             style={styles.checkboxTouch}
           >
             <View style={[styles.checkbox, event.isCompleted && styles.checkboxCompleted]}>
-              {event.isCompleted && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
+                {event.isCompleted && <Check size={14} color={colors.onPrimary} strokeWidth={3} />}
             </View>
           </Pressable>
 
@@ -150,7 +151,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
             {/* Location */}
             {event.location ? (
               <View style={styles.locationRow}>
-                <MapPin size={12} color="rgba(18, 20, 23, 0.5)" strokeWidth={2} />
+                <MapPin size={12} color={colors.onSurfaceVariant} strokeWidth={2} />
                 <AppText variant="bodySmall" style={styles.locationText} numberOfLines={1}>
                   {event.location}
                 </AppText>
@@ -178,40 +179,35 @@ const styles = StyleSheet.create({
   startTimeText: {
     fontSize: 12,
     fontFamily: fontFamily.bold,
-    color: '#121417',
+    color: '#1E1E2E',
   },
   endTimeText: {
     fontSize: 11,
     fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.45)',
+    color: '#504535',
   },
   verticalRail: {
     width: 2,
     flex: 1,
-    backgroundColor: 'rgba(18, 20, 23, 0.08)',
+    backgroundColor: 'rgba(30, 30, 46, 0.15)',
     marginTop: 6,
     borderRadius: 1,
   },
   card: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    backgroundColor: '#FAF5EB',
+    borderRadius: 18,
     padding: 14,
-    borderWidth: 1,
-    borderColor: '#E6E3DB',
-    shadowColor: '#121417',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
   },
   cardCompleted: {
-    backgroundColor: '#FBFBFA',
-    opacity: 0.85,
+    backgroundColor: '#F5EFE6',
   },
   cardConflict: {
-    borderColor: 'rgba(239, 68, 68, 0.5)',
-    backgroundColor: '#FFF5F5',
+    borderColor: '#1E1E2E',
+    backgroundColor: '#FFDAD6',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -229,6 +225,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 2.5,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
   typeBadgeText: {
     fontSize: 10,
@@ -239,20 +237,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#FFDAD6',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#1E1E2E',
   },
   conflictBadgeText: {
     fontSize: 10,
     fontFamily: fontFamily.bold,
-    color: '#DC2626',
+    color: '#BA1A1A',
   },
   deleteTouch: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -262,45 +262,49 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   checkboxTouch: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
     paddingTop: 2,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 7,
     borderWidth: 2,
-    borderColor: 'rgba(18, 20, 23, 0.25)',
+    borderColor: '#1E1E2E',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAF5EB',
   },
   checkboxCompleted: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
+    backgroundColor: '#76A284',
+    borderColor: '#1E1E2E',
   },
   detailsCol: {
     flex: 1,
     gap: 3,
   },
   title: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: fontFamily.bold,
-    color: '#121417',
-    lineHeight: 18,
+    color: '#1E1E2E',
+    lineHeight: 21,
   },
   titleCompleted: {
     textDecorationLine: 'line-through',
-    color: 'rgba(18, 20, 23, 0.45)',
+    color: '#837563',
   },
   subtitleTime: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.65)',
+    color: '#504535',
   },
   continuedBadge: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: fontFamily.bold,
-    color: '#7577EC',
+    color: '#805600',
   },
   locationRow: {
     flexDirection: 'row',
@@ -309,8 +313,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   locationText: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: fontFamily.medium,
-    color: 'rgba(18, 20, 23, 0.55)',
+    color: '#504535',
   },
 });

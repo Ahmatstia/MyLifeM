@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import { Check, ChevronDown, ChevronUp, MoreHorizontal, Plus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { space } from '@/theme/tokens';
 import { Card, AppText, Button, AppBottomSheet } from '@/shared/ui';
 import { type StageWithTasks, type TaskItemEntity, type TaskStatus, getStageStatusLabel } from '../../domain/entities/stage.entity';
 
@@ -92,19 +92,45 @@ export const StageCard: React.FC<StageCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  card: { marginBottom: space[4], borderLeftWidth: 3, borderLeftColor: colors.primaryContainer },
+  card: {
+    marginBottom: space[3],
+    backgroundColor: '#FAF5EB',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '2px 2px 0px #1E1E2E',
+  },
   header: { flexDirection: 'row', alignItems: 'center', gap: space[1] },
   heading: { flex: 1, minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: space[3] },
   headingText: { flex: 1, gap: space[1] },
-  step: { width: 36, height: 36, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primaryContainer },
-  completedStep: { backgroundColor: colors.primary },
+  step: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFEBD9',
+    borderWidth: 1.5,
+    borderColor: '#1E1E2E',
+    boxShadow: '1px 1px 0px #1E1E2E',
+  },
+  completedStep: { backgroundColor: '#76A284' },
   menuButton: { width: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   content: { marginTop: space[3], borderTopWidth: 1, borderTopColor: colors.outlineVariant, paddingTop: space[3] },
   description: { marginBottom: space[3] },
   taskRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: space[2], paddingVertical: space[2] },
   checkTouch: { width: 48, minHeight: 48, justifyContent: 'center', alignItems: 'center' },
-  checkbox: { width: 24, height: 24, borderRadius: radius.xs, borderWidth: 1.5, borderColor: colors.outline, alignItems: 'center', justifyContent: 'center' },
-  checked: { backgroundColor: colors.primary, borderColor: colors.primary },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#1E1E2E',
+    backgroundColor: '#FAF5EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checked: { backgroundColor: '#76A284', borderColor: '#1E1E2E' },
   taskText: { flex: 1, gap: space[1], paddingTop: space[2] },
   strike: { textDecorationLine: 'line-through' },
   addTask: { alignSelf: 'flex-start' },

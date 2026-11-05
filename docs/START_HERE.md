@@ -4,7 +4,7 @@ Tanggal: 26 Oktober 2026. Bahasa produk: Indonesia. Platform utama: Android; ars
 
 **Keputusan produk:** MyLife menghubungkan tujuan hidup dengan tindakan harian dan evaluasi berbasis bukti. Pengguna perlu tahu: saya menuju ke mana, langkah berikutnya apa, kapan dikerjakan, dan hasilnya sejauh mana.
 
-Audit awal menyelesaikan perencanaan sebelum perubahan kode aplikasi. Setelah pemilik mengarahkan agar implementasi dimulai dari UI, Botanical Pop diterapkan pada layar dan komponen aplikasi. Cakupan, hasil pemeriksaan, dan batasnya dicatat di [implementasi UI](./UI_IMPLEMENTATION_2026-10-26.md). Fitur R2 dan perbaikan database R0 belum otomatis tersedia.
+Audit awal menyelesaikan perencanaan sebelum perubahan kode aplikasi. Redesign aktif berikutnya menyederhanakan UI menjadi palet hijau-netral, kartu lebih ringkas, navigasi konsisten, dan tanpa profil/statistik contoh. Aturan implementasi ada di [desain v3](./design/DESIGN_V3.md); catatan UI sebelumnya adalah riwayat iterasi, bukan arah visual yang aktif.
 
 Tahap berikutnya sudah mengimplementasikan R0.1: ekspor dan pemulihan berkas lengkap melalui Pengaturan, dengan salinan pengaman dan transaksi. Lihat [implementasi backup](./BACKUP_IMPLEMENTATION_2026-10-26.md) untuk perilaku, verifikasi, batas format, dan pengujian native yang belum dilakukan. Integritas seluruh jalur tulis R0.2 tetap pekerjaan berikutnya.
 
@@ -25,7 +25,7 @@ Tahap sebelumnya, R0.3, memperbaiki tanggal lokal, agenda lintas malam, validasi
 5. [Desain v2](./DESIGN_V2.md): arah visual, warna, hierarki layar, komponen, aksesibilitas.
 6. [Backlog dan gerbang rilis](./DELIVERY_ROADMAP.md): pekerjaan berurutan dengan kriteria selesai.
 
-[Pratinjau visual Botanical Pop](./design-preview.html) memperlihatkan lima contoh layar. Navigasi dan contoh dialog sesi dapat dicoba; seluruh datanya simulasi dan tidak mengubah aplikasi atau database. Ini konsep arah visual, belum hasil implementasi React Native.
+[Pratinjau visual Botanical Pop](./design-preview.html) adalah konsep historis dan tidak lagi menjadi acuan visual. Untuk layar React Native yang aktif, gunakan token di `src/theme/` dan aturan pada [desain v3](./design/DESIGN_V3.md).
 
 ## Mana yang menjadi acuan?
 
@@ -42,7 +42,7 @@ Tahap sebelumnya, R0.3, memperbaiki tanggal lokal, agenda lintas malam, validasi
 - Kategori dikelola dari Pengaturan dengan bottom sheet yang sudah ada. Tidak perlu tab atau layar utama kategori.
 - Mulai dari mahasiswa, orang belajar mandiri, dan pekerja yang sedang meningkatkan keterampilan; perluas berdasarkan kebutuhan yang teruji.
 - Empat tujuan navigasi tetap: Hari Ini, Target, Proyek, Agenda. Evaluasi mingguan masuk melalui ringkasan Hari Ini, bukan tab baru.
-- Arah visual: **Botanical Pop** — petrol gelap, citron, peach, dan latar ivory; bubble terbatas pada area dekorasi, hierarki lebih bervariasi.
+- Arah visual aktif: **MyLife Clean** — hijau sebagai aksen tindakan, permukaan netral, kepadatan informasi terkontrol, dan hierarki tipografi ringkas.
 - Tidak menambah AI, cloud, keuangan rinci, atau pemantauan kesehatan otomatis pada rilis fondasi.
 
 ## Verifikasi keadaan awal
