@@ -195,19 +195,20 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: '#FAF5EB',
-    borderRadius: 18,
-    padding: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 12,
     borderWidth: 1.5,
     borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
+    boxShadow: '1.5px 1.5px 0px #1E1E2E',
   },
   cardCompleted: {
-    backgroundColor: '#F5EFE6',
+    backgroundColor: '#FAF8F5',
+    opacity: 0.85,
   },
   cardConflict: {
-    borderColor: '#1E1E2E',
-    backgroundColor: '#FFDAD6',
+    borderColor: '#BA1A1A',
+    backgroundColor: '#FFF2F0',
   },
   cardHeader: {
     flexDirection: 'row',

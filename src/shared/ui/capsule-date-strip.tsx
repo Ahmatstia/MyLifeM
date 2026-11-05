@@ -42,13 +42,13 @@ export function CapsuleDateStrip({
           accessibilityState={{ selected: item.selected }}
           style={({ pressed }) => [styles.day, item.selected && styles.daySelected, pressed && styles.pressed]}
         >
-          <AppText variant="labelSmall" style={[styles.weekday, item.selected && styles.selectedText]}>
+          <AppText variant="labelSmall" style={[styles.weekday, item.selected && styles.selectedWeekday]}>
             {item.weekday}
           </AppText>
-          <AppText variant="titleSmall" tabularNums style={[styles.date, item.selected && styles.selectedText]}>
+          <AppText variant="titleSmall" tabularNums style={[styles.date, item.selected && styles.selectedDate]}>
             {item.day}
           </AppText>
-          <View style={[styles.dot, item.today && styles.todayDot, item.selected && item.today && styles.selectedDot]} />
+          <View style={[styles.dot, item.today && styles.todayDot, item.selected && item.today && styles.selectedTodayDot]} />
         </Pressable>
       ))}
     </ScrollView>
@@ -56,33 +56,38 @@ export function CapsuleDateStrip({
 }
 
 const styles = StyleSheet.create({
-  row: { gap: space[2], paddingVertical: 4 },
+  row: { gap: space[2], paddingVertical: space[1] },
   day: {
-    minWidth: 46,
-    minHeight: 62,
+    minWidth: 44,
+    minHeight: 58,
     paddingHorizontal: 8,
     paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#FAF5EB',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
+    borderRadius: 14,
+    backgroundColor: '#F7F5F0',
+    borderWidth: 1,
+    borderColor: 'rgba(30, 30, 46, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 2,
   },
   daySelected: {
-    backgroundColor: '#E8A838', // Custard Gold
+    backgroundColor: '#1E1E2E',
     borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
+    elevation: 2,
+    shadowColor: '#1E1E2E',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
-  weekday: { color: '#504535', fontFamily: fontFamily.bold, fontSize: 11 },
-  date: { color: '#1E1E2E', fontFamily: fontFamily.bold, fontSize: 16 },
-  selectedText: { color: '#1E1E2E' },
-  dot: { width: 5, height: 5, borderRadius: radius.full, backgroundColor: 'transparent', marginTop: 1 },
+  weekday: { color: '#78716C', fontFamily: fontFamily.bold, fontSize: 11 },
+  date: { color: '#1E1E2E', fontFamily: fontFamily.bold, fontSize: 15 },
+  selectedWeekday: { color: '#D4D4D8' },
+  selectedDate: { color: '#FFFFFF' },
+  dot: { width: 4, height: 4, borderRadius: radius.full, backgroundColor: 'transparent', marginTop: 1 },
   todayDot: { backgroundColor: '#E06B52' },
-  selectedDot: { backgroundColor: '#1E1E2E' },
+  selectedTodayDot: { backgroundColor: '#E8A838' },
   pressed: {
-    transform: [{ translateX: 1 }, { translateY: 1 }],
-    boxShadow: '0px 0px 0px #1E1E2E',
+    opacity: 0.8,
+    transform: [{ scale: 0.97 }],
   },
 });

@@ -172,22 +172,22 @@ export const WeeklyOccurrenceCard: React.FC<WeeklyOccurrenceCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     marginBottom: 12,
-    backgroundColor: '#FAF5EB',
-    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     borderWidth: 1.5,
     borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
-    borderLeftWidth: 1.5,
-    borderLeftColor: '#1E1E2E',
+    boxShadow: '1.5px 1.5px 0px #1E1E2E',
+    borderLeftWidth: 4,
+    borderLeftColor: '#E8A838',
   },
   completedCard: {
-    backgroundColor: '#F5EFE6',
-    borderLeftColor: '#1E1E2E',
+    backgroundColor: '#FAF8F5',
+    borderLeftColor: '#76A284',
     opacity: 0.85,
   },
   cancelledCard: {
-    backgroundColor: '#FFDAD6',
-    borderLeftColor: '#1E1E2E',
+    backgroundColor: '#FFF2F0',
+    borderLeftColor: '#BA1A1A',
     opacity: 0.75,
   },
   mainRow: {
