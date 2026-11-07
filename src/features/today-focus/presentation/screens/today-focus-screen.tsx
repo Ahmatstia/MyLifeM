@@ -7,18 +7,15 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
-import Svg, { Circle } from 'react-native-svg';
 import {
   Check,
   Play,
   Pause,
   ChevronRight,
   Sparkles,
-  Zap,
   Settings as SettingsIcon,
   X,
   Plus,
-  CheckCircle2,
   Clock,
   Timer,
   CalendarDays,
@@ -69,24 +66,16 @@ export const TodayFocusScreen: React.FC = () => {
     month: 'long',
   });
 
-  // Circular compass gauge calculation
-  const compassSize = 58;
-  const strokeW = 4.5;
-  const compRadius = (compassSize - strokeW) / 2;
-  const compCircumference = 2 * Math.PI * compRadius;
-  const progressRatio = activeItems.length > 0 ? completedCount / activeItems.length : 0;
-  const compOffset = compCircumference * (1 - progressRatio);
-
   return (
     <Screen scrollable={false} withBottomPadding={false} style={styles.screenBg}>
-      {/* 1. Header: Modern Minimalist Typography */}
+      {/* 1. Header: Clean & Direct */}
       <View style={styles.header}>
         <View style={styles.headerTextCol}>
-          <AppText variant="labelSmall" style={styles.dateEyebrow}>
-            {todayFormatted}
-          </AppText>
           <AppText variant="headlineMedium" style={styles.pageTitle}>
             Hari Ini
+          </AppText>
+          <AppText variant="labelSmall" style={styles.dateSubtext}>
+            {todayFormatted}
           </AppText>
         </View>
 
@@ -97,7 +86,7 @@ export const TodayFocusScreen: React.FC = () => {
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={({ pressed }) => [styles.settingsBtn, pressed && styles.settingsBtnPressed]}
         >
-          <SettingsIcon size={19} color="#27272A" strokeWidth={2} />
+          <SettingsIcon size={19} color="#121316" strokeWidth={2} />
         </Pressable>
       </View>
 
@@ -122,7 +111,7 @@ export const TodayFocusScreen: React.FC = () => {
 
       {isLoading ? (
         <View style={styles.loading}>
-          <ActivityIndicator size="small" color="#E8A838" />
+          <ActivityIndicator size="small" color="#0E6852" />
           <AppText color="onSurfaceVariant">Menyiapkan harimu…</AppText>
         </View>
       ) : (
@@ -131,19 +120,109 @@ export const TodayFocusScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {/* 2. Sleek 7-Day Calendar Strip */}
-            <View style={styles.dateStripWrapper}>
-              <CapsuleDateStrip
-                selectedDate={selectedDate}
-                todayDate={todayDate}
-                onSelectDate={(date) => {
-                  if (date === todayDate) setSelectedDate(date);
-                  else router.push({ pathname: '/agenda', params: { date } });
+            {/* 2. Trantor Segmented Action Dock */}
+            <View style={styles.segmentedActionDock}>
+              {/* Left Pill: Mulai Fokus / Timer */}
+              <Pressable
+                onPress={() => {
+                  if (!nextTask && !timer.activeTask && !timer.hasSession) {
+                    setIsAddModalVisible(true);
+                  } else {
+                    if (!timer.hasSession && !timer.activeTask && nextTask) {
+                      timer.setActiveTask(nextTask);
+                    }
+                    setIsTimerExpanded(true);
+                  }
                 }}
-              />
+                style={({ pressed }) => [
+                  styles.segmentedPillLeft,
+                  pressed && styles.segmentedPressed,
+                ]}
+              >
+                <Play size={13} color="#8A3C1B" fill="#8A3C1B" />
+                <AppText variant="labelMedium" style={styles.segmentedTextPeach}>
+                  {timer.hasSession ? 'Lanjut Fokus' : 'Mulai Fokus'}
+                </AppText>
+              </Pressable>
+
+              {/* Center Circle: Add New Priority (+) */}
+              <Pressable
+                onPress={() => setIsAddModalVisible(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Tambah Tugas"
+                style={({ pressed }) => [
+                  styles.segmentedCenterCircle,
+                  pressed && styles.segmentedPressed,
+                ]}
+              >
+                <Plus size={18} color="#FFFFFF" strokeWidth={3} />
+              </Pressable>
+
+              {/* Right Pill: Agenda Shortcut */}
+              <Pressable
+                onPress={() => router.push('/agenda' as any)}
+                style={({ pressed }) => [
+                  styles.segmentedPillRight,
+                  pressed && styles.segmentedPressed,
+                ]}
+              >
+                <AppText variant="labelMedium" style={styles.segmentedTextMint}>
+                  Agenda
+                </AppText>
+                <CalendarDays size={13} color="#0E6852" />
+              </Pressable>
             </View>
 
-            {/* 3. Focus Timer: Expanded Widget or Fluid Daily Focus Hub */}
+            {/* 3. Weekly 7-Day Pill Meter (#CEF5EB Pod) */}
+            <View style={styles.mintMeterPod}>
+              {/* Top Status & Metrics Row (Clean typography, no dots/badges) */}
+              <View style={styles.mintPodTopRow}>
+                <AppText
+                  variant="labelSmall"
+                  style={[
+                    styles.statusText,
+                    timer.isRunning && styles.statusRunning,
+                    timer.hasSession && !timer.isRunning && styles.statusPaused,
+                  ]}
+                >
+                  {timer.reflection
+                    ? 'SESI TERCATAT'
+                    : timer.isRunning
+                      ? 'SESI BERJALAN'
+                      : timer.hasSession
+                        ? 'SESI SEDANG DIJEDA'
+                        : `${remainingCount} Tugas Siap`}
+                </AppText>
+
+                <AppText variant="labelSmall" style={styles.counterText}>
+                  {completedCount}/{activeItems.length} selesai
+                </AppText>
+              </View>
+
+              {/* 7-Day Vertical Pill Meter Bars */}
+              <View style={styles.dateStripWrapper}>
+                <CapsuleDateStrip
+                  selectedDate={selectedDate}
+                  todayDate={todayDate}
+                  onSelectDate={(date) => {
+                    if (date === todayDate) setSelectedDate(date);
+                    else router.push({ pathname: '/agenda', params: { date } });
+                  }}
+                />
+              </View>
+
+              {/* Bottom Metrics Ribbon of Mint Pod */}
+              <View style={styles.mintPodBottomRow}>
+                <View style={styles.focusMinutesGroup}>
+                  <Clock size={12} color="#0E6852" strokeWidth={2.4} />
+                  <AppText variant="bodySmall" style={styles.focusMinutesText}>
+                    Waktu fokus: <AppText variant="labelMedium" style={styles.focusMinutesBold}>{completedMinutes} menit</AppText>
+                  </AppText>
+                </View>
+              </View>
+            </View>
+
+            {/* 4. Focus Timer: Expanded Widget or Tactile Quick Action Dock */}
             {isTimerExpanded ? (
               <FocusTimerWidget
                 mode={timer.mode}
@@ -164,182 +243,77 @@ export const TodayFocusScreen: React.FC = () => {
                 onMinimize={() => setIsTimerExpanded(false)}
               />
             ) : (
-              <>
-                {/* 3A. Modern Fluid Focus Dashboard (Open Canvas Layout) */}
-                <View style={styles.focusDashboardHub}>
-                  {/* Status Indicator Bar */}
-                  <View style={styles.heroStatusRow}>
-                    <View style={styles.readyPill}>
-                      <View
-                        style={[
-                          styles.pulseDot,
-                          timer.isRunning && styles.pulseDotRunning,
-                          timer.hasSession && !timer.isRunning && styles.pulseDotPaused,
-                        ]}
-                      />
-                      <AppText variant="labelSmall" style={styles.readyPillText}>
-                        {timer.reflection
-                          ? 'SESI TERCATAT'
-                          : timer.isRunning
-                            ? 'SESI BERJALAN'
-                            : timer.hasSession
-                              ? 'SESI SEDANG DIJEDA'
-                              : `${remainingCount} Tugas Siap`}
-                      </AppText>
-                    </View>
-
-                    <View style={styles.taskDoneBadge}>
-                      <CheckCircle2 size={13} color="#16A34A" strokeWidth={2.4} />
-                      <AppText variant="labelSmall" style={styles.taskDoneBadgeText}>
-                        {completedCount}/{activeItems.length} selesai
-                      </AppText>
-                    </View>
+              <Pressable
+                onPress={() => {
+                  if (!nextTask && !timer.activeTask && !timer.hasSession) {
+                    setIsAddModalVisible(true);
+                  } else {
+                    if (!timer.hasSession && !timer.activeTask && nextTask) {
+                      timer.setActiveTask(nextTask);
+                    }
+                    setIsTimerExpanded(true);
+                  }
+                }}
+                style={({ pressed }) => [
+                  styles.hubActionDock,
+                  pressed && styles.hubActionDockPressed,
+                ]}
+              >
+                <View style={styles.hubActionLeft}>
+                  <View style={styles.hubActionIconBox}>
+                    <Play size={14} color="#CEF5EB" fill="#CEF5EB" />
                   </View>
-
-                  {/* Headline & Progress Ring */}
-                  <View style={styles.heroMiddleRow}>
-                    <View style={styles.heroTextCol}>
-                      <AppText variant="headlineSmall" style={styles.heroHeading}>
-                        Hari Ini:
-                      </AppText>
-                      <AppText variant="headlineLarge" style={styles.heroMissionsCount}>
-                        {remainingCount > 0
-                          ? `${remainingCount} Tugas Prioritas`
-                          : 'Semua Tugas Selesai!'}
-                      </AppText>
-                      <AppText variant="bodySmall" style={styles.heroSubtitle}>
-                        Fokuskan energimu pada penyelesaian prioritas utama.
-                      </AppText>
-                    </View>
-
-                    {/* Circular Progress Gauge */}
-                    <View style={styles.compassContainer}>
-                      <Svg width={compassSize} height={compassSize} style={styles.compassSvg}>
-                        <Circle
-                          cx={compassSize / 2}
-                          cy={compassSize / 2}
-                          r={compRadius}
-                          stroke="#E4E4E7"
-                          strokeWidth={strokeW}
-                          fill="none"
-                        />
-                        <Circle
-                          cx={compassSize / 2}
-                          cy={compassSize / 2}
-                          r={compRadius}
-                          stroke="#E8A838"
-                          strokeWidth={strokeW}
-                          strokeDasharray={`${compCircumference} ${compCircumference}`}
-                          strokeDashoffset={compOffset}
-                          strokeLinecap="round"
-                          fill="none"
-                        />
-                      </Svg>
-                      <View style={styles.compassInnerLabel}>
-                        <AppText variant="titleMedium" tabularNums style={styles.compassBigNum}>
-                          {completedCount}
-                        </AppText>
-                        <AppText variant="labelSmall" style={styles.compassSubNum}>
-                          /{activeItems.length}
-                        </AppText>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Tactile Quick Action Dock */}
-                  <Pressable
-                    onPress={() => {
-                      if (!nextTask && !timer.activeTask && !timer.hasSession) {
-                        setIsAddModalVisible(true);
-                      } else {
-                        if (!timer.hasSession && !timer.activeTask && nextTask) {
-                          timer.setActiveTask(nextTask);
-                        }
-                        setIsTimerExpanded(true);
-                      }
-                    }}
-                    style={({ pressed }) => [
-                      styles.hubActionDock,
-                      pressed && styles.hubActionDockPressed,
-                    ]}
-                  >
-                    <View style={styles.hubActionLeft}>
-                      <View style={styles.hubActionIconBox}>
-                        <Play size={15} color="#D97706" fill="#D97706" />
-                      </View>
-                      <View style={styles.hubActionTexts}>
-                        <AppText variant="labelMedium" style={styles.hubActionTitle} numberOfLines={1}>
-                          {timer.activeTask?.title || nextTask?.title || 'Mulai Fokus'}
-                        </AppText>
-                        <AppText variant="bodySmall" style={styles.hubActionSub}>
-                          {timer.hasSession ? 'Sesi sedang berjalan' : 'Klik untuk masuk zona fokus'}
-                        </AppText>
-                      </View>
-                    </View>
-
-                    <View style={styles.quickPlayActionPill}>
-                      <Timer size={13} color="#27272A" />
-                      <AppText variant="labelMedium" style={styles.quickPlayActionText}>
-                        {timer.hasSession ? 'Lihat sesi fokus' : 'Mulai'}
-                      </AppText>
-                    </View>
-                  </Pressable>
-
-                  {/* Hub Footer: Productivity Metrics */}
-                  <View style={styles.hubFooterRow}>
-                    <View style={styles.vitalityTextGroup}>
-                      <Clock size={13} color="#EA580C" strokeWidth={2.4} />
-                      <AppText variant="bodySmall" style={styles.vitalityText}>
-                        Waktu fokus: <AppText variant="labelMedium" style={styles.vitalityBold}>{completedMinutes} menit</AppText>
-                      </AppText>
-                    </View>
+                  <View style={styles.hubActionTexts}>
+                    <AppText variant="labelMedium" style={styles.hubActionTitle} numberOfLines={1}>
+                      {timer.activeTask?.title || nextTask?.title || 'Mulai Fokus'}
+                    </AppText>
+                    <AppText variant="bodySmall" style={styles.hubActionSub}>
+                      {timer.hasSession ? 'Sesi sedang berjalan' : 'Siap fokus'}
+                    </AppText>
                   </View>
                 </View>
-              </>
+
+                <View style={styles.quickPlayActionPill}>
+                  <Timer size={12} color="#CEF5EB" />
+                  <AppText variant="labelMedium" style={styles.quickPlayActionText}>
+                    {timer.hasSession ? 'Lihat sesi fokus' : 'Mulai'}
+                  </AppText>
+                </View>
+              </Pressable>
             )}
 
-            {/* 4. Agenda Terdekat: Clean Horizontal Glance Ticker */}
+            {/* 5. Agenda Terdekat: Trantor Obsidian Black Pod (#121316) */}
             {nextSchedule && (
               <Pressable
                 onPress={() => router.push('/agenda' as any)}
                 style={({ pressed }) => [
-                  styles.agendaGlanceStrip,
-                  pressed && styles.agendaGlanceStripPressed,
+                  styles.darkAgendaPod,
+                  pressed && styles.darkAgendaPodPressed,
                 ]}
               >
-                <View style={styles.agendaGlanceLeft}>
-                  <View style={styles.agendaGlanceIconBox}>
-                    <CalendarDays size={15} color="#D97706" strokeWidth={2.2} />
+                <View style={styles.darkAgendaLeft}>
+                  <View style={styles.darkAgendaIconBox}>
+                    <CalendarDays size={16} color="#0E6852" strokeWidth={2.4} />
                   </View>
-                  <View style={styles.agendaGlanceTexts}>
-                    <View style={styles.agendaGlanceTagRow}>
-                      <AppText variant="labelSmall" style={styles.agendaGlanceTagText}>
-                        AGENDA BERIKUTNYA
-                      </AppText>
-                      <AppText variant="labelSmall" style={styles.agendaGlanceTime} tabularNums>
-                        · {nextSchedule.schedule.startTime} – {nextSchedule.schedule.endTime} WIB
-                      </AppText>
-                    </View>
-                    <AppText variant="titleSmall" style={styles.agendaGlanceTitle} numberOfLines={1}>
+                  <View style={styles.darkAgendaTexts}>
+                    <AppText variant="labelSmall" style={styles.darkAgendaTime} tabularNums>
+                      AGENDA BERIKUTNYA · {nextSchedule.schedule.startTime} – {nextSchedule.schedule.endTime} WIB
+                    </AppText>
+                    <AppText variant="titleSmall" style={styles.darkAgendaTitle} numberOfLines={1}>
                       {nextSchedule.schedule.title}
                     </AppText>
                   </View>
                 </View>
 
-                <ChevronRight size={16} color="#A1A1AA" strokeWidth={2.2} />
+                <ChevronRight size={18} color="#CEF5EB" strokeWidth={2.2} />
               </Pressable>
             )}
 
-            {/* 5. Daftar Tugas Prioritas Hari Ini: Open Flow Checklist */}
+            {/* 6. Daftar Tugas Prioritas Hari Ini */}
             <View style={styles.questSectionHeader}>
-              <View style={styles.questTitleRow}>
-                <AppText variant="titleMedium" style={styles.questHeadingBold}>
-                  Tugas Prioritas Hari Ini
-                </AppText>
-                <AppText variant="bodySmall" style={styles.maxItemsLabel}>
-                  (maks. 5 tugas)
-                </AppText>
-              </View>
+              <AppText variant="titleMedium" style={styles.questHeadingBold}>
+                Tugas Prioritas Hari Ini
+              </AppText>
 
               <Pressable
                 onPress={() => setIsAddModalVisible(true)}
@@ -351,7 +325,7 @@ export const TodayFocusScreen: React.FC = () => {
                   focusItems.length >= 5 && styles.addPillButtonDisabled,
                 ]}
               >
-                <Plus size={13} color="#27272A" strokeWidth={2.5} />
+                <Plus size={13} color="#121316" strokeWidth={2.8} />
                 <AppText variant="labelSmall" style={styles.addPillText}>
                   Tambah
                 </AppText>
@@ -363,23 +337,31 @@ export const TodayFocusScreen: React.FC = () => {
                 title="Mulai dari satu langkah"
                 description="Pilih tugas penting dari roadmap atau buat tugas kilat baru."
                 actionTitle="Pilih prioritas"
-                customIcon={<Sparkles size={28} color="#E8A838" strokeWidth={2.2} />}
+                customIcon={<Sparkles size={28} color="#0E6852" strokeWidth={2.2} />}
                 onActionPress={() => setIsAddModalVisible(true)}
               />
             ) : (
-              <View style={styles.tasksChecklistWrapper}>
+              <View style={styles.tasksPodWrapper}>
                 {focusItems.map((item, index) => {
                   const isCompleted = item.isCompleted;
                   const isCancelled = item.task.status === 'CANCELLED';
                   const isActive = timer.activeTask?.id === item.taskId;
                   const isLast = index === focusItems.length - 1;
 
-                  const priorityBadge =
+                  // Clean typography colors without pill badges
+                  const priorityLabel =
                     item.task.priority === 'HIGH'
-                      ? { label: 'Tinggi', color: '#DC2626', bg: '#FEE2E2' }
+                      ? 'Tinggi'
                       : item.task.priority === 'LOW'
-                        ? { label: 'Rendah', color: '#4B5563', bg: '#F3F4F6' }
-                        : { label: 'Prioritas', color: '#D97706', bg: '#FEF3C7' };
+                        ? 'Rendah'
+                        : 'Prioritas';
+
+                  const priorityColor =
+                    item.task.priority === 'HIGH'
+                      ? '#DC2626'
+                      : item.task.priority === 'LOW'
+                        ? '#717684'
+                        : '#0E6852';
 
                   return (
                     <View
@@ -391,7 +373,7 @@ export const TodayFocusScreen: React.FC = () => {
                         !isLast && styles.taskRowDivider,
                       ]}
                     >
-                      {/* Left: Tactile Checkbox Button */}
+                      {/* Left: Tactile Circular Checkbox Pod */}
                       <Pressable
                         onPress={() => toggleTask(item.taskId, isCompleted || isCancelled)}
                         accessibilityRole="checkbox"
@@ -410,25 +392,20 @@ export const TodayFocusScreen: React.FC = () => {
                           ]}
                         >
                           {isCompleted && (
-                            <Check size={14} color="#FFFFFF" strokeWidth={3} />
+                            <Check size={13} color="#CEF5EB" strokeWidth={3} />
                           )}
                         </View>
                       </Pressable>
 
-                      {/* Center: Task Information */}
+                      {/* Center: Task Information (Clean typography, no badge soup) */}
                       <View style={styles.questDetailsCol}>
                         <View style={styles.questMetaRow}>
-                          <View style={[styles.tokenTag, { backgroundColor: priorityBadge.bg }]}>
-                            <AppText variant="labelSmall" style={[styles.tokenText, { color: priorityBadge.color }]}>
-                              {priorityBadge.label}
-                            </AppText>
-                          </View>
-                          <View style={styles.durationTag}>
-                            <Clock size={11} color="#71717A" />
-                            <AppText variant="bodySmall" style={styles.questDuration}>
-                              {item.task.estimatedMinutes}m
-                            </AppText>
-                          </View>
+                          <AppText variant="labelSmall" style={[styles.priorityLabel, { color: priorityColor }]}>
+                            {priorityLabel}
+                          </AppText>
+                          <AppText variant="bodySmall" style={styles.questDuration}>
+                            · {item.task.estimatedMinutes}m
+                          </AppText>
                         </View>
 
                         <AppText
@@ -471,7 +448,7 @@ export const TodayFocusScreen: React.FC = () => {
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                           style={styles.questRemoveBtn}
                         >
-                          <X size={15} color="#A1A1AA" />
+                          <X size={15} color="#9499A8" />
                         </Pressable>
 
                         {isCompleted ? null : isCancelled ? null : isActive ? (
@@ -481,7 +458,7 @@ export const TodayFocusScreen: React.FC = () => {
                             accessibilityLabel={'Jeda fokus ' + item.task.title}
                             style={styles.questPlayBtnActive}
                           >
-                            <Pause size={13} color="#FFFFFF" />
+                            <Pause size={13} color="#121316" />
                           </Pressable>
                         ) : (
                           <Pressable
@@ -493,7 +470,7 @@ export const TodayFocusScreen: React.FC = () => {
                             accessibilityLabel={'Mulai fokus ' + item.task.title}
                             style={styles.questPlayBtn}
                           >
-                            <Play size={12} color="#27272A" fill="#27272A" />
+                            <Play size={12} color="#121316" fill="#121316" />
                           </Pressable>
                         )}
                       </View>
@@ -503,28 +480,13 @@ export const TodayFocusScreen: React.FC = () => {
               </View>
             )}
 
-            {/* 6. Editorial Principle Insight */}
-            <View style={styles.editorialCallout}>
-              <View style={styles.editorialContent}>
-                <View style={styles.editorialHeader}>
-                  <Zap size={14} color="#EA580C" strokeWidth={2.4} />
-                  <AppText variant="labelMedium" style={styles.editorialTitle}>
-                    Prinsip Fokus & Produktivitas
-                  </AppText>
-                </View>
-                <AppText variant="bodySmall" style={styles.editorialBody}>
-                  Selesaikan 1–2 tugas prioritas utama di awal hari saat energi konsentrasi berada di puncak optimal.
-                </AppText>
-              </View>
-            </View>
-
             {/* Bottom spacer for floating button */}
             <View style={{ height: space[16] }} />
           </ScrollView>
         )
       )}
 
-      {/* Floating Add New Priority Task Bar */}
+      {/* 7. Trantor Floating Action Bar (Clean CTA, no double-badge) */}
       <View style={styles.floatingBottomContainer} pointerEvents="box-none">
         <Pressable
           onPress={() => setIsAddModalVisible(true)}
@@ -535,7 +497,7 @@ export const TodayFocusScreen: React.FC = () => {
             pressed && styles.floatingBtnPressed,
           ]}
         >
-          <Plus size={17} color="#FFFFFF" strokeWidth={2.8} />
+          <Plus size={18} color="#FFFFFF" strokeWidth={3} />
           <AppText variant="titleMedium" style={styles.floatingAddQuestText}>
             Tambah Tugas Prioritas
           </AppText>
@@ -568,7 +530,7 @@ export const TodayFocusScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   screenBg: {
-    backgroundColor: '#FAFAF9',
+    backgroundColor: '#F6F7F9', // Trantor Canvas Clean Light Grey
   },
   header: {
     flexDirection: 'row',
@@ -580,32 +542,36 @@ const styles = StyleSheet.create({
   headerTextCol: {
     gap: 1,
   },
-  dateEyebrow: {
-    fontFamily: fontFamily.medium,
-    fontSize: 12,
-    color: '#71717A',
-    textTransform: 'capitalize',
-  },
   pageTitle: {
     fontFamily: fontFamily.bold,
     fontSize: 28,
     lineHeight: 34,
-    color: '#18181B',
+    color: '#121316',
+  },
+  dateSubtext: {
+    fontSize: 12,
+    color: '#717684',
+    fontFamily: fontFamily.medium,
+    textTransform: 'capitalize',
   },
   settingsBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#F4F4F5',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(18, 19, 22, 0.08)',
+    shadowColor: '#121316',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 1,
   },
   settingsBtnPressed: {
-    backgroundColor: '#E4E4E7',
-    transform: [{ scale: 0.96 }],
-  },
-  dateStripWrapper: {
-    marginBottom: space[1],
+    backgroundColor: '#ECEEF2',
+    transform: [{ scale: 0.95 }],
   },
   scrollContent: {
     paddingBottom: 110,
@@ -619,148 +585,163 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space[3],
   },
-  // 3A. Modern Fluid Focus Hub (No chunky cartoon borders!)
-  focusDashboardHub: {
+  // 2. Trantor Segmented Action Dock
+  segmentedActionDock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 9999,
+    padding: 4,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.06)',
-    padding: 16,
-    marginBottom: space[2],
-    shadowColor: '#000000',
-    shadowOpacity: 0.03,
+    borderColor: 'rgba(18, 19, 22, 0.08)',
+    shadowColor: '#121316',
+    shadowOpacity: 0.04,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 1,
+    shadowRadius: 6,
+    elevation: 2,
+    marginBottom: space[1],
   },
-  heroStatusRow: {
+  segmentedPillLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FFDEC4',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 9999,
+  },
+  segmentedTextPeach: {
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+    color: '#8A3C1B',
+  },
+  segmentedCenterCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#121316',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#121316',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  segmentedPillRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#CEF5EB',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 9999,
+  },
+  segmentedTextMint: {
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+    color: '#0E6852',
+  },
+  segmentedPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.96 }],
+  },
+  // 3. Weekly 7-Day Pill Meter (#CEF5EB Pod)
+  mintMeterPod: {
+    backgroundColor: '#CEF5EB',
+    borderRadius: 24,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(14, 104, 82, 0.12)',
+    shadowColor: '#0E6852',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  mintPodTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: space[2],
   },
-  readyPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F4F4F5',
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: 9999,
-  },
-  pulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#E8A838',
-  },
-  pulseDotRunning: {
-    backgroundColor: '#16A34A',
-  },
-  pulseDotPaused: {
-    backgroundColor: '#EA580C',
-  },
-  readyPillText: {
+  statusText: {
     fontFamily: fontFamily.bold,
     fontSize: 11,
-    color: '#3F3F46',
+    color: '#0E6852',
+    letterSpacing: 0.3,
   },
-  taskDoneBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 9999,
+  statusRunning: {
+    color: '#15803D',
   },
-  taskDoneBadgeText: {
+  statusPaused: {
+    color: '#C2410C',
+  },
+  counterText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#166534',
+    fontSize: 12,
+    color: '#0E6852',
   },
-  heroMiddleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: space[3],
+  dateStripWrapper: {
     marginVertical: space[1],
   },
-  heroTextCol: {
-    flex: 1,
+  mintPodBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: space[2],
+    marginTop: space[1],
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(14, 104, 82, 0.16)',
   },
-  heroHeading: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: '#71717A',
-    lineHeight: 18,
+  focusMinutesGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
-  heroMissionsCount: {
-    fontFamily: fontFamily.bold,
-    fontSize: 22,
-    lineHeight: 28,
-    color: '#18181B',
-    marginBottom: 2,
-  },
-  heroSubtitle: {
+  focusMinutesText: {
     fontSize: 12,
-    color: '#71717A',
-    lineHeight: 17,
+    color: '#0E6852',
   },
-  compassContainer: {
-    position: 'relative',
-    width: 58,
-    height: 58,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  compassSvg: {
-    transform: [{ rotate: '-90deg' }],
-  },
-  compassInnerLabel: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  compassBigNum: {
+  focusMinutesBold: {
     fontFamily: fontFamily.bold,
-    fontSize: 15,
-    lineHeight: 17,
-    color: '#18181B',
+    color: '#121316',
+    fontSize: 12,
   },
-  compassSubNum: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    lineHeight: 12,
-    color: '#71717A',
-  },
+  // 4. Quick Focus Action Dock
   hubActionDock: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FAF8F5',
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginTop: space[3],
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
+    borderColor: 'rgba(18, 19, 22, 0.08)',
     gap: 8,
+    shadowColor: '#121316',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 2,
   },
   hubActionDockPressed: {
-    backgroundColor: '#F5F2EC',
+    backgroundColor: '#F7FAF9',
+    transform: [{ scale: 0.99 }],
   },
   hubActionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     flex: 1,
   },
   hubActionIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FEF3C7',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#121316',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -770,104 +751,73 @@ const styles = StyleSheet.create({
   },
   hubActionTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 13,
-    color: '#18181B',
+    fontSize: 14,
+    color: '#121316',
   },
   hubActionSub: {
     fontSize: 11,
-    color: '#71717A',
+    color: '#717684',
   },
   quickPlayActionPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E4E4E7',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    backgroundColor: '#121316',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 9999,
   },
   quickPlayActionText: {
     fontFamily: fontFamily.bold,
     fontSize: 11,
-    color: '#18181B',
+    color: '#CEF5EB',
   },
-  hubFooterRow: {
+  // 5. Trantor Obsidian Black Pod for Upcoming Agenda (#121316)
+  darkAgendaPod: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: space[2],
-    marginTop: space[2],
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: '#121316',
+    borderRadius: 20,
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    shadowColor: '#121316',
+    shadowOpacity: 0.16,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 3,
   },
-  vitalityTextGroup: {
+  darkAgendaPodPressed: {
+    backgroundColor: '#202227',
+  },
+  darkAgendaLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  vitalityText: {
-    fontSize: 12,
-    color: '#71717A',
-  },
-  vitalityBold: {
-    fontFamily: fontFamily.bold,
-    color: '#18181B',
-    fontSize: 12,
-  },
-  agendaGlanceStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFBEB',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginBottom: space[2],
-  },
-  agendaGlanceStripPressed: {
-    backgroundColor: '#FEF3C7',
-  },
-  agendaGlanceLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    gap: 12,
     flex: 1,
   },
-  agendaGlanceIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#FEF3C7',
+  darkAgendaIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#CEF5EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  agendaGlanceTexts: {
+  darkAgendaTexts: {
     flex: 1,
-    gap: 1,
+    gap: 2,
   },
-  agendaGlanceTagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  agendaGlanceTagText: {
+  darkAgendaTime: {
     fontFamily: fontFamily.bold,
     fontSize: 10,
-    color: '#B45309',
+    color: '#CEF5EB',
     letterSpacing: 0.5,
   },
-  agendaGlanceTime: {
-    fontSize: 11,
-    color: '#78716C',
-  },
-  agendaGlanceTitle: {
+  darkAgendaTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 13,
-    color: '#18181B',
+    fontSize: 14,
+    color: '#FFFFFF',
   },
   questSectionHeader: {
     flexDirection: 'row',
@@ -876,31 +826,22 @@ const styles = StyleSheet.create({
     marginTop: space[2],
     marginBottom: space[1],
   },
-  questTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6,
-  },
   questHeadingBold: {
     fontFamily: fontFamily.bold,
     fontSize: 17,
-    color: '#18181B',
-  },
-  maxItemsLabel: {
-    fontSize: 12,
-    color: '#71717A',
+    color: '#121316',
   },
   addPillButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F4F4F5',
-    paddingHorizontal: 10,
+    backgroundColor: '#FFDEC4',
+    paddingHorizontal: 11,
     paddingVertical: 5,
     borderRadius: 9999,
   },
   addPillButtonPressed: {
-    backgroundColor: '#E4E4E7',
+    backgroundColor: '#F5CEB2',
   },
   addPillButtonDisabled: {
     opacity: 0.4,
@@ -908,57 +849,61 @@ const styles = StyleSheet.create({
   addPillText: {
     fontFamily: fontFamily.bold,
     fontSize: 12,
-    color: '#18181B',
+    color: '#121316',
   },
-  // Checklist without enclosing card box!
-  tasksChecklistWrapper: {
+  // 6. Tasks Pod Wrapper
+  tasksPodWrapper: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.06)',
-    paddingHorizontal: 12,
-    marginBottom: space[2],
+    borderColor: 'rgba(18, 19, 22, 0.06)',
+    paddingHorizontal: 14,
+    shadowColor: '#121316',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 1,
   },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 13,
     gap: 12,
     backgroundColor: '#FFFFFF',
   },
   taskRowActive: {
-    backgroundColor: '#FFFBEB',
-    marginHorizontal: -12,
-    paddingHorizontal: 12,
+    backgroundColor: '#F2FBF8',
+    marginHorizontal: -14,
+    paddingHorizontal: 14,
     borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
+    borderLeftColor: '#0E6852',
   },
   taskRowCompleted: {
-    opacity: 0.7,
+    opacity: 0.65,
   },
   taskRowDivider: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0, 0, 0, 0.08)',
+    borderBottomColor: 'rgba(18, 19, 22, 0.08)',
   },
   taskCheckboxBtn: {
-    minWidth: 40,
-    minHeight: 40,
+    minWidth: 38,
+    minHeight: 38,
     alignItems: 'center',
     justifyContent: 'center',
   },
   taskCheckboxBox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 7,
     borderWidth: 1.5,
-    borderColor: '#D4D4D8',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#D1D4DC',
+    backgroundColor: '#F6F7F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   taskCheckboxBoxDone: {
-    backgroundColor: '#16A34A',
-    borderColor: '#16A34A',
+    backgroundColor: '#121316',
+    borderColor: '#121316',
   },
   questDetailsCol: {
     flex: 1,
@@ -967,38 +912,27 @@ const styles = StyleSheet.create({
   questMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space[2],
+    gap: 4,
   },
-  tokenTag: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  tokenText: {
+  priorityLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 10,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  durationTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
   questDuration: {
     fontSize: 11,
-    color: '#71717A',
+    color: '#717684',
     fontFamily: fontFamily.medium,
   },
   questTitle: {
     fontFamily: fontFamily.bold,
     fontSize: 14,
     lineHeight: 19,
-    color: '#18181B',
+    color: '#121316',
   },
   questTitleDone: {
     textDecorationLine: 'line-through',
-    color: '#A1A1AA',
+    color: '#9499A8',
   },
   questTitleCancelled: {
     textDecorationLine: 'line-through',
@@ -1007,10 +941,10 @@ const styles = StyleSheet.create({
   questSubtext: {
     fontSize: 12,
     lineHeight: 16,
-    color: '#71717A',
+    color: '#717684',
   },
   questSubtextDone: {
-    color: '#16A34A',
+    color: '#0E6852',
     fontFamily: fontFamily.bold,
   },
   questSubtextCancelled: {
@@ -1020,7 +954,7 @@ const styles = StyleSheet.create({
   questActionGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
   },
   questRemoveBtn: {
     width: 32,
@@ -1033,7 +967,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: '#F0F2F5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1041,36 +975,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#EA580C',
+    backgroundColor: '#FFDEC4',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  editorialCallout: {
-    backgroundColor: '#FAF8F5',
-    borderRadius: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: '#EA580C',
-    padding: 12,
-    marginBottom: space[4],
-  },
-  editorialContent: {
-    gap: 2,
-  },
-  editorialHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  editorialTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#18181B',
-  },
-  editorialBody: {
-    fontSize: 12,
-    color: '#71717A',
-    lineHeight: 17,
-  },
+  // 7. Floating Action Bar
   floatingBottomContainer: {
     position: 'absolute',
     bottom: space[3],
@@ -1083,21 +992,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#1E1E2E',
+    backgroundColor: '#121316',
     borderRadius: 9999,
     paddingVertical: 14,
-    paddingHorizontal: space[6],
+    paddingHorizontal: 24,
     width: '100%',
     maxWidth: 320,
-    shadowColor: '#000000',
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    elevation: 4,
+    shadowColor: '#121316',
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 14,
+    elevation: 6,
   },
   floatingBtnPressed: {
     transform: [{ scale: 0.98 }],
-    backgroundColor: '#2E2E3E',
+    backgroundColor: '#202227',
   },
   floatingAddQuestText: {
     fontFamily: fontFamily.bold,

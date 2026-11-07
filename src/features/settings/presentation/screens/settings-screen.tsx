@@ -90,14 +90,6 @@ export const SettingsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.introRow}>
-          <View style={styles.introIcon}><Lock size={16} color={colors.primary} /></View>
-          <View style={styles.introCopy}>
-            <AppText variant="titleSmall">Pengaturan MyLife</AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">Preferensi dan data aplikasi tersimpan lokal di perangkat.</AppText>
-          </View>
-        </View>
-
         {/* 3. Section: Organisasi */}
         <View style={styles.sectionHeaderRow}>
           <AppText

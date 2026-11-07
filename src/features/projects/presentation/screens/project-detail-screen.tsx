@@ -219,15 +219,8 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
           ) : null}
         </View>
 
-        {/* 5. Status Lifecycle Selector (Playful Segmented Capsule) */}
+        {/* 5. Status Lifecycle Selector */}
         <View style={styles.statusSection}>
-          <AppText
-            variant="labelMedium"
-            color="onSurfaceVariant"
-            style={styles.statusSectionTitle}
-          >
-            Status Siklus Proyek
-          </AppText>
           <View style={styles.segmentedContainer}>
             {STATUS_ITEMS.map((item) => {
               const isSelected = currentStatus === item.key;
@@ -242,7 +235,6 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
                     isSelected && styles.segmentButtonActive,
                   ]}
                 >
-                  {isSelected && <View style={styles.statusDotActive} />}
                   <AppText
                     variant="labelMedium"
                     style={[
@@ -270,15 +262,6 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
             {project.taskSummary.completedTasks}/{project.taskSummary.totalTasks} tugas selesai · {stages.length} tahap · estimasi {project.taskSummary.totalEstimatedHours} jam
           </AppText>
         </View>
-
-        {/* Disclaimer Note (preserves test requirement) */}
-        <AppText
-          variant="bodySmall"
-          color="onSurfaceVariant"
-          style={styles.footnoteText}
-        >
-          Tugas dibatalkan tidak dihitung. Persen menunjukkan progres rencana, bukan penguasaan keterampilan atau pencapaian hasil akhir.
-        </AppText>
 
         {/* 7. Milestone & Task Checklist Section */}
         <View style={styles.sectionHeaderRow}>

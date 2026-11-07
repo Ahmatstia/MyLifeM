@@ -27,9 +27,9 @@ export const ProjectListScreen: React.FC = () => {
   const totalTasks = projects.reduce((sum, project) => sum + project.taskSummary.totalTasks, 0);
   const completedTasks = projects.reduce((sum, project) => sum + project.taskSummary.completedTasks, 0);
 
-  const filterTabs: { label: string; value: any; hasDot?: boolean }[] = [
+  const filterTabs: { label: string; value: any }[] = [
     { label: 'Semua', value: null },
-    { label: 'Aktif', value: 'ACTIVE', hasDot: true },
+    { label: 'Aktif', value: 'ACTIVE' },
     { label: 'Rencana', value: 'PLANNING' },
     { label: 'Ditunda', value: 'ON_HOLD' },
     { label: 'Selesai', value: 'COMPLETED' },
@@ -39,13 +39,7 @@ export const ProjectListScreen: React.FC = () => {
     <Screen scrollable={false} withBottomPadding={false} style={styles.screenBg}>
       <View style={styles.header}>
         <View style={styles.titleColumn}>
-          <View style={styles.badgeCapsule}>
-            <FolderKanban size={11} color="#E06B52" strokeWidth={2.6} />
-            <AppText variant="labelSmall" style={styles.badgeText}>
-              PROYEK & INISIATIF
-            </AppText>
-          </View>
-          <AppText variant="headlineSmall" style={styles.headerTitle}>Proyek</AppText>
+          <AppText variant="headlineMedium" style={styles.headerTitle}>Proyek</AppText>
         </View>
 
         <Pressable
@@ -131,7 +125,6 @@ export const ProjectListScreen: React.FC = () => {
                       >
                         {tab.label}
                       </AppText>
-                      {tab.hasDot && <View style={styles.chipGreenDot} />}
                     </Pressable>
                   );
                 })}

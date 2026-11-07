@@ -12,8 +12,6 @@ import {
   ArrowLeft,
   Trash2,
   Plus,
-  Sparkles,
-  Calendar,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, radius, fontFamily } from '@/theme/tokens';
@@ -147,20 +145,13 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
         {/* TARGET HEADER PROFILE */}
         <View style={styles.headerProfileSection}>
           <View style={styles.metaBadgeRow}>
-            <View style={styles.categoryBadge}>
-              <View style={styles.categoryDot} />
-              <AppText variant="labelSmall" style={styles.categoryText}>
-                {target.categoryName.toUpperCase()}
-              </AppText>
-            </View>
-
+            <AppText variant="labelSmall" style={styles.categoryText}>
+              {target.categoryName.toUpperCase()}
+            </AppText>
             {target.targetDate ? (
-              <View style={styles.dateBadge}>
-                <Calendar size={12} color={colors.onSurfaceVariant} strokeWidth={2.2} />
-                <AppText variant="labelSmall" style={styles.dateBadgeText}>
-                  Target: {target.targetDate}
-                </AppText>
-              </View>
+              <AppText variant="labelSmall" style={styles.dateBadgeText}>
+                · Target: {target.targetDate}
+              </AppText>
             ) : null}
           </View>
 
@@ -168,19 +159,10 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
             {target.title}
           </AppText>
 
-          {/* PLAYFUL "WHY" MOTIVATION CARD */}
           {target.description ? (
-            <View style={styles.whyCard}>
-              <View style={styles.whyHeaderRow}>
-                <Sparkles size={14} color={colors.primary} strokeWidth={2.2} />
-                <AppText variant="labelSmall" style={styles.whyLabel}>
-                  Komitmen & Motivasi Pribadi
-                </AppText>
-              </View>
-              <AppText variant="bodySmall" style={styles.whyText}>
-                &ldquo;{target.description}&rdquo;
-              </AppText>
-            </View>
+            <AppText variant="bodyMedium" color="onSurfaceVariant" style={styles.whyText}>
+              {target.description}
+            </AppText>
           ) : null}
         </View>
 
@@ -202,16 +184,12 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           </AppText>
         </View>
 
-        <AppText variant="bodySmall" style={styles.disclaimerText}>
-          Mencakup tugas langsung dan proyek terkait. Tugas dibatalkan tidak dihitung; persen menunjukkan progres rencana, bukan penguasaan keterampilan.
-        </AppText>
-
-        {/* SECTION HEADER: TAHAPAN ROADMAP */}
+        {/* SECTION HEADER: TAHAPAN */}
         <View style={styles.sectionHeaderRow}>
           <View style={styles.sectionTitleCol}>
             <View style={styles.sectionTitleRow}>
               <AppText variant="titleMedium" style={styles.sectionHeadingBold}>
-                Tahapan Roadmap
+                Tahapan
               </AppText>
               <View style={styles.stageCountBadge}>
                 <AppText variant="labelSmall" style={styles.stageCountText}>
@@ -219,9 +197,6 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
                 </AppText>
               </View>
             </View>
-            <AppText variant="bodySmall" style={styles.sectionSubtext}>
-              Urutan fase untuk mencapai tujuanmu
-            </AppText>
           </View>
 
           <Pressable

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, type ViewStyle, type StyleProp } from 'react-native';
-import { ArrowRight, Terminal } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { fontFamily } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText } from '@/shared/ui';
@@ -85,14 +85,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, styl
         {project.title}
       </AppText>
 
-      {/* Description / Deliverable Output Box */}
+      {/* Description */}
       {project.description ? (
-        <View style={styles.outputBox}>
-          <Terminal size={14} color={colors.primary} strokeWidth={2} style={styles.outputIcon} />
-          <AppText variant="bodySmall" style={styles.outputText} numberOfLines={2}>
-            {project.description}
-          </AppText>
-        </View>
+        <AppText variant="bodySmall" style={styles.description} numberOfLines={2}>
+          {project.description}
+        </AppText>
       ) : null}
 
       {/* Progress & Metrics Bottom Section */}
@@ -192,28 +189,12 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: colors.onSurfaceVariant,
   },
-  outputBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FAF5EB',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#E06B52',
-    borderWidth: 1,
-    borderColor: 'rgba(30, 30, 46, 0.1)',
-    padding: 8,
-    marginTop: 8,
-    gap: 6,
-  },
-  outputIcon: {
-    marginTop: 2,
-  },
-  outputText: {
-    flex: 1,
-    fontSize: 12,
+  description: {
+    fontSize: 13,
     fontFamily: fontFamily.medium,
-    color: colors.onSurfaceVariant,
-    lineHeight: 16,
+    color: '#504535',
+    marginTop: 4,
+    lineHeight: 18,
   },
   bottomSection: {
     marginTop: 12,

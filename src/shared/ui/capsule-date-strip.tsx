@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { formatLocalDate, isDateOnly } from '@/shared/utils/local-date';
-import { radius, space, fontFamily } from '@/theme/tokens';
+import { space, fontFamily } from '@/theme/tokens';
 import { AppText } from './app-text';
 
 export interface CapsuleDateStripProps {
@@ -40,15 +40,28 @@ export function CapsuleDateStrip({
           accessibilityRole="button"
           accessibilityLabel={`${item.weekday}, ${item.date}${item.today ? ', hari ini' : ''}`}
           accessibilityState={{ selected: item.selected }}
-          style={({ pressed }) => [styles.day, item.selected && styles.daySelected, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.pillBar,
+            item.selected && styles.pillBarSelected,
+            item.today && !item.selected && styles.pillBarToday,
+            pressed && styles.pressed,
+          ]}
         >
-          <AppText variant="labelSmall" style={[styles.weekday, item.selected && styles.selectedWeekday]}>
+          <AppText
+            variant="labelSmall"
+            style={[
+              styles.weekday,
+              item.selected && styles.selectedWeekday,
+              item.today && !item.selected && styles.todayWeekday,
+            ]}
+          >
             {item.weekday}
           </AppText>
-          <AppText variant="titleSmall" tabularNums style={[styles.date, item.selected && styles.selectedDate]}>
-            {item.day}
-          </AppText>
-          <View style={[styles.dot, item.today && styles.todayDot, item.selected && item.today && styles.selectedTodayDot]} />
+          <View style={[styles.dateCircle, item.selected && styles.selectedDateCircle]}>
+            <AppText variant="titleSmall" tabularNums style={[styles.date, item.selected && styles.selectedDate]}>
+              {item.day}
+            </AppText>
+          </View>
         </Pressable>
       ))}
     </ScrollView>
@@ -56,38 +69,53 @@ export function CapsuleDateStrip({
 }
 
 const styles = StyleSheet.create({
-  row: { gap: space[2], paddingVertical: space[1] },
-  day: {
+  row: { gap: 8, paddingVertical: space[1], paddingHorizontal: 2 },
+  pillBar: {
     minWidth: 44,
-    minHeight: 58,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 14,
-    backgroundColor: '#F7F5F0',
+    height: 64,
+    paddingHorizontal: 6,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(30, 30, 46, 0.08)',
+    borderColor: 'rgba(18, 19, 22, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#121316',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  pillBarSelected: {
+    backgroundColor: '#121316',
+    borderColor: '#121316',
+    shadowOpacity: 0.18,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  pillBarToday: {
+    borderColor: 'rgba(14, 104, 82, 0.35)',
+  },
+  weekday: { color: '#717684', fontFamily: fontFamily.bold, fontSize: 10, letterSpacing: 0.3 },
+  selectedWeekday: { color: '#CEF5EB' },
+  todayWeekday: { color: '#0E6852' },
+  dateCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    backgroundColor: 'transparent',
   },
-  daySelected: {
-    backgroundColor: '#1E1E2E',
-    borderColor: '#1E1E2E',
-    elevation: 2,
-    shadowColor: '#1E1E2E',
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+  selectedDateCircle: {
+    backgroundColor: 'rgba(206, 245, 235, 0.15)',
   },
-  weekday: { color: '#78716C', fontFamily: fontFamily.bold, fontSize: 11 },
-  date: { color: '#1E1E2E', fontFamily: fontFamily.bold, fontSize: 15 },
-  selectedWeekday: { color: '#D4D4D8' },
+  date: { color: '#121316', fontFamily: fontFamily.bold, fontSize: 15 },
   selectedDate: { color: '#FFFFFF' },
-  dot: { width: 4, height: 4, borderRadius: radius.full, backgroundColor: 'transparent', marginTop: 1 },
-  todayDot: { backgroundColor: '#E06B52' },
-  selectedTodayDot: { backgroundColor: '#E8A838' },
   pressed: {
     opacity: 0.8,
-    transform: [{ scale: 0.97 }],
+    transform: [{ scale: 0.95 }],
   },
 });

@@ -28,14 +28,12 @@ export const TargetCard: React.FC<TargetCardProps> = ({ target, onPress, style }
       <View style={styles.topRow}>
         <View style={styles.headerTextCol}>
           <View style={styles.badgeRow}>
-            <View style={styles.categoryBadge}>
-              <AppText variant="labelSmall" style={styles.categoryText}>
-                {target.categoryName || 'Umum'}
-              </AppText>
-            </View>
+            <AppText variant="labelSmall" style={styles.categoryText}>
+              {target.categoryName || 'Umum'}
+            </AppText>
             {target.status === 'ACTIVE' && (
-            <AppText variant="labelSmall" style={styles.stageText}>
-                Aktif
+              <AppText variant="labelSmall" style={styles.stageText}>
+                · Aktif
               </AppText>
             )}
           </View>

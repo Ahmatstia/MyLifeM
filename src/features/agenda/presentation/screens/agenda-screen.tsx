@@ -37,7 +37,6 @@ export const AgendaScreen: React.FC = () => {
     selectedDate,
     setSelectedDate,
     todayDate,
-    timeZone,
     events = [],
     weeklyOccurrences = [],
     isLoading: isAgendaLoading,
@@ -128,13 +127,7 @@ export const AgendaScreen: React.FC = () => {
     <Screen scrollable={false} withBottomPadding={false} style={styles.screenBg}>
       <View style={styles.header}>
         <View style={styles.titleColumn}>
-          <View style={styles.badgeCapsule}>
-            <CalendarDays size={11} color="#E06B52" strokeWidth={2.6} />
-            <AppText variant="labelSmall" style={styles.badgeText}>
-              JADWAL & AGENDA
-            </AppText>
-          </View>
-          <AppText variant="headlineSmall" style={styles.headerTitle}>Agenda</AppText>
+          <AppText variant="headlineMedium" style={styles.headerTitle}>Agenda</AppText>
         </View>
 
         {viewMode === 'DAILY' ? (
@@ -229,10 +222,6 @@ export const AgendaScreen: React.FC = () => {
               todayDate={todayDate}
               onSelectDate={setSelectedDate}
             />
-
-            <AppText variant="bodySmall" style={styles.timezoneText}>
-              Zona waktu: {timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone}
-            </AppText>
 
             {reminderWarning && (
               <Banner

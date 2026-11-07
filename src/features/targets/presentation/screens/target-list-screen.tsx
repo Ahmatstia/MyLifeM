@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { Plus, Target as TargetIcon, Sparkles } from 'lucide-react-native';
+import { Plus, Sparkles } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, fontFamily } from '@/theme/tokens';
 import { Screen, AppText, Banner, EmptyState } from '@/shared/ui';
@@ -34,13 +34,7 @@ export const TargetListScreen: React.FC = () => {
     <Screen scrollable={false} withBottomPadding={false} style={styles.screenBg}>
       <View style={styles.header}>
         <View style={styles.titleColumn}>
-          <View style={styles.badgeCapsule}>
-            <TargetIcon size={11} color="#E06B52" strokeWidth={2.6} />
-            <AppText variant="labelSmall" style={styles.badgeText}>
-              ROADMAP STRATEGIS
-            </AppText>
-          </View>
-          <AppText variant="headlineSmall" style={styles.headerTitle}>Target Hidup</AppText>
+          <AppText variant="headlineMedium" style={styles.headerTitle}>Target</AppText>
         </View>
 
         <Pressable
@@ -139,16 +133,6 @@ export const TargetListScreen: React.FC = () => {
                   />
                 ))
               )}
-
-              {/* SETTINGS CATEGORY LINK */}
-              <Pressable
-                onPress={() => router.push('/settings')}
-                style={styles.settingsLink}
-              >
-                <AppText variant="bodySmall" style={styles.settingsLinkText}>
-                  ⚙️ Kelola kategori di Pengaturan
-                </AppText>
-              </Pressable>
             </>
           )
         )}
