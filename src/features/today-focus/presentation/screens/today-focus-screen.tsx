@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,7 +11,6 @@ import {
   Check,
   Play,
   Pause,
-  ChevronRight,
   Sparkles,
   Settings as SettingsIcon,
   X,
@@ -19,15 +18,16 @@ import {
   Clock,
   Timer,
   CalendarDays,
+  Repeat,
 } from 'lucide-react-native';
 import { space, fontFamily } from '@/theme/tokens';
 import { Screen, AppText, Banner, EmptyState } from '@/shared/ui';
-import { formatLocalDate } from '@/shared/utils/local-date';
-import { CapsuleDateStrip } from '@/shared/ui/capsule-date-strip';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
-import { useNextSchedule } from '@/features/agenda/presentation/hooks/use-next-schedule';
 import { useTodayFocus } from '../hooks/use-today-focus';
 import { useFocusTimer } from '../hooks/use-focus-timer';
+import { useAgenda } from '@/features/agenda/presentation/hooks/use-agenda';
+import { usePrayerTimes } from '@/features/prayer-times/presentation/hooks/use-prayer-times';
+import { PrayerTimesWidget } from '@/features/prayer-times/presentation/components/prayer-times-widget';
 import { FocusTimerWidget } from '../components/focus-timer-widget';
 import { AddPriorityModal } from '../components/add-priority-modal';
 import { SessionReflectionModal } from '../components/session-reflection-modal';
@@ -44,21 +44,37 @@ export const TodayFocusScreen: React.FC = () => {
     addQuickTask,
     addTaskToToday,
     removeFromToday,
-    todayDate,
   } = useTodayFocus();
 
+  const {
+    events = [],
+    weeklyOccurrences = [],
+    toggleEvent,
+    toggleWeeklyOccurrence,
+  } = useAgenda();
+
+  const prayerSchedule = usePrayerTimes();
   const [isTimerExpanded, setIsTimerExpanded] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(() => formatLocalDate(new Date()));
-  useEffect(() => setSelectedDate(todayDate), [todayDate]);
-  const { nextSchedule } = useNextSchedule();
   useOpenAddFromParam(() => router.push('/today/new'));
   const timer = useFocusTimer({ onSessionRecorded: refresh });
 
+  // Focus items metrics
   const completedCount = focusItems.filter((item) => item.isCompleted).length;
   const activeItems = focusItems.filter((item) => item.task.status !== 'CANCELLED');
   const remainingCount = Math.max(0, activeItems.length - completedCount);
   const nextTask = activeItems.find((item) => !item.isCompleted)?.task;
+
+  // Agenda metrics for today
+  const activeOccurrences = weeklyOccurrences.filter((occ) => !occ.isCancelled);
+  const totalAgendaCount = events.length + activeOccurrences.length;
+  const completedAgendaCount =
+    events.filter((e) => e.isCompleted).length +
+    activeOccurrences.filter((occ) => occ.isCompleted).length;
+
+  // Combined progress
+  const totalActionables = activeItems.length + totalAgendaCount;
+  const totalCompletedActionables = completedCount + completedAgendaCount;
 
   const todayFormatted = new Date().toLocaleDateString('id-ID', {
     weekday: 'long',
@@ -120,7 +136,56 @@ export const TodayFocusScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {/* 2. Trantor Segmented Action Dock */}
+            {/* 2. Hero Cockpit Pod (Organically Asymmetric Mint Pod #CEF5EB) */}
+            <View style={styles.heroPod}>
+              <View style={styles.heroTopRow}>
+                <View style={styles.heroPillBadge}>
+                  <AppText variant="labelSmall" style={styles.heroPillText}>
+                    TARGET HARI INI
+                  </AppText>
+                </View>
+
+                <AppText
+                  variant="labelSmall"
+                  style={[
+                    styles.statusText,
+                    timer.isRunning && styles.statusRunning,
+                    timer.hasSession && !timer.isRunning && styles.statusPaused,
+                  ]}
+                >
+                  {timer.reflection
+                    ? 'SESI TERCATAT'
+                    : timer.isRunning
+                      ? 'SESI BERJALAN'
+                      : timer.hasSession
+                        ? 'SESI SEDANG DIJEDA'
+                        : `${remainingCount} Prioritas Siap`}
+                </AppText>
+              </View>
+
+              <View style={styles.heroMainRow}>
+                <View style={styles.heroStatsCol}>
+                  <AppText variant="headlineMedium" style={styles.heroProgressNum}>
+                    {totalCompletedActionables}/{totalActionables} Selesai
+                  </AppText>
+                  <AppText variant="bodySmall" style={styles.heroProgressSub}>
+                    {remainingCount} prioritas · {totalAgendaCount - completedAgendaCount} agenda tersisa
+                  </AppText>
+                </View>
+
+                <View style={styles.heroMinutesPill}>
+                  <Clock size={13} color="#0E6852" strokeWidth={2.4} />
+                  <AppText variant="labelMedium" style={styles.heroMinutesNum}>
+                    {completedMinutes}m fokus
+                  </AppText>
+                </View>
+              </View>
+            </View>
+
+            {/* 3. Jadwal Shalat & Azan Widget */}
+            <PrayerTimesWidget schedule={prayerSchedule} />
+
+            {/* 4. Trantor Segmented Action Dock */}
             <View style={styles.segmentedActionDock}>
               {/* Left Pill: Mulai Fokus / Timer */}
               <Pressable
@@ -158,71 +223,22 @@ export const TodayFocusScreen: React.FC = () => {
                 <Plus size={18} color="#FFFFFF" strokeWidth={3} />
               </Pressable>
 
-              {/* Right Pill: Agenda Shortcut */}
+              {/* Right Pill: Add Agenda Shortcut */}
               <Pressable
-                onPress={() => router.push('/agenda' as any)}
+                onPress={() => router.push('/agenda/new')}
                 style={({ pressed }) => [
                   styles.segmentedPillRight,
                   pressed && styles.segmentedPressed,
                 ]}
               >
                 <AppText variant="labelMedium" style={styles.segmentedTextMint}>
-                  Agenda
+                  + Agenda
                 </AppText>
                 <CalendarDays size={13} color="#0E6852" />
               </Pressable>
             </View>
 
-            {/* 3. Weekly 7-Day Pill Meter (#CEF5EB Pod) */}
-            <View style={styles.mintMeterPod}>
-              {/* Top Status & Metrics Row (Clean typography, no dots/badges) */}
-              <View style={styles.mintPodTopRow}>
-                <AppText
-                  variant="labelSmall"
-                  style={[
-                    styles.statusText,
-                    timer.isRunning && styles.statusRunning,
-                    timer.hasSession && !timer.isRunning && styles.statusPaused,
-                  ]}
-                >
-                  {timer.reflection
-                    ? 'SESI TERCATAT'
-                    : timer.isRunning
-                      ? 'SESI BERJALAN'
-                      : timer.hasSession
-                        ? 'SESI SEDANG DIJEDA'
-                        : `${remainingCount} Tugas Siap`}
-                </AppText>
-
-                <AppText variant="labelSmall" style={styles.counterText}>
-                  {completedCount}/{activeItems.length} selesai
-                </AppText>
-              </View>
-
-              {/* 7-Day Vertical Pill Meter Bars */}
-              <View style={styles.dateStripWrapper}>
-                <CapsuleDateStrip
-                  selectedDate={selectedDate}
-                  todayDate={todayDate}
-                  onSelectDate={(date) => {
-                    if (date === todayDate) setSelectedDate(date);
-                    else router.push({ pathname: '/agenda', params: { date } });
-                  }}
-                />
-              </View>
-
-              {/* Bottom Metrics Ribbon of Mint Pod */}
-              <View style={styles.mintPodBottomRow}>
-                <View style={styles.focusMinutesGroup}>
-                  <Clock size={12} color="#0E6852" strokeWidth={2.4} />
-                  <AppText variant="bodySmall" style={styles.focusMinutesText}>
-                    Waktu fokus: <AppText variant="labelMedium" style={styles.focusMinutesBold}>{completedMinutes} menit</AppText>
-                  </AppText>
-                </View>
-              </View>
-            </View>
-
-            {/* 4. Focus Timer: Expanded Widget or Tactile Quick Action Dock */}
+            {/* 5. Focus Timer: Expanded Widget or Tactile Quick Dock */}
             {isTimerExpanded ? (
               <FocusTimerWidget
                 mode={timer.mode}
@@ -282,38 +298,16 @@ export const TodayFocusScreen: React.FC = () => {
               </Pressable>
             )}
 
-            {/* 5. Agenda Terdekat: Trantor Obsidian Black Pod (#121316) */}
-            {nextSchedule && (
-              <Pressable
-                onPress={() => router.push('/agenda' as any)}
-                style={({ pressed }) => [
-                  styles.darkAgendaPod,
-                  pressed && styles.darkAgendaPodPressed,
-                ]}
-              >
-                <View style={styles.darkAgendaLeft}>
-                  <View style={styles.darkAgendaIconBox}>
-                    <CalendarDays size={16} color="#0E6852" strokeWidth={2.4} />
-                  </View>
-                  <View style={styles.darkAgendaTexts}>
-                    <AppText variant="labelSmall" style={styles.darkAgendaTime} tabularNums>
-                      AGENDA BERIKUTNYA · {nextSchedule.schedule.startTime} – {nextSchedule.schedule.endTime} WIB
-                    </AppText>
-                    <AppText variant="titleSmall" style={styles.darkAgendaTitle} numberOfLines={1}>
-                      {nextSchedule.schedule.title}
-                    </AppText>
-                  </View>
-                </View>
-
-                <ChevronRight size={18} color="#CEF5EB" strokeWidth={2.2} />
-              </Pressable>
-            )}
-
-            {/* 6. Daftar Tugas Prioritas Hari Ini */}
-            <View style={styles.questSectionHeader}>
-              <AppText variant="titleMedium" style={styles.questHeadingBold}>
-                Tugas Prioritas Hari Ini
-              </AppText>
+            {/* 6. Section: Tugas Prioritas Hari Ini */}
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.sectionTitleGroup}>
+                <AppText variant="titleMedium" style={styles.sectionHeadingBold}>
+                  Tugas Prioritas Hari Ini
+                </AppText>
+                <AppText variant="labelSmall" style={styles.sectionCountHint}>
+                  {completedCount}/{focusItems.length} selesai
+                </AppText>
+              </View>
 
               <Pressable
                 onPress={() => router.push('/today/new')}
@@ -348,7 +342,6 @@ export const TodayFocusScreen: React.FC = () => {
                   const isActive = timer.activeTask?.id === item.taskId;
                   const isLast = index === focusItems.length - 1;
 
-                  // Clean typography colors without pill badges
                   const priorityLabel =
                     item.task.priority === 'HIGH'
                       ? 'Tinggi'
@@ -397,7 +390,7 @@ export const TodayFocusScreen: React.FC = () => {
                         </View>
                       </Pressable>
 
-                      {/* Center: Task Information (Clean typography, no badge soup) */}
+                      {/* Center: Task Information */}
                       <View style={styles.questDetailsCol}>
                         <View style={styles.questMetaRow}>
                           <AppText variant="labelSmall" style={[styles.priorityLabel, { color: priorityColor }]}>
@@ -480,27 +473,161 @@ export const TodayFocusScreen: React.FC = () => {
               </View>
             )}
 
+            {/* 7. Section: Agenda & Jadwal Hari Ini */}
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.sectionTitleGroup}>
+                <AppText variant="titleMedium" style={styles.sectionHeadingBold}>
+                  Agenda & Jadwal Hari Ini
+                </AppText>
+                <AppText variant="labelSmall" style={styles.sectionCountHint}>
+                  {completedAgendaCount}/{totalAgendaCount} selesai
+                </AppText>
+              </View>
+
+              <Pressable
+                onPress={() => router.push('/agenda/new')}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                style={({ pressed }) => [
+                  styles.addPillButton,
+                  pressed && styles.addPillButtonPressed,
+                ]}
+              >
+                <Plus size={13} color="#121316" strokeWidth={2.8} />
+                <AppText variant="labelSmall" style={styles.addPillText}>
+                  Jadwalkan
+                </AppText>
+              </Pressable>
+            </View>
+
+            {totalAgendaCount === 0 ? (
+              <View style={styles.emptyAgendaPod}>
+                <CalendarDays size={24} color="#717684" strokeWidth={2} />
+                <View style={{ flex: 1 }}>
+                  <AppText variant="labelMedium" style={styles.emptyAgendaTitle}>
+                    Tidak ada agenda khusus hari ini
+                  </AppText>
+                  <AppText variant="bodySmall" color="onSurfaceVariant">
+                    Waktumu leluasa untuk fokus pada tugas prioritas di atas.
+                  </AppText>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.agendaPodWrapper}>
+                {/* Regular today events */}
+                {events.map((ev, idx) => {
+                  const startTime = ev.isAllDay
+                    ? 'Sepanjang hari'
+                    : new Date(ev.startTime).toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+                  const isDone = ev.isCompleted;
+                  const isLast = idx === events.length - 1 && activeOccurrences.length === 0;
+
+                  return (
+                    <View
+                      key={ev.id}
+                      style={[
+                        styles.agendaRow,
+                        isDone && styles.agendaRowDone,
+                        !isLast && styles.agendaRowDivider,
+                      ]}
+                    >
+                      <Pressable
+                        onPress={() => toggleEvent(ev.id, isDone)}
+                        accessibilityRole="checkbox"
+                        aria-checked={isDone}
+                        accessibilityState={{ checked: isDone }}
+                        accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + ev.title}
+                        style={styles.taskCheckboxBtn}
+                      >
+                        <View style={[styles.taskCheckboxBox, isDone && styles.taskCheckboxBoxDone]}>
+                          {isDone && <Check size={13} color="#CEF5EB" strokeWidth={3} />}
+                        </View>
+                      </Pressable>
+
+                      <View style={styles.agendaDetailsCol}>
+                        <AppText variant="labelSmall" style={styles.agendaTimeText}>
+                          {startTime}
+                        </AppText>
+                        <AppText
+                          variant="titleSmall"
+                          style={[styles.agendaTitle, isDone && styles.agendaTitleDone]}
+                          numberOfLines={1}
+                        >
+                          {ev.title}
+                        </AppText>
+                      </View>
+                    </View>
+                  );
+                })}
+
+                {/* Repeating weekly occurrences */}
+                {activeOccurrences.map((occ, idx) => {
+                  const isDone = occ.isCompleted;
+                  const isLast = idx === activeOccurrences.length - 1;
+
+                  return (
+                    <View
+                      key={occ.schedule.id}
+                      style={[
+                        styles.agendaRow,
+                        isDone && styles.agendaRowDone,
+                        !isLast && styles.agendaRowDivider,
+                      ]}
+                    >
+                      <Pressable
+                        onPress={() => toggleWeeklyOccurrence(occ.schedule.id, isDone)}
+                        accessibilityRole="checkbox"
+                        aria-checked={isDone}
+                        accessibilityState={{ checked: isDone }}
+                        accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + occ.schedule.title}
+                        style={styles.taskCheckboxBtn}
+                      >
+                        <View style={[styles.taskCheckboxBox, isDone && styles.taskCheckboxBoxDone]}>
+                          {isDone && <Check size={13} color="#CEF5EB" strokeWidth={3} />}
+                        </View>
+                      </Pressable>
+
+                      <View style={styles.agendaDetailsCol}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Repeat size={11} color="#0E6852" />
+                          <AppText variant="labelSmall" style={styles.agendaTimeText}>
+                            {occ.schedule.startTime} – {occ.schedule.endTime}
+                          </AppText>
+                        </View>
+                        <AppText
+                          variant="titleSmall"
+                          style={[styles.agendaTitle, isDone && styles.agendaTitleDone]}
+                          numberOfLines={1}
+                        >
+                          {occ.schedule.title}
+                        </AppText>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
             {/* Bottom spacer for floating button */}
             <View style={{ height: space[16] }} />
           </ScrollView>
         )
       )}
 
-      {/* 7. Trantor Floating Action Bar (Clean CTA, no double-badge) */}
-      <View style={styles.floatingBottomContainer} pointerEvents="box-none">
+      {/* 8. Floating Action Button (Petak di sudut kanan bawah) */}
+      <View style={styles.floatingFabContainer} pointerEvents="box-none">
         <Pressable
           onPress={() => router.push('/today/new')}
           accessibilityRole="button"
           accessibilityLabel="Tambah Tugas Prioritas"
           style={({ pressed }) => [
-            styles.floatingAddQuestBtn,
-            pressed && styles.floatingBtnPressed,
+            styles.fabSquare,
+            pressed && styles.fabSquarePressed,
           ]}
         >
-          <Plus size={18} color="#FFFFFF" strokeWidth={3} />
-          <AppText variant="titleMedium" style={styles.floatingAddQuestText}>
-            Tambah Tugas Prioritas
-          </AppText>
+          <Plus size={24} color="#FFFFFF" strokeWidth={2.8} />
         </Pressable>
       </View>
 
@@ -530,380 +657,315 @@ export const TodayFocusScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   screenBg: {
-    backgroundColor: '#F6F7F9', // Trantor Canvas Clean Light Grey
+    backgroundColor: '#FAF9FC',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: space[3],
+    paddingTop: space[2],
     paddingBottom: space[2],
   },
   headerTextCol: {
-    gap: 1,
+    gap: 2,
   },
   pageTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 26,
+    lineHeight: 32,
     color: '#121316',
   },
   dateSubtext: {
-    fontSize: 12,
-    color: '#717684',
     fontFamily: fontFamily.medium,
-    textTransform: 'capitalize',
+    color: '#717684',
+    fontSize: 13,
   },
   settingsBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ECEEF2',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(18, 19, 22, 0.08)',
-    shadowColor: '#121316',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 1,
   },
   settingsBtnPressed: {
-    backgroundColor: '#ECEEF2',
-    transform: [{ scale: 0.95 }],
-  },
-  scrollContent: {
-    paddingBottom: 110,
-    gap: space[3],
+    backgroundColor: '#F3F4F6',
   },
   notice: {
     marginBottom: space[2],
   },
   loading: {
-    paddingVertical: space[10],
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: space[2],
+  },
+  scrollContent: {
+    paddingBottom: 90,
     gap: space[3],
   },
-  // 2. Trantor Segmented Action Dock
-  segmentedActionDock: {
+  // 2. Hero Cockpit Pod
+  heroPod: {
+    backgroundColor: '#CEF5EB',
+    borderRadius: 24,
+    padding: space[4],
+    gap: space[3],
+  },
+  heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 9999,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(18, 19, 22, 0.08)',
-    shadowColor: '#121316',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 2,
-    marginBottom: space[1],
   },
-  segmentedPillLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FFDEC4',
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-    borderRadius: 9999,
+  heroPillBadge: {
+    backgroundColor: '#0E6852',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
-  segmentedTextPeach: {
+  heroPillText: {
     fontFamily: fontFamily.bold,
+    fontSize: 10,
+    letterSpacing: 0.6,
+    color: '#CEF5EB',
+  },
+  heroMainRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  heroStatsCol: {
+    gap: 2,
+  },
+  heroProgressNum: {
+    fontFamily: fontFamily.bold,
+    fontSize: 24,
+    lineHeight: 30,
+    color: '#0E6852',
+  },
+  heroProgressSub: {
+    fontFamily: fontFamily.medium,
+    color: '#125B50',
     fontSize: 12,
-    color: '#8A3C1B',
   },
-  segmentedCenterCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#121316',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#121316',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  segmentedPillRight: {
+  heroMinutesPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#CEF5EB',
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-    borderRadius: 9999,
+    gap: 5,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
   },
-  segmentedTextMint: {
+  heroMinutesNum: {
     fontFamily: fontFamily.bold,
     fontSize: 12,
     color: '#0E6852',
-  },
-  segmentedPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.96 }],
-  },
-  // 3. Weekly 7-Day Pill Meter (#CEF5EB Pod)
-  mintMeterPod: {
-    backgroundColor: '#CEF5EB',
-    borderRadius: 24,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(14, 104, 82, 0.12)',
-    shadowColor: '#0E6852',
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  mintPodTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: space[2],
   },
   statusText: {
     fontFamily: fontFamily.bold,
     fontSize: 11,
+    letterSpacing: 0.8,
     color: '#0E6852',
-    letterSpacing: 0.3,
   },
   statusRunning: {
-    color: '#15803D',
+    color: '#0E6852',
   },
   statusPaused: {
-    color: '#C2410C',
+    color: '#B45309',
   },
-  counterText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#0E6852',
-  },
-  dateStripWrapper: {
-    marginVertical: space[1],
-  },
-  mintPodBottomRow: {
+  // 4. Segmented Action Dock
+  segmentedActionDock: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: space[2],
-    marginTop: space[1],
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(14, 104, 82, 0.16)',
+    gap: 8,
   },
-  focusMinutesGroup: {
+  segmentedPillLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#FFEBD9',
+    borderRadius: 999,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#F3D5C0',
   },
-  focusMinutesText: {
-    fontSize: 12,
+  segmentedTextPeach: {
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
+    color: '#8A3C1B',
+  },
+  segmentedCenterCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#121316',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentedPillRight: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#CEF5EB',
+    borderRadius: 999,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#B3EBDC',
+  },
+  segmentedTextMint: {
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
     color: '#0E6852',
   },
-  focusMinutesBold: {
-    fontFamily: fontFamily.bold,
-    color: '#121316',
-    fontSize: 12,
+  segmentedPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
   },
-  // 4. Quick Focus Action Dock
+  // 5. Hub Action Dock
   hubActionDock: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(18, 19, 22, 0.08)',
-    gap: 8,
-    shadowColor: '#121316',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: '#121316',
+    borderRadius: 22,
+    padding: space[4],
   },
   hubActionDockPressed: {
-    backgroundColor: '#F7FAF9',
-    transform: [{ scale: 0.99 }],
+    backgroundColor: '#202226',
   },
   hubActionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: space[3],
     flex: 1,
   },
   hubActionIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#121316',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#26292F',
     alignItems: 'center',
     justifyContent: 'center',
   },
   hubActionTexts: {
     flex: 1,
-    gap: 1,
+    gap: 2,
   },
   hubActionTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: '#121316',
+    fontSize: 15,
+    color: '#FFFFFF',
   },
   hubActionSub: {
-    fontSize: 11,
-    color: '#717684',
+    color: '#A0A4B0',
+    fontSize: 12,
   },
   quickPlayActionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#121316',
+    gap: 6,
+    backgroundColor: '#26292F',
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 9999,
+    paddingVertical: 8,
+    borderRadius: 999,
   },
   quickPlayActionText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: 12,
     color: '#CEF5EB',
   },
-  // 5. Trantor Obsidian Black Pod for Upcoming Agenda (#121316)
-  darkAgendaPod: {
+  // Sections
+  sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#121316',
-    borderRadius: 20,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    shadowColor: '#121316',
-    shadowOpacity: 0.16,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    elevation: 3,
+    marginTop: space[1],
   },
-  darkAgendaPodPressed: {
-    backgroundColor: '#202227',
-  },
-  darkAgendaLeft: {
+  sectionTitleGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    flex: 1,
+    gap: space[2],
   },
-  darkAgendaIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#CEF5EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  darkAgendaTexts: {
-    flex: 1,
-    gap: 2,
-  },
-  darkAgendaTime: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    color: '#CEF5EB',
-    letterSpacing: 0.5,
-  },
-  darkAgendaTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: '#FFFFFF',
-  },
-  questSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: space[2],
-    marginBottom: space[1],
-  },
-  questHeadingBold: {
+  sectionHeadingBold: {
     fontFamily: fontFamily.bold,
     fontSize: 17,
     color: '#121316',
+  },
+  sectionCountHint: {
+    fontFamily: fontFamily.medium,
+    color: '#717684',
+    fontSize: 12,
   },
   addPillButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFDEC4',
-    paddingHorizontal: 11,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ECEEF2',
+    paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 9999,
+    borderRadius: 999,
   },
   addPillButtonPressed: {
-    backgroundColor: '#F5CEB2',
+    backgroundColor: '#F3F4F6',
   },
   addPillButtonDisabled: {
     opacity: 0.4,
   },
   addPillText: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: 11,
     color: '#121316',
   },
-  // 6. Tasks Pod Wrapper
+  // Task Pod Wrapper
   tasksPodWrapper: {
     backgroundColor: '#FFFFFF',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(18, 19, 22, 0.06)',
-    paddingHorizontal: 14,
-    shadowColor: '#121316',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 1,
+    borderColor: '#ECEEF2',
+    overflow: 'hidden',
   },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 13,
-    gap: 12,
+    paddingHorizontal: space[3],
+    paddingVertical: space[3],
+    gap: space[3],
     backgroundColor: '#FFFFFF',
   },
   taskRowActive: {
-    backgroundColor: '#F2FBF8',
-    marginHorizontal: -14,
-    paddingHorizontal: 14,
-    borderLeftWidth: 3,
-    borderLeftColor: '#0E6852',
+    backgroundColor: '#F7FCFA',
   },
   taskRowCompleted: {
-    opacity: 0.65,
+    opacity: 0.55,
   },
   taskRowDivider: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(18, 19, 22, 0.08)',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   taskCheckboxBtn: {
-    minWidth: 38,
-    minHeight: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 4,
   },
   taskCheckboxBox: {
-    width: 24,
-    height: 24,
-    borderRadius: 7,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     borderWidth: 1.5,
-    borderColor: '#D1D4DC',
-    backgroundColor: '#F6F7F9',
+    borderColor: '#C4C7D0',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
   taskCheckboxBoxDone: {
-    backgroundColor: '#121316',
-    borderColor: '#121316',
+    backgroundColor: '#0E6852',
+    borderColor: '#0E6852',
   },
   questDetailsCol: {
     flex: 1,
@@ -917,57 +979,48 @@ const styles = StyleSheet.create({
   priorityLabel: {
     fontFamily: fontFamily.bold,
     fontSize: 11,
-    letterSpacing: 0.2,
   },
   questDuration: {
+    fontFamily: fontFamily.medium,
     fontSize: 11,
     color: '#717684',
-    fontFamily: fontFamily.medium,
   },
   questTitle: {
     fontFamily: fontFamily.bold,
     fontSize: 14,
-    lineHeight: 19,
     color: '#121316',
   },
   questTitleDone: {
     textDecorationLine: 'line-through',
-    color: '#9499A8',
+    color: '#717684',
   },
   questTitleCancelled: {
     textDecorationLine: 'line-through',
-    color: '#DC2626',
+    color: '#9499A8',
   },
   questSubtext: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
     color: '#717684',
   },
   questSubtextDone: {
     color: '#0E6852',
-    fontFamily: fontFamily.bold,
   },
   questSubtextCancelled: {
-    color: '#DC2626',
-    fontFamily: fontFamily.bold,
+    color: '#9499A8',
   },
   questActionGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   questRemoveBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 6,
   },
   questPlayBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F0F2F5',
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -975,43 +1028,89 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FFDEC4',
+    backgroundColor: '#CEF5EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // 7. Floating Action Bar
-  floatingBottomContainer: {
-    position: 'absolute',
-    bottom: space[3],
-    left: 0,
-    right: 0,
-    alignItems: 'center',
+  // Agenda Pod Wrapper
+  agendaPodWrapper: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#ECEEF2',
+    overflow: 'hidden',
   },
-  floatingAddQuestBtn: {
+  emptyAgendaPod: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#121316',
-    borderRadius: 9999,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    width: '100%',
-    maxWidth: 320,
-    shadowColor: '#121316',
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 14,
-    elevation: 6,
+    gap: space[3],
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: space[4],
+    borderWidth: 1,
+    borderColor: '#ECEEF2',
   },
-  floatingBtnPressed: {
-    transform: [{ scale: 0.98 }],
-    backgroundColor: '#202227',
+  emptyAgendaTitle: {
+    fontFamily: fontFamily.bold,
+    color: '#121316',
+    fontSize: 13,
   },
-  floatingAddQuestText: {
+  agendaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: space[3],
+    paddingVertical: space[3],
+    gap: space[3],
+    backgroundColor: '#FFFFFF',
+  },
+  agendaRowDone: {
+    opacity: 0.55,
+  },
+  agendaRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  agendaDetailsCol: {
+    flex: 1,
+    gap: 2,
+  },
+  agendaTimeText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 11,
+    color: '#0E6852',
+  },
+  agendaTitle: {
     fontFamily: fontFamily.bold,
     fontSize: 14,
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
+    color: '#121316',
+  },
+  agendaTitleDone: {
+    textDecorationLine: 'line-through',
+    color: '#717684',
+  },
+  // Floating Action Button (Petak di sudut kanan bawah)
+  floatingFabContainer: {
+    position: 'absolute',
+    bottom: space[4],
+    right: space[4],
+  },
+  fabSquare: {
+    width: 54,
+    height: 54,
+    borderRadius: 16,
+    backgroundColor: '#121316',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#26292F',
+    elevation: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  fabSquarePressed: {
+    transform: [{ scale: 0.94 }],
+    backgroundColor: '#26292F',
   },
 });
