@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
-import { View, Pressable, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Pressable, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import {
   CalendarDays,
-  Repeat,
-  Plus,
-  Sparkles,
-  School,
-  Flame,
+  ChevronRight,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, fontFamily } from '@/theme/tokens';
-import { Screen, AppText, Banner, EmptyState } from '@/shared/ui';
+import {
+  Screen,
+  AppText,
+  Banner,
+  EmptyState,
+  WaveBackdrop,
+  PillTabs,
+  SproutPlant,
+} from '@/shared/ui';
 import { useAgenda } from '../hooks/use-agenda';
 import { useWeeklySchedules } from '../hooks/use-weekly-schedules';
 import { DateStripHeader } from '../components/date-strip-header';
@@ -23,16 +27,20 @@ import { WeeklyScheduleManager } from '../components/weekly-schedule-manager';
 import { AddEditWeeklyScheduleModal } from '../components/add-edit-weekly-schedule-modal';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 import { conflictingEventIds } from '../../domain/agenda-time';
-import type { WeeklyScheduleEntity, WeeklyScheduleType } from '../../domain/entities/weekly-schedule.entity';
+import type {
+  WeeklyScheduleEntity,
+  WeeklyScheduleType,
+} from '../../domain/entities/weekly-schedule.entity';
 import { getDayOfWeekFromDate } from '../../domain/entities/weekly-schedule.entity';
 import { isDateOnly } from '@/shared/utils/local-date';
+
+const s = colors.sprout;
 
 export const AgendaScreen: React.FC = () => {
   const { date: routeDate } = useLocalSearchParams<{ date?: string }>();
   const [viewMode, setViewMode] = useState<'DAILY' | 'WEEKLY_MASTER'>('DAILY');
-  const [timelineFilter, setTimelineFilter] = useState<'ALL' | 'COMMITMENT' | 'ROUTINE'>('ALL');
+  const [timelineFilter] = useState<'ALL' | 'COMMITMENT' | 'ROUTINE'>('ALL');
 
-  // Daily Agenda State
   const {
     selectedDate,
     setSelectedDate,
@@ -55,7 +63,6 @@ export const AgendaScreen: React.FC = () => {
     if (typeof routeDate === 'string' && isDateOnly(routeDate)) setSelectedDate(routeDate);
   }, [routeDate, setSelectedDate]);
 
-  // Weekly Master Schedule State
   const {
     schedulesByDay = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] },
     selectedDay = 1,
@@ -69,12 +76,15 @@ export const AgendaScreen: React.FC = () => {
     removeSchedule,
   } = useWeeklySchedules();
 
-  // Modals state
   const [isAddEventModalVisible, setIsAddEventModalVisible] = useState(false);
   const [isWeeklyModalVisible, setIsWeeklyModalVisible] = useState(false);
-  const [editingWeeklySchedule, setEditingWeeklySchedule] = useState<WeeklyScheduleEntity | undefined>(undefined);
+  const [editingWeeklySchedule, setEditingWeeklySchedule] = useState<
+    WeeklyScheduleEntity | undefined
+  >(undefined);
   const [weeklyModalDefaultDay, setWeeklyModalDefaultDay] = useState(1);
-  const [weeklyModalInitialType, setWeeklyModalInitialType] = useState<WeeklyScheduleType | undefined>(undefined);
+  const [weeklyModalInitialType, setWeeklyModalInitialType] = useState<
+    WeeklyScheduleType | undefined
+  >(undefined);
 
   useOpenAddFromParam(() => {
     if (viewMode === 'DAILY') {
@@ -113,108 +123,62 @@ export const AgendaScreen: React.FC = () => {
   };
 
   const activeOccurrences = weeklyOccurrences.filter((occ) => !occ.isCancelled);
-  const completedOccurrences = activeOccurrences.filter((occ) => occ.isCompleted).length;
-  const completedEvents = events.filter((event) => event.isCompleted).length;
+  const routineOccurrences = weeklyOccurrences.filter(
+    (occ) => occ.schedule.scheduleType === 'ROUTINE'
+  );
+  const commitmentOccurrences = weeklyOccurrences.filter(
+    (occ) => occ.schedule.scheduleType !== 'ROUTINE'
+  );
 
-  const routineOccurrences = weeklyOccurrences.filter((occ) => occ.schedule.scheduleType === 'ROUTINE');
-  const commitmentOccurrences = weeklyOccurrences.filter((occ) => occ.schedule.scheduleType !== 'ROUTINE');
-  const activeCommitments = commitmentOccurrences.filter((occ) => !occ.isCancelled);
-  const completedCommitments = activeCommitments.filter((occ) => occ.isCompleted).length;
-
-  const currentTimeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const [selY, selM, selD] = selectedDate.split('-').map(Number);
+  const shortDateLabel = new Date(selY, selM - 1, selD).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+  });
+  const totalDayTasks = events.length + activeOccurrences.length;
 
   return (
-    <Screen scrollable={false} withBottomPadding={false} style={styles.screenBg}>
-      <View style={styles.header}>
-        <View style={styles.titleColumn}>
-          <AppText variant="headlineMedium" style={styles.headerTitle}>Agenda</AppText>
-        </View>
+    <Screen
+      scrollable
+      withBottomPadding={false}
+      style={styles.screenBg}
+      contentContainerStyle={styles.scrollContent}
+    >
+      <WaveBackdrop variant="home" height={285} withBottomHills />
 
-        {viewMode === 'DAILY' ? (
-          <Pressable
-            onPress={() => router.push({ pathname: '/agenda/new', params: { date: selectedDate } })}
-            accessibilityRole="button"
-            accessibilityLabel="Tambah Agenda Baru"
-            style={({ pressed }) => [
-              styles.actionBtn,
-              pressed && styles.actionBtnPressed,
-            ]}
-          >
-            <Plus size={15} color="#FAF5EB" strokeWidth={3} />
-            <AppText variant="labelMedium" style={styles.actionBtnText}>
-              Agenda
-            </AppText>
-          </Pressable>
-        ) : (
-          <Pressable
-            onPress={() => handleOpenAddWeekly(selectedDay)}
-            accessibilityRole="button"
-            accessibilityLabel="Tambah Jadwal Tetap Baru"
-            style={({ pressed }) => [
-              styles.actionBtn,
-              pressed && styles.actionBtnPressed,
-            ]}
-          >
-            <Plus size={15} color="#FAF5EB" strokeWidth={3} />
-            <AppText variant="labelMedium" style={styles.actionBtnText}>
-              Jadwal
-            </AppText>
-          </Pressable>
-        )}
+      {/* Top Header matching Sprout Home Wave (Non-sticky) */}
+      <View style={styles.header}>
+        <AppText variant="headlineMedium" style={styles.headerTitle}>
+          Kalender
+        </AppText>
+
+        <Pressable
+          onPress={() => {
+            if (viewMode === 'DAILY') {
+              router.push({ pathname: '/agenda/new', params: { date: selectedDate } });
+            } else {
+              handleOpenAddWeekly(selectedDay);
+            }
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={
+            viewMode === 'DAILY' ? 'Tambah Agenda Baru' : 'Tambah Jadwal Tetap Baru'
+          }
+          style={({ pressed }) => [styles.calendarIconBtn, pressed && { opacity: 0.8 }]}
+        >
+          <CalendarDays size={22} color={s.ink} strokeWidth={2.3} />
+        </Pressable>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* SEGMENT MODE SWITCHER (Daily Agenda vs Weekly Routine) */}
-        <View style={styles.segmentContainer}>
-          <Pressable
-            onPress={() => setViewMode('DAILY')}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: viewMode === 'DAILY' }}
-            style={[styles.segmentTab, viewMode === 'DAILY' && styles.segmentTabActive]}
-          >
-            <CalendarDays
-              size={15}
-              color={viewMode === 'DAILY' ? '#1E1E2E' : '#504535'}
-              strokeWidth={2.4}
-            />
-            <AppText
-              variant="labelMedium"
-              style={[
-                styles.segmentText,
-                viewMode === 'DAILY' ? styles.segmentTextActive : styles.segmentTextInactive,
-              ]}
-            >
-              Agenda Harian
-            </AppText>
-          </Pressable>
+      <PillTabs
+          options={[
+            { value: 'DAILY', label: 'Kalender Harian' },
+            { value: 'WEEKLY_MASTER', label: 'Jadwal Rutin' },
+          ]}
+          value={viewMode}
+          onChange={setViewMode}
+        />
 
-          <Pressable
-            onPress={() => setViewMode('WEEKLY_MASTER')}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: viewMode === 'WEEKLY_MASTER' }}
-            style={[styles.segmentTab, viewMode === 'WEEKLY_MASTER' && styles.segmentTabActive]}
-          >
-            <Repeat
-              size={15}
-              color={viewMode === 'WEEKLY_MASTER' ? '#1E1E2E' : '#504535'}
-              strokeWidth={2.4}
-            />
-            <AppText
-              variant="labelMedium"
-              style={[
-                styles.segmentText,
-                viewMode === 'WEEKLY_MASTER' ? styles.segmentTextActive : styles.segmentTextInactive,
-              ]}
-            >
-              Jadwal Rutin
-            </AppText>
-          </Pressable>
-        </View>
-
-        {/* VIEW 1: DAILY TIMELINE */}
         {viewMode === 'DAILY' && (
           <>
             <DateStripHeader
@@ -222,6 +186,29 @@ export const AgendaScreen: React.FC = () => {
               todayDate={todayDate}
               onSelectDate={setSelectedDate}
             />
+
+            {/* Sprout Summary Pill Card matching bottom of Kalender Reference UI */}
+            <Pressable
+              onPress={() => router.push({ pathname: '/agenda/new', params: { date: selectedDate } })}
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.sproutSummaryBanner,
+                pressed && { transform: [{ scale: 0.99 }] },
+              ]}
+            >
+              <View style={styles.sproutBannerLeft}>
+                <SproutPlant size={38} />
+                <View style={styles.sproutBannerTexts}>
+                  <AppText style={styles.sproutBannerTitle}>
+                    {selectedDate === todayDate ? 'Hari Ini' : 'Tanggal'} · {shortDateLabel}
+                  </AppText>
+                  <AppText style={styles.sproutBannerSub}>
+                    {totalDayTasks} Tugas
+                  </AppText>
+                </View>
+              </View>
+              <ChevronRight size={20} color={s.ink} strokeWidth={2.4} />
+            </Pressable>
 
             {reminderWarning && (
               <Banner
@@ -253,92 +240,13 @@ export const AgendaScreen: React.FC = () => {
 
             {isAgendaLoading ? (
               <View style={styles.loading}>
-                <ActivityIndicator color={colors.primary} size="large" />
+                <ActivityIndicator color={s.forest} size="large" />
                 <AppText color="onSurfaceVariant">Memuat agenda…</AppText>
               </View>
             ) : (
               !agendaError && (
                 <>
-                  {/* FAST FILTER CHIPS (Semua / Komitmen / Ritme) */}
-                  {weeklyOccurrences.length > 0 && (
-                    <View style={styles.filterStrip}>
-                      <Pressable
-                        onPress={() => setTimelineFilter('ALL')}
-                        accessibilityRole="button"
-                        style={[
-                          styles.filterChip,
-                          timelineFilter === 'ALL' && styles.filterChipActive,
-                        ]}
-                      >
-                        <Sparkles
-                          size={12}
-                          color={timelineFilter === 'ALL' ? colors.onPrimary : colors.onSurfaceVariant}
-                          strokeWidth={2.2}
-                        />
-                        <AppText
-                          variant="labelSmall"
-                          style={[
-                            styles.filterChipText,
-                            timelineFilter === 'ALL' && styles.filterChipTextActive,
-                          ]}
-                        >
-                          Semua ({weeklyOccurrences.length + events.length})
-                        </AppText>
-                      </Pressable>
-
-                      <Pressable
-                        onPress={() => setTimelineFilter('COMMITMENT')}
-                        accessibilityRole="button"
-                        style={[
-                          styles.filterChip,
-                          timelineFilter === 'COMMITMENT' && styles.filterChipActive,
-                        ]}
-                      >
-                        <School
-                          size={12}
-                          color={timelineFilter === 'COMMITMENT' ? colors.onPrimary : colors.onSurfaceVariant}
-                          strokeWidth={2.2}
-                        />
-                        <AppText
-                          variant="labelSmall"
-                          style={[
-                            styles.filterChipText,
-                            timelineFilter === 'COMMITMENT' && styles.filterChipTextActive,
-                          ]}
-                        >
-                          Komitmen ({commitmentOccurrences.length + events.length})
-                        </AppText>
-                      </Pressable>
-
-                      {routineOccurrences.length > 0 && (
-                        <Pressable
-                          onPress={() => setTimelineFilter('ROUTINE')}
-                          accessibilityRole="button"
-                          style={[
-                            styles.filterChip,
-                            timelineFilter === 'ROUTINE' && styles.filterChipActive,
-                          ]}
-                        >
-                          <Flame
-                            size={12}
-                            color={timelineFilter === 'ROUTINE' ? colors.onPrimary : colors.onSurfaceVariant}
-                            strokeWidth={2.2}
-                          />
-                          <AppText
-                            variant="labelSmall"
-                            style={[
-                              styles.filterChipText,
-                              timelineFilter === 'ROUTINE' && styles.filterChipTextActive,
-                            ]}
-                          >
-                            Ritme ({routineOccurrences.length})
-                          </AppText>
-                        </Pressable>
-                      )}
-                    </View>
-                  )}
-
-                  {/* 1. RITME KESEHARIAN (Routine Checklist) */}
+                  {/* 1. RITME KESEHARIAN */}
                   {timelineFilter !== 'COMMITMENT' && routineOccurrences.length > 0 && (
                     <DailyRoutineChecklist
                       routines={routineOccurrences}
@@ -354,37 +262,9 @@ export const AgendaScreen: React.FC = () => {
                     />
                   )}
 
-                  {/* LIVE CURRENT TIME INDICATOR */}
-                  {selectedDate === todayDate && (
-                    <View style={styles.liveTimeRow}>
-                      <AppText variant="labelSmall" tabularNums style={styles.liveTimeDigits}>
-                        {currentTimeStr}
-                      </AppText>
-                      <View style={styles.liveTimeDot} />
-                      <View style={styles.liveTimeTrack} />
-                      <View style={styles.liveTimeBadge}>
-                        <AppText variant="labelSmall" style={styles.liveTimeBadgeText}>
-                          Sekarang
-                        </AppText>
-                      </View>
-                    </View>
-                  )}
-
-                  {/* 2. JADWAL RUTIN (KERJA & RUTINITAS) */}
+                  {/* 2. JADWAL RUTIN */}
                   {timelineFilter !== 'ROUTINE' && commitmentOccurrences.length > 0 && (
                     <View style={styles.groupSection}>
-                      <View style={styles.groupHeaderRow}>
-                        <View style={styles.groupHeaderTag}>
-                          <Repeat size={13} color={colors.primary} strokeWidth={2.4} />
-                          <AppText variant="labelSmall" style={styles.groupHeaderLabel}>
-                            JADWAL RUTIN
-                          </AppText>
-                        </View>
-                        <AppText variant="bodySmall" style={styles.groupCountSubtext}>
-                          {completedCommitments}/{activeCommitments.length} selesai
-                        </AppText>
-                      </View>
-
                       {commitmentOccurrences.map((occ) => (
                         <WeeklyOccurrenceCard
                           key={occ.schedule.id}
@@ -400,14 +280,9 @@ export const AgendaScreen: React.FC = () => {
                     </View>
                   )}
 
-                  {/* 3. SEPANJANG HARI (All-day Events) */}
+                  {/* 3. SEPANJANG HARI */}
                   {timelineFilter !== 'ROUTINE' && allDay.length > 0 && (
                     <View style={styles.groupSection}>
-                      <View style={styles.allDayBadge}>
-                        <AppText variant="labelSmall" style={styles.allDayBadgeText}>
-                          SEPANJANG HARI
-                        </AppText>
-                      </View>
                       {allDay.map((event) => (
                         <TimelineEventCard
                           key={event.id}
@@ -419,12 +294,9 @@ export const AgendaScreen: React.FC = () => {
                     </View>
                   )}
 
-                  {/* 4. AGENDA WAKTU KHUSUS (Timed Events) */}
+                  {/* 4. AGENDA WAKTU KHUSUS */}
                   {timelineFilter !== 'ROUTINE' && timed.length > 0 && (
                     <View style={styles.groupSection}>
-                      <AppText variant="titleMedium" style={styles.sectionHeading}>
-                        Jadwal & Komitmen
-                      </AppText>
                       {timed.map((event) => (
                         <TimelineEventCard
                           key={event.id}
@@ -438,23 +310,16 @@ export const AgendaScreen: React.FC = () => {
                     </View>
                   )}
 
-                  {/* EMPTY STATE */}
-                  {weeklyOccurrences.length === 0 && events.length === 0 ? (
+                  {weeklyOccurrences.length === 0 && events.length === 0 && (
                     <EmptyState
                       title="Masih ada ruang di harimu"
-                      description="Belum ada jadwal tetap atau agenda khusus untuk tanggal ini. Jadwalkan kegiatan kerja, belajar, atau istirahat."
-                      customIcon={
-                        <CalendarDays size={30} color={colors.primary} strokeWidth={2.2} />
-                      }
+                      description="Belum ada jadwal tetap atau agenda khusus untuk tanggal ini."
+                      customIcon={<CalendarDays size={30} color={s.forest} strokeWidth={2.2} />}
                       actionTitle="Jadwalkan kegiatan"
-                      onActionPress={() => router.push({ pathname: '/agenda/new', params: { date: selectedDate } })}
+                      onActionPress={() =>
+                        router.push({ pathname: '/agenda/new', params: { date: selectedDate } })
+                      }
                     />
-                  ) : (
-                    <AppText variant="bodySmall" style={styles.summaryNote}>
-                      {completedEvents + completedOccurrences}/
-                      {events.length + activeOccurrences.length} kegiatan selesai hari ini.
-                      Sisakan ruang untuk istirahat.
-                    </AppText>
                   )}
                 </>
               )
@@ -471,7 +336,6 @@ export const AgendaScreen: React.FC = () => {
           </>
         )}
 
-        {/* VIEW 2: WEEKLY ROUTINE SCHEDULE MANAGER */}
         {viewMode === 'WEEKLY_MASTER' && (
           <>
             {weeklyError && (
@@ -486,7 +350,7 @@ export const AgendaScreen: React.FC = () => {
 
             {isWeeklyLoading ? (
               <View style={styles.loading}>
-                <ActivityIndicator color={colors.primary} size="large" />
+                <ActivityIndicator color={s.forest} size="large" />
                 <AppText color="onSurfaceVariant">Memuat jadwal rutin mingguan…</AppText>
               </View>
             ) : (
@@ -522,239 +386,79 @@ export const AgendaScreen: React.FC = () => {
             />
           </>
         )}
-      </ScrollView>
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  screenBg: { backgroundColor: '#FCF8FF' },
+  screenBg: {
+    backgroundColor: s.cream,
+  },
   header: {
-    paddingTop: space[2],
+    paddingTop: space[3],
     paddingBottom: space[2],
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  titleColumn: {
-    gap: 4,
-  },
-  badgeCapsule: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#FFEBD9',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
-  },
-  badgeText: { fontSize: 11, fontFamily: fontFamily.bold, color: '#A23D28', letterSpacing: 0.6 },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 26,
+    lineHeight: 32,
     fontFamily: fontFamily.bold,
-    color: '#1E1E2E',
-    lineHeight: 28,
+    color: s.ink,
   },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    minHeight: 40,
-    backgroundColor: '#E06B52',
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
-  },
-  actionBtnPressed: {
-    transform: [{ translateX: 1 }, { translateY: 1 }],
-    boxShadow: '0px 0px 0px #1E1E2E',
-  },
-  actionBtnText: {
-    color: '#FAF5EB',
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-  },
-  scrollContent: {
-    paddingBottom: 90,
-    gap: space[3],
-  },
-
-  /* SEGMENT MODE SWITCHER */
-  segmentContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FAF5EB',
-    borderRadius: 999,
-    padding: 4,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
-    marginTop: space[2],
-    marginBottom: space[3],
-  },
-  segmentTab: {
-    flex: 1,
-    flexDirection: 'row',
+  calendarIconBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: s.card,
+    borderWidth: 1,
+    borderColor: '#EDE4D1',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 9,
-    borderRadius: 999,
-    gap: 6,
   },
-  segmentTabActive: {
-    backgroundColor: '#E8A838', // Custard Gold
-    boxShadow: '1.5px 1.5px 0px #1E1E2E',
+  scrollContent: {
+    paddingBottom: 100,
+    gap: space[4],
   },
-  segmentText: {
-    fontSize: 12,
+  sproutSummaryBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F1EBDC',
+    borderRadius: 26,
+    paddingHorizontal: space[4],
+    paddingVertical: space[3],
+    borderWidth: 1,
+    borderColor: '#E7DFCC',
+  },
+  sproutBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+  },
+  sproutBannerTexts: {
+    gap: 2,
+  },
+  sproutBannerTitle: {
     fontFamily: fontFamily.bold,
+    fontSize: 14,
+    color: s.ink,
   },
-  segmentTextActive: {
-    color: '#1E1E2E',
-  },
-  segmentTextInactive: {
-    color: '#504535',
-  },
-
-  timezoneText: {
-    fontSize: 11,
+  sproutBannerSub: {
     fontFamily: fontFamily.medium,
-    color: '#504535',
-    paddingVertical: 2,
-    paddingHorizontal: 2,
+    fontSize: 12,
+    color: s.inkMuted,
   },
   notice: {
-    marginVertical: space[2],
+    marginVertical: space[1],
   },
   loading: {
     alignItems: 'center',
     gap: space[3],
     paddingVertical: space[10],
   },
-
-  /* FILTER STRIP */
-  filterStrip: {
-    flexDirection: 'row',
-    gap: 8,
-    marginVertical: 4,
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    backgroundColor: '#FAF5EB',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-  },
-  filterChipActive: {
-    backgroundColor: '#E8A838',
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
-  },
-  filterChipText: {
-    fontSize: 11,
-    fontFamily: fontFamily.bold,
-    color: '#504535',
-  },
-  filterChipTextActive: {
-    color: '#1E1E2E',
-  },
-
-  /* LIVE TIME MARKER */
-  liveTimeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginVertical: 8,
-    paddingHorizontal: 2,
-  },
-  liveTimeDigits: {
-    fontSize: 12,
-    fontFamily: fontFamily.bold,
-    color: colors.primary,
-  },
-  liveTimeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-  liveTimeTrack: {
-    flex: 1,
-    height: 2,
-    backgroundColor: colors.primaryContainer,
-    borderRadius: 1,
-  },
-  liveTimeBadge: {
-    backgroundColor: colors.primaryContainer,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  liveTimeBadgeText: {
-    fontSize: 10,
-    fontFamily: fontFamily.bold,
-    color: colors.onPrimaryContainer,
-  },
-
-  /* GROUPS */
   groupSection: {
-    marginTop: 10,
-  },
-  groupHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  groupHeaderTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  groupHeaderLabel: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: colors.primary,
-    letterSpacing: 0.6,
-  },
-  groupCountSubtext: {
-    fontSize: 11,
-    fontFamily: fontFamily.medium,
-    color: colors.onSurfaceVariant,
-  },
-  allDayBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.warningContainer,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 999,
-    marginBottom: 8,
-  },
-  allDayBadgeText: {
-    fontSize: 10,
-    fontFamily: fontFamily.bold,
-    color: colors.onWarningContainer,
-    letterSpacing: 0.6,
-  },
-  sectionHeading: {
-    fontSize: 15,
-    fontFamily: fontFamily.bold,
-    color: colors.onSurface,
-    marginBottom: 8,
-  },
-  summaryNote: {
-    paddingVertical: 14,
-    textAlign: 'center',
-    fontSize: 12,
-    fontFamily: fontFamily.medium,
-    color: colors.onSurfaceVariant,
+    marginTop: 4,
   },
 });

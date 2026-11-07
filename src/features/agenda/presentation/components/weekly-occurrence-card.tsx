@@ -1,14 +1,15 @@
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { CheckCircle2, Circle, Clock, MapPin, Repeat, Ban } from 'lucide-react-native';
+import { MapPin, Repeat } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, fontFamily } from '@/theme/tokens';
-import { AppText } from '@/shared/ui/app-text';
-import { Card } from '@/shared/ui/card';
+import { space, fontFamily } from '@/theme/tokens';
+import { AppText, SoftCard, SproutCheck, IconTile } from '@/shared/ui';
 import type {
   ProjectedWeeklyOccurrence,
   WeeklyScheduleType,
 } from '../../domain/entities/weekly-schedule.entity';
+
+const s = colors.sprout;
 
 export interface WeeklyOccurrenceCardProps {
   occurrence: ProjectedWeeklyOccurrence;
@@ -18,33 +19,13 @@ export interface WeeklyOccurrenceCardProps {
 
 const TYPE_CONFIG: Record<
   WeeklyScheduleType,
-  { label: string; color: string; bg: string }
+  { label: string; tone: 'leaf' | 'teal' | 'grape' | 'rose' | 'sun' }
 > = {
-  COLLEGE: {
-    label: 'Kuliah / Kelas',
-    color: colors.primary,
-    bg: colors.primaryContainer,
-  },
-  WORK: {
-    label: 'Kerja',
-    color: colors.secondary,
-    bg: colors.secondaryContainer,
-  },
-  STUDY: {
-    label: 'Belajar',
-    color: colors.tertiary,
-    bg: colors.tertiaryContainer,
-  },
-  PERSONAL: {
-    label: 'Pribadi',
-    color: colors.onSurfaceVariant,
-    bg: colors.surfaceContainerHighest,
-  },
-  ROUTINE: {
-    label: 'Rutinitas',
-    color: colors.primary,
-    bg: colors.surfaceContainerLow,
-  },
+  COLLEGE: { label: 'Kuliah / Kelas', tone: 'leaf' },
+  WORK: { label: 'Kerja', tone: 'teal' },
+  STUDY: { label: 'Belajar', tone: 'grape' },
+  PERSONAL: { label: 'Pribadi', tone: 'rose' },
+  ROUTINE: { label: 'Rutinitas', tone: 'sun' },
 };
 
 export const WeeklyOccurrenceCard: React.FC<WeeklyOccurrenceCardProps> = ({
@@ -56,221 +37,106 @@ export const WeeklyOccurrenceCard: React.FC<WeeklyOccurrenceCardProps> = ({
   const typeConfig = TYPE_CONFIG[schedule.scheduleType] || TYPE_CONFIG.COLLEGE;
 
   return (
-    <Card
-      variant={isCompleted ? 'filled' : 'elevated'}
-      padding={space[4]}
+    <SoftCard
       style={[
         styles.card,
-        isCompleted && styles.completedCard,
         isCancelled && styles.cancelledCard,
       ]}
     >
       <View style={styles.mainRow}>
-        {/* Toggle Checkbox */}
-        <Pressable
+        <SproutCheck
+          checked={isCompleted}
           onPress={onToggleComplete}
-          disabled={isCancelled}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: isCompleted, disabled: isCancelled }}
           accessibilityLabel={`Tandai ${schedule.title} ${isCompleted ? 'belum selesai' : 'selesai'}`}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={styles.checkbox}
-        >
-          {isCompleted ? (
-            <CheckCircle2 size={24} color={colors.primary} />
-          ) : (
-            <Circle
-              size={24}
-              color={isCancelled ? colors.outlineVariant : colors.outline}
-            />
-          )}
-        </Pressable>
+          size={28}
+        />
 
-        {/* Content Details */}
         <View style={styles.contentCol}>
-          {/* Header Row: Time, Rutin Tag, & Type Pill */}
-          <View style={styles.tagRow}>
-            <View style={styles.timeTag}>
-              <Clock size={12} color={colors.primary} />
-              <AppText variant="labelSmall" color="primary" tabularNums>
-                {schedule.startTime} – {schedule.endTime}
-              </AppText>
-            </View>
-
-            <View style={styles.rutinBadge}>
-              <Repeat size={11} color={colors.primary} />
-              <AppText variant="labelSmall" color="primary" style={styles.rutinText}>
-                RUTIN
-              </AppText>
-            </View>
-
-            <View style={[styles.typeBadge, { backgroundColor: typeConfig.bg }]}>
-              <AppText variant="labelSmall" color={typeConfig.color} style={styles.typeText}>
-                {typeConfig.label}
-              </AppText>
-            </View>
-
-            {isCancelled && (
-              <View style={styles.cancelledBadge}>
-                <Ban size={11} color={colors.error} />
-                <AppText variant="labelSmall" color="error" style={styles.typeText}>
-                  DILIBURKAN
-                </AppText>
-              </View>
-            )}
-          </View>
-
-          {/* Title */}
           <AppText
-            variant="titleMedium"
             style={[
               styles.title,
               isCompleted && styles.completedText,
               isCancelled && styles.cancelledText,
             ]}
+            numberOfLines={1}
           >
             {schedule.title}
           </AppText>
 
-          {/* Location & Notes */}
+          <AppText tabularNums style={styles.subtext}>
+            {schedule.startTime} – {schedule.endTime} · {typeConfig.label}
+            {isCancelled ? ' · Diliburkan' : ''}
+          </AppText>
+
           {(schedule.location || schedule.notes) && (
             <View style={styles.metaRow}>
               {schedule.location && (
                 <View style={styles.metaItem}>
-                  <MapPin size={13} color={colors.onSurfaceVariant} />
-                  <AppText variant="bodySmall" color="onSurfaceVariant" numberOfLines={1}>
+                  <MapPin size={12} color={s.inkMuted} />
+                  <AppText style={styles.metaText} numberOfLines={1}>
                     {schedule.location}
                   </AppText>
                 </View>
               )}
-              {schedule.notes && (
-                <AppText variant="bodySmall" color="onSurfaceVariant" numberOfLines={1}>
-                  • {schedule.notes}
-                </AppText>
-              )}
             </View>
           )}
 
-          {/* Footer: Quick Cancel / Reopen for today */}
-          <View style={styles.footerRow}>
-            <Pressable
-              onPress={onToggleCancelled}
-              accessibilityRole="button"
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            >
-              <AppText variant="labelSmall" color="onSurfaceVariant">
-                {isCancelled ? 'Aktifkan kembali hari ini' : 'Liburkan hari ini saja'}
-              </AppText>
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={onToggleCancelled}
+            accessibilityRole="button"
+            hitSlop={6}
+            style={styles.cancelLink}
+          >
+            <AppText style={styles.cancelLinkText}>
+              {isCancelled ? 'Aktifkan kembali hari ini' : 'Liburkan hari ini saja'}
+            </AppText>
+          </Pressable>
         </View>
+
+        <IconTile icon={Repeat} tone={typeConfig.tone} size={42} />
       </View>
-    </Card>
+    </SoftCard>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '1.5px 1.5px 0px #1E1E2E',
-    borderLeftWidth: 4,
-    borderLeftColor: '#E8A838',
-  },
-  completedCard: {
-    backgroundColor: '#FAF8F5',
-    borderLeftColor: '#76A284',
-    opacity: 0.85,
+    borderRadius: 26,
+    marginBottom: space[3],
   },
   cancelledCard: {
-    backgroundColor: '#FFF2F0',
-    borderLeftColor: '#BA1A1A',
-    opacity: 0.75,
+    opacity: 0.72,
   },
   mainRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: space[3],
-  },
-  checkbox: {
-    paddingTop: 2,
   },
   contentCol: {
     flex: 1,
-    gap: space[2],
-  },
-  tagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: space[2],
-  },
-  timeTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FFEBD9',
-    paddingHorizontal: space[2],
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
-  },
-  rutinBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 3,
-    backgroundColor: '#FAF5EB',
-    paddingHorizontal: space[2],
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
-  },
-  rutinText: {
-    fontSize: 10,
-    fontFamily: fontFamily.bold,
-  },
-  typeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
-  },
-  typeText: {
-    fontSize: 11,
-    fontFamily: fontFamily.bold,
-  },
-  cancelledBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: colors.errorContainer,
-    paddingHorizontal: space[2],
-    paddingVertical: 3,
-    borderRadius: radius.full,
   },
   title: {
-    fontSize: 16,
     fontFamily: fontFamily.bold,
-    color: colors.onSurface,
+    fontSize: 15,
+    color: s.ink,
   },
   completedText: {
     textDecorationLine: 'line-through',
-    color: colors.onSurfaceVariant,
+    color: s.inkMuted,
   },
   cancelledText: {
     textDecorationLine: 'line-through',
     color: colors.error,
   },
+  subtext: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    color: s.inkMuted,
+  },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
     gap: space[2],
   },
   metaItem: {
@@ -278,9 +144,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingTop: space[1],
+  metaText: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    color: s.inkMuted,
+  },
+  cancelLink: {
+    alignSelf: 'flex-start',
+    marginTop: 2,
+  },
+  cancelLinkText: {
+    fontFamily: fontFamily.medium,
+    fontSize: 11,
+    color: s.forest,
   },
 });

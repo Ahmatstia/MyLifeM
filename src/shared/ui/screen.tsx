@@ -4,7 +4,7 @@ import {
   ScrollView,
   useWindowDimensions,
   type ViewStyle,
-  } from 'react-native';
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
@@ -12,6 +12,7 @@ import { space } from '@/theme/tokens';
 
 export interface ScreenProps {
   children: React.ReactNode;
+   overlay?: React.ReactNode;
   scrollable?: boolean;
   withHorizontalPadding?: boolean;
   withBottomPadding?: boolean;
@@ -21,6 +22,7 @@ export interface ScreenProps {
 
 export const Screen: React.FC<ScreenProps> = ({
   children,
+  overlay,
   scrollable = true,
   withHorizontalPadding = true,
   withBottomPadding = true,
@@ -30,19 +32,13 @@ export const Screen: React.FC<ScreenProps> = ({
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
 
-  const containerStyle: ViewStyle = {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingTop: insets.top,
-  };
-
   const horizontalPadding = withHorizontalPadding ? (width < 360 ? space[4] : space[5]) : 0;
   // Extra bottom padding for Android gesture bar and tabs
   const bottomPadding = (withBottomPadding ? 80 : 0) + insets.bottom + space[4];
 
   if (scrollable) {
     return (
-      <View style={[containerStyle, style]}>
+      <View style={[{ flex: 1, backgroundColor: colors.background }, style]}>
         <StatusBar style="dark" />
         <ScrollView
           style={{ flex: 1 }}
@@ -50,6 +46,7 @@ export const Screen: React.FC<ScreenProps> = ({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             {
+              paddingTop: insets.top,
               paddingHorizontal: horizontalPadding,
               paddingBottom: bottomPadding,
               flexGrow: 1,
@@ -62,6 +59,7 @@ export const Screen: React.FC<ScreenProps> = ({
         >
           {children}
         </ScrollView>
+        {overlay}
       </View>
     );
   }
@@ -69,8 +67,10 @@ export const Screen: React.FC<ScreenProps> = ({
   return (
     <View
       style={[
-        containerStyle,
         {
+          flex: 1,
+          backgroundColor: colors.background,
+          paddingTop: insets.top,
           paddingHorizontal: horizontalPadding,
           paddingBottom: bottomPadding,
         },

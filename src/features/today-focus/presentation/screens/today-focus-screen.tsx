@@ -4,24 +4,35 @@ import {
   StyleSheet,
   ActivityIndicator,
   Pressable,
-  ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
-  Check,
-  Play,
   Pause,
   Sparkles,
-  Settings as SettingsIcon,
   X,
   Plus,
   Clock,
-  Timer,
   CalendarDays,
   Repeat,
+  ArrowRight,
+  Dumbbell,
 } from 'lucide-react-native';
 import { space, fontFamily } from '@/theme/tokens';
-import { Screen, AppText, Banner, EmptyState } from '@/shared/ui';
+import { colors } from '@/theme/colors';
+import {
+  Screen,
+  AppText,
+  Banner,
+  EmptyState,
+  WaveBackdrop,
+  SoftCard,
+  HeroBlob,
+  SproutCheck,
+  IconTile,
+  SectionTitle,
+  MascotPeek,
+  SproutPlant,
+} from '@/shared/ui';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 import { useTodayFocus } from '../hooks/use-today-focus';
 import { useFocusTimer } from '../hooks/use-focus-timer';
@@ -31,6 +42,8 @@ import { PrayerTimesWidget } from '@/features/prayer-times/presentation/componen
 import { FocusTimerWidget } from '../components/focus-timer-widget';
 import { AddPriorityModal } from '../components/add-priority-modal';
 import { SessionReflectionModal } from '../components/session-reflection-modal';
+
+const s = colors.sprout;
 
 export const TodayFocusScreen: React.FC = () => {
   const {
@@ -59,51 +72,85 @@ export const TodayFocusScreen: React.FC = () => {
   useOpenAddFromParam(() => router.push('/today/new'));
   const timer = useFocusTimer({ onSessionRecorded: refresh });
 
-  // Focus items metrics
   const completedCount = focusItems.filter((item) => item.isCompleted).length;
   const activeItems = focusItems.filter((item) => item.task.status !== 'CANCELLED');
   const remainingCount = Math.max(0, activeItems.length - completedCount);
   const nextTask = activeItems.find((item) => !item.isCompleted)?.task;
 
-  // Agenda metrics for today
   const activeOccurrences = weeklyOccurrences.filter((occ) => !occ.isCancelled);
   const totalAgendaCount = events.length + activeOccurrences.length;
   const completedAgendaCount =
     events.filter((e) => e.isCompleted).length +
     activeOccurrences.filter((occ) => occ.isCompleted).length;
 
-  // Combined progress
-  const totalActionables = activeItems.length + totalAgendaCount;
-  const totalCompletedActionables = completedCount + completedAgendaCount;
-
-  const todayFormatted = new Date().toLocaleDateString('id-ID', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const handleHeroPress = () => {
+    if (!nextTask && !timer.activeTask && !timer.hasSession) {
+      router.push('/today/new');
+    } else {
+      if (!timer.hasSession && !timer.activeTask && nextTask) {
+        timer.setActiveTask(nextTask);
+      }
+      setIsTimerExpanded((prev) => !prev);
+    }
+  };
 
   return (
-    <Screen scrollable={false} withBottomPadding={false} style={styles.screenBg}>
-      {/* 1. Header: Clean & Direct */}
+    <Screen
+      scrollable
+      withBottomPadding={false}
+      style={styles.screenBg}
+      contentContainerStyle={styles.scrollContent}
+      overlay={
+        <>
+          {/* Square Floating Action Button in Bottom Right */}
+          <View style={styles.floatingFabContainer} pointerEvents="box-none">
+            <Pressable
+              onPress={() => router.push('/today/new')}
+              accessibilityRole="button"
+              accessibilityLabel="Tambah Tugas Prioritas"
+              style={({ pressed }) => [
+                styles.fabSquare,
+                pressed && styles.fabSquarePressed,
+              ]}
+            >
+              <Plus size={24} color={s.ink} strokeWidth={2.8} />
+            </Pressable>
+          </View>
+
+          <AddPriorityModal
+            visible={isAddModalVisible}
+            availableTasks={availableTasks}
+            currentCount={focusItems.length}
+            onClose={() => setIsAddModalVisible(false)}
+            onAddQuickTask={addQuickTask}
+            onSelectExistingTask={addTaskToToday}
+          />
+
+          {timer.reflection && (
+            <SessionReflectionModal
+              key={timer.reflection.id}
+              visible
+              durationMinutes={Math.floor(timer.reflection.elapsedMs / 60_000)}
+              taskTitle={timer.reflection.taskTitle ?? undefined}
+              onClose={timer.dismissReflection}
+              onSubmit={timer.saveReflection}
+            />
+          )}
+        </>
+      }
+    >
+      <WaveBackdrop variant="home" height={285} />
+
+      {/* 1. Storybook Greeting Header (Tanpa profil, ikut ter-scroll penuh dari atas) */}
       <View style={styles.header}>
         <View style={styles.headerTextCol}>
-          <AppText variant="headlineMedium" style={styles.pageTitle}>
-            Hari Ini
+          <AppText variant="headlineMedium" style={styles.greetingTitle}>
+            Halo, Pejuang!
           </AppText>
-          <AppText variant="labelSmall" style={styles.dateSubtext}>
-            {todayFormatted}
+          <AppText variant="bodySmall" style={styles.greetingSubtext}>
+            Hari ini yuk, lebih produktif{'\n'}dari kemarin ✨
           </AppText>
         </View>
-
-        <Pressable
-          onPress={() => router.push('/settings')}
-          accessibilityRole="button"
-          accessibilityLabel="Buka Pengaturan"
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={({ pressed }) => [styles.settingsBtn, pressed && styles.settingsBtnPressed]}
-        >
-          <SettingsIcon size={19} color="#121316" strokeWidth={2} />
-        </Pressable>
       </View>
 
       {timer.error && (
@@ -127,119 +174,52 @@ export const TodayFocusScreen: React.FC = () => {
 
       {isLoading ? (
         <View style={styles.loading}>
-          <ActivityIndicator size="small" color="#0E6852" />
+          <ActivityIndicator size="small" color={s.forest} />
           <AppText color="onSurfaceVariant">Menyiapkan harimu…</AppText>
         </View>
       ) : (
         !error && (
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {/* 2. Hero Cockpit Pod (Organically Asymmetric Mint Pod #CEF5EB) */}
-            <View style={styles.heroPod}>
-              <View style={styles.heroTopRow}>
-                <View style={styles.heroPillBadge}>
-                  <AppText variant="labelSmall" style={styles.heroPillText}>
-                    TARGET HARI INI
-                  </AppText>
-                </View>
-
-                <AppText
-                  variant="labelSmall"
-                  style={[
-                    styles.statusText,
-                    timer.isRunning && styles.statusRunning,
-                    timer.hasSession && !timer.isRunning && styles.statusPaused,
-                  ]}
-                >
-                  {timer.reflection
-                    ? 'SESI TERCATAT'
-                    : timer.isRunning
-                      ? 'SESI BERJALAN'
-                      : timer.hasSession
-                        ? 'SESI SEDANG DIJEDA'
-                        : `${remainingCount} Prioritas Siap`}
-                </AppText>
+          <>
+            {/* 2. Wavy Forest Green Hero Banner with Peeking Mascot */}
+            <View style={styles.heroWrap}>
+              <View style={styles.sproutLeftBadge} pointerEvents="none">
+                <SproutPlant size={36} />
+              </View>
+              <View style={styles.mascotPeekWrap} pointerEvents="none">
+                <MascotPeek width={152} height={114} />
               </View>
 
-              <View style={styles.heroMainRow}>
-                <View style={styles.heroStatsCol}>
-                  <AppText variant="headlineMedium" style={styles.heroProgressNum}>
-                    {totalCompletedActionables}/{totalActionables} Selesai
-                  </AppText>
-                  <AppText variant="bodySmall" style={styles.heroProgressSub}>
-                    {remainingCount} prioritas · {totalAgendaCount - completedAgendaCount} agenda tersisa
-                  </AppText>
-                </View>
+              <HeroBlob
+                onPress={handleHeroPress}
+                accessibilityLabel={timer.hasSession ? 'Lihat sesi fokus' : 'Mulai sesi fokus'}
+                style={styles.heroBlob}
+              >
+                <View style={styles.heroInnerRow}>
+                  <View style={styles.heroTextCol}>
+                    <AppText style={styles.heroBigNum}>{activeItems.length || 0}</AppText>
+                    <AppText style={styles.heroLabel}>Target Aktif</AppText>
+                    <AppText style={styles.heroStatusSub}>
+                      {timer.reflection
+                        ? 'SESI TERCATAT'
+                        : timer.isRunning
+                          ? `SESI BERJALAN · ${timer.formattedTime}`
+                          : timer.hasSession
+                            ? `SESI SEDANG DIJEDA · Lihat sesi fokus`
+                            : completedMinutes > 0
+                              ? `${completedMinutes} menit fokus hari ini`
+                              : `${remainingCount} tugas siap dikerjakan`}
+                    </AppText>
+                  </View>
 
-                <View style={styles.heroMinutesPill}>
-                  <Clock size={13} color="#0E6852" strokeWidth={2.4} />
-                  <AppText variant="labelMedium" style={styles.heroMinutesNum}>
-                    {completedMinutes}m fokus
-                  </AppText>
+                  <View style={styles.heroCircleArrow}>
+                    <ArrowRight size={17} color={s.forest} strokeWidth={2.8} />
+                  </View>
                 </View>
-              </View>
+              </HeroBlob>
             </View>
 
-            {/* 3. Jadwal Shalat & Azan Widget */}
-            <PrayerTimesWidget schedule={prayerSchedule} />
-
-            {/* 4. Trantor Segmented Action Dock */}
-            <View style={styles.segmentedActionDock}>
-              {/* Left Pill: Mulai Fokus / Timer */}
-              <Pressable
-                onPress={() => {
-                  if (!nextTask && !timer.activeTask && !timer.hasSession) {
-                    router.push('/today/new');
-                  } else {
-                    if (!timer.hasSession && !timer.activeTask && nextTask) {
-                      timer.setActiveTask(nextTask);
-                    }
-                    setIsTimerExpanded(true);
-                  }
-                }}
-                style={({ pressed }) => [
-                  styles.segmentedPillLeft,
-                  pressed && styles.segmentedPressed,
-                ]}
-              >
-                <Play size={13} color="#8A3C1B" fill="#8A3C1B" />
-                <AppText variant="labelMedium" style={styles.segmentedTextPeach}>
-                  {timer.hasSession ? 'Lanjut Fokus' : 'Mulai Fokus'}
-                </AppText>
-              </Pressable>
-
-              {/* Center Circle: Add New Priority (+) */}
-              <Pressable
-                onPress={() => router.push('/today/new')}
-                accessibilityRole="button"
-                accessibilityLabel="Tambah Tugas"
-                style={({ pressed }) => [
-                  styles.segmentedCenterCircle,
-                  pressed && styles.segmentedPressed,
-                ]}
-              >
-                <Plus size={18} color="#FFFFFF" strokeWidth={3} />
-              </Pressable>
-
-              {/* Right Pill: Add Agenda Shortcut */}
-              <Pressable
-                onPress={() => router.push('/agenda/new')}
-                style={({ pressed }) => [
-                  styles.segmentedPillRight,
-                  pressed && styles.segmentedPressed,
-                ]}
-              >
-                <AppText variant="labelMedium" style={styles.segmentedTextMint}>
-                  + Agenda
-                </AppText>
-                <CalendarDays size={13} color="#0E6852" />
-              </Pressable>
-            </View>
-
-            {/* 5. Focus Timer: Expanded Widget or Tactile Quick Dock */}
-            {isTimerExpanded ? (
+            {/* Expanded Focus Timer Widget when opened */}
+            {isTimerExpanded && (
               <FocusTimerWidget
                 mode={timer.mode}
                 formattedTime={timer.formattedTime}
@@ -258,263 +238,146 @@ export const TodayFocusScreen: React.FC = () => {
                 onClearActiveTask={() => timer.setActiveTask(null)}
                 onMinimize={() => setIsTimerExpanded(false)}
               />
-            ) : (
-              <Pressable
-                onPress={() => {
-                  if (!nextTask && !timer.activeTask && !timer.hasSession) {
-                    router.push('/today/new');
-                  } else {
-                    if (!timer.hasSession && !timer.activeTask && nextTask) {
-                      timer.setActiveTask(nextTask);
-                    }
-                    setIsTimerExpanded(true);
-                  }
-                }}
-                style={({ pressed }) => [
-                  styles.hubActionDock,
-                  pressed && styles.hubActionDockPressed,
-                ]}
-              >
-                <View style={styles.hubActionLeft}>
-                  <View style={styles.hubActionIconBox}>
-                    <Play size={14} color="#CEF5EB" fill="#CEF5EB" />
-                  </View>
-                  <View style={styles.hubActionTexts}>
-                    <AppText variant="labelMedium" style={styles.hubActionTitle} numberOfLines={1}>
-                      {timer.activeTask?.title || nextTask?.title || 'Mulai Fokus'}
-                    </AppText>
-                    <AppText variant="bodySmall" style={styles.hubActionSub}>
-                      {timer.hasSession ? 'Sesi sedang berjalan' : 'Siap fokus'}
-                    </AppText>
-                  </View>
-                </View>
-
-                <View style={styles.quickPlayActionPill}>
-                  <Timer size={12} color="#CEF5EB" />
-                  <AppText variant="labelMedium" style={styles.quickPlayActionText}>
-                    {timer.hasSession ? 'Lihat sesi fokus' : 'Mulai'}
-                  </AppText>
-                </View>
-              </Pressable>
             )}
 
-            {/* 6. Section: Tugas Prioritas Hari Ini */}
-            <View style={styles.sectionHeaderRow}>
-              <View style={styles.sectionTitleGroup}>
-                <AppText variant="titleMedium" style={styles.sectionHeadingBold}>
-                  Tugas Prioritas Hari Ini
-                </AppText>
-                <AppText variant="labelSmall" style={styles.sectionCountHint}>
-                  {completedCount}/{focusItems.length} selesai
-                </AppText>
-              </View>
-
-              <Pressable
-                onPress={() => router.push('/today/new')}
-                disabled={focusItems.length >= 5}
-                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                style={({ pressed }) => [
-                  styles.addPillButton,
-                  pressed && styles.addPillButtonPressed,
-                  focusItems.length >= 5 && styles.addPillButtonDisabled,
-                ]}
-              >
-                <Plus size={13} color="#121316" strokeWidth={2.8} />
-                <AppText variant="labelSmall" style={styles.addPillText}>
-                  Tambah
-                </AppText>
-              </Pressable>
-            </View>
+            {/* 3. Section: Hari Ini (Pillow-Soft Task Cards matching Reference UI) */}
+            <SectionTitle
+              title="Hari Ini"
+              actionLabel="Selengkapnya"
+              onAction={() => router.push('/today/new')}
+            />
 
             {focusItems.length === 0 ? (
               <EmptyState
                 title="Mulai dari satu langkah"
                 description="Pilih tugas penting dari roadmap atau buat tugas kilat baru."
                 actionTitle="Pilih prioritas"
-                customIcon={<Sparkles size={28} color="#0E6852" strokeWidth={2.2} />}
+                customIcon={<Sparkles size={28} color={s.forest} strokeWidth={2.2} />}
                 onActionPress={() => router.push('/today/new')}
               />
             ) : (
-              <View style={styles.tasksPodWrapper}>
-                {focusItems.map((item, index) => {
+              <View style={styles.cardStack}>
+                {focusItems.map((item, idx) => {
                   const isCompleted = item.isCompleted;
                   const isCancelled = item.task.status === 'CANCELLED';
                   const isActive = timer.activeTask?.id === item.taskId;
-                  const isLast = index === focusItems.length - 1;
 
-                  const priorityLabel =
+                  const categoryLabel =
                     item.task.priority === 'HIGH'
-                      ? 'Tinggi'
+                      ? 'Prioritas Utama'
                       : item.task.priority === 'LOW'
-                        ? 'Rendah'
-                        : 'Prioritas';
+                        ? 'Ringan'
+                        : 'Fokus Harian';
 
-                  const priorityColor =
-                    item.task.priority === 'HIGH'
-                      ? '#DC2626'
-                      : item.task.priority === 'LOW'
-                        ? '#717684'
-                        : '#0E6852';
+                  const durationLabel =
+                    item.task.estimatedMinutes >= 60 && item.task.estimatedMinutes % 60 === 0
+                      ? `${item.task.estimatedMinutes / 60} jam`
+                      : `${item.task.estimatedMinutes} menit`;
+
+                  const RightIcon = idx % 2 === 0 ? Clock : Dumbbell;
 
                   return (
-                    <View
-                      key={item.id}
-                      style={[
-                        styles.taskRow,
-                        isActive && styles.taskRowActive,
-                        isCompleted && styles.taskRowCompleted,
-                        !isLast && styles.taskRowDivider,
-                      ]}
-                    >
-                      {/* Left: Tactile Circular Checkbox Pod */}
-                      <Pressable
-                        onPress={() => toggleTask(item.taskId, isCompleted || isCancelled)}
-                        accessibilityRole="checkbox"
-                        aria-checked={isCompleted}
-                        accessibilityState={{ checked: isCompleted }}
-                        accessibilityLabel={
-                          (isCompleted || isCancelled ? 'Buka kembali ' : 'Selesaikan ') +
-                          item.task.title
-                        }
-                        style={styles.taskCheckboxBtn}
-                      >
-                        <View
-                          style={[
-                            styles.taskCheckboxBox,
-                            isCompleted && styles.taskCheckboxBoxDone,
-                          ]}
-                        >
-                          {isCompleted && (
-                            <Check size={13} color="#CEF5EB" strokeWidth={3} />
+                    <SoftCard key={item.id} style={styles.taskCard}>
+                      <View style={styles.taskCardRow}>
+                        <SproutCheck
+                          checked={isCompleted}
+                          onPress={() => toggleTask(item.taskId, isCompleted || isCancelled)}
+                          accessibilityLabel={
+                            (isCompleted || isCancelled ? 'Buka kembali ' : 'Selesaikan ') +
+                            item.task.title
+                          }
+                          size={30}
+                        />
+
+                        <View style={styles.taskCenterCol}>
+                          <AppText
+                            style={[
+                              styles.taskTitle,
+                              isCompleted && styles.taskTitleDone,
+                              isCancelled && styles.taskTitleCancelled,
+                            ]}
+                            numberOfLines={2}
+                          >
+                            {item.task.title}
+                          </AppText>
+                          <AppText style={styles.taskSubtext} numberOfLines={1}>
+                            {isCancelled
+                              ? 'Dibatalkan'
+                              : isCompleted
+                                ? `${durationLabel} · Selesai`
+                                : isActive
+                                  ? `${durationLabel} · Sedang fokus`
+                                  : `${durationLabel} · ${item.task.description || categoryLabel}`}
+                          </AppText>
+                        </View>
+
+                        <View style={styles.taskRightActions}>
+                          {isCompleted || isCancelled ? null : isActive ? (
+                            <IconTile
+                              icon={Pause}
+                              tone="sun"
+                              size={44}
+                              onPress={timer.pauseTimer}
+                              accessibilityLabel={'Jeda fokus ' + item.task.title}
+                            />
+                          ) : (
+                            <IconTile
+                              icon={RightIcon}
+                              tone="leaf"
+                              size={44}
+                              onPress={() => {
+                                if (!timer.hasSession) timer.setActiveTask(item.task);
+                                setIsTimerExpanded(true);
+                              }}
+                              accessibilityLabel={'Mulai fokus ' + item.task.title}
+                            />
                           )}
-                        </View>
-                      </Pressable>
 
-                      {/* Center: Task Information */}
-                      <View style={styles.questDetailsCol}>
-                        <View style={styles.questMetaRow}>
-                          <AppText variant="labelSmall" style={[styles.priorityLabel, { color: priorityColor }]}>
-                            {priorityLabel}
-                          </AppText>
-                          <AppText variant="bodySmall" style={styles.questDuration}>
-                            · {item.task.estimatedMinutes}m
-                          </AppText>
-                        </View>
-
-                        <AppText
-                          variant="titleSmall"
-                          style={[
-                            styles.questTitle,
-                            isCompleted && styles.questTitleDone,
-                            isCancelled && styles.questTitleCancelled,
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {item.task.title}
-                        </AppText>
-
-                        <AppText
-                          variant="bodySmall"
-                          style={[
-                            styles.questSubtext,
-                            isCompleted && styles.questSubtextDone,
-                            isCancelled && styles.questSubtextCancelled,
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {isCancelled
-                            ? 'Dibatalkan'
-                            : isCompleted
-                              ? 'Selesai'
-                              : isActive
-                                ? 'Sedang fokus'
-                                : item.task.description || 'Tugas harian'}
-                        </AppText>
-                      </View>
-
-                      {/* Right: Quick Action Controls */}
-                      <View style={styles.questActionGroup}>
-                        <Pressable
-                          onPress={() => removeFromToday(item.id)}
-                          accessibilityRole="button"
-                          accessibilityLabel={'Hapus ' + item.task.title}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          style={styles.questRemoveBtn}
-                        >
-                          <X size={15} color="#9499A8" />
-                        </Pressable>
-
-                        {isCompleted ? null : isCancelled ? null : isActive ? (
                           <Pressable
-                            onPress={timer.pauseTimer}
+                            onPress={() => removeFromToday(item.id)}
                             accessibilityRole="button"
-                            accessibilityLabel={'Jeda fokus ' + item.task.title}
-                            style={styles.questPlayBtnActive}
+                            accessibilityLabel={'Hapus ' + item.task.title}
+                            hitSlop={8}
+                            style={styles.removeMiniBtn}
                           >
-                            <Pause size={13} color="#121316" />
+                            <X size={14} color={s.inkSubtle} />
                           </Pressable>
-                        ) : (
-                          <Pressable
-                            onPress={() => {
-                              if (!timer.hasSession) timer.setActiveTask(item.task);
-                              setIsTimerExpanded(true);
-                            }}
-                            accessibilityRole="button"
-                            accessibilityLabel={'Mulai fokus ' + item.task.title}
-                            style={styles.questPlayBtn}
-                          >
-                            <Play size={12} color="#121316" fill="#121316" />
-                          </Pressable>
-                        )}
+                        </View>
                       </View>
-                    </View>
+                    </SoftCard>
                   );
                 })}
               </View>
             )}
 
-            {/* 7. Section: Agenda & Jadwal Hari Ini */}
-            <View style={styles.sectionHeaderRow}>
-              <View style={styles.sectionTitleGroup}>
-                <AppText variant="titleMedium" style={styles.sectionHeadingBold}>
-                  Agenda & Jadwal Hari Ini
-                </AppText>
-                <AppText variant="labelSmall" style={styles.sectionCountHint}>
-                  {completedAgendaCount}/{totalAgendaCount} selesai
-                </AppText>
-              </View>
+            {/* 4. Jadwal Shalat & Azan Widget */}
+            <PrayerTimesWidget schedule={prayerSchedule} />
 
-              <Pressable
-                onPress={() => router.push('/agenda/new')}
-                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                style={({ pressed }) => [
-                  styles.addPillButton,
-                  pressed && styles.addPillButtonPressed,
-                ]}
-              >
-                <Plus size={13} color="#121316" strokeWidth={2.8} />
-                <AppText variant="labelSmall" style={styles.addPillText}>
-                  Jadwalkan
-                </AppText>
-              </Pressable>
-            </View>
+            {/* 5. Section: Agenda & Jadwal Hari Ini */}
+            <SectionTitle
+              title="Agenda Hari Ini"
+              hint={totalAgendaCount > 0 ? `${completedAgendaCount}/${totalAgendaCount}` : undefined}
+              actionLabel="Jadwalkan"
+              onAction={() => router.push('/agenda/new')}
+            />
 
             {totalAgendaCount === 0 ? (
-              <View style={styles.emptyAgendaPod}>
-                <CalendarDays size={24} color="#717684" strokeWidth={2} />
-                <View style={{ flex: 1 }}>
-                  <AppText variant="labelMedium" style={styles.emptyAgendaTitle}>
-                    Tidak ada agenda khusus hari ini
-                  </AppText>
-                  <AppText variant="bodySmall" color="onSurfaceVariant">
-                    Waktumu leluasa untuk fokus pada tugas prioritas di atas.
-                  </AppText>
+              <SoftCard tone="cream" style={styles.emptyAgendaCard}>
+                <View style={styles.emptyAgendaRow}>
+                  <IconTile icon={CalendarDays} tone="leaf" size={42} />
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <AppText style={styles.emptyAgendaTitle}>
+                      Belum ada agenda terjadwal
+                    </AppText>
+                    <AppText style={styles.emptyAgendaSub}>
+                      Ketuk Jadwalkan untuk menambah kegiatan hari ini.
+                    </AppText>
+                  </View>
                 </View>
-              </View>
+              </SoftCard>
             ) : (
-              <View style={styles.agendaPodWrapper}>
-                {/* Regular today events */}
-                {events.map((ev, idx) => {
+              <View style={styles.cardStack}>
+                {events.map((ev) => {
                   const startTime = ev.isAllDay
                     ? 'Sepanjang hari'
                     : new Date(ev.startTime).toLocaleTimeString('id-ID', {
@@ -522,134 +385,69 @@ export const TodayFocusScreen: React.FC = () => {
                         minute: '2-digit',
                       });
                   const isDone = ev.isCompleted;
-                  const isLast = idx === events.length - 1 && activeOccurrences.length === 0;
 
                   return (
-                    <View
-                      key={ev.id}
-                      style={[
-                        styles.agendaRow,
-                        isDone && styles.agendaRowDone,
-                        !isLast && styles.agendaRowDivider,
-                      ]}
-                    >
-                      <Pressable
-                        onPress={() => toggleEvent(ev.id, isDone)}
-                        accessibilityRole="checkbox"
-                        aria-checked={isDone}
-                        accessibilityState={{ checked: isDone }}
-                        accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + ev.title}
-                        style={styles.taskCheckboxBtn}
-                      >
-                        <View style={[styles.taskCheckboxBox, isDone && styles.taskCheckboxBoxDone]}>
-                          {isDone && <Check size={13} color="#CEF5EB" strokeWidth={3} />}
+                    <SoftCard key={ev.id} style={styles.taskCard}>
+                      <View style={styles.taskCardRow}>
+                        <SproutCheck
+                          checked={isDone}
+                          onPress={() => toggleEvent(ev.id, isDone)}
+                          accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + ev.title}
+                          size={28}
+                        />
+                        <View style={styles.taskCenterCol}>
+                          <AppText
+                            style={[styles.taskTitle, isDone && styles.taskTitleDone]}
+                            numberOfLines={1}
+                          >
+                            {ev.title}
+                          </AppText>
+                          <AppText style={styles.taskSubtext}>
+                            {startTime} · Agenda Harian
+                          </AppText>
                         </View>
-                      </Pressable>
-
-                      <View style={styles.agendaDetailsCol}>
-                        <AppText variant="labelSmall" style={styles.agendaTimeText}>
-                          {startTime}
-                        </AppText>
-                        <AppText
-                          variant="titleSmall"
-                          style={[styles.agendaTitle, isDone && styles.agendaTitleDone]}
-                          numberOfLines={1}
-                        >
-                          {ev.title}
-                        </AppText>
+                        <IconTile icon={CalendarDays} tone="leaf" size={42} />
                       </View>
-                    </View>
+                    </SoftCard>
                   );
                 })}
 
-                {/* Repeating weekly occurrences */}
-                {activeOccurrences.map((occ, idx) => {
+                {activeOccurrences.map((occ) => {
                   const isDone = occ.isCompleted;
-                  const isLast = idx === activeOccurrences.length - 1;
 
                   return (
-                    <View
-                      key={occ.schedule.id}
-                      style={[
-                        styles.agendaRow,
-                        isDone && styles.agendaRowDone,
-                        !isLast && styles.agendaRowDivider,
-                      ]}
-                    >
-                      <Pressable
-                        onPress={() => toggleWeeklyOccurrence(occ.schedule.id, isDone)}
-                        accessibilityRole="checkbox"
-                        aria-checked={isDone}
-                        accessibilityState={{ checked: isDone }}
-                        accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + occ.schedule.title}
-                        style={styles.taskCheckboxBtn}
-                      >
-                        <View style={[styles.taskCheckboxBox, isDone && styles.taskCheckboxBoxDone]}>
-                          {isDone && <Check size={13} color="#CEF5EB" strokeWidth={3} />}
-                        </View>
-                      </Pressable>
-
-                      <View style={styles.agendaDetailsCol}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                          <Repeat size={11} color="#0E6852" />
-                          <AppText variant="labelSmall" style={styles.agendaTimeText}>
-                            {occ.schedule.startTime} – {occ.schedule.endTime}
+                    <SoftCard key={occ.schedule.id} style={styles.taskCard}>
+                      <View style={styles.taskCardRow}>
+                        <SproutCheck
+                          checked={isDone}
+                          onPress={() => toggleWeeklyOccurrence(occ.schedule.id, isDone)}
+                          accessibilityLabel={
+                            (isDone ? 'Buka kembali ' : 'Selesaikan ') + occ.schedule.title
+                          }
+                          size={28}
+                        />
+                        <View style={styles.taskCenterCol}>
+                          <AppText
+                            style={[styles.taskTitle, isDone && styles.taskTitleDone]}
+                            numberOfLines={1}
+                          >
+                            {occ.schedule.title}
+                          </AppText>
+                          <AppText style={styles.taskSubtext}>
+                            {occ.schedule.startTime} – {occ.schedule.endTime} · Jadwal Rutin
                           </AppText>
                         </View>
-                        <AppText
-                          variant="titleSmall"
-                          style={[styles.agendaTitle, isDone && styles.agendaTitleDone]}
-                          numberOfLines={1}
-                        >
-                          {occ.schedule.title}
-                        </AppText>
+                        <IconTile icon={Repeat} tone="teal" size={42} />
                       </View>
-                    </View>
+                    </SoftCard>
                   );
                 })}
               </View>
             )}
 
-            {/* Bottom spacer for floating button */}
             <View style={{ height: space[16] }} />
-          </ScrollView>
+          </>
         )
-      )}
-
-      {/* 8. Floating Action Button (Petak di sudut kanan bawah) */}
-      <View style={styles.floatingFabContainer} pointerEvents="box-none">
-        <Pressable
-          onPress={() => router.push('/today/new')}
-          accessibilityRole="button"
-          accessibilityLabel="Tambah Tugas Prioritas"
-          style={({ pressed }) => [
-            styles.fabSquare,
-            pressed && styles.fabSquarePressed,
-          ]}
-        >
-          <Plus size={24} color="#FFFFFF" strokeWidth={2.8} />
-        </Pressable>
-      </View>
-
-      {/* MODALS */}
-      <AddPriorityModal
-        visible={isAddModalVisible}
-        availableTasks={availableTasks}
-        currentCount={focusItems.length}
-        onClose={() => setIsAddModalVisible(false)}
-        onAddQuickTask={addQuickTask}
-        onSelectExistingTask={addTaskToToday}
-      />
-
-      {timer.reflection && (
-        <SessionReflectionModal
-          key={timer.reflection.id}
-          visible
-          durationMinutes={Math.floor(timer.reflection.elapsedMs / 60_000)}
-          taskTitle={timer.reflection.taskTitle ?? undefined}
-          onClose={timer.dismissReflection}
-          onSubmit={timer.saveReflection}
-        />
       )}
     </Screen>
   );
@@ -657,41 +455,30 @@ export const TodayFocusScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   screenBg: {
-    backgroundColor: '#FAF9FC',
+    backgroundColor: s.cream,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    paddingTop: space[2],
+    paddingTop: space[3],
     paddingBottom: space[2],
   },
   headerTextCol: {
-    gap: 2,
+    gap: 4,
+    flex: 1,
   },
-  pageTitle: {
+  greetingTitle: {
     fontFamily: fontFamily.bold,
     fontSize: 26,
     lineHeight: 32,
-    color: '#121316',
+    color: s.ink,
   },
-  dateSubtext: {
+  greetingSubtext: {
     fontFamily: fontFamily.medium,
-    color: '#717684',
+    color: '#3B564B',
     fontSize: 13,
-  },
-  settingsBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#ECEEF2',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  settingsBtnPressed: {
-    backgroundColor: '#F3F4F6',
+    lineHeight: 19,
   },
   notice: {
     marginBottom: space[2],
@@ -701,416 +488,153 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: space[2],
+    paddingVertical: space[10],
   },
   scrollContent: {
-    paddingBottom: 90,
+    paddingBottom: 100,
     gap: space[3],
   },
-  // 2. Hero Cockpit Pod
-  heroPod: {
-    backgroundColor: '#CEF5EB',
-    borderRadius: 24,
-    padding: space[4],
-    gap: space[3],
+  heroWrap: {
+    marginTop: 52,
+    marginBottom: space[1],
+    position: 'relative',
   },
-  heroTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  sproutLeftBadge: {
+    position: 'absolute',
+    top: -22,
+    left: 18,
+    zIndex: 3,
   },
-  heroPillBadge: {
-    backgroundColor: '#0E6852',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
+  mascotPeekWrap: {
+    position: 'absolute',
+    top: -66,
+    right: 8,
+    zIndex: 3,
   },
-  heroPillText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    letterSpacing: 0.6,
-    color: '#CEF5EB',
+  heroBlob: {
+    minHeight: 116,
   },
-  heroMainRow: {
+  heroInnerRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  heroStatsCol: {
+  heroTextCol: {
     gap: 2,
-  },
-  heroProgressNum: {
-    fontFamily: fontFamily.bold,
-    fontSize: 24,
-    lineHeight: 30,
-    color: '#0E6852',
-  },
-  heroProgressSub: {
-    fontFamily: fontFamily.medium,
-    color: '#125B50',
-    fontSize: 12,
-  },
-  heroMinutesPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  heroMinutesNum: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#0E6852',
-  },
-  statusText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    letterSpacing: 0.8,
-    color: '#0E6852',
-  },
-  statusRunning: {
-    color: '#0E6852',
-  },
-  statusPaused: {
-    color: '#B45309',
-  },
-  // 4. Segmented Action Dock
-  segmentedActionDock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  segmentedPillLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#FFEBD9',
-    borderRadius: 999,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#F3D5C0',
-  },
-  segmentedTextPeach: {
-    fontFamily: fontFamily.bold,
-    fontSize: 13,
-    color: '#8A3C1B',
-  },
-  segmentedCenterCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#121316',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentedPillRight: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#CEF5EB',
-    borderRadius: 999,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#B3EBDC',
-  },
-  segmentedTextMint: {
-    fontFamily: fontFamily.bold,
-    fontSize: 13,
-    color: '#0E6852',
-  },
-  segmentedPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
-  },
-  // 5. Hub Action Dock
-  hubActionDock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#121316',
-    borderRadius: 22,
-    padding: space[4],
-  },
-  hubActionDockPressed: {
-    backgroundColor: '#202226',
-  },
-  hubActionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
     flex: 1,
   },
-  hubActionIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#26292F',
-    alignItems: 'center',
-    justifyContent: 'center',
+  heroBigNum: {
+    fontFamily: fontFamily.bold,
+    fontSize: 34,
+    lineHeight: 38,
+    color: '#FFFFFF',
   },
-  hubActionTexts: {
-    flex: 1,
-    gap: 2,
-  },
-  hubActionTitle: {
+  heroLabel: {
     fontFamily: fontFamily.bold,
     fontSize: 15,
     color: '#FFFFFF',
   },
-  hubActionSub: {
-    color: '#A0A4B0',
-    fontSize: 12,
+  heroStatusSub: {
+    fontFamily: fontFamily.medium,
+    fontSize: 11,
+    color: '#D5EBDD',
+    marginTop: 2,
   },
-  quickPlayActionPill: {
+  heroCircleArrow: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: s.leafSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardStack: {
+    gap: space[3],
+  },
+  taskCard: {
+    borderRadius: 28,
+    paddingVertical: space[4],
+    paddingHorizontal: space[4],
+  },
+  taskCardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+  },
+  taskCenterCol: {
+    flex: 1,
+    gap: 3,
+  },
+  taskTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+    lineHeight: 21,
+    color: s.ink,
+  },
+  taskTitleDone: {
+    textDecorationLine: 'line-through',
+    color: s.inkMuted,
+  },
+  taskTitleCancelled: {
+    textDecorationLine: 'line-through',
+    color: s.inkSubtle,
+  },
+  taskSubtext: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    color: s.inkMuted,
+  },
+  taskRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#26292F',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
   },
-  quickPlayActionText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#CEF5EB',
-  },
-  // Sections
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: space[1],
-  },
-  sectionTitleGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[2],
-  },
-  sectionHeadingBold: {
-    fontFamily: fontFamily.bold,
-    fontSize: 17,
-    color: '#121316',
-  },
-  sectionCountHint: {
-    fontFamily: fontFamily.medium,
-    color: '#717684',
-    fontSize: 12,
-  },
-  addPillButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#ECEEF2',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  addPillButtonPressed: {
-    backgroundColor: '#F3F4F6',
-  },
-  addPillButtonDisabled: {
-    opacity: 0.4,
-  },
-  addPillText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#121316',
-  },
-  // Task Pod Wrapper
-  tasksPodWrapper: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#ECEEF2',
-    overflow: 'hidden',
-  },
-  taskRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: space[3],
-    paddingVertical: space[3],
-    gap: space[3],
-    backgroundColor: '#FFFFFF',
-  },
-  taskRowActive: {
-    backgroundColor: '#F7FCFA',
-  },
-  taskRowCompleted: {
-    opacity: 0.55,
-  },
-  taskRowDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  taskCheckboxBtn: {
-    padding: 4,
-  },
-  taskCheckboxBox: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 1.5,
-    borderColor: '#C4C7D0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  taskCheckboxBoxDone: {
-    backgroundColor: '#0E6852',
-    borderColor: '#0E6852',
-  },
-  questDetailsCol: {
-    flex: 1,
-    gap: 2,
-  },
-  questMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  priorityLabel: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-  },
-  questDuration: {
-    fontFamily: fontFamily.medium,
-    fontSize: 11,
-    color: '#717684',
-  },
-  questTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: '#121316',
-  },
-  questTitleDone: {
-    textDecorationLine: 'line-through',
-    color: '#717684',
-  },
-  questTitleCancelled: {
-    textDecorationLine: 'line-through',
-    color: '#9499A8',
-  },
-  questSubtext: {
-    fontSize: 11,
-    color: '#717684',
-  },
-  questSubtextDone: {
-    color: '#0E6852',
-  },
-  questSubtextCancelled: {
-    color: '#9499A8',
-  },
-  questActionGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  questRemoveBtn: {
-    padding: 6,
-  },
-  questPlayBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+  removeMiniBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  questPlayBtnActive: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#CEF5EB',
-    alignItems: 'center',
-    justifyContent: 'center',
+  emptyAgendaCard: {
+    borderRadius: 24,
   },
-  // Agenda Pod Wrapper
-  agendaPodWrapper: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#ECEEF2',
-    overflow: 'hidden',
-  },
-  emptyAgendaPod: {
+  emptyAgendaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[3],
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: space[4],
-    borderWidth: 1,
-    borderColor: '#ECEEF2',
   },
   emptyAgendaTitle: {
     fontFamily: fontFamily.bold,
-    color: '#121316',
-    fontSize: 13,
-  },
-  agendaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: space[3],
-    paddingVertical: space[3],
-    gap: space[3],
-    backgroundColor: '#FFFFFF',
-  },
-  agendaRowDone: {
-    opacity: 0.55,
-  },
-  agendaRowDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  agendaDetailsCol: {
-    flex: 1,
-    gap: 2,
-  },
-  agendaTimeText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#0E6852',
-  },
-  agendaTitle: {
-    fontFamily: fontFamily.bold,
     fontSize: 14,
-    color: '#121316',
+    color: s.ink,
   },
-  agendaTitleDone: {
-    textDecorationLine: 'line-through',
-    color: '#717684',
+  emptyAgendaSub: {
+    fontFamily: fontFamily.regular,
+    fontSize: 12,
+    color: s.inkMuted,
   },
-  // Floating Action Button (Petak di sudut kanan bawah)
   floatingFabContainer: {
     position: 'absolute',
-    bottom: space[4],
     right: space[4],
+    bottom: space[4],
+    zIndex: 20,
   },
   fabSquare: {
     width: 54,
     height: 54,
-    borderRadius: 16,
-    backgroundColor: '#121316',
+    borderRadius: 18,
+    backgroundColor: s.sun,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#26292F',
+    shadowColor: '#B58105',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
     elevation: 6,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
   },
   fabSquarePressed: {
     transform: [{ scale: 0.94 }],
-    backgroundColor: '#26292F',
+    backgroundColor: s.sunDeep,
   },
 });

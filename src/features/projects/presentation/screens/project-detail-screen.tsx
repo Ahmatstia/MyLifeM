@@ -5,24 +5,28 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
   ArrowLeft,
   Trash2,
   Plus,
-  Target as TargetIcon,
-  Calendar,
-  Sparkles,
+  Check,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, fontFamily } from '@/theme/tokens';
-import { Screen } from '@/shared/ui/screen';
-import { AppText } from '@/shared/ui/app-text';
-import { Button } from '@/shared/ui/button';
-import { ProgressBar } from '@/shared/ui/progress-bar';
-import { Banner } from '@/shared/ui/banner';
+import {
+  Screen,
+  AppText,
+  Button,
+  Banner,
+  WaveBackdrop,
+  SoftCard,
+  PillTabs,
+  SectionTitle,
+  MascotCozy,
+  sproutShadow,
+} from '@/shared/ui';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { StageCard } from '@/features/stages/presentation/components/stage-card';
 import { AddEditStageModal } from '@/features/stages/presentation/components/add-edit-stage-modal';
@@ -30,15 +34,17 @@ import { AddEditTaskModal } from '@/features/stages/presentation/components/add-
 import type { TaskItemEntity } from '@/features/stages/domain/entities/stage.entity';
 import type { ProjectStatus } from '../../domain/entities/project.entity';
 
+const s = colors.sprout;
+
 export interface ProjectDetailScreenProps {
   projectId: string;
 }
 
-const STATUS_ITEMS: { key: ProjectStatus; label: string }[] = [
-  { key: 'ACTIVE', label: 'Aktif' },
-  { key: 'PLANNING', label: 'Rencana' },
-  { key: 'ON_HOLD', label: 'Ditunda' },
-  { key: 'COMPLETED', label: 'Selesai' },
+const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
+  { value: 'ACTIVE', label: 'Aktif' },
+  { value: 'PLANNING', label: 'Rencana' },
+  { value: 'ON_HOLD', label: 'Ditunda' },
+  { value: 'COMPLETED', label: 'Selesai' },
 ];
 
 export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
@@ -62,13 +68,11 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
     deleteThisProject,
   } = useProjectDetail(projectId);
 
-  // Stage Modal State
   const [stageModalVisible, setStageModalVisible] = useState(false);
   const [editingStage, setEditingStage] = useState<
     { id: string; name: string; description?: string | null } | undefined
   >(undefined);
 
-  // Task Modal State
   const [taskModalVisible, setTaskModalVisible] = useState(false);
   const [selectedStageForTask, setSelectedStageForTask] = useState<{
     id: string;
@@ -109,14 +113,10 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
 
   if (isLoading) {
     return (
-      <Screen>
+      <Screen style={styles.screenRoot}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <AppText
-            variant="bodyMedium"
-            color="onSurfaceVariant"
-            style={styles.loadingText}
-          >
+          <ActivityIndicator size="large" color={s.forest} />
+          <AppText variant="bodyMedium" color="onSurfaceVariant">
             Memuat detail proyek...
           </AppText>
         </View>
@@ -126,7 +126,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
 
   if (error || !project) {
     return (
-      <Screen>
+      <Screen style={styles.screenRoot}>
         <Banner
           variant="error"
           message={error || 'Proyek tidak ditemukan atau telah dihapus.'}
@@ -137,166 +137,151 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
     );
   }
 
-  const currentStatus = project.status;
-
   return (
-    <Screen scrollable={false} withBottomPadding={false} style={styles.screenRoot}>
-      {/* 1. Header Navigation */}
+    <Screen
+      scrollable
+      withBottomPadding={false}
+      style={styles.screenRoot}
+      contentContainerStyle={styles.scrollContent}
+      overlay={
+        <>
+          <AddEditStageModal
+            visible={stageModalVisible}
+            initialData={editingStage}
+            onClose={() => setStageModalVisible(false)}
+            onSubmit={async (name, description) => {
+              if (editingStage) {
+                return editStage(editingStage.id, name, description);
+              } else {
+                return addStage(name, description);
+              }
+            }}
+          />
+
+          {selectedStageForTask && (
+            <AddEditTaskModal
+              visible={taskModalVisible}
+              stageId={selectedStageForTask.id}
+              stageName={selectedStageForTask.name}
+              initialData={editingTaskData}
+              onClose={() => {
+                setTaskModalVisible(false);
+                setEditingTaskData(undefined);
+              }}
+              onSubmit={async (input) => {
+                if (editingTaskData) {
+                  return editTask(editingTaskData.id, input);
+                } else {
+                  return addTask({
+                    stageId: selectedStageForTask.id,
+                    name: input.name || '',
+                    description: input.description,
+                    priority: input.priority,
+                    estimatedHours: input.estimatedHours,
+                    status: input.status,
+                  });
+                }
+              }}
+            />
+          )}
+        </>
+      }
+    >
+      <WaveBackdrop variant="home" height={285} />
+
+      {/* 1. Header Navigation (Non-sticky) */}
       <View style={styles.topBar}>
-        <View style={styles.topBarLeft}>
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Kembali"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={styles.circleButton}
-          >
-            <ArrowLeft size={20} color={colors.onSurface} />
-          </Pressable>
-          <AppText variant="titleMedium" style={styles.topBarTitle}>
-            Detail Proyek
-          </AppText>
-        </View>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Kembali"
+          style={styles.circleButton}
+        >
+          <ArrowLeft size={20} color={s.ink} />
+        </Pressable>
+
+        <AppText style={styles.topBarTitle} numberOfLines={1}>
+          Detail Proyek
+        </AppText>
 
         <Pressable
           onPress={handleDeleteProject}
           accessibilityRole="button"
           accessibilityLabel="Hapus proyek"
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={styles.circleButton}
+          style={styles.circleDeleteBtn}
         >
-          <Trash2 size={18} color={colors.error} />
+          <Trash2 size={17} color={colors.error} />
         </Pressable>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* 2. Target & Deadline Badges */}
-        <View style={styles.badgeRow}>
-          {project.targetTitle ? (
-            <View style={styles.targetBadge}>
-              <TargetIcon size={14} color="#1F1D8A" />
-              <AppText
-                variant="labelMedium"
-                style={styles.targetBadgeText}
-                numberOfLines={1}
-              >
-                Terkait: {project.targetTitle}
-              </AppText>
-            </View>
-          ) : (
-            <View style={styles.targetBadge}>
-              <Sparkles size={14} color="#1F1D8A" />
-              <AppText variant="labelMedium" style={styles.targetBadgeText}>
-                Eksplorasi Mandiri
-              </AppText>
-            </View>
-          )}
-
-          <View style={styles.deadlinBadge}>
-            <Calendar size={13} color="#6C3A00" />
-            <AppText variant="labelMedium" style={styles.deadlineBadgeText}>
-              {project.targetDate ? project.targetDate : 'Jangka Panjang'}
-            </AppText>
-          </View>
+      {/* Cozy Mascot Illustration */}
+        <View style={styles.cozyHeroWrap}>
+          <MascotCozy width={250} height={168} />
         </View>
 
-        {/* 3. Title & Subtitle */}
-        <View style={styles.headingSection}>
-          <AppText variant="headlineLarge" style={styles.projectTitle}>
-            {project.title}
-          </AppText>
+        {/* Curved Storybook Detail Card */}
+        <View style={styles.detailSheetCard}>
+          <View style={styles.detailHeaderRow}>
+            <View style={styles.greenCheckCircle}>
+              <Check size={24} color="#FFFFFF" strokeWidth={3.2} />
+            </View>
+
+            <View style={styles.detailTitleCol}>
+              <AppText style={styles.projectTitle}>{project.title}</AppText>
+              <AppText style={styles.projectMetaSub}>
+                {project.targetTitle ? project.targetTitle : 'Proyek Mandiri'} ·{' '}
+                {project.taskSummary.totalTasks > 0
+                  ? `${project.taskSummary.totalEstimatedHours} jam · ${project.taskSummary.progressPercent}%`
+                  : 'Belum ada rencana'}
+              </AppText>
+            </View>
+          </View>
+
           {project.description ? (
-            <AppText
-              variant="bodyMedium"
-              color="onSurfaceVariant"
-              style={styles.projectDesc}
-            >
-              {project.description}
-            </AppText>
+            <AppText style={styles.projectDesc}>{project.description}</AppText>
           ) : null}
-        </View>
 
-        {/* 5. Status Lifecycle Selector */}
-        <View style={styles.statusSection}>
-          <View style={styles.segmentedContainer}>
-            {STATUS_ITEMS.map((item) => {
-              const isSelected = currentStatus === item.key;
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => updateStatus(item.key)}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: isSelected }}
-                  style={[
-                    styles.segmentButton,
-                    isSelected && styles.segmentButtonActive,
-                  ]}
-                >
-                  <AppText
-                    variant="labelMedium"
-                    style={[
-                      styles.segmentText,
-                      isSelected && styles.segmentTextActive,
-                    ]}
-                  >
-                    {item.label}
-                  </AppText>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryTop}>
-            <AppText variant="labelMedium" color="onSurfaceVariant">PROGRES RENCANA</AppText>
-            <AppText variant="titleLarge" style={styles.summaryPercent} tabularNums>
-              {project.taskSummary.totalTasks ? `${project.taskSummary.progressPercent}%` : 'Belum ada rencana'}
-            </AppText>
-          </View>
-          <ProgressBar progress={project.taskSummary.progressPercent} height={5} />
-          <AppText variant="bodySmall" color="onSurfaceVariant">
-            {project.taskSummary.completedTasks}/{project.taskSummary.totalTasks} tugas selesai · {stages.length} tahap · estimasi {project.taskSummary.totalEstimatedHours} jam
-          </AppText>
-        </View>
-
-        {/* 7. Milestone & Task Checklist Section */}
-        <View style={styles.sectionHeaderRow}>
-          <View style={styles.sectionTitleBlock}>
-            <AppText variant="titleMedium" style={styles.sectionTitle}>
-              Milestone & Checklist
-            </AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">
-              {stages.length} Tahap • {project.taskSummary.totalTasks} Tugas Terdaftar
-            </AppText>
-          </View>
-
-          <Button
-            title="+ Tambah Tahap"
-            variant="tonal"
-            size="compact"
-            onPress={() => {
-              setEditingStage(undefined);
-              setStageModalVisible(true);
-            }}
+          <PillTabs
+            options={STATUS_OPTIONS}
+            value={project.status}
+            onChange={updateStatus}
           />
+
+          {/* Celebration / Progress Pill Banner */}
+          <View style={styles.celebrationBanner}>
+            <View style={styles.celebrationIconCircle}>
+              <Check size={20} color="#FFFFFF" strokeWidth={3} />
+            </View>
+            <View style={styles.celebrationTextCol}>
+              <AppText style={styles.celebrationTitle}>
+                {project.status === 'COMPLETED'
+                  ? 'Tugas Selesai!'
+                  : `${project.taskSummary.completedTasks}/${project.taskSummary.totalTasks} Tugas Selesai!`}
+              </AppText>
+              <AppText style={styles.celebrationSub}>
+                Kerja bagus, terus semangat!
+              </AppText>
+            </View>
+          </View>
         </View>
 
-        {/* Stages List */}
+        {/* Milestone & Task Checklist Section */}
+        <SectionTitle
+          title="Tahapan Proyek"
+          hint={`${stages.length} tahap`}
+          actionLabel="Tambah Tahap"
+          onAction={() => {
+            setEditingStage(undefined);
+            setStageModalVisible(true);
+          }}
+        />
+
         {stages.length === 0 ? (
-          <View style={styles.emptyStagesCard}>
-            <AppText variant="titleMedium" align="center">
+          <SoftCard style={styles.emptyStagesCard}>
+            <AppText style={styles.emptyTitle} align="center">
               Belum Ada Tahapan
             </AppText>
-            <AppText
-              variant="bodySmall"
-              color="onSurfaceVariant"
-              align="center"
-              style={styles.emptyDesc}
-            >
+            <AppText align="center" style={styles.emptyDesc}>
               {`Pecah proyek "${project.title}" menjadi tahapan terukur untuk memulai pengerjaan.`}
             </AppText>
             <Button
@@ -310,7 +295,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
               leftIcon={<Plus size={16} color={colors.onPrimary} />}
               style={styles.emptyBtn}
             />
-          </View>
+          </SoftCard>
         ) : (
           stages.map((stage, idx) => (
             <StageCard
@@ -341,148 +326,159 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({
         )}
 
         <View style={{ height: space[4] }} />
-      </ScrollView>
-
-      {/* Add / Edit Stage Modal */}
-      <AddEditStageModal
-        visible={stageModalVisible}
-        initialData={editingStage}
-        onClose={() => setStageModalVisible(false)}
-        onSubmit={async (name, description) => {
-          if (editingStage) {
-            return editStage(editingStage.id, name, description);
-          } else {
-            return addStage(name, description);
-          }
-        }}
-      />
-
-      {/* Add / Edit Task Modal */}
-      {selectedStageForTask && (
-        <AddEditTaskModal
-          visible={taskModalVisible}
-          stageId={selectedStageForTask.id}
-          stageName={selectedStageForTask.name}
-          initialData={editingTaskData}
-          onClose={() => {
-            setTaskModalVisible(false);
-            setEditingTaskData(undefined);
-          }}
-          onSubmit={async (input) => {
-            if (editingTaskData) {
-              return editTask(editingTaskData.id, input);
-            } else {
-              return addTask({
-                stageId: selectedStageForTask.id,
-                name: input.name || '',
-                description: input.description,
-                priority: input.priority,
-                estimatedHours: input.estimatedHours,
-                status: input.status,
-              });
-            }
-          }}
-        />
-      )}
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  screenRoot: { backgroundColor: '#FCF8FF' },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space[3] },
-  loadingText: { letterSpacing: -0.2 },
-  topBar: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space[2] },
-  topBarLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space[2] },
-  topBarTitle: { fontFamily: fontFamily.bold, fontSize: 16, color: '#1E1E2E' },
+  screenRoot: {
+    backgroundColor: s.cream,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space[3],
+  },
+  topBar: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[1],
+  },
+  topBarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: fontFamily.bold,
+    fontSize: 17,
+    color: s.ink,
+  },
   circleButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: s.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#EBE3D0',
+  },
+  circleDeleteBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF2F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F3D0CA',
+  },
+  scrollContent: {
+    paddingBottom: 90,
+    gap: space[3],
+  },
+  cozyHeroWrap: {
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: -14,
+    zIndex: 2,
+  },
+  detailSheetCard: {
+    backgroundColor: s.card,
+    borderRadius: 34,
+    padding: space[5],
+    borderWidth: 1,
+    borderColor: '#F1EADA',
+    gap: space[4],
+    ...sproutShadow,
+  },
+  detailHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+  },
+  greenCheckCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#3B9B5E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailTitleCol: {
+    flex: 1,
+    gap: 2,
+  },
+  projectTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 22,
+    lineHeight: 28,
+    color: s.ink,
+  },
+  projectMetaSub: {
+    fontFamily: fontFamily.medium,
+    fontSize: 13,
+    color: s.inkMuted,
+  },
+  projectDesc: {
+    fontFamily: fontFamily.regular,
+    fontSize: 15,
+    lineHeight: 22,
+    color: s.ink,
+  },
+  celebrationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+    backgroundColor: '#F4EFE2',
+    borderRadius: 26,
+    paddingHorizontal: space[4],
+    paddingVertical: space[3],
+    borderWidth: 1,
+    borderColor: '#E7DFCC',
+  },
+  celebrationIconCircle: {
     width: 42,
     height: 42,
-    borderRadius: 12,
-    backgroundColor: '#FAF5EB',
+    borderRadius: 21,
+    backgroundColor: '#3B9B5E',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  scrollContent: { paddingBottom: space[4], gap: space[2] },
-  badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
-  targetBadge: {
-    minHeight: 28,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFEBD9',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
+  celebrationTextCol: {
+    flex: 1,
+    gap: 2,
   },
-  targetBadgeText: { color: '#805600', fontFamily: fontFamily.bold, fontSize: 11 },
-  deadlinBadge: {
-    minHeight: 28,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FAF5EB',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
+  celebrationTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 15,
+    color: s.ink,
   },
-  deadlineBadgeText: { color: '#504535', fontFamily: fontFamily.medium, fontSize: 11 },
-  headingSection: { marginVertical: space[2] },
-  projectTitle: { fontFamily: fontFamily.bold, fontSize: 24, lineHeight: 30, letterSpacing: -0.3, color: '#1E1E2E', marginBottom: 4 },
-  projectDesc: { fontSize: 14, lineHeight: 20, color: '#504535' },
-  statusSection: { marginBottom: space[2] },
-  statusSectionTitle: { fontFamily: fontFamily.bold, fontSize: 12, color: '#1E1E2E', marginBottom: space[1] },
-  segmentedContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    backgroundColor: '#FAF5EB',
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    padding: 3,
-    gap: 3,
+  celebrationSub: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    color: s.inkMuted,
   },
-  segmentButton: { minHeight: 36, flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 6, borderRadius: 999 },
-  segmentButtonActive: {
-    backgroundColor: '#E8A838', // Custard Gold
-    boxShadow: '1.5px 1.5px 0px #1E1E2E',
-  },
-  statusDotActive: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#1E1E2E' },
-  segmentText: { fontFamily: fontFamily.bold, fontSize: 11, color: '#504535' },
-  segmentTextActive: { color: '#1E1E2E' },
-  summaryCard: {
-    gap: space[2],
-    backgroundColor: '#FAF5EB',
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
-    padding: space[3],
-  },
-  summaryTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  summaryPercent: { color: '#805600', fontFamily: fontFamily.bold },
-  footnoteText: { fontSize: 11, lineHeight: 16, marginVertical: space[1], color: '#504535' },
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space[2], marginTop: space[2], marginBottom: space[1] },
-  sectionTitleBlock: { flex: 1 },
-  sectionTitle: { fontFamily: fontFamily.bold, fontSize: 15, color: '#1E1E2E' },
   emptyStagesCard: {
-    padding: space[4],
+    padding: space[5],
     gap: space[2],
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FAF5EB',
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
+    borderRadius: 28,
   },
-  emptyDesc: { marginBottom: space[2], maxWidth: 280, color: '#504535' },
-  emptyBtn: { borderRadius: 999 },
+  emptyTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+    color: s.ink,
+  },
+  emptyDesc: {
+    marginBottom: space[2],
+    maxWidth: 280,
+    color: s.inkMuted,
+    fontSize: 13,
+  },
+  emptyBtn: {
+    borderRadius: 999,
+  },
 });

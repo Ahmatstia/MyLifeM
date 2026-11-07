@@ -14,6 +14,14 @@ import {
   PlusJakartaSans_600SemiBold,
   PlusJakartaSans_700Bold,
 } from '@expo-google-fonts/plus-jakarta-sans';
+import {
+  Fredoka_600SemiBold,
+  Fredoka_700Bold,
+} from '@expo-google-fonts/fredoka';
+import {
+  Quicksand_500Medium,
+  Quicksand_600SemiBold,
+} from '@expo-google-fonts/quicksand';
 
 // Keep the splash screen visible while initializing local database
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -43,6 +51,10 @@ export default function RootLayout() {
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
+    Quicksand_500Medium,
+    Quicksand_600SemiBold,
+    Fredoka_600SemiBold,
+    Fredoka_700Bold,
   });
 
   useEffect(() => {

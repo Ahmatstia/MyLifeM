@@ -5,22 +5,34 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
   ArrowLeft,
   Trash2,
   Plus,
+  Check,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, radius, fontFamily } from '@/theme/tokens';
-import { Screen, AppText, Banner, Button, ProgressBar } from '@/shared/ui';
+import { space, fontFamily } from '@/theme/tokens';
+import {
+  Screen,
+  AppText,
+  Banner,
+  Button,
+  WaveBackdrop,
+  SoftCard,
+  SectionTitle,
+  MascotCozy,
+  sproutShadow,
+} from '@/shared/ui';
 import { useTargetDetail } from '../hooks/use-target-detail';
 import { StageCard } from '@/features/stages/presentation/components/stage-card';
 import { AddEditStageModal } from '@/features/stages/presentation/components/add-edit-stage-modal';
 import { AddEditTaskModal } from '@/features/stages/presentation/components/add-edit-task-modal';
 import type { TaskItemEntity } from '@/features/stages/domain/entities/stage.entity';
+
+const s = colors.sprout;
 
 export interface TargetDetailScreenProps {
   targetId: string;
@@ -44,13 +56,16 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
     deleteThisTarget,
   } = useTargetDetail(targetId);
 
-  // Stage Modal State
   const [stageModalVisible, setStageModalVisible] = useState(false);
-  const [editingStage, setEditingStage] = useState<{ id: string; name: string; description?: string | null } | undefined>(undefined);
+  const [editingStage, setEditingStage] = useState<
+    { id: string; name: string; description?: string | null } | undefined
+  >(undefined);
 
-  // Task Modal State
   const [taskModalVisible, setTaskModalVisible] = useState(false);
-  const [selectedStageForTask, setSelectedStageForTask] = useState<{ id: string; name: string } | null>(null);
+  const [selectedStageForTask, setSelectedStageForTask] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [editingTaskData, setEditingTaskData] = useState<TaskItemEntity | undefined>(undefined);
 
   const handleDeleteTarget = () => {
@@ -89,7 +104,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
     return (
       <Screen style={styles.screenBg}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={s.forest} />
           <AppText variant="bodyMedium" color="onSurfaceVariant">
             Memuat detail target...
           </AppText>
@@ -112,8 +127,58 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
   }
 
   return (
-    <Screen scrollable={false} style={styles.screenBg} withBottomPadding={false}>
-      {/* TOP NAVIGATION BAR */}
+    <Screen
+      scrollable
+      style={styles.screenBg}
+      withBottomPadding={false}
+      contentContainerStyle={styles.scrollContent}
+      overlay={
+        <>
+          <AddEditStageModal
+            visible={stageModalVisible}
+            initialData={editingStage}
+            onClose={() => setStageModalVisible(false)}
+            onSubmit={async (name, description) => {
+              if (editingStage) {
+                return editStage(editingStage.id, name, description);
+              } else {
+                return addStage(name, description);
+              }
+            }}
+          />
+
+          {selectedStageForTask && (
+            <AddEditTaskModal
+              visible={taskModalVisible}
+              stageId={selectedStageForTask.id}
+              stageName={selectedStageForTask.name}
+              initialData={editingTaskData}
+              onClose={() => {
+                setTaskModalVisible(false);
+                setEditingTaskData(undefined);
+              }}
+              onSubmit={async (input) => {
+                if (editingTaskData) {
+                  return editTask(editingTaskData.id, input);
+                } else {
+                  return addTask({
+                    stageId: selectedStageForTask.id,
+                    name: input.name || '',
+                    description: input.description,
+                    priority: input.priority,
+                    estimatedHours: input.estimatedHours,
+                    status: input.status,
+                  });
+                }
+              }}
+            />
+          )}
+        </>
+      }
+    >
+      <WaveBackdrop variant="home" height={285} />
+
+      {/* TOP NAVIGATION BAR (Non-sticky) */}
       <View style={styles.topBar}>
         <Pressable
           onPress={() => router.back()}
@@ -121,10 +186,10 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           accessibilityLabel="Kembali"
           style={styles.circleNavBtn}
         >
-          <ArrowLeft size={18} color={colors.onSurface} strokeWidth={2.4} />
+          <ArrowLeft size={20} color={s.ink} strokeWidth={2.4} />
         </Pressable>
 
-        <AppText variant="titleMedium" numberOfLines={1} style={styles.topBarTitle}>
+        <AppText numberOfLines={1} style={styles.topBarTitle}>
           Rincian Target
         </AppText>
 
@@ -138,90 +203,69 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
         </Pressable>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* TARGET HEADER PROFILE */}
-        <View style={styles.headerProfileSection}>
-          <View style={styles.metaBadgeRow}>
-            <AppText variant="labelSmall" style={styles.categoryText}>
-              {target.categoryName.toUpperCase()}
-            </AppText>
-            {target.targetDate ? (
-              <AppText variant="labelSmall" style={styles.dateBadgeText}>
-                · Target: {target.targetDate}
-              </AppText>
-            ) : null}
-          </View>
-
-          <AppText variant="headlineMedium" style={styles.targetTitleText}>
-            {target.title}
-          </AppText>
-
-          {target.description ? (
-            <AppText variant="bodyMedium" color="onSurfaceVariant" style={styles.whyText}>
-              {target.description}
-            </AppText>
-          ) : null}
+      {/* Cozy Mascot Illustration (matching bottom-middle phone in Reference UI) */}
+        <View style={styles.cozyHeroWrap}>
+          <MascotCozy width={250} height={168} />
         </View>
 
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryTop}>
-            <View>
-              <AppText variant="labelMedium" color="onSurfaceVariant">PROGRES RENCANA</AppText>
-              <AppText variant="bodySmall" color="onSurfaceVariant">
-                {target.completedTasks}/{target.totalTasks} tugas · {stages.length} tahap
+        {/* Curved Storybook Detail Card */}
+        <View style={styles.detailSheetCard}>
+          <View style={styles.detailHeaderRow}>
+            <View style={styles.greenCheckCircle}>
+              <Check size={24} color="#FFFFFF" strokeWidth={3.2} />
+            </View>
+
+            <View style={styles.detailTitleCol}>
+              <AppText style={styles.targetTitleText}>{target.title}</AppText>
+              <AppText style={styles.targetMetaSub}>
+                {target.categoryName} ·{' '}
+                {target.totalTasks > 0
+                  ? `${target.totalEstimatedHours} jam · ${target.progressPercent}%`
+                  : 'Belum ada rencana'}
               </AppText>
             </View>
-            <AppText variant="titleLarge" style={styles.summaryPercent} tabularNums>
-              {target.totalTasks ? `${target.progressPercent}%` : 'Belum ada rencana'}
-            </AppText>
           </View>
-          <ProgressBar progress={target.progressPercent} height={5} />
-          <AppText variant="bodySmall" color="onSurfaceVariant">
-            Estimasi pekerjaan: {target.totalEstimatedHours} jam
-          </AppText>
+
+          {target.description ? (
+            <AppText style={styles.descriptionParagraph}>{target.description}</AppText>
+          ) : null}
+
+          {/* Celebration / Progress Pill Banner matching bottom of Detail Reference UI */}
+          <View style={styles.celebrationBanner}>
+            <View style={styles.celebrationIconCircle}>
+              <Check size={20} color="#FFFFFF" strokeWidth={3} />
+            </View>
+            <View style={styles.celebrationTextCol}>
+              <AppText style={styles.celebrationTitle}>
+                {target.progressPercent === 100 && target.totalTasks > 0
+                  ? 'Target Selesai!'
+                  : `${target.completedTasks}/${target.totalTasks} Tugas Selesai!`}
+              </AppText>
+              <AppText style={styles.celebrationSub}>
+                Kerja bagus, terus semangat!
+              </AppText>
+            </View>
+          </View>
         </View>
 
         {/* SECTION HEADER: TAHAPAN */}
-        <View style={styles.sectionHeaderRow}>
-          <View style={styles.sectionTitleCol}>
-            <View style={styles.sectionTitleRow}>
-              <AppText variant="titleMedium" style={styles.sectionHeadingBold}>
-                Tahapan
-              </AppText>
-              <View style={styles.stageCountBadge}>
-                <AppText variant="labelSmall" style={styles.stageCountText}>
-                  {stages.length}
-                </AppText>
-              </View>
-            </View>
-          </View>
-
-          <Pressable
-            onPress={() => {
-              setEditingStage(undefined);
-              setStageModalVisible(true);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Tambah Tahap Baru"
-            style={styles.addStageBtn}
-          >
-            <Plus size={14} color={colors.onPrimary} strokeWidth={2.8} />
-            <AppText variant="labelSmall" style={styles.addStageText}>
-              Tahap Baru
-            </AppText>
-          </Pressable>
-        </View>
+        <SectionTitle
+          title="Tahapan"
+          hint={`${stages.length} tahap`}
+          actionLabel="Tahap Baru"
+          onAction={() => {
+            setEditingStage(undefined);
+            setStageModalVisible(true);
+          }}
+        />
 
         {/* STAGES LIST */}
         {stages.length === 0 ? (
-          <View style={styles.emptyStagesCard}>
-            <AppText variant="titleMedium" align="center" style={styles.emptyTitle}>
+          <SoftCard style={styles.emptyStagesCard}>
+            <AppText align="center" style={styles.emptyTitle}>
               Belum Ada Tahapan
             </AppText>
-            <AppText variant="bodySmall" align="center" style={styles.emptyDesc}>
+            <AppText align="center" style={styles.emptyDesc}>
               {`Mulai pecah target "${target.title}" menjadi beberapa fase berurutan agar lebih mudah dikerjakan.`}
             </AppText>
             <Button
@@ -235,7 +279,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
               leftIcon={<Plus size={16} color={colors.onPrimary} />}
               style={styles.emptyBtn}
             />
-          </View>
+          </SoftCard>
         ) : (
           stages.map((stage, idx) => (
             <StageCard
@@ -264,176 +308,158 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
             />
           ))
         )}
-
-      </ScrollView>
-
-      {/* MODAL TAMBAH/EDIT TAHAP */}
-      <AddEditStageModal
-        visible={stageModalVisible}
-        initialData={editingStage}
-        onClose={() => setStageModalVisible(false)}
-        onSubmit={async (name, description) => {
-          if (editingStage) {
-            return editStage(editingStage.id, name, description);
-          } else {
-            return addStage(name, description);
-          }
-        }}
-      />
-
-      {/* MODAL TAMBAH/EDIT TUGAS */}
-      {selectedStageForTask && (
-        <AddEditTaskModal
-          visible={taskModalVisible}
-          stageId={selectedStageForTask.id}
-          stageName={selectedStageForTask.name}
-          initialData={editingTaskData}
-          onClose={() => {
-            setTaskModalVisible(false);
-            setEditingTaskData(undefined);
-          }}
-          onSubmit={async (input) => {
-            if (editingTaskData) {
-              return editTask(editingTaskData.id, input);
-            } else {
-              return addTask({
-                stageId: selectedStageForTask.id,
-                name: input.name || '',
-                description: input.description,
-                priority: input.priority,
-                estimatedHours: input.estimatedHours,
-                status: input.status,
-              });
-            }
-          }}
-        />
-      )}
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  screenBg: { backgroundColor: '#FCF8FF' },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space[3] },
-  topBar: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space[2] },
-  topBarTitle: { flex: 1, textAlign: 'center', fontFamily: fontFamily.bold, color: '#1E1E2E', fontSize: 16 },
-  circleNavBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#FAF5EB',
+  screenBg: {
+    backgroundColor: s.cream,
+  },
+  loadingContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
+    gap: space[3],
+  },
+  topBar: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[1],
+  },
+  topBarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: fontFamily.bold,
+    color: s.ink,
+    fontSize: 17,
+  },
+  circleNavBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: s.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#EBE3D0',
   },
   circleDeleteBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF2F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F3D0CA',
+  },
+  scrollContent: {
+    paddingBottom: 90,
+    gap: space[3],
+  },
+  cozyHeroWrap: {
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: -14,
+    zIndex: 2,
+  },
+  detailSheetCard: {
+    backgroundColor: s.card,
+    borderRadius: 34,
+    padding: space[5],
+    borderWidth: 1,
+    borderColor: '#F1EADA',
+    gap: space[4],
+    ...sproutShadow,
+  },
+  detailHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+  },
+  greenCheckCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#3B9B5E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailTitleCol: {
+    flex: 1,
+    gap: 2,
+  },
+  targetTitleText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 22,
+    lineHeight: 28,
+    color: s.ink,
+  },
+  targetMetaSub: {
+    fontFamily: fontFamily.medium,
+    fontSize: 13,
+    color: s.inkMuted,
+  },
+  descriptionParagraph: {
+    fontFamily: fontFamily.regular,
+    fontSize: 15,
+    lineHeight: 22,
+    color: s.ink,
+  },
+  celebrationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+    backgroundColor: '#F4EFE2',
+    borderRadius: 26,
+    paddingHorizontal: space[4],
+    paddingVertical: space[3],
+    borderWidth: 1,
+    borderColor: '#E7DFCC',
+  },
+  celebrationIconCircle: {
     width: 42,
     height: 42,
-    borderRadius: 12,
-    backgroundColor: '#FFDAD6',
+    borderRadius: 21,
+    backgroundColor: '#3B9B5E',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  scrollContent: { paddingBottom: space[4], gap: space[2] },
-  headerProfileSection: { gap: space[2] },
-  metaBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space[2] },
-  categoryBadge: {
-    minHeight: 28,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFEBD9',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
+  celebrationTextCol: {
+    flex: 1,
+    gap: 2,
   },
-  categoryDot: { width: 6, height: 6, borderRadius: radius.full, backgroundColor: '#805600' },
-  categoryText: { color: '#805600', fontFamily: fontFamily.bold, fontSize: 11 },
-  dateBadge: {
-    minHeight: 28,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FAF5EB',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
+  celebrationTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 15,
+    color: s.ink,
   },
-  dateBadgeText: { color: '#504535', fontFamily: fontFamily.medium, fontSize: 11 },
-  targetTitleText: { fontFamily: fontFamily.bold, fontSize: 24, lineHeight: 30, color: '#1E1E2E' },
-  whyCard: {
-    gap: 6,
-    padding: space[3],
-    backgroundColor: '#FAF5EB',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    borderRadius: 18,
-    boxShadow: '2px 2px 0px #1E1E2E',
+  celebrationSub: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    color: s.inkMuted,
   },
-  whyHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  whyLabel: { color: '#805600', fontFamily: fontFamily.bold },
-  whyText: { color: '#504535', lineHeight: 20 },
-  summaryCard: {
-    gap: space[2],
-    padding: space[3],
-    backgroundColor: '#FAF5EB',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    borderRadius: 18,
-    boxShadow: '2px 2px 0px #1E1E2E',
-  },
-  summaryTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  summaryPercent: { color: '#805600', fontFamily: fontFamily.bold },
-  disclaimerText: { fontSize: 11, lineHeight: 16, color: '#504535' },
-  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[2], marginTop: space[3], marginBottom: space[1] },
-  sectionTitleCol: { flex: 1, gap: 2 },
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
-  sectionHeadingBold: { color: '#1E1E2E', fontFamily: fontFamily.bold, fontSize: 16 },
-  sectionSubtext: { color: '#504535' },
-  stageCountBadge: {
-    minWidth: 24,
-    height: 24,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFEBD9',
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
-  },
-  stageCountText: { color: '#805600', fontFamily: fontFamily.bold, fontSize: 11 },
-  addStageBtn: {
-    minHeight: 38,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    backgroundColor: '#E06B52',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
-  },
-  addStageText: { color: '#FAF5EB', fontFamily: fontFamily.bold, fontSize: 12 },
   emptyStagesCard: {
-    padding: space[4],
+    padding: space[5],
     gap: space[2],
     alignItems: 'center',
-    backgroundColor: '#FAF5EB',
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
+    borderRadius: 28,
   },
-  emptyTitle: { color: '#1E1E2E', fontFamily: fontFamily.bold },
-  emptyDesc: { marginBottom: space[2], maxWidth: 280, color: '#504535' },
-  emptyBtn: { borderRadius: 999 },
+  emptyTitle: {
+    color: s.ink,
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+  },
+  emptyDesc: {
+    marginBottom: space[2],
+    maxWidth: 280,
+    color: s.inkMuted,
+    fontSize: 13,
+  },
+  emptyBtn: {
+    borderRadius: 999,
+  },
 });

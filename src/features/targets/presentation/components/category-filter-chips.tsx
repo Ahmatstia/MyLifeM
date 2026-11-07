@@ -6,10 +6,12 @@ import {
   StyleSheet,
   type ViewStyle,
 } from 'react-native';
-import { Sparkles } from 'lucide-react-native';
 import { fontFamily } from '@/theme/tokens';
+import { colors } from '@/theme/colors';
 import { AppText } from '@/shared/ui/app-text';
 import type { CategoryWithCount } from '@/features/categories/domain/entities/category.entity';
+
+const s = colors.sprout;
 
 export interface CategoryFilterChipsProps {
   categories: CategoryWithCount[];
@@ -18,9 +20,6 @@ export interface CategoryFilterChipsProps {
   style?: ViewStyle;
 }
 
-/**
- * Compact, scrollable filters for target categories.
- */
 export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
   categories,
   selectedCategoryId,
@@ -36,23 +35,15 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Chip "Semua" */}
         <Pressable
           onPress={() => onSelectCategory(null)}
           accessibilityRole="button"
           accessibilityState={{ selected: isAllSelected }}
-          style={({ pressed }) => [
+          style={[
             styles.chip,
             isAllSelected ? styles.chipSelected : styles.chipUnselected,
-            pressed && styles.pressed,
           ]}
         >
-          <Sparkles
-            size={13}
-            color="#1E1E2E"
-            strokeWidth={2.5}
-            style={styles.icon}
-          />
           <AppText
             variant="labelMedium"
             style={[
@@ -64,7 +55,6 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
           </AppText>
         </Pressable>
 
-        {/* Categories Chips */}
         {categories.map((cat) => {
           const isSelected = selectedCategoryId === cat.id;
 
@@ -74,10 +64,9 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
               onPress={() => onSelectCategory(cat.id)}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              style={({ pressed }) => [
+              style={[
                 styles.chip,
                 isSelected ? styles.chipSelected : styles.chipUnselected,
-                pressed && styles.pressed,
               ]}
             >
               <AppText
@@ -99,44 +88,39 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 4,
+    backgroundColor: '#F1EBDC',
+    borderRadius: 999,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#E7DFCC',
   },
   scrollContent: {
-    paddingHorizontal: 2,
-    gap: 8,
+    gap: 6,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 36,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 999, // Pill capsule
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
+    justifyContent: 'center',
+    minHeight: 38,
+    paddingVertical: 7,
+    paddingHorizontal: 18,
+    borderRadius: 999,
   },
   chipSelected: {
-    backgroundColor: '#E8A838', // Custard Gold
-    boxShadow: '2px 2px 0px #1E1E2E',
+    backgroundColor: s.forest,
   },
   chipUnselected: {
-    backgroundColor: '#FAF5EB', // Warm Paper
+    backgroundColor: 'transparent',
   },
   chipText: {
-    fontSize: 12,
-    fontFamily: fontFamily.bold,
+    fontSize: 13,
+    fontFamily: fontFamily.semibold,
   },
   chipTextSelected: {
-    color: '#1E1E2E',
+    color: '#FFFFFF',
+    fontFamily: fontFamily.bold,
   },
   chipTextUnselected: {
-    color: '#504535',
-  },
-  icon: {
-    marginRight: 6,
-  },
-  pressed: {
-    transform: [{ translateX: 1 }, { translateY: 1 }],
-    boxShadow: '0px 0px 0px #1E1E2E',
+    color: s.inkMuted,
   },
 });

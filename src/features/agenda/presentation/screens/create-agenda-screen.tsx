@@ -4,25 +4,50 @@ import {
   TextInput,
   Pressable,
   Switch,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  Sparkles,
+  Briefcase,
+  Users,
+  GraduationCap,
+  Heart,
+  Clock,
+  MapPin,
+} from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { radius, space, fontFamily } from '@/theme/tokens';
-import { Screen, AppText, Button, FormScreenHeader } from '@/shared/ui';
+import {
+  Screen,
+  AppText,
+  FormScreenHeader,
+  WaveBackdrop,
+  ChoiceTile,
+  SunButton,
+  FieldLabel,
+  MascotHead,
+  sproutShadow,
+} from '@/shared/ui';
 import { localTimeToIso, shiftDate, formatLocalDate, isDateOnly } from '@/shared/utils/local-date';
 import { useAgenda } from '../hooks/use-agenda';
 import type { AgendaEventType } from '../../domain/entities/agenda.entity';
 
-const EVENT_TYPES: { type: AgendaEventType; label: string; activeColor: string }[] = [
-  { type: 'WORK', label: 'Kerja', activeColor: '#0E6852' },
-  { type: 'MEETING', label: 'Rapat', activeColor: '#2B59C3' },
-  { type: 'LEARNING', label: 'Belajar', activeColor: '#9333EA' },
-  { type: 'PERSONAL', label: 'Pribadi', activeColor: '#D97706' },
+const s = colors.sprout;
+
+const EVENT_TYPES: {
+  type: AgendaEventType;
+  label: string;
+  icon: typeof Briefcase;
+  tone: 'leaf' | 'teal' | 'grape' | 'rose';
+}[] = [
+  { type: 'LEARNING', label: 'Belajar', icon: GraduationCap, tone: 'leaf' },
+  { type: 'PERSONAL', label: 'Pribadi', icon: Heart, tone: 'rose' },
+  { type: 'WORK', label: 'Kerja', icon: Briefcase, tone: 'teal' },
+  { type: 'MEETING', label: 'Rapat', icon: Users, tone: 'grape' },
 ];
 
 const REMINDER_OPTIONS = [
@@ -30,21 +55,21 @@ const REMINDER_OPTIONS = [
   { minutes: 0, label: 'Tepat Waktu' },
   { minutes: 10, label: '10 mnt' },
   { minutes: 30, label: '30 mnt' },
-  { minutes: 60, label: '1 jam' },
 ];
 
 export const CreateAgendaScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ date?: string }>();
-  const initialDate = typeof params.date === 'string' && isDateOnly(params.date)
-    ? params.date
-    : formatLocalDate(new Date());
+  const initialDate =
+    typeof params.date === 'string' && isDateOnly(params.date)
+      ? params.date
+      : formatLocalDate(new Date());
 
   const { addEvent } = useAgenda();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [eventType, setEventType] = useState<AgendaEventType>('WORK');
+  const [eventType, setEventType] = useState<AgendaEventType>('LEARNING');
   const [isAllDay, setIsAllDay] = useState(false);
   const [endsTomorrow, setEndsTomorrow] = useState(false);
   const [formDate] = useState(initialDate);
@@ -70,7 +95,9 @@ export const CreateAgendaScreen: React.FC = () => {
         : localTimeToIso(endsTomorrow ? shiftDate(formDate, 1) : formDate, endTimeStr);
 
       if (endIso <= startIso) {
-        throw new Error('Waktu selesai harus setelah mulai. Untuk lintas malam, aktifkan "Selesai besok".');
+        throw new Error(
+          'Waktu selesai harus setelah mulai. Untuk lintas malam, aktifkan "Selesai besok".'
+        );
       }
 
       setErrorMessage(null);
@@ -104,19 +131,22 @@ export const CreateAgendaScreen: React.FC = () => {
   };
 
   return (
-    <Screen scrollable={false} withBottomPadding={false} withHorizontalPadding={false} style={styles.screenBg}>
-      <FormScreenHeader title="Agenda Baru" onBack={() => router.back()} />
-
+    <Screen
+      scrollable
+      withBottomPadding={false}
+      style={styles.screenBg}
+      contentContainerStyle={{ ...styles.scrollContent, paddingBottom: 120 + insets.bottom }}
+    >
+      <WaveBackdrop variant="form" withBottomHills />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 110 + insets.bottom }]}
-        >
-          {errorMessage && (
+        <View style={{ marginHorizontal: -space[4] }}>
+          <FormScreenHeader title="Tambah Agenda" onBack={() => router.back()} />
+        </View>
+
+        {errorMessage && (
             <View style={styles.errorBox}>
               <AppText variant="bodySmall" color="onErrorContainer">
                 {errorMessage}
@@ -124,165 +154,118 @@ export const CreateAgendaScreen: React.FC = () => {
             </View>
           )}
 
-          {/* Section 1: Main Info */}
-          <View style={styles.pod}>
-            <AppText variant="labelSmall" style={styles.fieldLabel}>
-              JUDUL AGENDA *
-            </AppText>
-            <TextInput
-              value={title}
-              onChangeText={(text) => {
-                setTitle(text);
-                if (errorMessage) setErrorMessage(null);
-              }}
-              placeholder="Misal: Diskusi Strategi Q3"
-              placeholderTextColor="#8F9298"
-              style={styles.textInput}
-              autoFocus
-            />
-
-            <View style={styles.podDivider} />
-
-            <AppText variant="labelSmall" style={styles.fieldLabel}>
-              TIPE KEGIATAN
-            </AppText>
-            <View style={styles.eventTypeRow}>
-              {EVENT_TYPES.map((et) => {
-                const isSelected = eventType === et.type;
-                return (
-                  <Pressable
-                    key={et.type}
-                    onPress={() => setEventType(et.type)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isSelected }}
-                    style={[
-                      styles.eventTypeBtn,
-                      isSelected && [styles.eventTypeBtnSelected, { backgroundColor: et.activeColor }],
-                    ]}
-                  >
-                    <AppText
-                      variant="labelMedium"
-                      style={[
-                        styles.eventTypeText,
-                        isSelected && styles.eventTypeTextSelected,
-                      ]}
-                    >
-                      {et.label}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
+          {/* Mascot + Cloud Input */}
+          <View style={styles.cloudHeroWrap}>
+            <View style={styles.mascotHeadWrap} pointerEvents="none">
+              <MascotHead width={144} height={92} />
             </View>
 
-            <View style={styles.podDivider} />
+            <View style={styles.cloudOuterCard}>
+              <View style={styles.cloudInnerPill}>
+                <TextInput
+                  value={title}
+                  onChangeText={(text) => {
+                    setTitle(text);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  placeholder="Apa agenda kegiatanmu?"
+                  placeholderTextColor={s.inkSubtle}
+                  style={styles.cloudInput}
+                  autoFocus
+                />
+                <Sparkles size={20} color={s.sun} fill={s.sun} />
+              </View>
 
-            <AppText variant="labelSmall" style={styles.fieldLabel}>
-              LOKASI / TAUTAN RUANG (OPSIONAL)
-            </AppText>
-            <TextInput
-              value={location}
-              onChangeText={setLocation}
-              placeholder="Misal: Google Meet / Lab 3"
-              placeholderTextColor="#8F9298"
-              style={styles.textInput}
-            />
+              <TextInput
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Catatan singkat (opsional)…"
+                placeholderTextColor={s.inkSubtle}
+                style={styles.cloudDescInput}
+              />
+            </View>
           </View>
 
-          {/* Section 2: Waktu & Tanggal */}
-          <View style={styles.pod}>
+          {/* Kategori Squircle Tiles */}
+          <FieldLabel>Kategori</FieldLabel>
+          <View style={styles.categoryTilesRow}>
+            {EVENT_TYPES.map((et) => (
+              <ChoiceTile
+                key={et.type}
+                label={et.label}
+                icon={et.icon}
+                tone={et.tone}
+                selected={eventType === et.type}
+                onPress={() => setEventType(et.type)}
+              />
+            ))}
+          </View>
+
+          {/* Waktu */}
+          <FieldLabel>Waktu</FieldLabel>
+          <View style={styles.timeCard}>
             <View style={styles.switchRow}>
-              <View style={{ flex: 1 }}>
-                <AppText variant="titleSmall" style={styles.rowHeading}>
-                  Sepanjang Hari
-                </AppText>
-                <AppText variant="bodySmall" color="onSurfaceVariant">
-                  Tidak terikat jam spesifik
-                </AppText>
+              <View style={styles.timeRowLeft}>
+                <Clock size={18} color={s.ink} strokeWidth={2.2} />
+                <AppText style={styles.rowHeading}>Sepanjang Hari</AppText>
               </View>
               <Switch
                 value={isAllDay}
                 onValueChange={setIsAllDay}
-                trackColor={{ false: '#E2E4E9', true: '#0E6852' }}
+                trackColor={{ false: '#D8D0BE', true: s.forest }}
               />
             </View>
 
             {!isAllDay && (
               <>
-                <View style={styles.podDivider} />
-
                 <View style={styles.timeInputsRow}>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <AppText variant="labelSmall" style={styles.fieldLabel}>
-                      MULAI (HH:mm)
-                    </AppText>
+                  <View style={styles.timeFieldBox}>
+                    <AppText style={styles.miniLabel}>Mulai</AppText>
                     <TextInput
                       value={startTimeStr}
                       onChangeText={setStartTimeStr}
                       placeholder="09:00"
-                      placeholderTextColor="#8F9298"
-                      style={styles.textInput}
+                      placeholderTextColor={s.inkSubtle}
+                      style={styles.timeInput}
                       keyboardType="numbers-and-punctuation"
                     />
                   </View>
 
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <AppText variant="labelSmall" style={styles.fieldLabel}>
-                      SELESAI (HH:mm)
-                    </AppText>
+                  <View style={styles.timeFieldBox}>
+                    <AppText style={styles.miniLabel}>Selesai</AppText>
                     <TextInput
                       value={endTimeStr}
                       onChangeText={setEndTimeStr}
                       placeholder="10:00"
-                      placeholderTextColor="#8F9298"
-                      style={styles.textInput}
+                      placeholderTextColor={s.inkSubtle}
+                      style={styles.timeInput}
                       keyboardType="numbers-and-punctuation"
                     />
                   </View>
                 </View>
 
                 <View style={styles.switchRow}>
-                  <View style={{ flex: 1 }}>
-                    <AppText variant="titleSmall" style={styles.rowHeading}>
-                      Selesai Besok
-                    </AppText>
-                    <AppText variant="bodySmall" color="onSurfaceVariant">
-                      Kegiatan berlangsung lintas tengah malam
-                    </AppText>
-                  </View>
+                  <AppText style={styles.subLabel}>Berlanjut lintas tengah malam</AppText>
                   <Switch
                     value={endsTomorrow}
                     onValueChange={setEndsTomorrow}
-                    trackColor={{ false: '#E2E4E9', true: '#0E6852' }}
+                    trackColor={{ false: '#D8D0BE', true: s.forest }}
                   />
                 </View>
-              </>
-            )}
 
-            {!isAllDay && (
-              <>
-                <View style={styles.podDivider} />
-                <AppText variant="labelSmall" style={styles.fieldLabel}>
-                  PENGINGAT
-                </AppText>
-                <View style={styles.chipGrid}>
+                <View style={styles.reminderRow}>
                   {REMINDER_OPTIONS.map((opt) => {
-                    const isSelected = reminderMinutes === opt.minutes;
+                    const selected = reminderMinutes === opt.minutes;
                     return (
                       <Pressable
                         key={String(opt.minutes)}
                         onPress={() => setReminderMinutes(opt.minutes)}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: isSelected }}
-                        style={[
-                          styles.reminderChip,
-                          isSelected && styles.reminderChipSelected,
-                        ]}
+                        style={[styles.reminderChip, selected && styles.reminderChipSelected]}
                       >
                         <AppText
-                          variant="labelMedium"
                           style={[
                             styles.reminderChipText,
-                            isSelected && styles.reminderChipTextSelected,
+                            selected && styles.reminderChipTextSelected,
                           ]}
                         >
                           {opt.label}
@@ -295,40 +278,21 @@ export const CreateAgendaScreen: React.FC = () => {
             )}
           </View>
 
-          {/* Section 3: Catatan */}
-          <View style={styles.pod}>
-            <AppText variant="labelSmall" style={styles.fieldLabel}>
-              CATATAN TAMBAHAN (OPSIONAL)
-            </AppText>
+          {/* Lokasi */}
+          <View style={styles.locationPillRow}>
+            <MapPin size={18} color={s.ink} strokeWidth={2.2} />
             <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Agenda rapat, persiapan yang perlu dibawa, dll..."
-              placeholderTextColor="#8F9298"
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-              style={[styles.textInput, styles.multilineInput]}
+              value={location}
+              onChangeText={setLocation}
+              placeholder="Lokasi atau tautan ruang (opsional)"
+              placeholderTextColor={s.inkSubtle}
+              style={styles.locationInput}
             />
           </View>
-        </ScrollView>
 
-        {/* Fixed Bottom Action Dock */}
-        <View style={[styles.bottomDock, { paddingBottom: Math.max(insets.bottom, space[4]) }]}>
-          <Button
-            title="Batal"
-            variant="tonal"
-            onPress={() => router.back()}
-            style={styles.cancelBtn}
-          />
-          <Button
-            title="Jadwalkan"
-            variant="filled"
-            onPress={handleSubmit}
-            loading={isSubmitting}
-            style={styles.saveBtn}
-          />
-        </View>
+          <View style={styles.ctaWrap}>
+            <SunButton title="Simpan" onPress={handleSubmit} loading={isSubmitting} />
+          </View>
       </KeyboardAvoidingView>
     </Screen>
   );
@@ -336,13 +300,14 @@ export const CreateAgendaScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   screenBg: {
-    backgroundColor: '#FCF8FF',
+    backgroundColor: s.cream,
   },
   keyboardContainer: {
     flex: 1,
   },
   scrollContent: {
-    padding: space[4],
+    paddingHorizontal: space[5],
+    paddingTop: space[2],
     gap: space[3],
   },
   errorBox: {
@@ -350,129 +315,152 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: space[3],
   },
-  pod: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+  cloudHeroWrap: {
+    marginTop: 58,
+    marginBottom: space[1],
+    position: 'relative',
+  },
+  mascotHeadWrap: {
+    position: 'absolute',
+    top: -68,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 3,
+  },
+  cloudOuterCard: {
+    backgroundColor: s.card,
+    borderRadius: 32,
     padding: space[4],
     borderWidth: 1,
-    borderColor: '#ECEEF2',
+    borderColor: '#F1EADA',
+    gap: space[2],
+    ...sproutShadow,
+  },
+  cloudInnerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F4EFE3',
+    borderRadius: 22,
+    paddingHorizontal: space[4],
+    paddingVertical: space[3],
     gap: space[2],
   },
-  podDivider: {
-    height: 1,
-    backgroundColor: '#F3F4F6',
-    marginVertical: space[2],
-  },
-  fieldLabel: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    letterSpacing: 0.8,
-    color: '#717684',
-  },
-  textInput: {
+  cloudInput: {
+    flex: 1,
     fontFamily: fontFamily.medium,
     fontSize: 15,
-    color: '#121316',
-    backgroundColor: '#F9FAFB',
-    borderRadius: 14,
-    paddingHorizontal: space[3],
-    paddingVertical: space[3],
-    borderWidth: 1,
-    borderColor: '#E8EAED',
+    color: s.ink,
+    paddingVertical: 4,
   },
-  multilineInput: {
-    minHeight: 80,
-  },
-  eventTypeRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: space[1],
-  },
-  eventTypeBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E8EAED',
-  },
-  eventTypeBtnSelected: {
-    borderColor: 'transparent',
-  },
-  eventTypeText: {
-    fontFamily: fontFamily.medium,
-    color: '#44474E',
+  cloudDescInput: {
+    fontFamily: fontFamily.regular,
     fontSize: 13,
+    color: s.inkMuted,
+    paddingHorizontal: space[2],
+    paddingTop: space[1],
   },
-  eventTypeTextSelected: {
-    fontFamily: fontFamily.bold,
-    color: '#FFFFFF',
+  categoryTilesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: space[2],
+  },
+  timeCard: {
+    backgroundColor: '#F1EBDC',
+    borderRadius: 24,
+    padding: space[4],
+    borderWidth: 1,
+    borderColor: '#E7DFCC',
+    gap: space[3],
   },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: space[1],
+  },
+  timeRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[2],
   },
   rowHeading: {
-    fontFamily: fontFamily.semibold,
-    color: '#121316',
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
+    color: s.ink,
+  },
+  subLabel: {
+    fontFamily: fontFamily.medium,
+    fontSize: 13,
+    color: s.inkMuted,
   },
   timeInputsRow: {
     flexDirection: 'row',
     gap: space[3],
   },
-  chipGrid: {
+  timeFieldBox: {
+    flex: 1,
+    backgroundColor: s.card,
+    borderRadius: 16,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
+    borderWidth: 1,
+    borderColor: '#E7DFCC',
+  },
+  miniLabel: {
+    fontFamily: fontFamily.bold,
+    fontSize: 10,
+    color: s.inkMuted,
+  },
+  timeInput: {
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+    color: s.ink,
+    paddingVertical: 2,
+  },
+  reminderRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginTop: space[1],
+    gap: 6,
   },
   reminderChip: {
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: s.card,
     borderWidth: 1,
-    borderColor: '#E8EAED',
+    borderColor: '#E7DFCC',
   },
   reminderChipSelected: {
-    backgroundColor: '#121316',
-    borderColor: '#121316',
+    backgroundColor: s.forest,
+    borderColor: s.forest,
   },
   reminderChipText: {
     fontFamily: fontFamily.medium,
-    color: '#44474E',
     fontSize: 12,
+    color: s.inkMuted,
   },
   reminderChipTextSelected: {
     fontFamily: fontFamily.bold,
     color: '#FFFFFF',
   },
-  bottomDock: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  locationPillRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space[3],
+    backgroundColor: '#F1EBDC',
+    borderRadius: 22,
     paddingHorizontal: space[4],
-    paddingTop: space[3],
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#ECEEF2',
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#E7DFCC',
+    gap: space[3],
   },
-  cancelBtn: {
+  locationInput: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 16,
+    fontFamily: fontFamily.medium,
+    fontSize: 14,
+    color: s.ink,
   },
-  saveBtn: {
-    flex: 2,
-    backgroundColor: '#121316',
-    borderRadius: 16,
+  ctaWrap: {
+    marginTop: space[3],
   },
 });

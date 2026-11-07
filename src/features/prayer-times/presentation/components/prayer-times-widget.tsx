@@ -2,8 +2,12 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Moon, Bell } from 'lucide-react-native';
 import { fontFamily, space } from '@/theme/tokens';
+import { colors } from '@/theme/colors';
 import { AppText } from '@/shared/ui/app-text';
+import { sproutShadow } from '@/shared/ui/sprout';
 import type { TodayPrayerSchedule } from '../../domain/entities/prayer-times.entity';
+
+const s = colors.sprout;
 
 export interface PrayerTimesWidgetProps {
   schedule: TodayPrayerSchedule;
@@ -19,22 +23,19 @@ export const PrayerTimesWidget: React.FC<PrayerTimesWidgetProps> = ({
       {/* Top Header Row */}
       <View style={styles.headerRow}>
         <View style={styles.headerTitleGroup}>
-          <View style={styles.iconCircle}>
-            <Moon size={13} color="#0E6852" strokeWidth={2.4} />
+          <View style={styles.iconSquircle}>
+            <Moon size={15} color={s.forest} strokeWidth={2.4} />
           </View>
           <View style={styles.titleColumn}>
             <AppText variant="labelSmall" style={styles.widgetHeaderLabel}>
-              JADWAL SHALAT & AZAN
-            </AppText>
-            <AppText variant="labelSmall" style={styles.citySubtext}>
-              {cityName}
+              Jadwal Azan · {cityName}
             </AppText>
           </View>
         </View>
 
         {nextPrayer && (
           <View style={styles.nextPill}>
-            <Bell size={11} color="#0E6852" strokeWidth={2.6} />
+            <Bell size={11} color={s.ink} strokeWidth={2.6} />
             <AppText variant="labelSmall" style={styles.nextPillText}>
               {nextPrayer.name} {nextPrayer.formattedTime}
               {remainingText ? ` · ${remainingText}` : ''}
@@ -89,12 +90,13 @@ export const PrayerTimesWidget: React.FC<PrayerTimesWidgetProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: space[3],
+    backgroundColor: s.card,
+    borderRadius: 26,
+    padding: space[4],
     borderWidth: 1,
-    borderColor: '#ECEEF2',
+    borderColor: '#F1EADA',
     gap: space[3],
+    ...sproutShadow,
   },
   headerRow: {
     flexDirection: 'row',
@@ -108,11 +110,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space[2],
   },
-  iconCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#CEF5EB',
+  iconSquircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 11,
+    backgroundColor: s.leafSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -121,28 +123,22 @@ const styles = StyleSheet.create({
   },
   widgetHeaderLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 10,
-    letterSpacing: 0.8,
-    color: '#121316',
-  },
-  citySubtext: {
-    fontSize: 11,
-    fontFamily: fontFamily.medium,
-    color: '#717684',
+    fontSize: 13,
+    color: s.ink,
   },
   nextPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#CEF5EB',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    gap: 5,
+    backgroundColor: s.sunSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
   },
   nextPillText: {
     fontFamily: fontFamily.bold,
     fontSize: 11,
-    color: '#0E6852',
+    color: s.ink,
   },
   prayersRow: {
     flexDirection: 'row',
@@ -150,46 +146,46 @@ const styles = StyleSheet.create({
   },
   prayerPill: {
     flex: 1,
-    backgroundColor: '#F7F8FA',
-    borderRadius: 14,
-    paddingVertical: 8,
+    backgroundColor: s.cream,
+    borderRadius: 16,
+    paddingVertical: 9,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E8EAED',
+    borderColor: '#EDE5D2',
     gap: 3,
   },
   prayerPillNext: {
-    backgroundColor: '#121316',
-    borderColor: '#121316',
+    backgroundColor: s.forest,
+    borderColor: s.forest,
   },
   prayerPillPassed: {
-    backgroundColor: '#FAFAFA',
-    borderColor: '#EEEEEE',
-    opacity: 0.6,
+    backgroundColor: '#F7F3E8',
+    borderColor: '#EFE9D9',
+    opacity: 0.65,
   },
   prayerName: {
     fontFamily: fontFamily.medium,
     fontSize: 10,
-    color: '#717684',
+    color: s.inkMuted,
   },
   prayerNameNext: {
     fontFamily: fontFamily.bold,
-    color: '#CEF5EB',
+    color: s.leafSoft,
   },
   prayerNamePassed: {
-    color: '#9E9E9E',
+    color: s.inkSubtle,
   },
   prayerTime: {
     fontFamily: fontFamily.bold,
     fontSize: 12,
-    color: '#121316',
+    color: s.ink,
   },
   prayerTimeNext: {
     color: '#FFFFFF',
   },
   prayerTimePassed: {
-    color: '#9E9E9E',
+    color: s.inkSubtle,
   },
 });

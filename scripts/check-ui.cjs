@@ -351,6 +351,8 @@ async function checkStartup() {
     'expo-router': { Stack, ThemeProvider: function TestThemeProvider() { return null; }, DefaultTheme: { colors: {} } },
     'expo-splash-screen': { preventAutoHideAsync: async () => {}, hideAsync: async () => {} },
     '@expo-google-fonts/plus-jakarta-sans': { useFonts: () => [true, null] },
+    '@expo-google-fonts/fredoka': { useFonts: () => [true, null] },
+    '@expo-google-fonts/quicksand': { useFonts: () => [true, null] },
     '@/db/client': { initDatabase: async () => { if (fails) throw new Error('Relasi legacy bermasalah'); } },
     '@/db/data-revision': { useDataRevision: () => 0 },
     '@/features/settings/data/services/backup-file.service': {},

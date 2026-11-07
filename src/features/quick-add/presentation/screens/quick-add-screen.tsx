@@ -9,47 +9,55 @@ import {
   Calendar,
   X,
   ChevronRight,
+  type LucideIcon,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, fontFamily } from '@/theme/tokens';
-import { AppText } from '@/shared/ui/app-text';
+import { space, fontFamily } from '@/theme/tokens';
+import { AppText, IconTile, MascotHead, sproutShadow } from '@/shared/ui';
+
+const s = colors.sprout;
 
 type QuickAddItem = {
   id: string;
   label: string;
   subtitle: string;
   pathname: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
+  tone: 'leaf' | 'teal' | 'grape' | 'sun';
 };
 
 const ITEMS: QuickAddItem[] = [
   {
     id: 'priority',
-    label: 'Tugas Prioritas',
-    subtitle: 'Tugas fokus hari ini',
+    label: 'Tugas Hari Ini',
+    subtitle: 'Fokus harian yang ingin diselesaikan',
     pathname: '/today/new',
-    icon: <CheckCircle2 size={19} color={colors.primary} />,
+    icon: CheckCircle2,
+    tone: 'leaf',
   },
   {
     id: 'target',
     label: 'Target Hidup',
-    subtitle: 'Sasaran & roadmap strategis',
+    subtitle: 'Sasaran & langkah jangka panjang',
     pathname: '/targets/new',
-    icon: <Target size={19} color={colors.primary} />,
+    icon: Target,
+    tone: 'teal',
   },
   {
     id: 'project',
     label: 'Proyek Baru',
-    subtitle: 'Rencana kerja & inisiatif',
+    subtitle: 'Rencana kerja & tahapan eksekusi',
     pathname: '/projects/new',
-    icon: <FolderKanban size={19} color={colors.primary} />,
+    icon: FolderKanban,
+    tone: 'grape',
   },
   {
     id: 'agenda',
-    label: 'Agenda',
-    subtitle: 'Jadwal dan pengingat waktu',
+    label: 'Agenda & Kalender',
+    subtitle: 'Jadwal kegiatan dan pengingat waktu',
     pathname: '/agenda/new',
-    icon: <Calendar size={19} color={colors.primary} />,
+    icon: Calendar,
+    tone: 'sun',
   },
 ];
 
@@ -68,22 +76,21 @@ export const QuickAddScreen: React.FC = () => {
         accessibilityLabel="Tutup"
       />
 
-      <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 20) + space[3] }]}>
-        {/* Drag Handle */}
-        <View style={styles.handleStrip}>
-          <View style={styles.handle} />
+      <View
+        style={[
+          styles.sheet,
+          { paddingBottom: Math.max(insets.bottom, 20) + space[3] },
+        ]}
+      >
+        <View style={styles.mascotPeekTop} pointerEvents="none">
+          <MascotHead width={128} height={82} />
         </View>
 
-        {/* Header Section */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={styles.titleRow}>
-              <AppText variant="headlineSmall" style={styles.sheetTitle}>
-                Tambah Cepat
-              </AppText>
-            </View>
-            <AppText variant="bodySmall" color="onSurfaceVariant" style={styles.sheetSubtitle}>
-              Pilih apa yang ingin kamu tambahkan ke ritme hidupmu
+            <AppText style={styles.sheetTitle}>Tambah Baru ✨</AppText>
+            <AppText style={styles.sheetSubtitle}>
+              Pilih apa yang ingin kamu mulai hari ini
             </AppText>
           </View>
 
@@ -91,10 +98,10 @@ export const QuickAddScreen: React.FC = () => {
             onPress={() => router.back()}
             accessibilityRole="button"
             accessibilityLabel="Tutup"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            hitSlop={8}
             style={styles.closeButton}
           >
-            <X size={20} color={colors.onSurface} />
+            <X size={20} color={s.ink} />
           </Pressable>
         </View>
 
@@ -107,58 +114,110 @@ export const QuickAddScreen: React.FC = () => {
               accessibilityLabel={item.label}
               style={({ pressed }) => [
                 styles.actionRow,
-                pressed && styles.bentoCardPressed,
+                pressed && styles.actionRowPressed,
               ]}
             >
-              <View style={styles.iconTile}>{item.icon}</View>
+              <IconTile icon={item.icon} tone={item.tone} size={44} />
               <View style={styles.actionCopy}>
-                <AppText variant="titleSmall" style={styles.actionTitle}>{item.label}</AppText>
-                <AppText
-                  variant="bodySmall"
-                  color="onSurfaceVariant"
-                  numberOfLines={1}
-                >
+                <AppText style={styles.actionTitle}>{item.label}</AppText>
+                <AppText style={styles.actionSub} numberOfLines={1}>
                   {item.subtitle}
                 </AppText>
               </View>
-              <ChevronRight size={18} color={colors.onSurfaceVariant} />
+              <ChevronRight size={18} color={s.inkMuted} />
             </Pressable>
           ))}
         </View>
-
-        {/* Cancel Button */}
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Batal"
-          style={styles.cancelButton}
-        >
-          <AppText variant="labelMedium" color="onSurfaceVariant">
-            Batal
-          </AppText>
-        </Pressable>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, justifyContent: 'flex-end' },
-  scrim: { ...StyleSheet.absoluteFill, backgroundColor: colors.scrim },
-  sheet: { backgroundColor: colors.surfaceContainerLowest, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: space[4], paddingTop: space[2] },
-  handleStrip: { minHeight: 24, alignItems: 'center', justifyContent: 'center' },
-  handle: { width: 36, height: 4, borderRadius: radius.full, backgroundColor: colors.outlineVariant },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space[3] },
-  headerLeft: { flex: 1, gap: 2 },
-  titleRow: { flexDirection: 'row', alignItems: 'center' },
-  sheetTitle: { fontSize: 19, color: colors.onSurface },
-  sheetSubtitle: { fontSize: 12, color: colors.onSurfaceVariant },
-  closeButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.surfaceContainerLow, alignItems: 'center', justifyContent: 'center' },
-  actionList: { gap: space[2] },
-  actionRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: space[3], paddingHorizontal: space[3], paddingVertical: space[2], backgroundColor: colors.surfaceContainerLowest, borderRadius: 14, borderWidth: 1, borderColor: colors.outlineVariant },
-  iconTile: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center' },
-  actionCopy: { flex: 1, gap: 1 },
-  actionTitle: { fontFamily: fontFamily.semibold, color: colors.onSurface },
-  bentoCardPressed: { backgroundColor: colors.surfaceContainerLow },
-  cancelButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: space[2] },
+  root: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  scrim: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.scrim,
+  },
+  sheet: {
+    backgroundColor: s.cream,
+    borderTopLeftRadius: 34,
+    borderTopRightRadius: 34,
+    paddingHorizontal: space[4],
+    paddingTop: space[5],
+    position: 'relative',
+  },
+  mascotPeekTop: {
+    position: 'absolute',
+    top: -64,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[3],
+  },
+  headerLeft: {
+    flex: 1,
+    gap: 2,
+  },
+  sheetTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 20,
+    color: s.ink,
+  },
+  sheetSubtitle: {
+    fontFamily: fontFamily.medium,
+    fontSize: 13,
+    color: s.inkMuted,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: s.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#EBE3D0',
+  },
+  actionList: {
+    gap: space[2],
+  },
+  actionRow: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+    paddingHorizontal: space[4],
+    paddingVertical: space[3],
+    backgroundColor: s.card,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#F1EADA',
+    ...sproutShadow,
+  },
+  actionRowPressed: {
+    transform: [{ scale: 0.985 }],
+  },
+  actionCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  actionTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 15,
+    color: s.ink,
+  },
+  actionSub: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    color: s.inkMuted,
+  },
 });

@@ -2,7 +2,10 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { fontFamily, space } from '@/theme/tokens';
+import { colors } from '@/theme/colors';
 import { AppText } from './app-text';
+
+const s = colors.sprout;
 
 export interface FormScreenHeaderProps {
   title: string;
@@ -24,7 +27,7 @@ export const FormScreenHeader: React.FC<FormScreenHeaderProps> = ({
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
       >
-        <ArrowLeft size={18} color="#121316" strokeWidth={2.4} />
+        <ArrowLeft size={20} color={s.ink} strokeWidth={2.5} />
       </Pressable>
 
       <AppText variant="titleMedium" style={styles.headerTitle} numberOfLines={1}>
@@ -45,35 +48,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: space[4],
     paddingVertical: space[3],
-    borderBottomWidth: 1,
-    borderBottomColor: '#ECEEF2',
-    backgroundColor: '#FCF8FF',
+    backgroundColor: 'transparent',
   },
   backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFFFFF',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: s.card,
     borderWidth: 1,
-    borderColor: '#E2E4E9',
+    borderColor: '#EBE3D0',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#8A7A50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   backBtnPressed: {
-    backgroundColor: '#F3F4F6',
+    transform: [{ scale: 0.95 }],
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontFamily: fontFamily.bold,
-    color: '#121316',
+    color: s.ink,
     flex: 1,
     textAlign: 'center',
     marginHorizontal: space[2],
   },
   rightSlot: {
-    minWidth: 38,
+    minWidth: 40,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
 });
-

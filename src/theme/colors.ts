@@ -5,54 +5,54 @@
  */
 
 export const colors = {
-  // Warm ivory and neutral reading surfaces.
-  background: '#F7F5EF',
-  surface: '#F7F5EF',
-  surfaceContainerLowest: '#FFFFFF',
-  surfaceContainerLow: '#EEEFE7',
-  surfaceContainer: '#E7EBE1',
-  surfaceContainerHigh: '#DEE5D8',
-  surfaceContainerHighest: '#CCD7C8',
+  // Warm cream "storybook" canvas (MyLife Sprout theme).
+  background: '#FAF6EC',
+  surface: '#FAF6EC',
+  surfaceContainerLowest: '#FFFDF8',
+  surfaceContainerLow: '#F3EEE2',
+  surfaceContainer: '#EDE7D8',
+  surfaceContainerHigh: '#E5DFCD',
+  surfaceContainerHighest: '#D9D2BE',
 
-  // Teal actions, petrol hero, citron accent.
-  primary: '#125B50',
-  primaryHover: '#0D483F',
-  primaryContainer: '#DDEDE5',
+  // Deep forest green actions & hero blobs.
+  primary: '#1E5A4C',
+  primaryHover: '#174A3E',
+  primaryContainer: '#E3EED3',
   onPrimary: '#FFFFFF',
-  onPrimaryContainer: '#153F35',
-  hero: '#173C36',
+  onPrimaryContainer: '#1B4A3F',
+  hero: '#1E5A4C',
   onHero: '#FFFFFF',
-  onHeroMuted: '#DDEDE5',
-  heroDecoration: '#31584D',
-  heroTrack: '#668A7D',
+  onHeroMuted: '#E3EED3',
+  heroDecoration: '#2D6E5E',
+  heroTrack: '#5E8F80',
 
-  // Peach uses dark text for readable labels.
-  secondary: '#934329',
-  secondaryContainer: '#FFE3D5',
+  // Warm sunshine yellow accent (CTA & FAB).
+  secondary: '#8A5A00',
+  secondaryContainer: '#F7C948',
   onSecondary: '#FFFFFF',
-  onSecondaryContainer: '#6C2B18',
+  onSecondaryContainer: '#3D2A00',
 
-  // Tertiary (aksen hangat untuk teks/ikon)
-  tertiary: '#236341',
-  tertiaryContainer: '#E0F1E6',
+  // Leaf green
+  tertiary: '#3F7A2E',
+  tertiaryContainer: '#E3EED3',
   onTertiary: '#FFFFFF',
-  onTertiaryContainer: '#194B31',
+  onTertiaryContainer: '#244A1A',
 
-  // Highlight (hanya sebagai isi untuk momen spesial, mis. streak)
-  highlight: '#D5F478',
-  highlightContainer: '#E9F6C5',
-  onHighlight: '#293B13',
-  onHighlightContainer: '#293B13',
+  // Highlight (sunshine)
+  highlight: '#F7C948',
+  highlightContainer: '#FCEFC4',
+  onHighlight: '#3D2A00',
+  onHighlightContainer: '#3D2A00',
 
-  // Text hierarchy.
-  onSurface: '#262D29',
-  onSurfaceVariant: '#5D6861',
-  onSurfaceSubtle: '#626B62',
+  // Text hierarchy (deep green ink).
+  onSurface: '#1F3B34',
+  onSurfaceVariant: '#5E6B64',
+  onSurfaceSubtle: '#646F68',
 
-  // Border & divider: Whisper-soft borders (no harsh wireframe outlines)
-  outline: '#748373',
-  outlineVariant: '#DEE3D8',
-  border: '#DEE3D8',
+  // Border & divider: soft warm lines
+  outline: '#8A9389',
+  outlineVariant: '#E8E1D0',
+  border: '#E8E1D0',
 
   // Status
   success: '#236341',
@@ -77,6 +77,33 @@ export const colors = {
 
   // Scrim modal (hitam 32%)
   scrim: 'rgba(20, 38, 30, 0.48)',
+
+  // MyLife Sprout palette (reference storybook UI)
+  sprout: {
+    cream: '#FAF6EC',
+    creamDeep: '#F3EEE2',
+    card: '#FFFDF8',
+    cardShade: '#EFE8D8',
+    forest: '#1E5A4C',
+    forestDeep: '#174A3E',
+    forestSoft: '#2D6E5E',
+    leaf: '#8CC152',
+    leafSoft: '#E3EED3',
+    leafMist: '#EEF4E2',
+    sun: '#F7C948',
+    sunDeep: '#EDB82E',
+    sunSoft: '#FCEFC4',
+    ink: '#1F3B34',
+    inkMuted: '#5E6B64',
+    inkSubtle: '#7A867F',
+    inkFaint: '#9AA39C',
+    rose: '#E8636B',
+    roseSoft: '#FBE3E1',
+    teal: '#2F8F83',
+    tealSoft: '#DDEFEA',
+    grape: '#7B6CD9',
+    grapeSoft: '#E9E5FA',
+  },
 
   // Neo-Bento Pop Palette (High-Contrast, Playful & Vibrant)
   bento: {

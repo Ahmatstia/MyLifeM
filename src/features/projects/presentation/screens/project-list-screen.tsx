@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Plus, FolderKanban, Sparkles } from 'lucide-react-native';
+import { Plus, FolderKanban, CheckCircle2, Clock, Star } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, fontFamily } from '@/theme/tokens';
-import { Screen, AppText, Banner, EmptyState } from '@/shared/ui';
+import {
+  Screen,
+  AppText,
+  Banner,
+  EmptyState,
+  WaveBackdrop,
+  SoftCard,
+  SectionTitle,
+} from '@/shared/ui';
 import { useProjects } from '../hooks/use-projects';
 import { ProjectCard } from '../components/project-card';
 import { AddProjectModal } from '../components/add-project-modal';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
+
+const s = colors.sprout;
 
 export const ProjectListScreen: React.FC = () => {
   const {
@@ -25,7 +35,14 @@ export const ProjectListScreen: React.FC = () => {
   useOpenAddFromParam(() => router.push('/projects/new'));
 
   const totalTasks = projects.reduce((sum, project) => sum + project.taskSummary.totalTasks, 0);
-  const completedTasks = projects.reduce((sum, project) => sum + project.taskSummary.completedTasks, 0);
+  const completedTasks = projects.reduce(
+    (sum, project) => sum + project.taskSummary.completedTasks,
+    0
+  );
+  const totalEstimatedHours = projects.reduce(
+    (sum, project) => sum + (project.taskSummary.totalEstimatedHours || 0),
+    0
+  );
 
   const filterTabs: { label: string; value: any }[] = [
     { label: 'Semua', value: null },
@@ -36,32 +53,72 @@ export const ProjectListScreen: React.FC = () => {
   ];
 
   return (
-    <Screen scrollable={false} withBottomPadding={false} style={styles.screenBg}>
+    <Screen
+      scrollable
+      withBottomPadding={false}
+      style={styles.screenBg}
+      contentContainerStyle={styles.scrollContent}
+      overlay={
+        <AddProjectModal
+          visible={isModalVisible}
+          onClose={() => setIsModalVisible(false)}
+          onSubmit={addProject}
+        />
+      }
+    >
+      <WaveBackdrop variant="home" height={285} />
+
       <View style={styles.header}>
-        <View style={styles.titleColumn}>
-          <AppText variant="headlineMedium" style={styles.headerTitle}>Proyek</AppText>
-        </View>
+        <AppText variant="headlineMedium" style={styles.headerTitle}>
+          Proyek Kerja
+        </AppText>
 
         <Pressable
           onPress={() => router.push('/projects/new')}
           accessibilityRole="button"
           accessibilityLabel="Tambah Proyek Baru"
-          style={({ pressed }) => [
-            styles.addProjectBtn,
-            pressed && styles.addProjectBtnPressed,
-          ]}
+          style={({ pressed }) => [styles.addPillBtn, pressed && { transform: [{ scale: 0.96 }] }]}
         >
-          <Plus size={15} color="#FAF5EB" strokeWidth={3} />
-          <AppText variant="labelMedium" style={styles.addProjectText}>
-            Proyek Baru
-          </AppText>
+          <Plus size={15} color={s.ink} strokeWidth={2.8} />
+          <AppText style={styles.addPillText}>Proyek Baru</AppText>
         </Pressable>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+      {/* Segmented Status Filter Bar */}
+        <View style={styles.pillFilterContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterStrip}
+          >
+            {filterTabs.map((tab) => {
+              const isSelected = statusFilter === tab.value;
+              return (
+                <Pressable
+                  key={tab.label}
+                  onPress={() => setStatusFilter(tab.value)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  style={[
+                    styles.chip,
+                    isSelected ? styles.chipSelected : styles.chipUnselected,
+                  ]}
+                >
+                  <AppText
+                    variant="labelMedium"
+                    style={[
+                      styles.chipText,
+                      isSelected ? styles.chipTextSelected : styles.chipTextUnselected,
+                    ]}
+                  >
+                    {tab.label}
+                  </AppText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {error && (
           <Banner
             variant="error"
@@ -74,63 +131,59 @@ export const ProjectListScreen: React.FC = () => {
 
         {isLoading ? (
           <View style={styles.loading}>
-            <ActivityIndicator color={colors.primary} size="large" />
+            <ActivityIndicator color={s.forest} size="large" />
             <AppText color="onSurfaceVariant">Memuat proyek…</AppText>
           </View>
         ) : (
           !error && (
             <>
-              <View style={styles.summaryCard}>
-                <View style={styles.summaryIcon}><FolderKanban size={18} color={colors.primary} /></View>
-                <View style={styles.summaryCopy}>
-                  <AppText variant="labelMedium" color="onSurfaceVariant">{projects.length} proyek ditampilkan</AppText>
-                  <AppText variant="bodySmall" color="onSurfaceVariant">{completedTasks} dari {totalTasks} tugas selesai</AppText>
+              {/* 3-Column Ringkasan Proyek Card */}
+              <SoftCard style={styles.ringkasanCard}>
+                <AppText style={styles.ringkasanHeading}>Ringkasan Proyek</AppText>
+                <View style={styles.statsColumnsRow}>
+                  <View style={styles.statCol}>
+                    <View style={[styles.statIconCircle, { backgroundColor: s.leafSoft }]}>
+                      <CheckCircle2 size={16} color={s.forest} strokeWidth={2.5} />
+                    </View>
+                    <AppText style={styles.statValue} tabularNums>
+                      {completedTasks}/{totalTasks}
+                    </AppText>
+                    <AppText style={styles.statLabel}>Tugas Selesai</AppText>
+                  </View>
+
+                  <View style={styles.statDivider} />
+
+                  <View style={styles.statCol}>
+                    <View style={[styles.statIconCircle, { backgroundColor: s.tealSoft }]}>
+                      <Clock size={16} color={s.teal} strokeWidth={2.5} />
+                    </View>
+                    <AppText style={styles.statValue} tabularNums>
+                      {totalEstimatedHours} jam
+                    </AppText>
+                    <AppText style={styles.statLabel}>Waktu Kerja</AppText>
+                  </View>
+
+                  <View style={styles.statDivider} />
+
+                  <View style={styles.statCol}>
+                    <View style={[styles.statIconCircle, { backgroundColor: s.sunSoft }]}>
+                      <Star size={16} color="#B87E00" fill={s.sun} strokeWidth={2.2} />
+                    </View>
+                    <AppText style={styles.statValue} tabularNums>
+                      {projects.length}
+                    </AppText>
+                    <AppText style={styles.statLabel}>Total Proyek</AppText>
+                  </View>
                 </View>
-              </View>
+              </SoftCard>
 
-              {/* HORIZONTAL STATUS FILTER CHIPS */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filterStrip}
-              >
-                {filterTabs.map((tab) => {
-                  const isSelected = statusFilter === tab.value;
-                  return (
-                    <Pressable
-                      key={tab.label}
-                      onPress={() => setStatusFilter(tab.value)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: isSelected }}
-                      style={({ pressed }) => [
-                        styles.chip,
-                        isSelected ? styles.chipSelected : styles.chipUnselected,
-                        pressed && styles.pressed,
-                      ]}
-                    >
-                      {tab.value === null && (
-                        <Sparkles
-                          size={12}
-                          color="#1E1E2E"
-                          strokeWidth={2.4}
-                          style={styles.chipIcon}
-                        />
-                      )}
-                      <AppText
-                        variant="labelMedium"
-                        style={[
-                          styles.chipText,
-                          isSelected ? styles.chipTextSelected : styles.chipTextUnselected,
-                        ]}
-                      >
-                        {tab.label}
-                      </AppText>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
+              <SectionTitle
+                title="Daftar Proyek"
+                hint={`${projects.length} proyek`}
+                actionLabel="Tambah"
+                onAction={() => router.push('/projects/new')}
+              />
 
-              {/* PROJECT CARDS LIST / EMPTY STATE */}
               {projects.length === 0 ? (
                 <EmptyState
                   title={
@@ -139,9 +192,7 @@ export const ProjectListScreen: React.FC = () => {
                       : 'Wujudkan ide pertamamu'
                   }
                   description="Tentukan hasil yang ingin dibuat, lalu bagi pekerjaanmu menjadi tahapan dan tugas."
-                  customIcon={
-                    <FolderKanban size={30} color={colors.primary} strokeWidth={2.2} />
-                  }
+                  customIcon={<FolderKanban size={30} color={s.forest} strokeWidth={2.2} />}
                   actionTitle="Buat proyek"
                   onActionPress={() => router.push('/projects/new')}
                 />
@@ -159,108 +210,131 @@ export const ProjectListScreen: React.FC = () => {
                   />
                 ))
               )}
-
             </>
           )
         )}
-      </ScrollView>
-
-      {/* MODAL TAMBAH PROYEK */}
-      <AddProjectModal
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        onSubmit={addProject}
-      />
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  screenBg: { backgroundColor: '#FCF8FF' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: space[2], paddingBottom: space[2] },
-  titleColumn: { gap: 4 },
-  badgeCapsule: {
+  screenBg: {
+    backgroundColor: s.cream,
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#FFEBD9',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
+    justifyContent: 'space-between',
+    paddingTop: space[3],
+    paddingBottom: space[3],
   },
-  badgeText: { fontSize: 11, fontFamily: fontFamily.bold, color: '#A23D28', letterSpacing: 0.6 },
-  headerTitle: { fontSize: 22, lineHeight: 28, fontFamily: fontFamily.bold, color: '#1E1E2E' },
-  addProjectBtn: {
-    minHeight: 40,
+  headerTitle: {
+    fontSize: 26,
+    lineHeight: 32,
+    fontFamily: fontFamily.bold,
+    color: s.ink,
+  },
+  addPillBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#E06B52',
+    backgroundColor: s.sun,
     paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
   },
-  addProjectBtnPressed: {
-    transform: [{ translateX: 1 }, { translateY: 1 }],
-    boxShadow: '0px 0px 0px #1E1E2E',
+  addPillText: {
+    color: s.ink,
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
   },
-  addProjectText: { color: '#FAF5EB', fontFamily: fontFamily.bold, fontSize: 12 },
-  scrollContent: { paddingBottom: 90, gap: space[3] },
-  summaryCard: {
-    minHeight: 62,
+  scrollContent: {
+    paddingBottom: 100,
+    gap: space[3],
+  },
+  pillFilterContainer: {
+    backgroundColor: '#F1EBDC',
+    borderRadius: 999,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#E7DFCC',
+  },
+  filterStrip: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  chip: {
+    minHeight: 38,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space[3],
-    paddingHorizontal: space[4],
-    paddingVertical: space[3],
-    backgroundColor: '#FFF8EE',
-    borderWidth: 1,
-    borderColor: 'rgba(232, 168, 56, 0.45)',
-    borderRadius: 14,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    borderRadius: 999,
   },
-  summaryIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#FAF5EB',
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
+  chipSelected: {
+    backgroundColor: s.forest,
+  },
+  chipUnselected: {
+    backgroundColor: 'transparent',
+  },
+  chipText: {
+    fontSize: 13,
+    fontFamily: fontFamily.semibold,
+  },
+  chipTextSelected: {
+    color: '#FFFFFF',
+    fontFamily: fontFamily.bold,
+  },
+  chipTextUnselected: {
+    color: s.inkMuted,
+  },
+  notice: {
+    marginVertical: space[2],
+  },
+  loading: {
+    alignItems: 'center',
+    gap: space[3],
+    paddingVertical: space[10],
+  },
+  ringkasanCard: {
+    borderRadius: 26,
+    gap: space[3],
+  },
+  ringkasanHeading: {
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
+    color: s.ink,
+  },
+  statsColumnsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statCol: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  statIconCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summaryCopy: { gap: 3 },
-  notice: { marginVertical: space[2] },
-  loading: { alignItems: 'center', gap: space[3], paddingVertical: space[10] },
-  filterStrip: { flexDirection: 'row', gap: space[2], paddingVertical: 4 },
-  chip: {
-    minHeight: 36,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
+  statValue: {
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+    color: s.ink,
   },
-  chipSelected: {
-    backgroundColor: '#E8A838', // Custard Gold
-    boxShadow: '2px 2px 0px #1E1E2E',
+  statLabel: {
+    fontFamily: fontFamily.medium,
+    fontSize: 11,
+    color: s.inkMuted,
   },
-  chipUnselected: {
-    backgroundColor: '#FAF5EB', // Warm Paper
-  },
-  chipIcon: { marginRight: 2 },
-  chipText: { fontSize: 12, fontFamily: fontFamily.bold },
-  chipTextSelected: { color: '#1E1E2E' },
-  chipTextUnselected: { color: '#504535' },
-  chipGreenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#76A284' },
-  pressed: {
-    transform: [{ translateX: 1 }, { translateY: 1 }],
-    boxShadow: '0px 0px 0px #1E1E2E',
+  statDivider: {
+    width: 1,
+    height: 44,
+    backgroundColor: '#EBE3D0',
   },
 });

@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, type ViewStyle, type StyleProp } from 'react-native';
-import { ArrowRight } from 'lucide-react-native';
-import { fontFamily } from '@/theme/tokens';
+import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
+import { FolderKanban, Check } from 'lucide-react-native';
+import { fontFamily, space } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
-import { AppText } from '@/shared/ui';
+import { AppText, SoftCard, IconTile } from '@/shared/ui';
 import type { ProjectWithSummary } from '../../domain/entities/project.entity';
+
+const s = colors.sprout;
 
 export interface ProjectCardProps {
   project: ProjectWithSummary;
@@ -14,32 +16,12 @@ export interface ProjectCardProps {
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; bg: string; text: string; bar: string }
+  { label: string; tone: 'leaf' | 'sun' | 'teal' | 'grape' }
 > = {
-  ACTIVE: {
-    label: 'Aktif',
-    bg: '#FFEBD9',
-    text: '#A23D28',
-    bar: '#E8A838',
-  },
-  PLANNING: {
-    label: 'Rencana',
-    bg: '#FAF5EB',
-    text: '#504535',
-    bar: '#B7A4CF',
-  },
-  ON_HOLD: {
-    label: 'Ditunda',
-    bg: '#E8E3D7',
-    text: '#504535',
-    bar: '#837563',
-  },
-  COMPLETED: {
-    label: 'Selesai',
-    bg: '#C2E0CC',
-    text: '#254F36',
-    bar: '#76A284',
-  },
+  ACTIVE: { label: 'Aktif', tone: 'leaf' },
+  PLANNING: { label: 'Rencana', tone: 'grape' },
+  ON_HOLD: { label: 'Ditunda', tone: 'sun' },
+  COMPLETED: { label: 'Selesai', tone: 'teal' },
 };
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, style }) => {
@@ -48,183 +30,115 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onPress, styl
   const isCompleted = project.status === 'COMPLETED';
 
   return (
-    <Pressable
+    <SoftCard
       onPress={onPress}
-      accessibilityRole="button"
       accessibilityLabel={`Buka rincian proyek ${project.title}`}
-      style={({ pressed }) => [
-        styles.card,
-        pressed && styles.pressed,
-        style,
-      ]}
+      style={[styles.card, style]}
     >
-      {/* Top Row: Status Pill, Linked Target & Action Arrow */}
-      <View style={styles.topRow}>
-        <View style={styles.metaRow}>
-          <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
-            <AppText variant="labelSmall" style={[styles.statusText, { color: config.text }]}>
-              {config.label}
-            </AppText>
-          </View>
-          <AppText variant="bodySmall" style={styles.targetLinkText} numberOfLines={1}>
-            {project.targetTitle ? `Target · ${project.targetTitle}` : 'Proyek mandiri'}
-          </AppText>
+      <View style={styles.mainRow}>
+        {/* Left Ring */}
+        <View style={[styles.statusRing, isCompleted && styles.statusRingDone]}>
+          {isCompleted ? (
+            <Check size={16} color="#FFFFFF" strokeWidth={3} />
+          ) : (
+            <View style={styles.innerDot} />
+          )}
         </View>
 
-        <View style={styles.arrowCircle}>
-          <ArrowRight size={16} color={colors.primary} strokeWidth={2.2} />
-        </View>
-      </View>
-
-      {/* Title */}
-      <AppText
-        variant="titleMedium"
-        style={[styles.title, isCompleted && styles.titleCompleted]}
-        numberOfLines={2}
-      >
-        {project.title}
-      </AppText>
-
-      {/* Description */}
-      {project.description ? (
-        <AppText variant="bodySmall" style={styles.description} numberOfLines={2}>
-          {project.description}
-        </AppText>
-      ) : null}
-
-      {/* Progress & Metrics Bottom Section */}
-      <View style={styles.bottomSection}>
-        <View style={styles.metricTextRow}>
-          <AppText variant="bodySmall" style={styles.tasksText}>
-            {project.taskSummary.completedTasks}/{project.taskSummary.totalTasks} tugas
-            {stagesCount > 0 ? ` · ${stagesCount} tahap` : ''}
+        {/* Center Info */}
+        <View style={styles.centerCol}>
+          <AppText
+            style={[styles.title, isCompleted && styles.titleCompleted]}
+            numberOfLines={2}
+          >
+            {project.title}
           </AppText>
-          <AppText variant="labelSmall" style={styles.percentText} tabularNums>
+
+          <AppText style={styles.subtext} numberOfLines={1}>
             {project.taskSummary.totalTasks > 0
-              ? `${project.taskSummary.progressPercent}%`
+              ? `${project.taskSummary.completedTasks}/${project.taskSummary.totalTasks} tugas · ${project.taskSummary.progressPercent}%`
               : 'Belum ada rencana'}
+            {stagesCount > 0 ? ` · ${stagesCount} tahap` : ''}
+            {project.targetTitle ? ` · ${project.targetTitle}` : ''}
           </AppText>
+
+          <View style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressFill,
+                {
+                  width: `${Math.min(100, Math.max(0, project.taskSummary.progressPercent))}%`,
+                  backgroundColor: isCompleted ? s.leaf : s.forest,
+                },
+              ]}
+            />
+          </View>
         </View>
 
-        <View style={styles.progressTrack}>
-          <View
-            style={[
-              styles.progressBar,
-              {
-                width: `${Math.min(100, Math.max(0, project.taskSummary.progressPercent))}%`,
-                backgroundColor: config.bar,
-              },
-            ]}
-          />
-        </View>
+        {/* Right Soft Squircle Icon Tile */}
+        <IconTile icon={FolderKanban} tone={config.tone} size={44} />
       </View>
-    </Pressable>
+    </SoftCard>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
+    borderRadius: 28,
+    marginBottom: space[3],
+  },
+  mainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+  },
+  statusRing: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#B9C49F',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    borderLeftWidth: 4,
-    borderLeftColor: '#E8A838',
-    boxShadow: '2px 2px 0px #1E1E2E',
-    marginBottom: 12,
-  },
-  pressed: {
-    transform: [{ translateX: 1 }, { translateY: 1 }],
-    boxShadow: '0px 0px 0px #1E1E2E',
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  metaRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(30, 30, 46, 0.2)',
-  },
-  statusText: {
-    fontSize: 10,
-    fontFamily: fontFamily.bold,
-    letterSpacing: 0.4,
-  },
-  targetLinkText: {
-    fontSize: 12,
-    fontFamily: fontFamily.medium,
-    color: '#504535',
-    flex: 1,
-  },
-  arrowCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FAF5EB',
-    borderWidth: 1,
-    borderColor: '#1E1E2E',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  statusRingDone: {
+    backgroundColor: s.forest,
+    borderColor: s.forest,
+  },
+  innerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: s.leaf,
+  },
+  centerCol: {
+    flex: 1,
+    gap: 4,
+  },
   title: {
-    fontSize: 16,
     fontFamily: fontFamily.bold,
-    color: colors.onSurface,
-    marginTop: 8,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 21,
+    color: s.ink,
   },
   titleCompleted: {
     textDecorationLine: 'line-through',
-    color: colors.onSurfaceVariant,
+    color: s.inkMuted,
   },
-  description: {
-    fontSize: 13,
+  subtext: {
     fontFamily: fontFamily.medium,
-    color: '#504535',
-    marginTop: 4,
-    lineHeight: 18,
-  },
-  bottomSection: {
-    marginTop: 12,
-    gap: 6,
-  },
-  metricTextRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  tasksText: {
-    fontSize: 11,
-    fontFamily: fontFamily.medium,
-    color: colors.onSurfaceVariant,
-  },
-  percentText: {
-    fontSize: 11,
-    fontFamily: fontFamily.bold,
-    color: colors.onSurface,
+    fontSize: 12,
+    color: s.inkMuted,
   },
   progressTrack: {
-    width: '100%',
     height: 6,
-    backgroundColor: '#FAF5EB',
     borderRadius: 999,
+    backgroundColor: '#EDE6D5',
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(30, 30, 46, 0.15)',
+    marginTop: 2,
   },
-  progressBar: {
+  progressFill: {
     height: '100%',
     borderRadius: 999,
   },

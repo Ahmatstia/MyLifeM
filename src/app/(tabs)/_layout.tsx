@@ -1,9 +1,12 @@
 import React from 'react';
 import { Tabs, router } from 'expo-router';
-import { CheckCircle2, Target, FolderKanban, CalendarDays } from 'lucide-react-native';
+import { Home, Target, FolderKanban, CalendarDays } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fontFamily } from '@/theme/tokens';
+import { colors } from '@/theme/colors';
 import { TabFabButton } from '@/shared/ui/tab-fab-button';
+
+const s = colors.sprout;
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -15,24 +18,26 @@ export default function TabLayout() {
         headerShown: false,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          height: 62 + bottomInset,
-          backgroundColor: '#FAF5EB',
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          borderWidth: 1.5,
-          borderColor: '#1E1E2E',
-          borderBottomWidth: 0,
-          paddingBottom: bottomInset,
-          paddingTop: 6,
-          paddingHorizontal: 8,
-          boxShadow: '0px -2px 0px rgba(30, 30, 46, 0.06)',
+          height: 68 + bottomInset,
+          backgroundColor: s.forest,
+          borderTopLeftRadius: 32,
+          borderTopRightRadius: 32,
+          borderTopWidth: 0,
+          paddingBottom: bottomInset + 4,
+          paddingTop: 8,
+          paddingHorizontal: 10,
+          shadowColor: '#0E2E26',
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: 0.16,
+          shadowRadius: 16,
+          elevation: 10,
         },
-        tabBarActiveTintColor: '#E06B52',
-        tabBarInactiveTintColor: '#504535',
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: '#8FB9AA',
         tabBarItemStyle: {
-          borderRadius: 14,
+          borderRadius: 16,
           marginVertical: 2,
-          marginHorizontal: 1,
+          marginHorizontal: 2,
           paddingVertical: 0,
         },
         tabBarLabelStyle: {
@@ -47,7 +52,7 @@ export default function TabLayout() {
         options={{
           title: 'Hari Ini',
           tabBarIcon: ({ color, size }) => (
-            <CheckCircle2 size={size || 20} color={color} strokeWidth={2.4} />
+            <Home size={size || 22} color={color} strokeWidth={2.4} />
           ),
         }}
       />
@@ -56,7 +61,7 @@ export default function TabLayout() {
         options={{
           title: 'Target',
           tabBarIcon: ({ color, size }) => (
-            <Target size={size || 20} color={color} strokeWidth={2.4} />
+            <Target size={size || 22} color={color} strokeWidth={2.4} />
           ),
         }}
       />
@@ -74,16 +79,16 @@ export default function TabLayout() {
         options={{
           title: 'Proyek',
           tabBarIcon: ({ color, size }) => (
-            <FolderKanban size={size || 20} color={color} strokeWidth={2.4} />
+            <FolderKanban size={size || 22} color={color} strokeWidth={2.4} />
           ),
         }}
       />
       <Tabs.Screen
         name="agenda"
         options={{
-          title: 'Agenda',
+          title: 'Kalender',
           tabBarIcon: ({ color, size }) => (
-            <CalendarDays size={size || 20} color={color} strokeWidth={2.4} />
+            <CalendarDays size={size || 22} color={color} strokeWidth={2.4} />
           ),
         }}
       />
