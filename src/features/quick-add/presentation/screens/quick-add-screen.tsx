@@ -18,7 +18,7 @@ type QuickAddItem = {
   id: string;
   label: string;
   subtitle: string;
-  pathname: '/' | '/targets' | '/projects' | '/agenda';
+  pathname: string;
   icon: React.ReactNode;
 };
 
@@ -27,28 +27,28 @@ const ITEMS: QuickAddItem[] = [
     id: 'priority',
     label: 'Tugas Prioritas',
     subtitle: 'Tugas fokus hari ini',
-    pathname: '/',
+    pathname: '/today/new',
     icon: <CheckCircle2 size={19} color={colors.primary} />,
   },
   {
     id: 'target',
     label: 'Target Hidup',
     subtitle: 'Sasaran & roadmap strategis',
-    pathname: '/targets',
+    pathname: '/targets/new',
     icon: <Target size={19} color={colors.primary} />,
   },
   {
     id: 'project',
     label: 'Proyek Baru',
     subtitle: 'Rencana kerja & inisiatif',
-    pathname: '/projects',
+    pathname: '/projects/new',
     icon: <FolderKanban size={19} color={colors.primary} />,
   },
   {
     id: 'agenda',
     label: 'Agenda',
     subtitle: 'Jadwal dan pengingat waktu',
-    pathname: '/agenda',
+    pathname: '/agenda/new',
     icon: <Calendar size={19} color={colors.primary} />,
   },
 ];
@@ -57,10 +57,7 @@ export const QuickAddScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
 
   const handleSelect = (item: QuickAddItem) => {
-    router.back();
-    setTimeout(() => {
-      router.navigate({ pathname: item.pathname, params: { add: '1' } } as any);
-    }, 0);
+    router.replace(item.pathname as any);
   };
 
   return (

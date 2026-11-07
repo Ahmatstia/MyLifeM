@@ -33,7 +33,7 @@ const TYPE_CONFIG: Record<
   { label: string; color: string; bg: string; icon: React.ReactNode }
 > = {
   COLLEGE: {
-    label: 'Kuliah',
+    label: 'Kuliah / Kelas',
     color: colors.primary,
     bg: colors.primaryContainer,
     icon: <GraduationCap size={13} color={colors.primary} strokeWidth={2.4} />,
@@ -140,7 +140,7 @@ export const WeeklyScheduleManager: React.FC<WeeklyScheduleManagerProps> = ({
             Hari {currentDayName}
           </AppText>
           <AppText variant="bodySmall" color="onSurfaceVariant">
-            {currentDaySchedules.length} komitmen berulang setiap pekan
+            {currentDaySchedules.length} jadwal rutin setiap hari {currentDayName}
           </AppText>
         </View>
         <Button
@@ -156,7 +156,7 @@ export const WeeklyScheduleManager: React.FC<WeeklyScheduleManagerProps> = ({
       {currentDaySchedules.length === 0 ? (
         <EmptyState
           title={`Belum ada jadwal di hari ${currentDayName}`}
-          description={`Tambahkan jadwal kuliah atau jam kerja rutinmu setiap hari ${currentDayName} agar otomatis muncul di agenda harian.`}
+          description={`Tambahkan jadwal kerja, belajar, atau rutinitas harianmu setiap hari ${currentDayName} agar otomatis muncul di agenda harian.`}
           customIcon={<Calendar size={32} color={colors.primary} />}
           actionTitle={`+ Tambah Jadwal ${currentDayName}`}
           onActionPress={() => onAddSchedule(selectedDay)}

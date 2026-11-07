@@ -24,7 +24,7 @@ export const TargetListScreen: React.FC = () => {
   } = useTargets();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  useOpenAddFromParam(() => setIsModalVisible(true));
+  useOpenAddFromParam(() => router.push('/targets/new'));
 
   const totalTasks = targets.reduce((sum, target) => sum + target.totalTasks, 0);
   const completedTasks = targets.reduce((sum, target) => sum + target.completedTasks, 0);
@@ -38,7 +38,7 @@ export const TargetListScreen: React.FC = () => {
         </View>
 
         <Pressable
-          onPress={() => setIsModalVisible(true)}
+          onPress={() => router.push('/targets/new')}
           accessibilityRole="button"
           accessibilityLabel="Tambah Target Baru"
           style={({ pressed }) => [
@@ -117,7 +117,7 @@ export const TargetListScreen: React.FC = () => {
                     <Sparkles size={30} color={colors.primary} strokeWidth={2} />
                   }
                   actionTitle="Buat target"
-                  onActionPress={() => setIsModalVisible(true)}
+                  onActionPress={() => router.push('/targets/new')}
                 />
               ) : (
                 targets.map((target) => (

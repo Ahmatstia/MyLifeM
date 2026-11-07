@@ -30,7 +30,7 @@ export interface AddEditWeeklyScheduleModalProps {
 }
 
 const SCHEDULE_TYPES: { type: WeeklyScheduleType; label: string; color: string }[] = [
-  { type: 'COLLEGE', label: 'Kuliah', color: colors.primary },
+  { type: 'COLLEGE', label: 'Kuliah / Kelas', color: colors.primary },
   { type: 'WORK', label: 'Kerja', color: colors.secondary },
   { type: 'ROUTINE', label: 'Rutinitas', color: colors.primary },
   { type: 'STUDY', label: 'Belajar', color: colors.tertiary },
@@ -162,8 +162,8 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
     <AppBottomSheet
       visible={visible}
       onClose={onClose}
-      title={initialData ? 'Ubah Jadwal Tetap' : 'Jadwal Tetap Baru'}
-      subtitle="Komitmen rutin mingguan (KRS kuliah / jam kerja)."
+      title={initialData ? 'Ubah Jadwal Rutin' : 'Jadwal Rutin Baru'}
+      subtitle="Jadwal kegiatan atau jam kerja yang berulang setiap minggu."
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -257,7 +257,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
         {/* 2. Judul Jadwal */}
         <View style={styles.fieldGroup}>
           <AppText variant="labelMedium" color="onSurfaceVariant" style={styles.label}>
-            {scheduleType === 'ROUTINE' ? 'NAMA RUTINITAS KESEHARIAN *' : 'NAMA KEGIATAN / MATA KULIAH *'}
+            {scheduleType === 'ROUTINE' ? 'NAMA RUTINITAS KESEHARIAN *' : 'NAMA JADWAL / KEGIATAN *'}
           </AppText>
           <TextInput
             style={styles.input}
@@ -265,8 +265,8 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
             onChangeText={setTitle}
             placeholder={
               scheduleType === 'ROUTINE'
-                ? 'misal: Bangun Pagi & Subuh, Olahraga, Sarapan...'
-                : 'misal: Kuliah Algoritma, Shift Siang...'
+                ? 'misal: Olahraga pagi, Sarapan, Baca buku...'
+                : 'misal: Jam Kerja Kantor, Rapat Mingguan, Kursus...'
             }
             placeholderTextColor={colors.onSurfaceVariant}
           />

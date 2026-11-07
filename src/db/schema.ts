@@ -379,7 +379,7 @@ export const userSettings = sqliteTable('user_settings', {
 });
 
 // ==========================================
-// 10. WEEKLY SCHEDULES (Master KRS & Work Routine)
+// 10. WEEKLY SCHEDULES (Weekly Routine & Work Shifts)
 // ==========================================
 export const weeklySchedules = sqliteTable(
   'weekly_schedules',

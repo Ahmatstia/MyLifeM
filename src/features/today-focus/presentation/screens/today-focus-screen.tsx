@@ -52,7 +52,7 @@ export const TodayFocusScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(() => formatLocalDate(new Date()));
   useEffect(() => setSelectedDate(todayDate), [todayDate]);
   const { nextSchedule } = useNextSchedule();
-  useOpenAddFromParam(() => setIsAddModalVisible(true));
+  useOpenAddFromParam(() => router.push('/today/new'));
   const timer = useFocusTimer({ onSessionRecorded: refresh });
 
   const completedCount = focusItems.filter((item) => item.isCompleted).length;
@@ -126,7 +126,7 @@ export const TodayFocusScreen: React.FC = () => {
               <Pressable
                 onPress={() => {
                   if (!nextTask && !timer.activeTask && !timer.hasSession) {
-                    setIsAddModalVisible(true);
+                    router.push('/today/new');
                   } else {
                     if (!timer.hasSession && !timer.activeTask && nextTask) {
                       timer.setActiveTask(nextTask);
@@ -147,7 +147,7 @@ export const TodayFocusScreen: React.FC = () => {
 
               {/* Center Circle: Add New Priority (+) */}
               <Pressable
-                onPress={() => setIsAddModalVisible(true)}
+                onPress={() => router.push('/today/new')}
                 accessibilityRole="button"
                 accessibilityLabel="Tambah Tugas"
                 style={({ pressed }) => [
@@ -246,7 +246,7 @@ export const TodayFocusScreen: React.FC = () => {
               <Pressable
                 onPress={() => {
                   if (!nextTask && !timer.activeTask && !timer.hasSession) {
-                    setIsAddModalVisible(true);
+                    router.push('/today/new');
                   } else {
                     if (!timer.hasSession && !timer.activeTask && nextTask) {
                       timer.setActiveTask(nextTask);
@@ -316,7 +316,7 @@ export const TodayFocusScreen: React.FC = () => {
               </AppText>
 
               <Pressable
-                onPress={() => setIsAddModalVisible(true)}
+                onPress={() => router.push('/today/new')}
                 disabled={focusItems.length >= 5}
                 hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 style={({ pressed }) => [
@@ -338,7 +338,7 @@ export const TodayFocusScreen: React.FC = () => {
                 description="Pilih tugas penting dari roadmap atau buat tugas kilat baru."
                 actionTitle="Pilih prioritas"
                 customIcon={<Sparkles size={28} color="#0E6852" strokeWidth={2.2} />}
-                onActionPress={() => setIsAddModalVisible(true)}
+                onActionPress={() => router.push('/today/new')}
               />
             ) : (
               <View style={styles.tasksPodWrapper}>
@@ -489,7 +489,7 @@ export const TodayFocusScreen: React.FC = () => {
       {/* 7. Trantor Floating Action Bar (Clean CTA, no double-badge) */}
       <View style={styles.floatingBottomContainer} pointerEvents="box-none">
         <Pressable
-          onPress={() => setIsAddModalVisible(true)}
+          onPress={() => router.push('/today/new')}
           accessibilityRole="button"
           accessibilityLabel="Tambah Tugas Prioritas"
           style={({ pressed }) => [

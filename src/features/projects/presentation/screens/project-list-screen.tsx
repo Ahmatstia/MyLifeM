@@ -22,7 +22,7 @@ export const ProjectListScreen: React.FC = () => {
   } = useProjects();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  useOpenAddFromParam(() => setIsModalVisible(true));
+  useOpenAddFromParam(() => router.push('/projects/new'));
 
   const totalTasks = projects.reduce((sum, project) => sum + project.taskSummary.totalTasks, 0);
   const completedTasks = projects.reduce((sum, project) => sum + project.taskSummary.completedTasks, 0);
@@ -43,7 +43,7 @@ export const ProjectListScreen: React.FC = () => {
         </View>
 
         <Pressable
-          onPress={() => setIsModalVisible(true)}
+          onPress={() => router.push('/projects/new')}
           accessibilityRole="button"
           accessibilityLabel="Tambah Proyek Baru"
           style={({ pressed }) => [
@@ -143,7 +143,7 @@ export const ProjectListScreen: React.FC = () => {
                     <FolderKanban size={30} color={colors.primary} strokeWidth={2.2} />
                   }
                   actionTitle="Buat proyek"
-                  onActionPress={() => setIsModalVisible(true)}
+                  onActionPress={() => router.push('/projects/new')}
                 />
               ) : (
                 projects.map((project) => (

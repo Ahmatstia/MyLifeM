@@ -107,12 +107,17 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.background },
+          animation: 'fade',
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="targets/[id]" />
-        <Stack.Screen name="projects/[id]" />
-        <Stack.Screen name="settings" />
+        <Stack.Screen name="targets/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="targets/new" options={{ animation: 'fade' }} />
+        <Stack.Screen name="projects/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="projects/new" options={{ animation: 'fade' }} />
+        <Stack.Screen name="agenda/new" options={{ animation: 'fade' }} />
+        <Stack.Screen name="today/new" options={{ animation: 'fade' }} />
+        <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen
           name="quick-add"
           options={{ presentation: 'transparentModal', animation: 'fade' }}

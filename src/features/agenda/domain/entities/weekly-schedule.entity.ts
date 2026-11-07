@@ -1,6 +1,6 @@
 /**
  * Weekly Schedule Domain Entity & Types
- * Represents master repeating schedules (KRS / Work Shifts) and their daily overrides.
+ * Represents weekly repeating schedules (Classes / Work Shifts) and their daily overrides.
  */
 
 export type WeeklyScheduleType = 'COLLEGE' | 'WORK' | 'STUDY' | 'PERSONAL' | 'ROUTINE';

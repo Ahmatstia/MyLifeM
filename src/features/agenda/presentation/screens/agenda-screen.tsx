@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { View, Pressable, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import {
   CalendarDays,
@@ -78,7 +78,7 @@ export const AgendaScreen: React.FC = () => {
 
   useOpenAddFromParam(() => {
     if (viewMode === 'DAILY') {
-      setIsAddEventModalVisible(true);
+      router.push({ pathname: '/agenda/new', params: { date: selectedDate } });
     } else {
       setEditingWeeklySchedule(undefined);
       setWeeklyModalDefaultDay(selectedDay);
@@ -132,7 +132,7 @@ export const AgendaScreen: React.FC = () => {
 
         {viewMode === 'DAILY' ? (
           <Pressable
-            onPress={() => setIsAddEventModalVisible(true)}
+            onPress={() => router.push({ pathname: '/agenda/new', params: { date: selectedDate } })}
             accessibilityRole="button"
             accessibilityLabel="Tambah Agenda Baru"
             style={({ pressed }) => [
@@ -167,7 +167,7 @@ export const AgendaScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* SEGMENT MODE SWITCHER (Daily vs Weekly Master KRS) */}
+        {/* SEGMENT MODE SWITCHER (Daily Agenda vs Weekly Routine) */}
         <View style={styles.segmentContainer}>
           <Pressable
             onPress={() => setViewMode('DAILY')}
@@ -187,7 +187,7 @@ export const AgendaScreen: React.FC = () => {
                 viewMode === 'DAILY' ? styles.segmentTextActive : styles.segmentTextInactive,
               ]}
             >
-              Hari Ini & Tanggal
+              Agenda Harian
             </AppText>
           </Pressable>
 
@@ -209,7 +209,7 @@ export const AgendaScreen: React.FC = () => {
                 viewMode === 'WEEKLY_MASTER' ? styles.segmentTextActive : styles.segmentTextInactive,
               ]}
             >
-              Master Mingguan (KRS)
+              Jadwal Rutin
             </AppText>
           </Pressable>
         </View>
@@ -370,14 +370,14 @@ export const AgendaScreen: React.FC = () => {
                     </View>
                   )}
 
-                  {/* 2. KOMITMEN UTAMA (KRS & KERJA) */}
+                  {/* 2. JADWAL RUTIN (KERJA & RUTINITAS) */}
                   {timelineFilter !== 'ROUTINE' && commitmentOccurrences.length > 0 && (
                     <View style={styles.groupSection}>
                       <View style={styles.groupHeaderRow}>
                         <View style={styles.groupHeaderTag}>
                           <Repeat size={13} color={colors.primary} strokeWidth={2.4} />
                           <AppText variant="labelSmall" style={styles.groupHeaderLabel}>
-                            KOMITMEN UTAMA (KRS & KERJA)
+                            JADWAL RUTIN
                           </AppText>
                         </View>
                         <AppText variant="bodySmall" style={styles.groupCountSubtext}>
@@ -442,12 +442,12 @@ export const AgendaScreen: React.FC = () => {
                   {weeklyOccurrences.length === 0 && events.length === 0 ? (
                     <EmptyState
                       title="Masih ada ruang di harimu"
-                      description="Belum ada jadwal tetap atau agenda khusus untuk tanggal ini. Jadwalkan waktu kuliah, kerja, atau istirahat."
+                      description="Belum ada jadwal tetap atau agenda khusus untuk tanggal ini. Jadwalkan kegiatan kerja, belajar, atau istirahat."
                       customIcon={
                         <CalendarDays size={30} color={colors.primary} strokeWidth={2.2} />
                       }
                       actionTitle="Jadwalkan kegiatan"
-                      onActionPress={() => setIsAddEventModalVisible(true)}
+                      onActionPress={() => router.push({ pathname: '/agenda/new', params: { date: selectedDate } })}
                     />
                   ) : (
                     <AppText variant="bodySmall" style={styles.summaryNote}>
@@ -471,7 +471,7 @@ export const AgendaScreen: React.FC = () => {
           </>
         )}
 
-        {/* VIEW 2: WEEKLY MASTER SCHEDULE (KRS MANAGER) */}
+        {/* VIEW 2: WEEKLY ROUTINE SCHEDULE MANAGER */}
         {viewMode === 'WEEKLY_MASTER' && (
           <>
             {weeklyError && (
@@ -487,7 +487,7 @@ export const AgendaScreen: React.FC = () => {
             {isWeeklyLoading ? (
               <View style={styles.loading}>
                 <ActivityIndicator color={colors.primary} size="large" />
-                <AppText color="onSurfaceVariant">Memuat master jadwal mingguan…</AppText>
+                <AppText color="onSurfaceVariant">Memuat jadwal rutin mingguan…</AppText>
               </View>
             ) : (
               <WeeklyScheduleManager

@@ -21,7 +21,7 @@ const TYPE_CONFIG: Record<
   { label: string; color: string; bg: string }
 > = {
   COLLEGE: {
-    label: 'Kuliah',
+    label: 'Kuliah / Kelas',
     color: colors.primary,
     bg: colors.primaryContainer,
   },

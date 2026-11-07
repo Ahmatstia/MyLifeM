@@ -57,7 +57,7 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       statusBarTranslucent
       onRequestClose={onClose}
     >

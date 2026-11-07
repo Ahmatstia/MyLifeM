@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "mylife",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#FCF8FF",
     "ios": {
       "icon": "./assets/expo.icon"
     },
