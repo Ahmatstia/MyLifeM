@@ -6,13 +6,18 @@ import {
   View,
 } from 'react-native';
 import { router } from 'expo-router';
+import Svg, { Line } from 'react-native-svg';
 import {
   ArrowRight,
-  ChevronRight,
+  ArrowUpRight,
+  CalendarDays,
+  FolderKanban,
   Pause,
   Play,
   Plus,
+  Repeat,
   Sparkles,
+  Target,
   X,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
@@ -80,6 +85,10 @@ export const TodayFocusScreen: React.FC = () => {
 
   const totalCombinedCount = focusItems.length + totalAgendaCount;
   const completedCombinedCount = completedCount + completedAgendaCount;
+  const combinedProgressPercent =
+    totalCombinedCount > 0
+      ? Math.round((completedCombinedCount / totalCombinedCount) * 100)
+      : 0;
 
   const handleHeroPress = () => {
     if (!nextTask && !timer.activeTask && !timer.hasSession) {
@@ -91,6 +100,10 @@ export const TodayFocusScreen: React.FC = () => {
       setIsTimerExpanded((prev) => !prev);
     }
   };
+
+  // Build total count to know which row is the very last on the timeline spine
+  const totalTimelineNodes =
+    focusItems.length + events.length + activeOccurrences.length;
 
   return (
     <Screen
@@ -240,36 +253,30 @@ export const TodayFocusScreen: React.FC = () => {
             {/* 3. Jadwal Shalat & Azan Widget (Right below Target Aktif) */}
             <PrayerTimesWidget schedule={prayerSchedule} />
 
-            {/* 4. Unified Section: Hari Ini (Open Journal List — Tanpa Card & Tanpa Badge) */}
-            <View style={styles.sectionHeaderRow}>
-              <View style={styles.sectionHeaderLeft}>
-                <AppText style={styles.sectionHeading}>Hari Ini</AppText>
-                {totalCombinedCount > 0 && (
-                  <AppText style={styles.sectionCountText} tabularNums>
-                    {`${completedCombinedCount}/${totalCombinedCount} selesai`}
-                  </AppText>
-                )}
+            {/* 4. Unified Section: Hari Ini — Editorial Timeline Flow (No Cards, No Pill Badges) */}
+            <View style={styles.sectionHeaderBlock}>
+              <View style={styles.sectionHeaderTop}>
+                <View style={styles.sectionTitleGroup}>
+                  <AppText style={styles.sectionHeading}>Hari Ini</AppText>
+                  {totalCombinedCount > 0 && (
+                    <AppText style={styles.sectionProgressLabel} tabularNums>
+                      {`${completedCombinedCount} dari ${totalCombinedCount} tuntas`}
+                    </AppText>
+                  )}
+                </View>
               </View>
 
-              <View style={styles.sectionActionsRow}>
-                <Pressable
-                  onPress={() => router.push('/today/new')}
-                  accessibilityRole="button"
-                  accessibilityLabel="Tambah Tugas Hari Ini"
-                  hitSlop={6}
-                >
-                  <AppText style={styles.plainLinkText}>+ Tugas</AppText>
-                </Pressable>
-                <AppText style={styles.linkDot}>·</AppText>
-                <Pressable
-                  onPress={() => router.push('/agenda/new')}
-                  accessibilityRole="button"
-                  accessibilityLabel="Tambah Agenda Hari Ini"
-                  hitSlop={6}
-                >
-                  <AppText style={styles.plainLinkText}>+ Agenda</AppText>
-                </Pressable>
-              </View>
+              {/* Thin Organic Progress Thread under Section Header */}
+              {totalCombinedCount > 0 && (
+                <View style={styles.headerProgressTrack}>
+                  <View
+                    style={[
+                      styles.headerProgressFill,
+                      { width: `${combinedProgressPercent}%` },
+                    ]}
+                  />
+                </View>
+              )}
             </View>
 
             {totalCombinedCount === 0 ? (
@@ -281,9 +288,10 @@ export const TodayFocusScreen: React.FC = () => {
                 onActionPress={() => router.push('/today/new')}
               />
             ) : (
-              <View style={styles.journalList}>
+              <View style={styles.timelineContainer}>
                 {/* A. Fokus Tugas (dari Target, Proyek, atau Hari Ini) */}
-                {focusItems.map((item) => {
+                {focusItems.map((item, idx) => {
+                  const isLastNode = idx + 1 === totalTimelineNodes;
                   const isCompleted = item.isCompleted;
                   const isCancelled = item.task.status === 'CANCELLED';
                   const isActive = timer.activeTask?.id === item.taskId;
@@ -296,15 +304,17 @@ export const TodayFocusScreen: React.FC = () => {
                   const isFromTarget = Boolean(item.task.targetId);
                   const isFromProject = !isFromTarget && Boolean(item.task.projectId);
 
-                  const originText = isFromTarget
+                  const accentColor = s.forest;
+
+                  const originKicker = isFromTarget
                     ? item.task.targetTitle
-                      ? `Dari Target: ${item.task.targetTitle}`
+                      ? `Target · ${item.task.targetTitle}`
                       : 'Dari Target'
                     : isFromProject
                       ? item.task.projectTitle
-                        ? `Dari Proyek: ${item.task.projectTitle}`
+                        ? `Proyek · ${item.task.projectTitle}`
                         : 'Dari Proyek'
-                      : 'Dari Hari Ini';
+                      : 'Fokus Hari Ini';
 
                   const handleRowPress = () => {
                     if (item.task.targetId) {
@@ -328,86 +338,154 @@ export const TodayFocusScreen: React.FC = () => {
                       key={item.id}
                       onPress={handleRowPress}
                       accessibilityRole="button"
-                      accessibilityLabel={`Buka ${originText}: ${item.task.title}`}
+                      accessibilityLabel={`Buka ${originKicker}: ${item.task.title}`}
                       style={({ pressed }) => [
-                        styles.journalRow,
-                        pressed && styles.journalRowPressed,
+                        styles.timelineItem,
+                        pressed && styles.timelineItemPressed,
                       ]}
                     >
-                      <SproutCheck
-                        checked={isCompleted}
-                        onPress={() => toggleTask(item.taskId, isCompleted || isCancelled)}
-                        accessibilityLabel={
-                          (isCompleted || isCancelled ? 'Buka kembali ' : 'Selesaikan ') +
-                          item.task.title
-                        }
-                        size={24}
-                      />
-
-                      <View style={styles.journalCenterCol}>
-                        <AppText
-                          style={[
-                            styles.journalTitle,
-                            isCompleted && styles.journalTitleDone,
-                            isCancelled && styles.journalTitleCancelled,
-                          ]}
-                          numberOfLines={2}
-                        >
-                          {item.task.title}
-                        </AppText>
-                        <AppText style={styles.journalSubtext} numberOfLines={1}>
-                          {isCancelled
-                            ? `Dibatalkan · ${originText}`
-                            : isCompleted
-                              ? `${originText} · ${durationLabel} · Selesai`
-                              : isActive
-                                ? `${originText} · ${durationLabel} · Sedang fokus`
-                                : `${originText} · ${durationLabel}`}
-                        </AppText>
+                      {/* Left Column: Timeline Node + Continuous Vertical Spine */}
+                      <View style={styles.timelineRail}>
+                        <View style={styles.checkNodeWrap}>
+                          <SproutCheck
+                            checked={isCompleted}
+                            onPress={() => toggleTask(item.taskId, isCompleted || isCancelled)}
+                            accessibilityLabel={
+                              (isCompleted || isCancelled ? 'Buka kembali ' : 'Selesaikan ') +
+                              item.task.title
+                            }
+                            size={26}
+                          />
+                        </View>
+                        {!isLastNode && (
+                          <View
+                            style={[
+                              styles.timelineSpineLine,
+                              isCompleted && styles.timelineSpineLineDone,
+                            ]}
+                          />
+                        )}
                       </View>
 
-                      <View style={styles.journalRightActions}>
-                        {isCompleted || isCancelled ? null : isActive ? (
-                          <Pressable
-                            onPress={timer.pauseTimer}
-                            accessibilityRole="button"
-                            accessibilityLabel={'Jeda fokus ' + item.task.title}
-                            hitSlop={6}
-                            style={styles.inlineIconAction}
-                          >
-                            <Pause size={15} color={s.forest} strokeWidth={2.5} />
-                          </Pressable>
-                        ) : (
-                          <Pressable
-                            onPress={() => {
-                              if (!timer.hasSession) timer.setActiveTask(item.task);
-                              setIsTimerExpanded(true);
-                            }}
-                            accessibilityRole="button"
-                            accessibilityLabel={'Mulai fokus ' + item.task.title}
-                            hitSlop={6}
-                            style={styles.inlineIconAction}
-                          >
-                            <Play size={14} color={s.forest} fill={s.forest} strokeWidth={2.2} />
-                          </Pressable>
-                        )}
+                      {/* Right Column: Editorial Content + Dashed Notebook Divider */}
+                      <View style={styles.timelineBody}>
+                        <View style={styles.timelineMainRow}>
+                          <View style={styles.timelineTextCol}>
+                            {/* Plain Editorial Kicker Line (No Badge Box!) */}
+                            <View style={styles.kickerInlineRow}>
+                              {isFromTarget ? (
+                                <Target size={11} color={accentColor} strokeWidth={2.4} />
+                              ) : isFromProject ? (
+                                <FolderKanban size={11} color={accentColor} strokeWidth={2.4} />
+                              ) : (
+                                <Sparkles size={11} color={accentColor} strokeWidth={2.4} />
+                              )}
+                              <AppText
+                                style={[styles.kickerText, { color: accentColor }]}
+                                numberOfLines={1}
+                              >
+                                {originKicker}
+                              </AppText>
+                              {(isFromTarget || isFromProject) && (
+                                <ArrowUpRight size={11} color={accentColor} strokeWidth={2.4} />
+                              )}
+                            </View>
 
-                        <Pressable
-                          onPress={() => removeFromToday(item.id)}
-                          accessibilityRole="button"
-                          accessibilityLabel={'Hapus ' + item.task.title}
-                          hitSlop={8}
-                          style={styles.inlineIconAction}
-                        >
-                          <X size={14} color={s.inkSubtle} />
-                        </Pressable>
+                            {/* Main Title */}
+                            <AppText
+                              style={[
+                                styles.timelineTitle,
+                                isCompleted && styles.timelineTitleDone,
+                                isCancelled && styles.timelineTitleCancelled,
+                              ]}
+                              numberOfLines={2}
+                            >
+                              {item.task.title}
+                            </AppText>
+
+                            {/* Subtitle / Duration & Status */}
+                            <AppText style={styles.timelineSubtext} numberOfLines={1}>
+                              {isCancelled
+                                ? 'Dibatalkan'
+                                : isCompleted
+                                  ? `${durationLabel} · Selesai dikerjakan`
+                                  : isActive
+                                    ? `${durationLabel} · Sesi fokus sedang berjalan`
+                                    : item.task.description
+                                      ? `${durationLabel} · ${item.task.description}`
+                                      : `Estimasi fokus ${durationLabel}`}
+                            </AppText>
+                          </View>
+
+                          {/* Right Actions: Tactile Play/Pause Circle & Subtle Remove */}
+                          <View style={styles.timelineActions}>
+                            {isCompleted || isCancelled ? null : isActive ? (
+                              <Pressable
+                                onPress={timer.pauseTimer}
+                                accessibilityRole="button"
+                                accessibilityLabel={'Jeda fokus ' + item.task.title}
+                                hitSlop={6}
+                                style={[styles.focusOrbBtn, styles.focusOrbBtnActive]}
+                              >
+                                <Pause size={14} color={s.ink} strokeWidth={2.6} />
+                              </Pressable>
+                            ) : (
+                              <Pressable
+                                onPress={() => {
+                                  if (!timer.hasSession) timer.setActiveTask(item.task);
+                                  setIsTimerExpanded(true);
+                                }}
+                                accessibilityRole="button"
+                                accessibilityLabel={'Mulai fokus ' + item.task.title}
+                                hitSlop={6}
+                                style={styles.focusOrbBtn}
+                              >
+                                <Play
+                                  size={13}
+                                  color={s.forest}
+                                  fill={s.forest}
+                                  strokeWidth={2.2}
+                                />
+                              </Pressable>
+                            )}
+
+                            <Pressable
+                              onPress={() => removeFromToday(item.id)}
+                              accessibilityRole="button"
+                              accessibilityLabel={'Hapus ' + item.task.title}
+                              hitSlop={8}
+                              style={styles.dismissBtn}
+                            >
+                              <X size={13.5} color={s.inkSubtle} />
+                            </Pressable>
+                          </View>
+                        </View>
+
+                        {/* Hand-drawn Dashed Divider Line */}
+                        {!isLastNode && (
+                          <View style={styles.dashedDividerWrap} pointerEvents="none">
+                            <Svg width="100%" height={2}>
+                              <Line
+                                x1="0"
+                                y1="1"
+                                x2="100%"
+                                y2="1"
+                                stroke="#E3DAC3"
+                                strokeWidth={1.2}
+                                strokeDasharray="5 5"
+                              />
+                            </Svg>
+                          </View>
+                        )}
                       </View>
                     </Pressable>
                   );
                 })}
 
                 {/* B. Kegiatan Agenda Harian */}
-                {events.map((ev) => {
+                {events.map((ev, idx) => {
+                  const isLastNode =
+                    focusItems.length + idx + 1 === totalTimelineNodes;
                   const startTime = ev.isAllDay
                     ? 'Sepanjang hari'
                     : new Date(ev.startTime).toLocaleTimeString('id-ID', {
@@ -415,6 +493,7 @@ export const TodayFocusScreen: React.FC = () => {
                         minute: '2-digit',
                       });
                   const isDone = ev.isCompleted;
+                  const agendaColor = s.forest;
 
                   return (
                     <Pressable
@@ -423,37 +502,82 @@ export const TodayFocusScreen: React.FC = () => {
                       accessibilityRole="button"
                       accessibilityLabel={`Buka Agenda: ${ev.title}`}
                       style={({ pressed }) => [
-                        styles.journalRow,
-                        pressed && styles.journalRowPressed,
+                        styles.timelineItem,
+                        pressed && styles.timelineItemPressed,
                       ]}
                     >
-                      <SproutCheck
-                        checked={isDone}
-                        onPress={() => toggleEvent(ev.id, isDone)}
-                        accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + ev.title}
-                        size={24}
-                      />
-
-                      <View style={styles.journalCenterCol}>
-                        <AppText
-                          style={[styles.journalTitle, isDone && styles.journalTitleDone]}
-                          numberOfLines={1}
-                        >
-                          {ev.title}
-                        </AppText>
-                        <AppText style={styles.journalSubtext} numberOfLines={1}>
-                          {`Dari Agenda · ${startTime}${ev.location ? ` · ${ev.location}` : ''}`}
-                        </AppText>
+                      <View style={styles.timelineRail}>
+                        <View style={styles.checkNodeWrap}>
+                          <SproutCheck
+                            checked={isDone}
+                            onPress={() => toggleEvent(ev.id, isDone)}
+                            accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + ev.title}
+                            size={26}
+                          />
+                        </View>
+                        {!isLastNode && (
+                          <View
+                            style={[
+                              styles.timelineSpineLine,
+                              isDone && styles.timelineSpineLineDone,
+                            ]}
+                          />
+                        )}
                       </View>
 
-                      <ChevronRight size={16} color={s.inkSubtle} strokeWidth={2.2} />
+                      <View style={styles.timelineBody}>
+                        <View style={styles.timelineMainRow}>
+                          <View style={styles.timelineTextCol}>
+                            <View style={styles.kickerInlineRow}>
+                              <CalendarDays size={11} color={agendaColor} strokeWidth={2.4} />
+                              <AppText style={[styles.kickerText, { color: agendaColor }]}>
+                                {`Agenda · ${startTime}`}
+                              </AppText>
+                              <ArrowUpRight size={11} color={agendaColor} strokeWidth={2.4} />
+                            </View>
+
+                            <AppText
+                              style={[styles.timelineTitle, isDone && styles.timelineTitleDone]}
+                              numberOfLines={1}
+                            >
+                              {ev.title}
+                            </AppText>
+
+                            <AppText style={styles.timelineSubtext} numberOfLines={1}>
+                              {ev.location
+                                ? `Lokasi: ${ev.location}`
+                                : 'Ketuk untuk melihat di Kalender Agenda'}
+                            </AppText>
+                          </View>
+                        </View>
+
+                        {!isLastNode && (
+                          <View style={styles.dashedDividerWrap} pointerEvents="none">
+                            <Svg width="100%" height={2}>
+                              <Line
+                                x1="0"
+                                y1="1"
+                                x2="100%"
+                                y2="1"
+                                stroke="#E3DAC3"
+                                strokeWidth={1.2}
+                                strokeDasharray="5 5"
+                              />
+                            </Svg>
+                          </View>
+                        )}
+                      </View>
                     </Pressable>
                   );
                 })}
 
                 {/* C. Jadwal Rutin Mingguan */}
-                {activeOccurrences.map((occ) => {
+                {activeOccurrences.map((occ, idx) => {
+                  const isLastNode =
+                    focusItems.length + events.length + idx + 1 ===
+                    totalTimelineNodes;
                   const isDone = occ.isCompleted;
+                  const routineColor = s.forest;
 
                   return (
                     <Pressable
@@ -462,32 +586,71 @@ export const TodayFocusScreen: React.FC = () => {
                       accessibilityRole="button"
                       accessibilityLabel={`Buka Jadwal Rutin: ${occ.schedule.title}`}
                       style={({ pressed }) => [
-                        styles.journalRow,
-                        pressed && styles.journalRowPressed,
+                        styles.timelineItem,
+                        pressed && styles.timelineItemPressed,
                       ]}
                     >
-                      <SproutCheck
-                        checked={isDone}
-                        onPress={() => toggleWeeklyOccurrence(occ.schedule.id, isDone)}
-                        accessibilityLabel={
-                          (isDone ? 'Buka kembali ' : 'Selesaikan ') + occ.schedule.title
-                        }
-                        size={24}
-                      />
-
-                      <View style={styles.journalCenterCol}>
-                        <AppText
-                          style={[styles.journalTitle, isDone && styles.journalTitleDone]}
-                          numberOfLines={1}
-                        >
-                          {occ.schedule.title}
-                        </AppText>
-                        <AppText style={styles.journalSubtext} numberOfLines={1}>
-                          {`Dari Jadwal Rutin · ${occ.schedule.startTime}–${occ.schedule.endTime}`}
-                        </AppText>
+                      <View style={styles.timelineRail}>
+                        <View style={styles.checkNodeWrap}>
+                          <SproutCheck
+                            checked={isDone}
+                            onPress={() => toggleWeeklyOccurrence(occ.schedule.id, isDone)}
+                            accessibilityLabel={
+                              (isDone ? 'Buka kembali ' : 'Selesaikan ') + occ.schedule.title
+                            }
+                            size={26}
+                          />
+                        </View>
+                        {!isLastNode && (
+                          <View
+                            style={[
+                              styles.timelineSpineLine,
+                              isDone && styles.timelineSpineLineDone,
+                            ]}
+                          />
+                        )}
                       </View>
 
-                      <ChevronRight size={16} color={s.inkSubtle} strokeWidth={2.2} />
+                      <View style={styles.timelineBody}>
+                        <View style={styles.timelineMainRow}>
+                          <View style={styles.timelineTextCol}>
+                            <View style={styles.kickerInlineRow}>
+                              <Repeat size={11} color={routineColor} strokeWidth={2.4} />
+                              <AppText style={[styles.kickerText, { color: routineColor }]}>
+                                {`Jadwal Rutin · ${occ.schedule.startTime}–${occ.schedule.endTime}`}
+                              </AppText>
+                              <ArrowUpRight size={11} color={routineColor} strokeWidth={2.4} />
+                            </View>
+
+                            <AppText
+                              style={[styles.timelineTitle, isDone && styles.timelineTitleDone]}
+                              numberOfLines={1}
+                            >
+                              {occ.schedule.title}
+                            </AppText>
+
+                            <AppText style={styles.timelineSubtext} numberOfLines={1}>
+                              Rutinitas mingguan · Ketuk untuk buka kalender
+                            </AppText>
+                          </View>
+                        </View>
+
+                        {!isLastNode && (
+                          <View style={styles.dashedDividerWrap} pointerEvents="none">
+                            <Svg width="100%" height={2}>
+                              <Line
+                                x1="0"
+                                y1="1"
+                                x2="100%"
+                                y2="1"
+                                stroke="#E3DAC3"
+                                strokeWidth={1.2}
+                                strokeDasharray="5 5"
+                              />
+                            </Svg>
+                          </View>
+                        )}
+                      </View>
                     </Pressable>
                   );
                 })}
@@ -597,94 +760,160 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sectionHeaderRow: {
+  sectionHeaderBlock: {
+    paddingTop: space[2],
+    gap: 8,
+  },
+  sectionHeaderTop: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
-    paddingTop: space[2],
-    paddingBottom: 2,
   },
-  sectionHeaderLeft: {
+  sectionTitleGroup: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 8,
   },
   sectionHeading: {
     fontFamily: fontFamily.bold,
-    fontSize: 18,
+    fontSize: 19,
     lineHeight: 24,
     color: s.ink,
   },
-  sectionCountText: {
-    fontFamily: fontFamily.medium,
+  sectionProgressLabel: {
+    fontFamily: fontFamily.semibold,
     fontSize: 12,
-    color: s.inkMuted,
+    color: s.forest,
   },
   sectionActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  plainLinkText: {
-    fontFamily: fontFamily.semibold,
+  actionTextPrimary: {
+    fontFamily: fontFamily.bold,
     fontSize: 12.5,
     color: s.forest,
   },
-  linkDot: {
+  actionSeparator: {
     fontFamily: fontFamily.medium,
     fontSize: 12,
-    color: s.inkSubtle,
+    color: '#C9BEA4',
   },
-  journalList: {
-    borderTopWidth: 1,
-    borderTopColor: '#E6DEC8',
+  actionTextSecondary: {
+    fontFamily: fontFamily.bold,
+    fontSize: 12.5,
+    color: s.forest,
   },
-  journalRow: {
+  headerProgressTrack: {
+    height: 3,
+    borderRadius: 999,
+    backgroundColor: '#E7DEC8',
+    overflow: 'hidden',
+  },
+  headerProgressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: s.forest,
+  },
+  timelineContainer: {
+    paddingTop: 4,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 12,
+  },
+  timelineItemPressed: {
+    opacity: 0.72,
+  },
+  timelineRail: {
+    width: 28,
+    alignItems: 'center',
+  },
+  checkNodeWrap: {
+    paddingTop: 2,
+    zIndex: 2,
+  },
+  timelineSpineLine: {
+    flex: 1,
+    width: 2,
+    backgroundColor: '#DFD6C0',
+    marginVertical: 4,
+    borderRadius: 1,
+  },
+  timelineSpineLineDone: {
+    backgroundColor: '#9CC964',
+  },
+  timelineBody: {
+    flex: 1,
+    paddingBottom: 14,
+  },
+  timelineMainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 13,
-    paddingHorizontal: 2,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E6DEC8',
+    gap: 10,
   },
-  journalRowPressed: {
-    opacity: 0.65,
-  },
-  journalCenterCol: {
+  timelineTextCol: {
     flex: 1,
     gap: 2,
   },
-  journalTitle: {
+  kickerInlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  kickerText: {
     fontFamily: fontFamily.bold,
-    fontSize: 15.5,
-    lineHeight: 20,
+    fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 0.2,
+    flexShrink: 1,
+  },
+  timelineTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+    lineHeight: 21,
     color: s.ink,
   },
-  journalTitleDone: {
+  timelineTitleDone: {
     textDecorationLine: 'line-through',
     color: s.inkMuted,
   },
-  journalTitleCancelled: {
+  timelineTitleCancelled: {
     textDecorationLine: 'line-through',
     color: s.inkSubtle,
   },
-  journalSubtext: {
+  timelineSubtext: {
     fontFamily: fontFamily.medium,
     fontSize: 12,
     lineHeight: 16,
     color: s.inkMuted,
   },
-  journalRightActions: {
+  timelineActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
-  inlineIconAction: {
-    width: 28,
-    height: 28,
+  focusOrbBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: s.leafSoft,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  focusOrbBtnActive: {
+    backgroundColor: s.sun,
+  },
+  dismissBtn: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dashedDividerWrap: {
+    marginTop: 14,
   },
   floatingFabContainer: {
     position: 'absolute',

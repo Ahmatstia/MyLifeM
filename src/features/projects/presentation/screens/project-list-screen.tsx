@@ -59,11 +59,27 @@ export const ProjectListScreen: React.FC = () => {
       style={styles.screenBg}
       contentContainerStyle={styles.scrollContent}
       overlay={
-        <AddProjectModal
-          visible={isModalVisible}
-          onClose={() => setIsModalVisible(false)}
-          onSubmit={addProject}
-        />
+        <>
+          <View style={styles.floatingFabContainer} pointerEvents="box-none">
+            <Pressable
+              onPress={() => router.push('/projects/new')}
+              accessibilityRole="button"
+              accessibilityLabel="Tambah Proyek Baru"
+              style={({ pressed }) => [
+                styles.fabSquare,
+                pressed && styles.fabSquarePressed,
+              ]}
+            >
+              <Plus size={24} color={s.ink} strokeWidth={2.8} />
+            </Pressable>
+          </View>
+
+          <AddProjectModal
+            visible={isModalVisible}
+            onClose={() => setIsModalVisible(false)}
+            onSubmit={addProject}
+          />
+        </>
       }
     >
       <WaveBackdrop variant="home" height={285} />
@@ -72,16 +88,6 @@ export const ProjectListScreen: React.FC = () => {
         <AppText variant="headlineMedium" style={styles.headerTitle}>
           Proyek Kerja
         </AppText>
-
-        <Pressable
-          onPress={() => router.push('/projects/new')}
-          accessibilityRole="button"
-          accessibilityLabel="Tambah Proyek Baru"
-          style={({ pressed }) => [styles.addPillBtn, pressed && { transform: [{ scale: 0.96 }] }]}
-        >
-          <Plus size={15} color={s.ink} strokeWidth={2.8} />
-          <AppText style={styles.addPillText}>Proyek Baru</AppText>
-        </Pressable>
       </View>
 
       {/* Segmented Status Filter Bar */}
@@ -180,8 +186,6 @@ export const ProjectListScreen: React.FC = () => {
               <SectionTitle
                 title="Daftar Proyek"
                 hint={`${projects.length} proyek`}
-                actionLabel="Tambah"
-                onAction={() => router.push('/projects/new')}
               />
 
               {projects.length === 0 ? (
@@ -336,5 +340,28 @@ const styles = StyleSheet.create({
     width: 1,
     height: 44,
     backgroundColor: '#EBE3D0',
+  },
+  floatingFabContainer: {
+    position: 'absolute',
+    right: space[4],
+    bottom: space[4],
+    zIndex: 20,
+  },
+  fabSquare: {
+    width: 54,
+    height: 54,
+    borderRadius: 18,
+    backgroundColor: s.sun,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#B58105',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  fabSquarePressed: {
+    transform: [{ scale: 0.94 }],
+    backgroundColor: s.sunDeep,
   },
 });

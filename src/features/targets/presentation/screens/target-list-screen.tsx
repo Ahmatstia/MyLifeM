@@ -51,12 +51,28 @@ export const TargetListScreen: React.FC = () => {
       style={styles.screenBg}
       contentContainerStyle={styles.scrollContent}
       overlay={
-        <AddTargetModal
-          visible={isModalVisible}
-          categories={categories}
-          onClose={() => setIsModalVisible(false)}
-          onSubmit={addTarget}
-        />
+        <>
+          <View style={styles.floatingFabContainer} pointerEvents="box-none">
+            <Pressable
+              onPress={() => router.push('/targets/new')}
+              accessibilityRole="button"
+              accessibilityLabel="Tambah Target Baru"
+              style={({ pressed }) => [
+                styles.fabSquare,
+                pressed && styles.fabSquarePressed,
+              ]}
+            >
+              <Plus size={24} color={s.ink} strokeWidth={2.8} />
+            </Pressable>
+          </View>
+
+          <AddTargetModal
+            visible={isModalVisible}
+            categories={categories}
+            onClose={() => setIsModalVisible(false)}
+            onSubmit={addTarget}
+          />
+        </>
       }
     >
       <WaveBackdrop variant="home" height={285} />
@@ -71,16 +87,6 @@ export const TargetListScreen: React.FC = () => {
             Langkah kecil menuju impian besarmu ✨
           </AppText>
         </View>
-
-        <Pressable
-          onPress={() => router.push('/targets/new')}
-          accessibilityRole="button"
-          accessibilityLabel="Tambah Target Baru"
-          style={({ pressed }) => [styles.addPillBtn, pressed && { transform: [{ scale: 0.96 }] }]}
-        >
-          <Plus size={15} color={s.ink} strokeWidth={2.8} />
-          <AppText style={styles.addPillText}>Target Baru</AppText>
-        </Pressable>
       </View>
 
       {/* Segmented Category Pill Bar */}
@@ -478,5 +484,28 @@ const styles = StyleSheet.create({
   },
   trailListWrap: {
     paddingTop: 4,
+  },
+  floatingFabContainer: {
+    position: 'absolute',
+    right: space[4],
+    bottom: space[4],
+    zIndex: 20,
+  },
+  fabSquare: {
+    width: 54,
+    height: 54,
+    borderRadius: 18,
+    backgroundColor: s.sun,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#B58105',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  fabSquarePressed: {
+    transform: [{ scale: 0.94 }],
+    backgroundColor: s.sunDeep,
   },
 });
