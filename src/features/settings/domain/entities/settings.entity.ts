@@ -1,6 +1,6 @@
 /**
  * Settings Domain Entity & Types
- * Configurable preferences for Pomodoro, Deep Flow, Haptics, and Local-First storage.
+ * Configurable preferences for Pomodoro, Deep Flow, Haptics, Prayer Location, and Local-First storage.
  */
 
 export interface UserSettingsEntity {
@@ -8,6 +8,9 @@ export interface UserSettingsEntity {
   deepFlowMinutes: number;
   hapticsEnabled: boolean;
   keepAwakeEnabled: boolean;
+  prayerCity: string;
+  prayerLatitude: number;
+  prayerLongitude: number;
 }
 
 export const DEFAULT_SETTINGS: UserSettingsEntity = {
@@ -15,6 +18,9 @@ export const DEFAULT_SETTINGS: UserSettingsEntity = {
   deepFlowMinutes: 50,
   hapticsEnabled: true,
   keepAwakeEnabled: true,
+  prayerCity: 'Jakarta (WIB)',
+  prayerLatitude: -6.2088,
+  prayerLongitude: 106.8456,
 };
 
 export interface DatabaseStats {

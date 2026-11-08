@@ -6,6 +6,9 @@ import { isDateOnly, localDayBounds, parseInstant } from '@/shared/utils/local-d
 import {
   dailyFocusItems,
   tasks,
+  targets,
+  projects,
+  stages,
   focusSessions,
   type Task,
   type FocusSession,
@@ -116,10 +119,37 @@ function addPriority(tx: Pick<typeof db, 'select' | 'insert'>, date: string, tas
 export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   async getTodayFocusItems(date: string): Promise<DailyFocusItemEntity[]> {
     if (!isDateOnly(date)) throw new Error('Tanggal prioritas tidak valid.');
-    const rows = await db.select({ item: dailyFocusItems, task: tasks }).from(dailyFocusItems)
+    const rows = await db
+      .select({
+        item: dailyFocusItems,
+        task: tasks,
+        stageTargetId: stages.targetId,
+        stageProjectId: stages.projectId,
+        targetTitle: targets.title,
+        projectTitle: projects.title,
+      })
+      .from(dailyFocusItems)
       .innerJoin(tasks, eq(tasks.id, dailyFocusItems.taskId))
-      .where(eq(dailyFocusItems.date, date)).orderBy(dailyFocusItems.sortOrder);
-    return rows.map(({ item, task }) => ({ ...item, isCompleted: normalizeTaskStatus(task.status) === 'COMPLETED', task: mapToTaskEntity(task) }));
+      .leftJoin(stages, eq(stages.id, tasks.stageId))
+      .leftJoin(targets, sql`${targets.id} = COALESCE(${tasks.targetId}, ${stages.targetId})`)
+      .leftJoin(projects, sql`${projects.id} = COALESCE(${tasks.projectId}, ${stages.projectId})`)
+      .where(eq(dailyFocusItems.date, date))
+      .orderBy(dailyFocusItems.sortOrder);
+
+    return rows.map(({ item, task, stageTargetId, stageProjectId, targetTitle, projectTitle }) => {
+      const mappedTask = mapToTaskEntity(task);
+      return {
+        ...item,
+        isCompleted: normalizeTaskStatus(task.status) === 'COMPLETED',
+        task: {
+          ...mappedTask,
+          targetId: mappedTask.targetId || stageTargetId || null,
+          projectId: mappedTask.projectId || stageProjectId || null,
+          targetTitle: targetTitle || null,
+          projectTitle: projectTitle || null,
+        },
+      };
+    });
   }
 
   async addFocusItem(date: string, taskId: string): Promise<void> {

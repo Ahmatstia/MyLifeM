@@ -17,6 +17,7 @@ import {
 import { parseBackup, serializeBackup } from '../backup-format';
 import { readBackupData, replaceBackupData, replaceIfUnchanged } from '../backup-store';
 import { INTEGRITY_DDL } from '@/db/integrity';
+import { setPrayerLocation } from '@/features/prayer-times/data/prayer-location-store';
 
 export class SettingsRepositoryImpl implements SettingsRepository {
   async getSettings(): Promise<UserSettingsEntity> {
@@ -43,11 +44,36 @@ export class SettingsRepositoryImpl implements SettingsRepository {
         ? settingsMap.get('keep_awake_enabled') === 'true'
         : DEFAULT_SETTINGS.keepAwakeEnabled;
 
+      const prayerCity = settingsMap.get('prayer_city') || DEFAULT_SETTINGS.prayerCity;
+
+      const parsedLat = settingsMap.has('prayer_latitude')
+        ? parseFloat(settingsMap.get('prayer_latitude')!)
+        : NaN;
+      const prayerLatitude = Number.isFinite(parsedLat)
+        ? parsedLat
+        : DEFAULT_SETTINGS.prayerLatitude;
+
+      const parsedLng = settingsMap.has('prayer_longitude')
+        ? parseFloat(settingsMap.get('prayer_longitude')!)
+        : NaN;
+      const prayerLongitude = Number.isFinite(parsedLng)
+        ? parsedLng
+        : DEFAULT_SETTINGS.prayerLongitude;
+
+      setPrayerLocation({
+        cityName: prayerCity,
+        latitude: prayerLatitude,
+        longitude: prayerLongitude,
+      });
+
       return {
         pomodoroMinutes,
         deepFlowMinutes,
         hapticsEnabled,
         keepAwakeEnabled,
+        prayerCity,
+        prayerLatitude,
+        prayerLongitude,
       };
     } catch (error) {
       console.error('[SettingsRepositoryImpl] getSettings error:', error);
@@ -125,6 +151,57 @@ export class SettingsRepositoryImpl implements SettingsRepository {
               target: userSettings.key,
               set: {
                 value: partial.keepAwakeEnabled ? 'true' : 'false',
+                updatedAt: now,
+              },
+            }).run();
+        }
+
+        if (partial.prayerCity !== undefined) {
+          tx
+            .insert(userSettings)
+            .values({
+              key: 'prayer_city',
+              value: partial.prayerCity,
+              updatedAt: now,
+            })
+            .onConflictDoUpdate({
+              target: userSettings.key,
+              set: {
+                value: partial.prayerCity,
+                updatedAt: now,
+              },
+            }).run();
+        }
+
+        if (partial.prayerLatitude !== undefined) {
+          tx
+            .insert(userSettings)
+            .values({
+              key: 'prayer_latitude',
+              value: partial.prayerLatitude.toString(),
+              updatedAt: now,
+            })
+            .onConflictDoUpdate({
+              target: userSettings.key,
+              set: {
+                value: partial.prayerLatitude.toString(),
+                updatedAt: now,
+              },
+            }).run();
+        }
+
+        if (partial.prayerLongitude !== undefined) {
+          tx
+            .insert(userSettings)
+            .values({
+              key: 'prayer_longitude',
+              value: partial.prayerLongitude.toString(),
+              updatedAt: now,
+            })
+            .onConflictDoUpdate({
+              target: userSettings.key,
+              set: {
+                value: partial.prayerLongitude.toString(),
                 updatedAt: now,
               },
             }).run();

@@ -41,6 +41,7 @@ todayState = focus;
 const events = [{ id: 'event', title: 'Ruang belajar Python', eventType: 'LEARNING', startTime: '2026-10-26T19:30:00', endTime: '2026-10-26T20:00:00', isAllDay: false, isCompleted: false, location: 'Rumah' }];
 const stubs = {
   'expo-haptics': { selectionAsync: noop, impactAsync: noop, notificationAsync: noop, ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' } },
+  'expo-image': { Image: native.Image },
   'expo-router': { router: { push: noop, back: noop, navigate: noop, setParams: noop }, useFocusEffect: noop, useLocalSearchParams: () => ({}) },
   'expo-status-bar': { StatusBar: () => null },
   'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) },
@@ -85,6 +86,7 @@ function createLoader(overrides = {}) {
       if (specifier === '@/db/client') throw new Error('UI tests must never access the real database.');
       if (specifier.startsWith('@/') || specifier.startsWith('.')) {
         const targetPath = specifier.startsWith('@/') ? path.join(root, 'src', specifier.slice(2)) : path.resolve(path.dirname(filename), specifier);
+        if (/\.(png|jpg|jpeg|webp)$/i.test(targetPath)) return targetPath;
         const resolved = [targetPath + '.tsx', targetPath + '.ts', path.join(targetPath, 'index.ts')].find(candidate => fs.existsSync(candidate));
         assert.ok(resolved, specifier);
         return load(resolved);

@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Moon, Bell } from 'lucide-react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { router } from 'expo-router';
+import { Moon, Bell, MapPin, ChevronRight } from 'lucide-react-native';
 import { fontFamily, space } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText } from '@/shared/ui/app-text';
@@ -11,27 +12,52 @@ const s = colors.sprout;
 
 export interface PrayerTimesWidgetProps {
   schedule: TodayPrayerSchedule;
+  onPressLocation?: () => void;
 }
 
 export const PrayerTimesWidget: React.FC<PrayerTimesWidgetProps> = ({
   schedule,
+  onPressLocation,
 }) => {
   const { prayers, nextPrayer, remainingText, cityName } = schedule;
+
+  const handleLocationPress = () => {
+    if (onPressLocation) {
+      onPressLocation();
+    } else {
+      router.push('/settings');
+    }
+  };
 
   return (
     <View style={styles.container}>
       {/* Top Header Row */}
       <View style={styles.headerRow}>
-        <View style={styles.headerTitleGroup}>
+        <Pressable
+          onPress={handleLocationPress}
+          accessibilityRole="button"
+          accessibilityLabel={`Ubah lokasi jadwal azan, saat ini ${cityName}`}
+          style={({ pressed }) => [
+            styles.headerTitleGroup,
+            pressed && { opacity: 0.78 },
+          ]}
+        >
           <View style={styles.iconSquircle}>
             <Moon size={15} color={s.forest} strokeWidth={2.4} />
           </View>
           <View style={styles.titleColumn}>
             <AppText variant="labelSmall" style={styles.widgetHeaderLabel}>
-              Jadwal Azan · {cityName}
+              Jadwal Azan
             </AppText>
+            <View style={styles.locationBadgeRow}>
+              <MapPin size={11} color={s.forest} strokeWidth={2.4} />
+              <AppText variant="labelSmall" style={styles.locationCityText}>
+                {cityName}
+              </AppText>
+              <ChevronRight size={12} color={s.inkMuted} strokeWidth={2.4} />
+            </View>
           </View>
-        </View>
+        </Pressable>
 
         {nextPrayer && (
           <View style={styles.nextPill}>
@@ -111,9 +137,9 @@ const styles = StyleSheet.create({
     gap: space[2],
   },
   iconSquircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 11,
+    width: 34,
+    height: 34,
+    borderRadius: 12,
     backgroundColor: s.leafSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -125,6 +151,16 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
     fontSize: 13,
     color: s.ink,
+  },
+  locationBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  locationCityText: {
+    fontFamily: fontFamily.medium,
+    fontSize: 11,
+    color: s.forest,
   },
   nextPill: {
     flexDirection: 'row',

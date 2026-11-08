@@ -22,6 +22,8 @@ export interface TaskEntity {
   projectId: string | null;
   targetId: string | null;
   milestoneId: string | null;
+  targetTitle?: string | null;
+  projectTitle?: string | null;
   title: string;
   description: string | null;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';

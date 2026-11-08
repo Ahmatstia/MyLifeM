@@ -10,4 +10,5 @@ export * from './app-bottom-sheet';
 export * from './screen-header';
 export * from './form-screen-header';
 export * from './capsule-date-strip';
+export * from './app-sidebar-drawer';
 export * from './sprout';

@@ -72,7 +72,7 @@ export const HeroBlob: React.FC<HeroBlobProps> = ({ children, onPress, style, ac
         style={StyleSheet.absoluteFill}
       >
         <Path
-          d="M20 24 C70 0 130 14 190 22 C250 30 300 6 328 24 C338 30 340 44 340 58 V96 C340 110 330 120 314 120 H26 C10 120 0 110 0 94 V48 C0 36 8 28 20 24 Z"
+          d="M24 20 C68 4 114 18 156 18 H314 C330 18 340 28 340 44 V96 C340 110 330 120 314 120 H26 C10 120 0 110 0 94 V44 C0 30 10 24 24 20 Z"
           fill={s.forest}
         />
         <Path

@@ -4,6 +4,7 @@ import { INTEGRITY_DDL } from './integrity';
 import { TABLE_SPECS, parseBackup, checkBackupSize } from '@/features/settings/data/backup-format';
 import { readBackupData, replaceBackupData } from '@/features/settings/data/backup-store';
 import { saveMigrationBackup } from '@/features/settings/data/services/backup-file.service';
+import { setPrayerLocation } from '@/features/prayer-times/data/prayer-location-store';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DATABASE_VERSION = 1;
@@ -67,8 +68,27 @@ async function initialize(): Promise<void> {
   }
 }
 
+function syncPrayerLocationFromDb(connection: SQLiteDatabase): void {
+  try {
+    const rows = connection.getAllSync<{ key: string; value: string }>(
+      "SELECT key, value FROM user_settings WHERE key IN ('prayer_city', 'prayer_latitude', 'prayer_longitude')"
+    );
+    const map = new Map(rows.map((r) => [r.key, r.value]));
+    const cityName = map.get('prayer_city') || 'Jakarta (WIB)';
+    const lat = parseFloat(map.get('prayer_latitude') ?? '');
+    const lng = parseFloat(map.get('prayer_longitude') ?? '');
+    setPrayerLocation({
+      cityName,
+      latitude: Number.isFinite(lat) ? lat : -6.2088,
+      longitude: Number.isFinite(lng) ? lng : 106.8456,
+    });
+  } catch {
+    // Ignore if table not ready
+  }
+}
+
 export async function initDatabase(): Promise<void> {
   if (initialized) return;
-  if (!initialization) initialization = initialize().then(() => { initialized = true; }).finally(() => { initialization = null; });
+  if (!initialization) initialization = initialize().then(() => { syncPrayerLocationFromDb(getSqliteDb()); initialized = true; }).finally(() => { initialization = null; });
   return initialization;
 }

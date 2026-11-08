@@ -1,15 +1,31 @@
 import { useState, useEffect } from 'react';
 import type { TodayPrayerSchedule } from '../../domain/entities/prayer-times.entity';
 import { getTodayPrayerTimes } from '../../data/services/prayer-times.service';
+import {
+  getPrayerLocation,
+  subscribePrayerLocation,
+} from '../../data/prayer-location-store';
 
 export function usePrayerTimes(
-  latitude = -6.2088,
-  longitude = 106.8456,
-  cityName = 'Jakarta (WIB)'
+  overrideLat?: number,
+  overrideLng?: number,
+  overrideCity?: string
 ): TodayPrayerSchedule {
+  const [loc, setLoc] = useState(getPrayerLocation);
+
+  const latitude = overrideLat ?? loc.latitude;
+  const longitude = overrideLng ?? loc.longitude;
+  const cityName = overrideCity ?? loc.cityName;
+
   const [schedule, setSchedule] = useState<TodayPrayerSchedule>(() =>
     getTodayPrayerTimes(new Date(), latitude, longitude, cityName)
   );
+
+  useEffect(() => {
+    return subscribePrayerLocation((nextLoc) => {
+      setLoc(nextLoc);
+    });
+  }, []);
 
   useEffect(() => {
     const update = () => {
@@ -23,4 +39,3 @@ export function usePrayerTimes(
 
   return schedule;
 }
-

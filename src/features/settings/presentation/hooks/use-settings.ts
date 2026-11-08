@@ -11,6 +11,7 @@ import type {
 } from '../../domain/entities/settings.entity';
 import { DEFAULT_SETTINGS } from '../../domain/entities/settings.entity';
 import { settingsRepository } from '../../data/repositories/settings.repository.impl';
+import { setPrayerLocation } from '@/features/prayer-times/data/prayer-location-store';
 
 export function useSettings() {
   const [settings, setSettings] = useState<UserSettingsEntity>(DEFAULT_SETTINGS);
@@ -58,7 +59,15 @@ export function useSettings() {
   const updateSetting = async (partial: Partial<UserSettingsEntity>) => {
     try {
       // Optimistic update
-      setSettings((prev) => ({ ...prev, ...partial }));
+      setSettings((prev) => {
+        const next = { ...prev, ...partial };
+        setPrayerLocation({
+          cityName: next.prayerCity,
+          latitude: next.prayerLatitude,
+          longitude: next.prayerLongitude,
+        });
+        return next;
+      });
       const updated = await settingsRepository.saveSettings(partial);
       setSettings(updated);
     } catch (err) {

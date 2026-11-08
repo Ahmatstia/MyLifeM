@@ -1,47 +1,42 @@
 import React, { useState } from 'react';
 import {
-  View,
-  StyleSheet,
   ActivityIndicator,
   Pressable,
+  StyleSheet,
+  View,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
+  ArrowRight,
+  ChevronRight,
   Pause,
+  Play,
+  Plus,
   Sparkles,
   X,
-  Plus,
-  Clock,
-  CalendarDays,
-  Repeat,
-  ArrowRight,
-  Dumbbell,
 } from 'lucide-react-native';
-import { space, fontFamily } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
+import { fontFamily, space } from '@/theme/tokens';
 import {
-  Screen,
   AppText,
   Banner,
   EmptyState,
-  WaveBackdrop,
-  SoftCard,
   HeroBlob,
-  SproutCheck,
-  IconTile,
-  SectionTitle,
   MascotPeek,
+  Screen,
+  SproutCheck,
   SproutPlant,
+  WaveBackdrop,
 } from '@/shared/ui';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
-import { useTodayFocus } from '../hooks/use-today-focus';
-import { useFocusTimer } from '../hooks/use-focus-timer';
 import { useAgenda } from '@/features/agenda/presentation/hooks/use-agenda';
-import { usePrayerTimes } from '@/features/prayer-times/presentation/hooks/use-prayer-times';
 import { PrayerTimesWidget } from '@/features/prayer-times/presentation/components/prayer-times-widget';
-import { FocusTimerWidget } from '../components/focus-timer-widget';
+import { usePrayerTimes } from '@/features/prayer-times/presentation/hooks/use-prayer-times';
 import { AddPriorityModal } from '../components/add-priority-modal';
+import { FocusTimerWidget } from '../components/focus-timer-widget';
 import { SessionReflectionModal } from '../components/session-reflection-modal';
+import { useFocusTimer } from '../hooks/use-focus-timer';
+import { useTodayFocus } from '../hooks/use-today-focus';
 
 const s = colors.sprout;
 
@@ -83,6 +78,9 @@ export const TodayFocusScreen: React.FC = () => {
     events.filter((e) => e.isCompleted).length +
     activeOccurrences.filter((occ) => occ.isCompleted).length;
 
+  const totalCombinedCount = focusItems.length + totalAgendaCount;
+  const completedCombinedCount = completedCount + completedAgendaCount;
+
   const handleHeroPress = () => {
     if (!nextTask && !timer.activeTask && !timer.hasSession) {
       router.push('/today/new');
@@ -102,7 +100,6 @@ export const TodayFocusScreen: React.FC = () => {
       contentContainerStyle={styles.scrollContent}
       overlay={
         <>
-          {/* Square Floating Action Button in Bottom Right */}
           <View style={styles.floatingFabContainer} pointerEvents="box-none">
             <Pressable
               onPress={() => router.push('/today/new')}
@@ -141,7 +138,7 @@ export const TodayFocusScreen: React.FC = () => {
     >
       <WaveBackdrop variant="home" height={285} />
 
-      {/* 1. Storybook Greeting Header (Tanpa profil, ikut ter-scroll penuh dari atas) */}
+      {/* 1. Storybook Greeting Header */}
       <View style={styles.header}>
         <View style={styles.headerTextCol}>
           <AppText variant="headlineMedium" style={styles.greetingTitle}>
@@ -186,7 +183,7 @@ export const TodayFocusScreen: React.FC = () => {
                 <SproutPlant size={36} />
               </View>
               <View style={styles.mascotPeekWrap} pointerEvents="none">
-                <MascotPeek width={152} height={114} />
+                <MascotPeek width={152} height={109} />
               </View>
 
               <HeroBlob
@@ -240,143 +237,176 @@ export const TodayFocusScreen: React.FC = () => {
               />
             )}
 
-            {/* 3. Section: Hari Ini (Pillow-Soft Task Cards matching Reference UI) */}
-            <SectionTitle
-              title="Hari Ini"
-              actionLabel="Selengkapnya"
-              onAction={() => router.push('/today/new')}
-            />
+            {/* 3. Jadwal Shalat & Azan Widget (Right below Target Aktif) */}
+            <PrayerTimesWidget schedule={prayerSchedule} />
 
-            {focusItems.length === 0 ? (
+            {/* 4. Unified Section: Hari Ini (Open Journal List — Tanpa Card & Tanpa Badge) */}
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.sectionHeaderLeft}>
+                <AppText style={styles.sectionHeading}>Hari Ini</AppText>
+                {totalCombinedCount > 0 && (
+                  <AppText style={styles.sectionCountText} tabularNums>
+                    {`${completedCombinedCount}/${totalCombinedCount} selesai`}
+                  </AppText>
+                )}
+              </View>
+
+              <View style={styles.sectionActionsRow}>
+                <Pressable
+                  onPress={() => router.push('/today/new')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Tambah Tugas Hari Ini"
+                  hitSlop={6}
+                >
+                  <AppText style={styles.plainLinkText}>+ Tugas</AppText>
+                </Pressable>
+                <AppText style={styles.linkDot}>·</AppText>
+                <Pressable
+                  onPress={() => router.push('/agenda/new')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Tambah Agenda Hari Ini"
+                  hitSlop={6}
+                >
+                  <AppText style={styles.plainLinkText}>+ Agenda</AppText>
+                </Pressable>
+              </View>
+            </View>
+
+            {totalCombinedCount === 0 ? (
               <EmptyState
                 title="Mulai dari satu langkah"
-                description="Pilih tugas penting dari roadmap atau buat tugas kilat baru."
+                description="Pilih tugas penting dari target/proyek, buat tugas kilat, atau jadwalkan agenda hari ini."
                 actionTitle="Pilih prioritas"
                 customIcon={<Sparkles size={28} color={s.forest} strokeWidth={2.2} />}
                 onActionPress={() => router.push('/today/new')}
               />
             ) : (
-              <View style={styles.cardStack}>
-                {focusItems.map((item, idx) => {
+              <View style={styles.journalList}>
+                {/* A. Fokus Tugas (dari Target, Proyek, atau Hari Ini) */}
+                {focusItems.map((item) => {
                   const isCompleted = item.isCompleted;
                   const isCancelled = item.task.status === 'CANCELLED';
                   const isActive = timer.activeTask?.id === item.taskId;
-
-                  const categoryLabel =
-                    item.task.priority === 'HIGH'
-                      ? 'Prioritas Utama'
-                      : item.task.priority === 'LOW'
-                        ? 'Ringan'
-                        : 'Fokus Harian';
 
                   const durationLabel =
                     item.task.estimatedMinutes >= 60 && item.task.estimatedMinutes % 60 === 0
                       ? `${item.task.estimatedMinutes / 60} jam`
                       : `${item.task.estimatedMinutes} menit`;
 
-                  const RightIcon = idx % 2 === 0 ? Clock : Dumbbell;
+                  const isFromTarget = Boolean(item.task.targetId);
+                  const isFromProject = !isFromTarget && Boolean(item.task.projectId);
+
+                  const originText = isFromTarget
+                    ? item.task.targetTitle
+                      ? `Dari Target: ${item.task.targetTitle}`
+                      : 'Dari Target'
+                    : isFromProject
+                      ? item.task.projectTitle
+                        ? `Dari Proyek: ${item.task.projectTitle}`
+                        : 'Dari Proyek'
+                      : 'Dari Hari Ini';
+
+                  const handleRowPress = () => {
+                    if (item.task.targetId) {
+                      router.push({
+                        pathname: '/targets/[id]',
+                        params: { id: item.task.targetId },
+                      });
+                    } else if (item.task.projectId) {
+                      router.push({
+                        pathname: '/projects/[id]',
+                        params: { id: item.task.projectId },
+                      });
+                    } else if (!isCompleted && !isCancelled) {
+                      if (!timer.hasSession) timer.setActiveTask(item.task);
+                      setIsTimerExpanded(true);
+                    }
+                  };
 
                   return (
-                    <SoftCard key={item.id} style={styles.taskCard}>
-                      <View style={styles.taskCardRow}>
-                        <SproutCheck
-                          checked={isCompleted}
-                          onPress={() => toggleTask(item.taskId, isCompleted || isCancelled)}
-                          accessibilityLabel={
-                            (isCompleted || isCancelled ? 'Buka kembali ' : 'Selesaikan ') +
-                            item.task.title
-                          }
-                          size={30}
-                        />
+                    <Pressable
+                      key={item.id}
+                      onPress={handleRowPress}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Buka ${originText}: ${item.task.title}`}
+                      style={({ pressed }) => [
+                        styles.journalRow,
+                        pressed && styles.journalRowPressed,
+                      ]}
+                    >
+                      <SproutCheck
+                        checked={isCompleted}
+                        onPress={() => toggleTask(item.taskId, isCompleted || isCancelled)}
+                        accessibilityLabel={
+                          (isCompleted || isCancelled ? 'Buka kembali ' : 'Selesaikan ') +
+                          item.task.title
+                        }
+                        size={24}
+                      />
 
-                        <View style={styles.taskCenterCol}>
-                          <AppText
-                            style={[
-                              styles.taskTitle,
-                              isCompleted && styles.taskTitleDone,
-                              isCancelled && styles.taskTitleCancelled,
-                            ]}
-                            numberOfLines={2}
-                          >
-                            {item.task.title}
-                          </AppText>
-                          <AppText style={styles.taskSubtext} numberOfLines={1}>
-                            {isCancelled
-                              ? 'Dibatalkan'
-                              : isCompleted
-                                ? `${durationLabel} · Selesai`
-                                : isActive
-                                  ? `${durationLabel} · Sedang fokus`
-                                  : `${durationLabel} · ${item.task.description || categoryLabel}`}
-                          </AppText>
-                        </View>
-
-                        <View style={styles.taskRightActions}>
-                          {isCompleted || isCancelled ? null : isActive ? (
-                            <IconTile
-                              icon={Pause}
-                              tone="sun"
-                              size={44}
-                              onPress={timer.pauseTimer}
-                              accessibilityLabel={'Jeda fokus ' + item.task.title}
-                            />
-                          ) : (
-                            <IconTile
-                              icon={RightIcon}
-                              tone="leaf"
-                              size={44}
-                              onPress={() => {
-                                if (!timer.hasSession) timer.setActiveTask(item.task);
-                                setIsTimerExpanded(true);
-                              }}
-                              accessibilityLabel={'Mulai fokus ' + item.task.title}
-                            />
-                          )}
-
-                          <Pressable
-                            onPress={() => removeFromToday(item.id)}
-                            accessibilityRole="button"
-                            accessibilityLabel={'Hapus ' + item.task.title}
-                            hitSlop={8}
-                            style={styles.removeMiniBtn}
-                          >
-                            <X size={14} color={s.inkSubtle} />
-                          </Pressable>
-                        </View>
+                      <View style={styles.journalCenterCol}>
+                        <AppText
+                          style={[
+                            styles.journalTitle,
+                            isCompleted && styles.journalTitleDone,
+                            isCancelled && styles.journalTitleCancelled,
+                          ]}
+                          numberOfLines={2}
+                        >
+                          {item.task.title}
+                        </AppText>
+                        <AppText style={styles.journalSubtext} numberOfLines={1}>
+                          {isCancelled
+                            ? `Dibatalkan · ${originText}`
+                            : isCompleted
+                              ? `${originText} · ${durationLabel} · Selesai`
+                              : isActive
+                                ? `${originText} · ${durationLabel} · Sedang fokus`
+                                : `${originText} · ${durationLabel}`}
+                        </AppText>
                       </View>
-                    </SoftCard>
+
+                      <View style={styles.journalRightActions}>
+                        {isCompleted || isCancelled ? null : isActive ? (
+                          <Pressable
+                            onPress={timer.pauseTimer}
+                            accessibilityRole="button"
+                            accessibilityLabel={'Jeda fokus ' + item.task.title}
+                            hitSlop={6}
+                            style={styles.inlineIconAction}
+                          >
+                            <Pause size={15} color={s.forest} strokeWidth={2.5} />
+                          </Pressable>
+                        ) : (
+                          <Pressable
+                            onPress={() => {
+                              if (!timer.hasSession) timer.setActiveTask(item.task);
+                              setIsTimerExpanded(true);
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel={'Mulai fokus ' + item.task.title}
+                            hitSlop={6}
+                            style={styles.inlineIconAction}
+                          >
+                            <Play size={14} color={s.forest} fill={s.forest} strokeWidth={2.2} />
+                          </Pressable>
+                        )}
+
+                        <Pressable
+                          onPress={() => removeFromToday(item.id)}
+                          accessibilityRole="button"
+                          accessibilityLabel={'Hapus ' + item.task.title}
+                          hitSlop={8}
+                          style={styles.inlineIconAction}
+                        >
+                          <X size={14} color={s.inkSubtle} />
+                        </Pressable>
+                      </View>
+                    </Pressable>
                   );
                 })}
-              </View>
-            )}
 
-            {/* 4. Jadwal Shalat & Azan Widget */}
-            <PrayerTimesWidget schedule={prayerSchedule} />
-
-            {/* 5. Section: Agenda & Jadwal Hari Ini */}
-            <SectionTitle
-              title="Agenda Hari Ini"
-              hint={totalAgendaCount > 0 ? `${completedAgendaCount}/${totalAgendaCount}` : undefined}
-              actionLabel="Jadwalkan"
-              onAction={() => router.push('/agenda/new')}
-            />
-
-            {totalAgendaCount === 0 ? (
-              <SoftCard tone="cream" style={styles.emptyAgendaCard}>
-                <View style={styles.emptyAgendaRow}>
-                  <IconTile icon={CalendarDays} tone="leaf" size={42} />
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <AppText style={styles.emptyAgendaTitle}>
-                      Belum ada agenda terjadwal
-                    </AppText>
-                    <AppText style={styles.emptyAgendaSub}>
-                      Ketuk Jadwalkan untuk menambah kegiatan hari ini.
-                    </AppText>
-                  </View>
-                </View>
-              </SoftCard>
-            ) : (
-              <View style={styles.cardStack}>
+                {/* B. Kegiatan Agenda Harian */}
                 {events.map((ev) => {
                   const startTime = ev.isAllDay
                     ? 'Sepanjang hari'
@@ -387,59 +417,78 @@ export const TodayFocusScreen: React.FC = () => {
                   const isDone = ev.isCompleted;
 
                   return (
-                    <SoftCard key={ev.id} style={styles.taskCard}>
-                      <View style={styles.taskCardRow}>
-                        <SproutCheck
-                          checked={isDone}
-                          onPress={() => toggleEvent(ev.id, isDone)}
-                          accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + ev.title}
-                          size={28}
-                        />
-                        <View style={styles.taskCenterCol}>
-                          <AppText
-                            style={[styles.taskTitle, isDone && styles.taskTitleDone]}
-                            numberOfLines={1}
-                          >
-                            {ev.title}
-                          </AppText>
-                          <AppText style={styles.taskSubtext}>
-                            {startTime} · Agenda Harian
-                          </AppText>
-                        </View>
-                        <IconTile icon={CalendarDays} tone="leaf" size={42} />
+                    <Pressable
+                      key={ev.id}
+                      onPress={() => router.push('/(tabs)/agenda')}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Buka Agenda: ${ev.title}`}
+                      style={({ pressed }) => [
+                        styles.journalRow,
+                        pressed && styles.journalRowPressed,
+                      ]}
+                    >
+                      <SproutCheck
+                        checked={isDone}
+                        onPress={() => toggleEvent(ev.id, isDone)}
+                        accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + ev.title}
+                        size={24}
+                      />
+
+                      <View style={styles.journalCenterCol}>
+                        <AppText
+                          style={[styles.journalTitle, isDone && styles.journalTitleDone]}
+                          numberOfLines={1}
+                        >
+                          {ev.title}
+                        </AppText>
+                        <AppText style={styles.journalSubtext} numberOfLines={1}>
+                          {`Dari Agenda · ${startTime}${ev.location ? ` · ${ev.location}` : ''}`}
+                        </AppText>
                       </View>
-                    </SoftCard>
+
+                      <ChevronRight size={16} color={s.inkSubtle} strokeWidth={2.2} />
+                    </Pressable>
                   );
                 })}
 
+                {/* C. Jadwal Rutin Mingguan */}
                 {activeOccurrences.map((occ) => {
                   const isDone = occ.isCompleted;
 
                   return (
-                    <SoftCard key={occ.schedule.id} style={styles.taskCard}>
-                      <View style={styles.taskCardRow}>
-                        <SproutCheck
-                          checked={isDone}
-                          onPress={() => toggleWeeklyOccurrence(occ.schedule.id, isDone)}
-                          accessibilityLabel={
-                            (isDone ? 'Buka kembali ' : 'Selesaikan ') + occ.schedule.title
-                          }
-                          size={28}
-                        />
-                        <View style={styles.taskCenterCol}>
-                          <AppText
-                            style={[styles.taskTitle, isDone && styles.taskTitleDone]}
-                            numberOfLines={1}
-                          >
-                            {occ.schedule.title}
-                          </AppText>
-                          <AppText style={styles.taskSubtext}>
-                            {occ.schedule.startTime} – {occ.schedule.endTime} · Jadwal Rutin
-                          </AppText>
-                        </View>
-                        <IconTile icon={Repeat} tone="teal" size={42} />
+                    <Pressable
+                      key={occ.schedule.id}
+                      onPress={() => router.push('/(tabs)/agenda')}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Buka Jadwal Rutin: ${occ.schedule.title}`}
+                      style={({ pressed }) => [
+                        styles.journalRow,
+                        pressed && styles.journalRowPressed,
+                      ]}
+                    >
+                      <SproutCheck
+                        checked={isDone}
+                        onPress={() => toggleWeeklyOccurrence(occ.schedule.id, isDone)}
+                        accessibilityLabel={
+                          (isDone ? 'Buka kembali ' : 'Selesaikan ') + occ.schedule.title
+                        }
+                        size={24}
+                      />
+
+                      <View style={styles.journalCenterCol}>
+                        <AppText
+                          style={[styles.journalTitle, isDone && styles.journalTitleDone]}
+                          numberOfLines={1}
+                        >
+                          {occ.schedule.title}
+                        </AppText>
+                        <AppText style={styles.journalSubtext} numberOfLines={1}>
+                          {`Dari Jadwal Rutin · ${occ.schedule.startTime}–${occ.schedule.endTime}`}
+                        </AppText>
                       </View>
-                    </SoftCard>
+
+                      <ChevronRight size={16} color={s.inkSubtle} strokeWidth={2.2} />
+                    </Pressable>
                   );
                 })}
               </View>
@@ -495,20 +544,20 @@ const styles = StyleSheet.create({
     gap: space[3],
   },
   heroWrap: {
-    marginTop: 52,
+    marginTop: 68,
     marginBottom: space[1],
     position: 'relative',
   },
   sproutLeftBadge: {
     position: 'absolute',
-    top: -22,
-    left: 18,
+    top: -19,
+    left: 20,
     zIndex: 3,
   },
   mascotPeekWrap: {
     position: 'absolute',
-    top: -66,
-    right: 8,
+    top: -82,
+    right: 12,
     zIndex: 3,
   },
   heroBlob: {
@@ -548,71 +597,94 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardStack: {
-    gap: space[3],
-  },
-  taskCard: {
-    borderRadius: 28,
-    paddingVertical: space[4],
-    paddingHorizontal: space[4],
-  },
-  taskCardRow: {
+  sectionHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    paddingTop: space[2],
+    paddingBottom: 2,
   },
-  taskCenterCol: {
-    flex: 1,
-    gap: 3,
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
   },
-  taskTitle: {
+  sectionHeading: {
     fontFamily: fontFamily.bold,
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 18,
+    lineHeight: 24,
     color: s.ink,
   },
-  taskTitleDone: {
-    textDecorationLine: 'line-through',
-    color: s.inkMuted,
-  },
-  taskTitleCancelled: {
-    textDecorationLine: 'line-through',
-    color: s.inkSubtle,
-  },
-  taskSubtext: {
+  sectionCountText: {
     fontFamily: fontFamily.medium,
     fontSize: 12,
     color: s.inkMuted,
   },
-  taskRightActions: {
+  sectionActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  removeMiniBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+  plainLinkText: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 12.5,
+    color: s.forest,
   },
-  emptyAgendaCard: {
-    borderRadius: 24,
+  linkDot: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    color: s.inkSubtle,
   },
-  emptyAgendaRow: {
+  journalList: {
+    borderTopWidth: 1,
+    borderTopColor: '#E6DEC8',
+  },
+  journalRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space[3],
+    gap: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E6DEC8',
   },
-  emptyAgendaTitle: {
+  journalRowPressed: {
+    opacity: 0.65,
+  },
+  journalCenterCol: {
+    flex: 1,
+    gap: 2,
+  },
+  journalTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
+    fontSize: 15.5,
+    lineHeight: 20,
     color: s.ink,
   },
-  emptyAgendaSub: {
-    fontFamily: fontFamily.regular,
-    fontSize: 12,
+  journalTitleDone: {
+    textDecorationLine: 'line-through',
     color: s.inkMuted,
+  },
+  journalTitleCancelled: {
+    textDecorationLine: 'line-through',
+    color: s.inkSubtle,
+  },
+  journalSubtext: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    lineHeight: 16,
+    color: s.inkMuted,
+  },
+  journalRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  inlineIconAction: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   floatingFabContainer: {
     position: 'absolute',
