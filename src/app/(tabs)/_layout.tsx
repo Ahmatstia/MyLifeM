@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, router } from 'expo-router';
-import { Home, Target, FolderKanban, Menu } from 'lucide-react-native';
+import { Home, Target, CalendarDays, Menu } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fontFamily } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
@@ -86,16 +86,16 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="projects"
+          name="agenda"
           options={{
-            title: 'Proyek',
+            title: 'Agenda',
             tabBarIcon: ({ color, size }) => (
-              <FolderKanban size={size || 22} color={color} strokeWidth={2.4} />
+              <CalendarDays size={size || 22} color={color} strokeWidth={2.4} />
             ),
           }}
         />
         <Tabs.Screen
-          name="agenda"
+          name="projects"
           options={{
             title: 'Menu',
             tabBarIcon: ({ color, size }) => (

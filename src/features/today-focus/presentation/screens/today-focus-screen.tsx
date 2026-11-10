@@ -11,7 +11,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   CalendarDays,
-  FolderKanban,
   Pause,
   Play,
   Plus,
@@ -282,14 +281,14 @@ export const TodayFocusScreen: React.FC = () => {
             {totalCombinedCount === 0 ? (
               <EmptyState
                 title="Mulai dari satu langkah"
-                description="Pilih tugas penting dari target/proyek, buat tugas kilat, atau jadwalkan agenda hari ini."
+                description="Pilih tugas penting dari target hidupmu, buat tugas kilat, atau jadwalkan agenda hari ini."
                 actionTitle="Pilih prioritas"
                 customIcon={<Sparkles size={28} color={s.forest} strokeWidth={2.2} />}
                 onActionPress={() => router.push('/today/new')}
               />
             ) : (
               <View style={styles.timelineContainer}>
-                {/* A. Fokus Tugas (dari Target, Proyek, atau Hari Ini) */}
+                {/* A. Fokus Tugas (dari Target atau Hari Ini) */}
                 {focusItems.map((item, idx) => {
                   const isLastNode = idx + 1 === totalTimelineNodes;
                   const isCompleted = item.isCompleted;
@@ -301,20 +300,16 @@ export const TodayFocusScreen: React.FC = () => {
                       ? `${item.task.estimatedMinutes / 60} jam`
                       : `${item.task.estimatedMinutes} menit`;
 
-                  const isFromTarget = Boolean(item.task.targetId);
-                  const isFromProject = !isFromTarget && Boolean(item.task.projectId);
-
+                  const isFromTarget = Boolean(item.task.targetId || item.task.projectId);
                   const accentColor = s.forest;
 
                   const originKicker = isFromTarget
                     ? item.task.targetTitle
                       ? `Target · ${item.task.targetTitle}`
-                      : 'Dari Target'
-                    : isFromProject
-                      ? item.task.projectTitle
-                        ? `Proyek · ${item.task.projectTitle}`
-                        : 'Dari Proyek'
-                      : 'Fokus Hari Ini';
+                      : item.task.projectTitle
+                        ? `Target · ${item.task.projectTitle}`
+                        : 'Dari Target'
+                    : 'Fokus Hari Ini';
 
                   const handleRowPress = () => {
                     if (item.task.targetId) {
@@ -323,10 +318,7 @@ export const TodayFocusScreen: React.FC = () => {
                         params: { id: item.task.targetId },
                       });
                     } else if (item.task.projectId) {
-                      router.push({
-                        pathname: '/projects/[id]',
-                        params: { id: item.task.projectId },
-                      });
+                      router.push('/(tabs)/targets' as any);
                     } else if (!isCompleted && !isCancelled) {
                       if (!timer.hasSession) timer.setActiveTask(item.task);
                       setIsTimerExpanded(true);
@@ -375,8 +367,6 @@ export const TodayFocusScreen: React.FC = () => {
                             <View style={styles.kickerInlineRow}>
                               {isFromTarget ? (
                                 <Target size={11} color={accentColor} strokeWidth={2.4} />
-                              ) : isFromProject ? (
-                                <FolderKanban size={11} color={accentColor} strokeWidth={2.4} />
                               ) : (
                                 <Sparkles size={11} color={accentColor} strokeWidth={2.4} />
                               )}
@@ -386,7 +376,7 @@ export const TodayFocusScreen: React.FC = () => {
                               >
                                 {originKicker}
                               </AppText>
-                              {(isFromTarget || isFromProject) && (
+                              {isFromTarget && (
                                 <ArrowUpRight size={11} color={accentColor} strokeWidth={2.4} />
                               )}
                             </View>

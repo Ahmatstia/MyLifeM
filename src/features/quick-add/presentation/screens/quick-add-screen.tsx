@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   CheckCircle2,
   Target,
-  FolderKanban,
   Calendar,
   X,
   ChevronRight,
@@ -38,18 +37,10 @@ const ITEMS: QuickAddItem[] = [
   {
     id: 'target',
     label: 'Target Hidup',
-    subtitle: 'Sasaran & langkah jangka panjang',
+    subtitle: 'Sasaran, rencana tahapan & peta jalan ekspedisi',
     pathname: '/targets/new',
     icon: Target,
     tone: 'teal',
-  },
-  {
-    id: 'project',
-    label: 'Proyek Baru',
-    subtitle: 'Rencana kerja & tahapan eksekusi',
-    pathname: '/projects/new',
-    icon: FolderKanban,
-    tone: 'grape',
   },
   {
     id: 'agenda',

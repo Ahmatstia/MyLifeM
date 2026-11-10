@@ -12,6 +12,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   X,
+  Target,
   CalendarDays,
   Settings,
   ChevronRight,
@@ -141,6 +142,15 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
           >
             <AppText style={styles.groupHeading}>MENU FITUR</AppText>
             <View style={styles.menuCardGroup}>
+              <SidebarMenuItem
+                icon={Target}
+                iconBg={s.tealSoft}
+                iconColor={s.forest}
+                title="Target & Peta Jalan"
+                subtitle="Sasaran hidup, tahapan ekspedisi & progres"
+                onPress={() => navigateTo('/(tabs)/targets')}
+              />
+
               <SidebarMenuItem
                 icon={CalendarDays}
                 iconBg={s.leafSoft}

@@ -439,7 +439,6 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.statsGrid}>
             {[
               ['Target', stats.targetsCount],
-              ['Proyek', stats.projectsCount],
               ['Tugas', stats.tasksCount],
               ['Sesi fokus', stats.focusSessionsCount],
               ['Agenda', stats.agendaEventsCount],
@@ -800,8 +799,7 @@ export const SettingsScreen: React.FC = () => {
             </AppText>
             <AppText variant="bodyMedium">
               {pendingBackup.summary.total} catatan: {pendingBackup.summary.targets}{' '}
-              target, {pendingBackup.summary.projects} proyek,{' '}
-              {pendingBackup.summary.tasks} tugas,{' '}
+              target, {pendingBackup.summary.tasks} tugas,{' '}
               {pendingBackup.summary.categories} kategori,{' '}
               {pendingBackup.summary.stages} tahapan,{' '}
               {pendingBackup.summary.sessions} sesi fokus, dan{' '}
