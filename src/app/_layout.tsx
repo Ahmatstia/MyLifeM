@@ -129,6 +129,8 @@ export default function RootLayout() {
         <Stack.Screen name="projects/new" options={{ animation: 'fade' }} />
         <Stack.Screen name="agenda/new" options={{ animation: 'fade' }} />
         <Stack.Screen name="today/new" options={{ animation: 'fade' }} />
+        <Stack.Screen name="task-manager" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="task-manager/new" options={{ animation: 'fade' }} />
         <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen
           name="quick-add"

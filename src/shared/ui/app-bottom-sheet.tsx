@@ -14,7 +14,7 @@ import {
 import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
-import { radius, space, elevation } from '@/theme/tokens';
+import { radius, space } from '@/theme/tokens';
 import { AppText } from './app-text';
 
 export interface AppBottomSheetProps {
@@ -33,9 +33,9 @@ export interface AppBottomSheetProps {
 }
 
 /**
- * Bottom sheet bersama dengan area aksi di luar isi yang dapat digulir.
- * Memastikan overlay menutupi 100% layar (termasuk status bar & navigation bar Android),
- * dilengkapi backdrop dismiss, rounded pill handle, dan safe-area bottom yang rapi.
+ * Full-screen form container modal yang menggantikan modal setengah layar sebelumnya.
+ * Menampilkan formulir secara penuh 100% layar (edge-to-edge), dengan header terstruktur,
+ * tombol tutup yang jelas, area formulir scrollable yang leluasa, dan footer aksi di bawah.
  */
 export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
   visible,
@@ -46,7 +46,7 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
   headerRight,
   children,
   footer,
-  maxHeight = '90%',
+  maxHeight,
   scrollable = true,
   contentContainerStyle,
   style,
@@ -56,13 +56,13 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
   return (
     <Modal
       visible={visible}
-      transparent
-      animationType="fade"
+      transparent={false}
+      animationType="slide"
       statusBarTranslucent
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        {/* Full-screen backdrop: klik luar untuk menutup sheet */}
+        {/* Backdrop pressable dipertahankan untuk kompatibilitas gesture & testing */}
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onClose}
@@ -72,36 +72,31 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
 
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={[styles.keyboardAvoid, { paddingTop: insets.top + space[4] }]}
+          style={styles.keyboardAvoid}
         >
           <View
             style={[
               styles.sheetContainer,
               {
-                maxHeight,
-                paddingBottom: Math.max(insets.bottom, space[4]) + space[3],
+                paddingTop: insets.top + space[2],
+                paddingBottom: Math.max(insets.bottom, space[3]),
               },
               style,
             ]}
           >
-            {/* Cute Handle Pill */}
-            <View style={styles.handleStrip}>
-              <View style={styles.handle} />
-            </View>
-
-            {/* Standard Header */}
+            {/* Standard Full-Screen Header */}
             {(title || icon || headerRight !== undefined) && (
               <View style={styles.header}>
                 <View style={styles.headerLeft}>
                   {icon && <View style={styles.iconCircle}>{icon}</View>}
                   <View style={styles.titleCol}>
                     {title && (
-                      <AppText variant="titleLarge">
+                      <AppText variant="titleLarge" style={styles.headerTitle}>
                         {title}
                       </AppText>
                     )}
                     {subtitle && (
-                      <AppText variant="bodySmall" color="onSurfaceVariant">
+                      <AppText variant="bodySmall" color="onSurfaceVariant" numberOfLines={2}>
                         {subtitle}
                       </AppText>
                     )}
@@ -118,13 +113,13 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     style={styles.closeBtn}
                   >
-                    <X size={20} color={colors.onSurfaceVariant} />
+                    <X size={20} color={colors.onSurface} strokeWidth={2.4} />
                   </Pressable>
                 )}
               </View>
             )}
 
-            {/* Content Area */}
+            {/* Full-Screen Content Area */}
             {scrollable ? (
               <ScrollView
                 style={styles.scroll}
@@ -137,6 +132,7 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
             ) : (
               <View style={[styles.staticContent, contentContainerStyle]}>{children}</View>
             )}
+
             {footer && <View style={styles.footer}>{footer}</View>}
           </View>
         </KeyboardAvoidingView>
@@ -148,34 +144,17 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: colors.scrim,
-    justifyContent: 'flex-end',
+    backgroundColor: colors.surfaceContainerLowest,
   },
   keyboardAvoid: {
     flex: 1,
     width: '100%',
-    justifyContent: 'flex-end',
   },
   sheetContainer: {
-    flexShrink: 1,
-    backgroundColor: colors.surfaceContainerLowest, // Solid murni #FFFFFF
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    flex: 1,
+    height: '100%',
     width: '100%',
-    ...elevation.level3,
-  },
-  handleStrip: {
-    alignItems: 'center',
-    paddingTop: space[3],
-    paddingBottom: space[1],
-  },
-  handle: {
-    width: 38,
-    height: 4,
-    borderRadius: radius.pill,
-    backgroundColor: colors.outlineVariant,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   header: {
     flexDirection: 'row',
@@ -185,16 +164,18 @@ const styles = StyleSheet.create({
     paddingVertical: space[3],
     borderBottomWidth: 1,
     borderBottomColor: colors.outlineVariant,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
     gap: space[3],
+    marginRight: space[2],
   },
   iconCircle: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: radius.pill,
     backgroundColor: colors.primaryContainer,
     alignItems: 'center',
@@ -203,20 +184,37 @@ const styles = StyleSheet.create({
   titleCol: {
     flex: 1,
   },
+  headerTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+  },
   closeBtn: {
-    minWidth: 48,
-    minHeight: 48,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.md,
+    borderRadius: 20,
     backgroundColor: colors.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
-  scroll: { flexShrink: 1 },
-  footer: { paddingHorizontal: space[4], paddingTop: space[3], borderTopWidth: 1, borderTopColor: colors.outlineVariant },
+  scroll: {
+    flex: 1,
+  },
+  footer: {
+    paddingHorizontal: space[4],
+    paddingTop: space[3],
+    paddingBottom: space[2],
+    borderTopWidth: 1,
+    borderTopColor: colors.outlineVariant,
+    backgroundColor: colors.surfaceContainerLowest,
+  },
   scrollContent: {
     padding: space[4],
+    paddingBottom: space[6],
   },
   staticContent: {
+    flex: 1,
     padding: space[4],
   },
 });

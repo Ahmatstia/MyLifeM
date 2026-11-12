@@ -12,6 +12,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   X,
+  BellRing,
   Target,
   CalendarDays,
   Settings,
@@ -142,6 +143,15 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
           >
             <AppText style={styles.groupHeading}>MENU FITUR</AppText>
             <View style={styles.menuCardGroup}>
+              <SidebarMenuItem
+                icon={BellRing}
+                iconBg={s.sunSoft}
+                iconColor={s.forest}
+                title="Manajemen Tugas & Alarm"
+                subtitle="Jadwal pengerjaan sebelum deadline & alarm lagu"
+                onPress={() => navigateTo('/task-manager')}
+              />
+
               <SidebarMenuItem
                 icon={Target}
                 iconBg={s.tealSoft}

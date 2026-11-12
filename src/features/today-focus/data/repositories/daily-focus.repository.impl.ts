@@ -20,6 +20,7 @@ import type {
   SaveSessionInput,
 } from '../../domain/entities/daily-focus.entity';
 import type { DailyFocusRepository } from '../../domain/repositories/daily-focus.repository';
+import { managedTaskRepository } from '@/features/task-manager/data/repositories/managed-task.repository';
 
 function generateId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -119,6 +120,7 @@ function addPriority(tx: Pick<typeof db, 'select' | 'insert'>, date: string, tas
 export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   async getTodayFocusItems(date: string): Promise<DailyFocusItemEntity[]> {
     if (!isDateOnly(date)) throw new Error('Tanggal prioritas tidak valid.');
+    await managedTaskRepository.syncWithCoreTasksAndToday();
     const rows = await db
       .select({
         item: dailyFocusItems,

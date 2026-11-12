@@ -10,6 +10,7 @@ import Svg, { Line } from 'react-native-svg';
 import {
   ArrowRight,
   ArrowUpRight,
+  BellRing,
   CalendarDays,
   Pause,
   Play,
@@ -301,6 +302,8 @@ export const TodayFocusScreen: React.FC = () => {
                       : `${item.task.estimatedMinutes} menit`;
 
                   const isFromTarget = Boolean(item.task.targetId || item.task.projectId);
+                  const isFromManagedTask =
+                    !isFromTarget && item.task.id.startsWith('mtask-');
                   const accentColor = s.forest;
 
                   const originKicker = isFromTarget
@@ -309,7 +312,9 @@ export const TodayFocusScreen: React.FC = () => {
                       : item.task.projectTitle
                         ? `Target · ${item.task.projectTitle}`
                         : 'Dari Target'
-                    : 'Fokus Hari Ini';
+                    : isFromManagedTask
+                      ? 'Manajemen Tugas · Jadwal Eksekusi'
+                      : 'Fokus Hari Ini';
 
                   const handleRowPress = () => {
                     if (item.task.targetId) {
@@ -319,6 +324,8 @@ export const TodayFocusScreen: React.FC = () => {
                       });
                     } else if (item.task.projectId) {
                       router.push('/(tabs)/targets' as any);
+                    } else if (isFromManagedTask) {
+                      router.push('/task-manager' as any);
                     } else if (!isCompleted && !isCancelled) {
                       if (!timer.hasSession) timer.setActiveTask(item.task);
                       setIsTimerExpanded(true);
@@ -367,6 +374,8 @@ export const TodayFocusScreen: React.FC = () => {
                             <View style={styles.kickerInlineRow}>
                               {isFromTarget ? (
                                 <Target size={11} color={accentColor} strokeWidth={2.4} />
+                              ) : isFromManagedTask ? (
+                                <BellRing size={11} color={accentColor} strokeWidth={2.4} />
                               ) : (
                                 <Sparkles size={11} color={accentColor} strokeWidth={2.4} />
                               )}
@@ -376,7 +385,7 @@ export const TodayFocusScreen: React.FC = () => {
                               >
                                 {originKicker}
                               </AppText>
-                              {isFromTarget && (
+                              {(isFromTarget || isFromManagedTask) && (
                                 <ArrowUpRight size={11} color={accentColor} strokeWidth={2.4} />
                               )}
                             </View>

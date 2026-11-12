@@ -9,6 +9,7 @@ import {
   AppSidebarDrawer,
   registerSidebarOpener,
 } from '@/shared/ui/app-sidebar-drawer';
+import { AlarmRingingModal } from '@/features/task-manager/presentation/components/alarm-ringing-modal';
 
 const s = colors.sprout;
 
@@ -115,6 +116,7 @@ export default function TabLayout() {
         visible={isSidebarVisible}
         onClose={() => setIsSidebarVisible(false)}
       />
+      <AlarmRingingModal />
     </>
   );
 }
