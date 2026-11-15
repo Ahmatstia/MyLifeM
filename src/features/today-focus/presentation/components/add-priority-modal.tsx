@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
@@ -94,7 +95,7 @@ export const AddPriorityModal: React.FC<AddPriorityModalProps> = ({
         <TextInput
           value={quickTitle}
           onChangeText={setQuickTitle}
-          placeholder="Tulis tugas prioritas..."
+          placeholder="Masukkan nama tugas"
           placeholderTextColor={colors.onSurfaceSubtle}
           style={styles.textInput}
         />
@@ -174,6 +175,7 @@ const styles = StyleSheet.create({
     paddingVertical: space[3],
     fontSize: 14,
     fontFamily: fontFamily.regular,
+    ...formInputBase,
   },
   addButton: {
     minWidth: 100,

@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase } from '@/shared/ui/form-control-styles';
 import { fontFamily, radius, space } from '@/theme/tokens';
 import { AppBottomSheet, AppText, SunButton } from '@/shared/ui';
 import { formatLocalDate } from '@/shared/utils/local-date';
@@ -296,7 +297,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             setTitle(v);
             if (errorMessage) setErrorMessage(null);
           }}
-          placeholder="Judul tugas (misal: Laporan Praktikum AI Bab 1-3)"
+          placeholder="Masukkan nama tugas"
           placeholderTextColor={s.inkSubtle}
           style={styles.inputBox}
         />
@@ -307,8 +308,8 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             onChangeText={setCourseOrContext}
             placeholder={
               categoryType === 'COLLEGE'
-                ? 'Mata kuliah (misal: Machine Learning)'
-                : 'Divisi / Klien / Konteks'
+                ? 'Masukkan konteks tugas'
+                : 'Masukkan konteks tugas'
             }
             placeholderTextColor={s.inkSubtle}
             style={[styles.inputBox, { flex: 1 }]}
@@ -748,7 +749,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             value={subtaskDraft}
             onChangeText={setSubtaskDraft}
             onSubmitEditing={handleAddSubtask}
-            placeholder="Tambah langkah cicilan (misal: Buat kode eksperimen)"
+            placeholder="Masukkan langkah tugas"
             placeholderTextColor={s.inkSubtle}
             style={[styles.inputBox, { flex: 1 }]}
           />
@@ -861,6 +862,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: 14,
     color: s.ink,
+    ...formInputBase,
   },
   twoColRow: {
     flexDirection: 'row',

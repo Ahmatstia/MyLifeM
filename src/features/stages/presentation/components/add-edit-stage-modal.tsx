@@ -5,6 +5,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase, formLabelSpacing, formTextArea } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
@@ -95,7 +96,7 @@ export const AddEditStageModal: React.FC<AddEditStageModalProps> = ({
           setName(text);
           if (errorMessage) setErrorMessage(null);
         }}
-        placeholder="Contoh: Tahap 1 — Fondasi AI"
+        placeholder="Masukkan nama tahap"
         placeholderTextColor={colors.onSurfaceSubtle}
         style={styles.textInput}
       />
@@ -106,7 +107,7 @@ export const AddEditStageModal: React.FC<AddEditStageModalProps> = ({
       <TextInput
         value={description}
         onChangeText={setDescription}
-        placeholder="Fokus atau hasil yang diharapkan dari tahap ini..."
+        placeholder="Masukkan deskripsi tahap (opsional)"
         placeholderTextColor={colors.onSurfaceSubtle}
         multiline
         numberOfLines={3}
@@ -129,6 +130,7 @@ const styles = StyleSheet.create({
     marginBottom: space[2],
     marginTop: space[3],
     color: colors.onSurface,
+    ...formLabelSpacing,
   },
   textInput: {
     backgroundColor: colors.surfaceContainerLowest,
@@ -140,11 +142,13 @@ const styles = StyleSheet.create({
     minHeight: 56,
     fontSize: 14,
     fontFamily: fontFamily.regular,
+    ...formInputBase,
   },
   textArea: {
     minHeight: 96,
     textAlignVertical: 'top',
     paddingVertical: space[2],
+    ...formTextArea,
   },
   actionRow: {
     flexDirection: 'row',

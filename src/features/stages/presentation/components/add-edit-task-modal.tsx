@@ -6,6 +6,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase, formLabelSpacing, formTextArea } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
@@ -135,7 +136,7 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
           setName(text);
           if (errorMessage) setErrorMessage(null);
         }}
-        placeholder="Contoh: Memahami Konsep AI"
+        placeholder="Masukkan nama tugas"
         placeholderTextColor={colors.onSurfaceSubtle}
         style={styles.textInput}
       />
@@ -146,7 +147,7 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
       <TextInput
         value={description}
         onChangeText={setDescription}
-        placeholder="Detail pekerjaan atau kriteria selesai..."
+        placeholder="Masukkan deskripsi tugas (opsional)"
         placeholderTextColor={colors.onSurfaceSubtle}
         multiline
         numberOfLines={2}
@@ -190,7 +191,7 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
       <TextInput
         value={estimatedHours}
         onChangeText={setEstimatedHours}
-        placeholder="Contoh: 1 atau 1.5"
+        placeholder="Masukkan estimasi dalam jam"
         placeholderTextColor={colors.onSurfaceSubtle}
         keyboardType="decimal-pad"
         style={styles.textInput}
@@ -246,6 +247,7 @@ const styles = StyleSheet.create({
     marginBottom: space[2],
     marginTop: space[3],
     color: colors.onSurface,
+    ...formLabelSpacing,
   },
   textInput: {
     backgroundColor: colors.surfaceContainerLowest,
@@ -257,11 +259,13 @@ const styles = StyleSheet.create({
     minHeight: 56,
     fontSize: 14,
     fontFamily: fontFamily.regular,
+    ...formInputBase,
   },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
     paddingVertical: space[2],
+    ...formTextArea,
   },
   choiceRow: {
     flexDirection: 'row',

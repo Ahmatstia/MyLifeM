@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { X, Plus, Pencil, Trash2, Check } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase, formInputCompact } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
@@ -129,7 +130,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
             setNewCategoryName(text);
             if (errorMessage) setErrorMessage(null);
           }}
-          placeholder="Nama kategori baru (cth: Belajar)..."
+          placeholder="Masukkan nama kategori"
           placeholderTextColor={colors.onSurfaceSubtle}
           style={styles.textInput}
         />
@@ -165,6 +166,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                 <View key={cat.id} style={styles.editRow}>
                   <TextInput
                     accessibilityLabel="Ubah nama kategori"
+                    placeholder="Masukkan nama kategori"
                     value={editingName}
                     onChangeText={setEditingName}
                     autoFocus
@@ -263,6 +265,7 @@ const styles = StyleSheet.create({
     paddingVertical: space[3],
     fontSize: 14,
     fontFamily: fontFamily.regular,
+    ...formInputBase,
   },
   addButton: {
     minWidth: 100,
@@ -326,6 +329,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     fontFamily: fontFamily.regular,
     paddingHorizontal: space[2],
+    ...formInputCompact,
   },
   emptyCard: {
     padding: space[6],

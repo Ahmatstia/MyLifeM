@@ -28,6 +28,7 @@ import {
   Compass,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase } from '@/shared/ui/form-control-styles';
 import { space, fontFamily } from '@/theme/tokens';
 import {
   Screen,
@@ -596,7 +597,7 @@ export const SettingsScreen: React.FC = () => {
           <TextInput
             value={citySearch}
             onChangeText={setCitySearch}
-            placeholder="Cari kota (misal: Bandung, Surabaya, Makassar)…"
+            placeholder="Cari nama kota"
             placeholderTextColor={s.inkSubtle}
             style={styles.searchCityInput}
           />
@@ -691,7 +692,7 @@ export const SettingsScreen: React.FC = () => {
             <TextInput
               value={customCityName}
               onChangeText={setCustomCityName}
-              placeholder="Nama Kota / Kabupaten (contoh: Bogor WIB)"
+              placeholder="Masukkan nama kota atau kabupaten"
               placeholderTextColor={s.inkSubtle}
               style={styles.customInput}
             />
@@ -699,7 +700,7 @@ export const SettingsScreen: React.FC = () => {
               <TextInput
                 value={customLat}
                 onChangeText={setCustomLat}
-                placeholder="Latitude (-6.5971)"
+                placeholder="Masukkan latitude"
                 placeholderTextColor={s.inkSubtle}
                 keyboardType="numbers-and-punctuation"
                 style={[styles.customInput, { flex: 1 }]}
@@ -707,7 +708,7 @@ export const SettingsScreen: React.FC = () => {
               <TextInput
                 value={customLng}
                 onChangeText={setCustomLng}
-                placeholder="Longitude (106.8060)"
+                placeholder="Masukkan longitude"
                 placeholderTextColor={s.inkSubtle}
                 keyboardType="numbers-and-punctuation"
                 style={[styles.customInput, { flex: 1 }]}
@@ -1090,6 +1091,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     fontSize: 16,
     fontFamily: fontFamily.bold,
+    ...formInputBase,
   },
   locationSheetBody: {
     gap: space[3],
@@ -1104,6 +1106,7 @@ const styles = StyleSheet.create({
     color: s.ink,
     borderWidth: 1,
     borderColor: '#E5DEC9',
+    ...formInputBase,
   },
   regionFilterRow: {
     flexDirection: 'row',
@@ -1200,6 +1203,7 @@ const styles = StyleSheet.create({
     color: s.ink,
     borderWidth: 1,
     borderColor: '#E5DEC9',
+    ...formInputBase,
   },
   customLatLngRow: {
     flexDirection: 'row',

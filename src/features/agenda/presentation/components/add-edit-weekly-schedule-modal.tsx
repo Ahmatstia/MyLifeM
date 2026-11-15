@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Clock, MapPin, FileText, Bell } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase, formInputCompact, formLabelSpacing } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
@@ -265,8 +266,8 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
             onChangeText={setTitle}
             placeholder={
               scheduleType === 'ROUTINE'
-                ? 'misal: Olahraga pagi, Sarapan, Baca buku...'
-                : 'misal: Jam Kerja Kantor, Rapat Mingguan, Kursus...'
+                ? 'Masukkan nama rutinitas'
+                : 'Masukkan nama kegiatan'
             }
             placeholderTextColor={colors.onSurfaceVariant}
           />
@@ -315,7 +316,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
                   style={styles.timeTextInput}
                   value={startTime}
                   onChangeText={setStartTime}
-                  placeholder="08:00"
+                  placeholder="JJ:MM"
                   maxLength={5}
                   keyboardType="numbers-and-punctuation"
                   placeholderTextColor={colors.onSurfaceVariant}
@@ -335,7 +336,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
                   style={styles.timeTextInput}
                   value={endTime}
                   onChangeText={setEndTime}
-                  placeholder="10:00"
+                  placeholder="JJ:MM"
                   maxLength={5}
                   keyboardType="numbers-and-punctuation"
                   placeholderTextColor={colors.onSurfaceVariant}
@@ -357,7 +358,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
               style={styles.flexInput}
               value={location}
               onChangeText={setLocation}
-              placeholder="misal: Lab Komputer 3, Gedung B R. 302"
+              placeholder="Masukkan lokasi (opsional)"
               placeholderTextColor={colors.onSurfaceVariant}
             />
           </View>
@@ -374,7 +375,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
               style={styles.flexInput}
               value={notes}
               onChangeText={setNotes}
-              placeholder="misal: Dosen: Pak Hendra, Bawa Modul"
+              placeholder="Masukkan catatan (opsional)"
               placeholderTextColor={colors.onSurfaceVariant}
             />
           </View>
@@ -463,6 +464,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fontFamily.semibold,
+    ...formLabelSpacing,
   },
   presetRow: {
     flexDirection: 'row',
@@ -516,6 +518,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: fontFamily.regular,
     color: colors.onSurface,
+    ...formInputBase,
   },
   inputWithIcon: {
     flexDirection: 'row',
@@ -534,6 +537,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: fontFamily.regular,
     color: colors.onSurface,
+    ...formInputCompact,
   },
   typeRow: {
     flexDirection: 'row',
@@ -576,6 +580,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.semibold,
     color: colors.onSurface,
     textAlign: 'center',
+    ...formInputCompact,
   },
   dash: {
     alignSelf: 'center',

@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { Target as TargetIcon } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase, formLabelSpacing, formTextArea } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
@@ -124,7 +125,7 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
           setTitle(text);
           if (errorMessage) setErrorMessage(null);
         }}
-        placeholder="Contoh: AI Engineer atau Belajar Bahasa Inggris"
+        placeholder="Masukkan nama target"
         placeholderTextColor={colors.onSurfaceSubtle}
         style={styles.textInput}
       />
@@ -173,7 +174,7 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
       <TextInput
         value={description}
         onChangeText={setDescription}
-        placeholder="Tujuan spesifik atau hasil yang ingin kamu capai..."
+        placeholder="Masukkan deskripsi target (opsional)"
         placeholderTextColor={colors.onSurfaceSubtle}
         multiline
         numberOfLines={3}
@@ -225,6 +226,7 @@ const styles = StyleSheet.create({
     marginBottom: space[2],
     marginTop: space[3],
     color: colors.onSurface,
+    ...formLabelSpacing,
   },
   categoryLabelRow: {
     flexDirection: 'row',
@@ -249,11 +251,13 @@ const styles = StyleSheet.create({
     minHeight: 56,
     fontSize: 14,
     fontFamily: fontFamily.regular,
+    ...formInputBase,
   },
   textArea: {
     minHeight: 96,
     textAlignVertical: 'top',
     paddingVertical: space[2],
+    ...formTextArea,
   },
   chipRow: {
     flexDirection: 'row',

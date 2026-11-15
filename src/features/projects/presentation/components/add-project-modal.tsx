@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { FolderPlus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase, formLabelSpacing, formTextArea } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
@@ -112,7 +113,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       <TextInput
         value={title}
         onChangeText={setTitle}
-        placeholder="Contoh: Rilis Aplikasi MyLife Mobile"
+        placeholder="Masukkan nama proyek"
         placeholderTextColor={colors.onSurfaceSubtle}
         style={styles.textInput}
       />
@@ -124,7 +125,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       <TextInput
         value={description}
         onChangeText={setDescription}
-        placeholder="Apa hasil akhir yang ingin dicapai dari proyek ini?"
+        placeholder="Masukkan deskripsi proyek (opsional)"
         placeholderTextColor={colors.onSurfaceSubtle}
         multiline
         numberOfLines={3}
@@ -219,6 +220,7 @@ const styles = StyleSheet.create({
     marginBottom: space[2],
     marginTop: space[3],
     color: colors.onSurface,
+    ...formLabelSpacing,
   },
   textInput: {
     backgroundColor: colors.surfaceContainerLowest,
@@ -230,11 +232,13 @@ const styles = StyleSheet.create({
     minHeight: 56,
     fontSize: 14,
     fontFamily: fontFamily.regular,
+    ...formInputBase,
   },
   textArea: {
     minHeight: 96,
     textAlignVertical: 'top',
     paddingVertical: space[2],
+    ...formTextArea,
   },
   targetsRow: {
     flexDirection: 'row',

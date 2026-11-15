@@ -20,6 +20,7 @@ import {
   MapPin,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase, formInputCompact } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import {
   Screen,
@@ -157,7 +158,6 @@ export const CreateAgendaScreen: React.FC = () => {
           {/* Mascot + Cloud Input */}
           <View style={styles.cloudHeroWrap}>
             <View style={styles.mascotHeadWrap} pointerEvents="none">
-              <MascotHead width={144} height={92} />
             </View>
 
             <View style={styles.cloudOuterCard}>
@@ -168,7 +168,7 @@ export const CreateAgendaScreen: React.FC = () => {
                     setTitle(text);
                     if (errorMessage) setErrorMessage(null);
                   }}
-                  placeholder="Apa agenda kegiatanmu?"
+                  placeholder="Masukkan nama kegiatan"
                   placeholderTextColor={s.inkSubtle}
                   style={styles.cloudInput}
                   autoFocus
@@ -179,7 +179,7 @@ export const CreateAgendaScreen: React.FC = () => {
               <TextInput
                 value={description}
                 onChangeText={setDescription}
-                placeholder="Catatan singkat (opsional)…"
+                placeholder="Masukkan catatan (opsional)"
                 placeholderTextColor={s.inkSubtle}
                 style={styles.cloudDescInput}
               />
@@ -224,7 +224,7 @@ export const CreateAgendaScreen: React.FC = () => {
                     <TextInput
                       value={startTimeStr}
                       onChangeText={setStartTimeStr}
-                      placeholder="09:00"
+                      placeholder="JJ:MM"
                       placeholderTextColor={s.inkSubtle}
                       style={styles.timeInput}
                       keyboardType="numbers-and-punctuation"
@@ -236,7 +236,7 @@ export const CreateAgendaScreen: React.FC = () => {
                     <TextInput
                       value={endTimeStr}
                       onChangeText={setEndTimeStr}
-                      placeholder="10:00"
+                      placeholder="JJ:MM"
                       placeholderTextColor={s.inkSubtle}
                       style={styles.timeInput}
                       keyboardType="numbers-and-punctuation"
@@ -284,7 +284,7 @@ export const CreateAgendaScreen: React.FC = () => {
             <TextInput
               value={location}
               onChangeText={setLocation}
-              placeholder="Lokasi atau tautan ruang (opsional)"
+              placeholder="Masukkan lokasi atau tautan (opsional)"
               placeholderTextColor={s.inkSubtle}
               style={styles.locationInput}
             />
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     padding: space[3],
   },
   cloudHeroWrap: {
-    marginTop: 58,
+    marginTop: space[2],
     marginBottom: space[1],
     position: 'relative',
   },
@@ -352,6 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: s.ink,
     paddingVertical: 4,
+    ...formInputBase,
   },
   cloudDescInput: {
     fontFamily: fontFamily.regular,
@@ -359,6 +360,7 @@ const styles = StyleSheet.create({
     color: s.inkMuted,
     paddingHorizontal: space[2],
     paddingTop: space[1],
+    ...formInputBase,
   },
   categoryTilesRow: {
     flexDirection: 'row',
@@ -416,6 +418,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: s.ink,
     paddingVertical: 2,
+    ...formInputCompact,
   },
   reminderRow: {
     flexDirection: 'row',
@@ -459,6 +462,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: 14,
     color: s.ink,
+    ...formInputCompact,
   },
   ctaWrap: {
     marginTop: space[3],

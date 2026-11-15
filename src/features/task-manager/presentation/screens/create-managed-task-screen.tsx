@@ -29,15 +29,14 @@ import {
   X,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase } from '@/shared/ui/form-control-styles';
 import { fontFamily, radius, space } from '@/theme/tokens';
 import {
   Screen,
   AppText,
   FormScreenHeader,
   WaveBackdrop,
-  MascotHead,
   SunButton,
-  sproutShadow,
 } from '@/shared/ui';
 import { formatLocalDate } from '@/shared/utils/local-date';
 import {
@@ -264,12 +263,8 @@ export const CreateManagedTaskScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Mascot Peeking + Cloud Input Card */}
+        <AppText style={styles.sectionHeading}>Nama tugas</AppText>
         <View style={styles.cloudHeroWrap}>
-          <View style={styles.mascotHeadWrap} pointerEvents="none">
-            <MascotHead width={144} height={92} />
-          </View>
-
           <View style={styles.cloudOuterCard}>
             <View style={styles.cloudInnerPill}>
               <TextInput
@@ -278,7 +273,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                   setTitle(text);
                   if (errorMessage) setErrorMessage(null);
                 }}
-                placeholder="Tugas apa yang harus dikerjakan?"
+                placeholder="Masukkan nama tugas"
                 placeholderTextColor={s.inkSubtle}
                 style={styles.cloudInput}
                 autoFocus
@@ -289,7 +284,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
             <TextInput
               value={notes}
               onChangeText={setNotes}
-              placeholder="Catatan pengerjaan atau instruksi tugas (opsional)…"
+              placeholder="Masukkan catatan tugas (opsional)"
               placeholderTextColor={s.inkSubtle}
               multiline
               style={styles.cloudDescInput}
@@ -336,8 +331,8 @@ export const CreateManagedTaskScreen: React.FC = () => {
           onChangeText={setCourseOrContext}
           placeholder={
             categoryType === 'COLLEGE'
-              ? 'Mata kuliah (misal: Machine Learning / Akuntansi)'
-              : 'Divisi / Klien / Proyek Terkait'
+              ? 'Masukkan konteks tugas'
+              : 'Masukkan konteks tugas'
           }
           placeholderTextColor={s.inkSubtle}
           style={styles.inputBox}
@@ -443,7 +438,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
               <TextInput
                 value={deadlineDate}
                 onChangeText={setDeadlineDate}
-                placeholder="YYYY-MM-DD"
+              placeholder="YYYY-MM-DD"
                 placeholderTextColor={s.inkSubtle}
                 style={styles.compactDateInput}
               />
@@ -783,7 +778,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
             value={subtaskDraft}
             onChangeText={setSubtaskDraft}
             onSubmitEditing={handleAddSubtask}
-            placeholder="Tambah langkah cicilan tugas (misal: Bab 1)..."
+              placeholder="Masukkan langkah tugas"
             placeholderTextColor={s.inkSubtle}
             style={[styles.inputBox, { flex: 1 }]}
           />
@@ -869,26 +864,15 @@ const styles = StyleSheet.create({
     color: colors.onErrorContainer,
   },
   cloudHeroWrap: {
-    marginTop: 58,
-    marginBottom: space[1],
-    position: 'relative',
-  },
-  mascotHeadWrap: {
-    position: 'absolute',
-    top: -68,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 3,
+    marginBottom: space[2],
   },
   cloudOuterCard: {
     backgroundColor: s.card,
-    borderRadius: 32,
+    borderRadius: radius.lg,
     padding: space[4],
     borderWidth: 1,
     borderColor: '#F1EADA',
     gap: space[2],
-    ...sproutShadow,
   },
   cloudInnerPill: {
     flexDirection: 'row',
@@ -905,6 +889,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: s.ink,
     paddingVertical: 4,
+    ...formInputBase,
   },
   cloudDescInput: {
     fontFamily: fontFamily.regular,
@@ -913,6 +898,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[2],
     paddingTop: space[1],
     minHeight: 44,
+    ...formInputBase,
   },
   sectionHeading: {
     fontFamily: fontFamily.bold,
@@ -960,6 +946,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: 14,
     color: s.ink,
+    ...formInputBase,
   },
   durationCard: {
     backgroundColor: '#F1EBDC',

@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { CalendarPlus, Clock, MapPin, Bell } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase, formInputCompact, formLabelSpacing, formTextArea } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
@@ -157,7 +158,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
         accessibilityLabel="Judul agenda"
         value={title}
         onChangeText={setTitle}
-        placeholder="Contoh: Diskusi Arsitektur Sistem"
+        placeholder="Masukkan nama kegiatan"
         placeholderTextColor={colors.onSurfaceSubtle}
         style={styles.textInput}
       />
@@ -234,7 +235,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 accessibilityLabel="Jam mulai"
                 value={startTimeStr}
                 onChangeText={setStartTimeStr}
-                placeholder="09:00"
+                placeholder="JJ:MM"
                 placeholderTextColor={colors.onSurfaceSubtle}
                 keyboardType="numbers-and-punctuation"
                 maxLength={5}
@@ -258,7 +259,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 accessibilityLabel="Jam selesai"
                 value={endTimeStr}
                 onChangeText={setEndTimeStr}
-                placeholder="10:00"
+                placeholder="JJ:MM"
                 placeholderTextColor={colors.onSurfaceSubtle}
                 keyboardType="numbers-and-punctuation"
                 maxLength={5}
@@ -284,7 +285,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
           editable={!isSubmitting}
           value={location}
           onChangeText={setLocation}
-          placeholder="Google Meet, Kantor, atau Rumah"
+          placeholder="Masukkan lokasi atau tautan"
           placeholderTextColor={colors.onSurfaceSubtle}
           style={styles.flexInput}
         />
@@ -334,7 +335,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
         editable={!isSubmitting}
         value={description}
         onChangeText={setDescription}
-        placeholder="Tambahkan agenda rapat atau catatan persiapan..."
+        placeholder="Masukkan catatan kegiatan (opsional)"
         placeholderTextColor={colors.onSurfaceSubtle}
         multiline
         numberOfLines={2}
@@ -358,6 +359,7 @@ const styles = StyleSheet.create({
     marginBottom: space[2],
     marginTop: space[3],
     color: colors.onSurface,
+    ...formLabelSpacing,
   },
   subLabel: {
     marginBottom: 4,
@@ -372,11 +374,13 @@ const styles = StyleSheet.create({
     minHeight: 56,
     fontSize: 14,
     fontFamily: fontFamily.regular,
+    ...formInputBase,
   },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
     paddingVertical: space[2],
+    ...formTextArea,
   },
   typeRow: {
     flexDirection: 'row',
@@ -453,6 +457,7 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     fontSize: 14,
     fontFamily: fontFamily.regular,
+    ...formInputCompact,
   },
   iconInputContainer: {
     flexDirection: 'row',
@@ -471,6 +476,7 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     fontSize: 14,
     fontFamily: fontFamily.regular,
+    ...formInputCompact,
   },
   reminderRow: {
     flexDirection: 'row',

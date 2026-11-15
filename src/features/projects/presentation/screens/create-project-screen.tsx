@@ -17,6 +17,7 @@ import {
   Flag,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { formInputBase } from '@/shared/ui/form-control-styles';
 import { radius, space, fontFamily } from '@/theme/tokens';
 import {
   Screen,
@@ -26,8 +27,6 @@ import {
   ChoiceTile,
   SunButton,
   FieldLabel,
-  MascotHead,
-  sproutShadow,
 } from '@/shared/ui';
 import { targetRepository } from '@/features/targets/data/repositories/target.repository.impl';
 import { projectRepository } from '../../data/repositories/project.repository.impl';
@@ -118,12 +117,8 @@ export const CreateProjectScreen: React.FC = () => {
             </View>
           )}
 
-          {/* Mascot + Cloud Input */}
+          <FieldLabel>Nama proyek</FieldLabel>
           <View style={styles.cloudHeroWrap}>
-            <View style={styles.mascotHeadWrap} pointerEvents="none">
-              <MascotHead width={144} height={92} />
-            </View>
-
             <View style={styles.cloudOuterCard}>
               <View style={styles.cloudInnerPill}>
                 <TextInput
@@ -132,7 +127,7 @@ export const CreateProjectScreen: React.FC = () => {
                     setTitle(text);
                     if (errorMessage) setErrorMessage(null);
                   }}
-                  placeholder="Proyek apa yang ingin dikerjakan?"
+                  placeholder="Masukkan nama proyek"
                   placeholderTextColor={s.inkSubtle}
                   style={styles.cloudInput}
                   autoFocus
@@ -140,10 +135,11 @@ export const CreateProjectScreen: React.FC = () => {
                 <Sparkles size={20} color={s.sun} fill={s.sun} />
               </View>
 
+              <FieldLabel>Deskripsi (opsional)</FieldLabel>
               <TextInput
                 value={description}
                 onChangeText={setDescription}
-                placeholder="Catatan hasil akhir proyek ini (opsional)…"
+                placeholder="Masukkan deskripsi proyek"
                 placeholderTextColor={s.inkSubtle}
                 multiline
                 style={styles.cloudDescInput}
@@ -217,7 +213,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: space[5],
+    paddingHorizontal: space[4],
     paddingTop: space[2],
     gap: space[3],
   },
@@ -227,26 +223,16 @@ const styles = StyleSheet.create({
     padding: space[3],
   },
   cloudHeroWrap: {
-    marginTop: 58,
-    marginBottom: space[1],
+    marginBottom: space[2],
     position: 'relative',
-  },
-  mascotHeadWrap: {
-    position: 'absolute',
-    top: -68,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 3,
   },
   cloudOuterCard: {
     backgroundColor: s.card,
-    borderRadius: 32,
-    padding: space[4],
+    borderRadius: radius.lg,
+    padding: space[3],
     borderWidth: 1,
     borderColor: '#F1EADA',
     gap: space[2],
-    ...sproutShadow,
   },
   cloudInnerPill: {
     flexDirection: 'row',
@@ -263,6 +249,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: s.ink,
     paddingVertical: 4,
+    ...formInputBase,
   },
   cloudDescInput: {
     fontFamily: fontFamily.regular,
@@ -271,6 +258,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[2],
     paddingTop: space[1],
     minHeight: 44,
+    ...formInputBase,
   },
   tilesRow: {
     flexDirection: 'row',

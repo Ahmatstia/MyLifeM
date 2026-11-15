@@ -45,10 +45,10 @@ export const SessionReflectionModal: React.FC<SessionReflectionModalProps> = ({ 
       </Pressable>)}</View>
       <AppText variant="labelLarge" style={styles.label}>Hambatan atau distraksi (opsional)</AppText>
       <TextInput accessibilityLabel="Hambatan atau distraksi" editable={!saving} value={obstacle} onChangeText={setObstacle}
-        placeholder="Apa yang mengganggu fokusmu?" placeholderTextColor={colors.onSurfaceSubtle} style={styles.input} />
+        placeholder="Masukkan hambatan (opsional)" placeholderTextColor={colors.onSurfaceSubtle} style={styles.input} />
       <AppText variant="labelLarge" style={styles.label}>Langkah berikutnya (opsional)</AppText>
       <TextInput accessibilityLabel="Langkah berikutnya" editable={!saving} value={nextAction} onChangeText={setNextAction}
-        placeholder="Langkah kecil setelah beristirahat…" placeholderTextColor={colors.onSurfaceSubtle} multiline style={[styles.input, styles.multiline]} />
+        placeholder="Masukkan langkah berikutnya (opsional)" placeholderTextColor={colors.onSurfaceSubtle} multiline style={[styles.input, styles.multiline]} />
     </AppBottomSheet>
   );
 };
