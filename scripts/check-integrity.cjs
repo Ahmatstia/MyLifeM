@@ -8,7 +8,7 @@ const { loader, fixture, connection } = require('./check-backup.cjs');
 const legacyDDL = fs.readFileSync(path.join(__dirname, 'fixtures/legacy-v0.sql'), 'utf8');
 let checks = 0;
 function passed(name) { checks++; console.log('PASS:', name); }
-function environment() {
+function environment(overrides = {}) {
   const sqlite = new DatabaseSync(':memory:');
   let fault = () => {};
   let archive = null;
@@ -38,7 +38,9 @@ function environment() {
   };
   const stubs = { 'expo-sqlite': { openDatabaseSync: name => { if (name === ':memory:') return connection(); assert.equal(name, 'mylife.db'); return raw; } },
     'drizzle-orm/expo-sqlite': require(path.join(__dirname, '../node_modules/drizzle-orm/expo-sqlite/driver.cjs')),
-    '@/features/settings/data/services/backup-file.service': { saveMigrationBackup: json => save(json) } };
+    '@/features/settings/data/services/backup-file.service': { saveMigrationBackup: json => save(json) },
+    '../services/task-alarm-notification.service': { TaskAlarmNotificationService: { reconcileTaskAlarms: async () => {} } },
+    ...overrides };
   const load = loader(stubs);
   const client = load('src/db/client.ts');
   const format = load('src/features/settings/data/backup-format.ts');

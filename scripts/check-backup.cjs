@@ -97,6 +97,25 @@ async function main() {
     assert.deepEqual(format.parseBackup(json).data, JSON.parse(JSON.stringify(source)));
     assert.equal(Object.keys(format.parseBackup(json).data).length, 13);
   });
+  for (const scheduleType of ['COLLEGE', 'WORK', 'STUDY', 'PERSONAL', 'ROUTINE']) {
+    check(`${scheduleType} schedules and daily logs survive current and legacy backup parsing`, () => {
+      for (const input of [JSON.parse(json), structuredClone(legacy)]) {
+        input.data.weeklySchedules[0].scheduleType = scheduleType;
+        const restored = format.parseBackup(JSON.stringify(input));
+        assert.deepEqual(restored.data.weeklySchedules, input.data.weeklySchedules);
+        assert.deepEqual(restored.data.weeklyScheduleLogs, input.data.weeklyScheduleLogs);
+      }
+    });
+  }
+  active.runSync('UPDATE weekly_schedules SET schedule_type = ? WHERE id = ?', ['ROUTINE', 'weeklySchedules']);
+  const routineSource = store.readBackupData(active);
+  const routineJson = await repository.exportBackupJson();
+  active.runSync('DELETE FROM weekly_schedules WHERE id = ?', ['weeklySchedules']);
+  await repository.restoreBackupJson(routineJson, await repository.exportBackupJson());
+  check('repository export/restore recovers ROUTINE schedules and their daily logs', () => {
+    assert.deepEqual(store.readBackupData(active), routineSource);
+  });
+  await repository.restoreBackupJson(json, await repository.exportBackupJson());
   const invalid = (name, mutate) => check('reject ' + name, () => {
     const input = JSON.parse(json); mutate(input);
     assert.throws(() => format.parseBackup(JSON.stringify(input)), /Cadangan tidak valid|10 MB/);
@@ -118,6 +137,7 @@ async function main() {
   invalid('duplicate daily priority', input => { input.data.dailyFocusItems.push({ ...input.data.dailyFocusItems[0], id: 'duplicate' }); });
   invalid('negative duration', input => { input.data.tasks[0].estimatedMinutes = -1; });
   invalid('unknown status', input => { input.data.tasks[0].status = 'MAGIC'; });
+  invalid('unknown weekly schedule type', input => { input.data.weeklySchedules[0].scheduleType = 'MAGIC'; });
   invalid('rating outside range', input => { input.data.focusSessions[0].rating = 6; });
   invalid('reversed session', input => { input.data.focusSessions[0].endedAt = '2025-10-26T03:00:00Z'; });
   invalid('session without a clock', input => { input.data.focusSessions[0].startedAt = '2026-10-26'; });

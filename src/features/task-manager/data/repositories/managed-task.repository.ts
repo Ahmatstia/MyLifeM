@@ -1,5 +1,7 @@
 import { eq, and } from 'drizzle-orm';
 import { db } from '@/db/client';
+import { normalizeTaskStatus } from '@/shared/domain/task-status';
+import { writeTaskStatus } from '@/shared/data/task-status';
 import { userSettings, tasks, dailyFocusItems } from '@/db/schema';
 import { formatLocalDate } from '@/shared/utils/local-date';
 import {
@@ -12,6 +14,8 @@ import { TaskAlarmNotificationService } from '../services/task-alarm-notificatio
 
 const MANAGED_TASKS_KEY = 'managed_tasks_v1';
 const CUSTOM_TRACKS_KEY = 'custom_alarm_tracks_v1';
+
+type TaskConnection = Pick<typeof db, 'select' | 'insert' | 'update' | 'delete'>;
 
 type AlarmListener = (ringingTask: ManagedTaskEntity | null) => void;
 type DataListener = () => void;
@@ -58,175 +62,107 @@ export function clearRingingAlarm(): void {
 }
 
 export class ManagedTaskRepository {
+  private alarmUpdates: Promise<void> = Promise.resolve();
+
+  private readTasks(connection: Pick<TaskConnection, 'select'>): ManagedTaskEntity[] {
+    const row = connection.select().from(userSettings)
+      .where(eq(userSettings.key, MANAGED_TASKS_KEY)).get();
+    if (!row) return [];
+    const parsed = JSON.parse(row.value);
+    if (!Array.isArray(parsed)) throw new Error('Data tugas terjadwal tidak valid.');
+
+    const coreMap = new Map(connection.select().from(tasks).all().map(task => [task.id, task]));
+    return parsed.map((item: ManagedTaskEntity) => {
+      const core = coreMap.get(item.id);
+      if (!core) return item;
+      const completed = normalizeTaskStatus(core.status) === 'COMPLETED';
+      return {
+        ...item,
+        isCompleted: completed,
+        completedAt: completed ? core.completedAt || item.completedAt : null,
+      };
+    });
+  }
+
   async getAllTasks(): Promise<ManagedTaskEntity[]> {
-    try {
-      const row = await db
-        .select()
-        .from(userSettings)
-        .where(eq(userSettings.key, MANAGED_TASKS_KEY))
-        .get();
-
-      if (!row || !row.value) return [];
-      const parsed = JSON.parse(row.value);
-      if (!Array.isArray(parsed)) return [];
-
-      // Synchronize completion status from the core `tasks` table in case user checked it off on "Hari Ini"
-      const coreTasks = await db.select().from(tasks);
-      const coreMap = new Map(coreTasks.map((t) => [t.id, t]));
-
-      let changed = false;
-      const synced: ManagedTaskEntity[] = parsed.map((item: ManagedTaskEntity) => {
-        const core = coreMap.get(item.id);
-        if (core) {
-          const coreDone = core.isCompleted === 1 || core.status === 'COMPLETED';
-          if (coreDone !== item.isCompleted) {
-            changed = true;
-            return {
-              ...item,
-              isCompleted: coreDone,
-              completedAt: coreDone
-                ? core.completedAt || new Date().toISOString()
-                : null,
-            };
-          }
-        }
-        return item;
-      });
-
-      if (changed) {
-        await this.saveTasksArray(synced);
-      }
-
-      return synced.sort((a, b) => {
-        if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-        const execA = `${a.executionDate}T${a.executionTime}`;
-        const execB = `${b.executionDate}T${b.executionTime}`;
-        return execA.localeCompare(execB);
-      });
-    } catch {
-      return [];
-    }
+    return this.readTasks(db).sort((a, b) => {
+      if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
+      return (a.executionDate + 'T' + a.executionTime).localeCompare(b.executionDate + 'T' + b.executionTime);
+    });
   }
 
-  private async saveTasksArray(list: ManagedTaskEntity[]): Promise<void> {
+  private mutateTasks(update: (current: ManagedTaskEntity[], tx: TaskConnection) => ManagedTaskEntity[]): ManagedTaskEntity[] {
+    return db.transaction(tx => {
+      const updated = update(this.readTasks(tx), tx);
+      const value = JSON.stringify(updated), updatedAt = new Date().toISOString();
+      tx.insert(userSettings).values({ key: MANAGED_TASKS_KEY, value, updatedAt })
+        .onConflictDoUpdate({ target: userSettings.key, set: { value, updatedAt } }).run();
+      return updated;
+    });
+  }
+
+  private reconcileAlarms(askPermission = false): Promise<void> {
+    // Native work follows commit, in order, and always reads the latest committed tasks.
+    this.alarmUpdates = this.alarmUpdates.then(() =>
+      TaskAlarmNotificationService.reconcileTaskAlarms(this.readTasks(db), askPermission)
+    ).catch(error => {
+      console.warn('[ManagedTaskRepository] Pengingat belum dapat diselaraskan:', error);
+    });
+    return this.alarmUpdates;
+  }
+
+  private syncCoreTasks(tx: TaskConnection, all: ManagedTaskEntity[], completionId?: string): void {
+    const todayDate = formatLocalDate(new Date());
     const nowIso = new Date().toISOString();
-    await db
-      .insert(userSettings)
-      .values({
-        key: MANAGED_TASKS_KEY,
-        value: JSON.stringify(list),
+    for (const item of all) {
+      const prefix = item.courseOrContext ? '[' + item.courseOrContext + '] ' : '';
+      const formattedTitle = prefix + item.title;
+      const subtitle = 'Jadwal kerjakan: ' + item.executionDate + ' ' + item.executionTime
+        + ' · Deadline: ' + item.deadlineDate + ' ' + item.deadlineTime;
+      const existing = tx.select().from(tasks).where(eq(tasks.id, item.id)).get();
+      // Only an explicit completion action may replace an existing core status.
+      const status = !existing || item.id === completionId
+        ? item.isCompleted ? 'COMPLETED' : 'TODO'
+        : normalizeTaskStatus(existing.status);
+      const fields = {
+        title: formattedTitle,
+        name: formattedTitle,
+        description: item.notes || subtitle,
+        priority: item.priority,
+        estimatedMinutes: item.estimatedMinutes,
+        estimatedHours: Math.max(0.25, item.estimatedMinutes / 60),
+        dueDate: item.deadlineDate,
         updatedAt: nowIso,
-      })
-      .onConflictDoUpdate({
-        target: userSettings.key,
-        set: {
-          value: JSON.stringify(list),
-          updatedAt: nowIso,
-        },
-      });
-  }
+      };
+      if (!existing) {
+        tx.insert(tasks).values({
+          ...fields, id: item.id, status, isCompleted: status === 'COMPLETED' ? 1 : 0,
+          completedAt: item.completedAt, actualMinutes: 0, sortOrder: 0, createdAt: item.createdAt,
+        }).run();
+      } else {
+        tx.update(tasks).set(fields).where(eq(tasks.id, item.id)).run();
+      }
+      writeTaskStatus(tx, item.id, status, nowIso);
 
-  /**
-   * Sinkronisasi otomatis tugas yang jadwal pengerjaannya (executionDate) adalah hari ini
-   * (atau sudah lewat namun belum selesai) ke tabel `tasks` dan `daily_focus_items` (Layar Hari Ini).
-   */
-  async syncWithCoreTasksAndToday(
-    list?: ManagedTaskEntity[]
-  ): Promise<void> {
-    try {
-      const all = list ?? (await this.getAllTasks());
-      const todayDate = formatLocalDate(new Date());
-      const nowIso = new Date().toISOString();
-
-      for (const item of all) {
-        const prefix = item.courseOrContext
-          ? `[${item.courseOrContext}] `
-          : '';
-        const formattedTitle = `${prefix}${item.title}`;
-        const subtitleDesc = `Jadwal kerjakan: ${item.executionDate} ${item.executionTime} · Deadline: ${item.deadlineDate} ${item.deadlineTime}`;
-
-        const existingTask = await db
-          .select()
-          .from(tasks)
-          .where(eq(tasks.id, item.id))
-          .get();
-
-        if (!existingTask) {
-          await db.insert(tasks).values({
-            id: item.id,
-            title: formattedTitle,
-            name: formattedTitle,
-            description: item.notes || subtitleDesc,
-            priority: item.priority,
-            status: item.isCompleted ? 'COMPLETED' : 'TODO',
-            estimatedHours: Math.max(0.25, item.estimatedMinutes / 60),
-            estimatedMinutes: item.estimatedMinutes,
-            actualMinutes: 0,
-            sortOrder: 0,
-            dueDate: item.deadlineDate,
-            isCompleted: item.isCompleted ? 1 : 0,
-            completedAt: item.completedAt,
-            createdAt: item.createdAt,
-            updatedAt: nowIso,
-          });
-        } else {
-          await db
-            .update(tasks)
-            .set({
-              title: formattedTitle,
-              name: formattedTitle,
-              description: item.notes || subtitleDesc,
-              priority: item.priority,
-              status: item.isCompleted ? 'COMPLETED' : 'TODO',
-              estimatedMinutes: item.estimatedMinutes,
-              estimatedHours: Math.max(0.25, item.estimatedMinutes / 60),
-              dueDate: item.deadlineDate,
-              isCompleted: item.isCompleted ? 1 : 0,
-              completedAt: item.completedAt,
-              updatedAt: nowIso,
-            })
-            .where(eq(tasks.id, item.id));
-        }
-
-        // Auto-add to Today Focus if executionDate <= todayDate and autoAddToToday is enabled
-        if (
-          item.autoAddToToday &&
-          !item.isCompleted &&
-          item.executionDate <= todayDate
-        ) {
-          const existingFocus = await db
-            .select()
-            .from(dailyFocusItems)
-            .where(
-              and(
-                eq(dailyFocusItems.date, todayDate),
-                eq(dailyFocusItems.taskId, item.id)
-              )
-            )
-            .get();
-
-          if (!existingFocus) {
-            const todayFocusRows = await db
-              .select()
-              .from(dailyFocusItems)
-              .where(eq(dailyFocusItems.date, todayDate));
-
-            if (todayFocusRows.length < 5) {
-              await db.insert(dailyFocusItems).values({
-                id: `df-mt-${item.id}-${todayDate}`,
-                date: todayDate,
-                taskId: item.id,
-                sortOrder: todayFocusRows.length,
-                isCompleted: item.isCompleted ? 1 : 0,
-                createdAt: nowIso,
-              });
-            }
+      if (item.autoAddToToday && ['TODO', 'IN_PROGRESS'].includes(status) && item.executionDate <= todayDate) {
+        const existingFocus = tx.select().from(dailyFocusItems).where(
+          and(eq(dailyFocusItems.date, todayDate), eq(dailyFocusItems.taskId, item.id))
+        ).get();
+        if (!existingFocus) {
+          const todayFocusRows = tx.select().from(dailyFocusItems).where(eq(dailyFocusItems.date, todayDate)).all();
+          if (todayFocusRows.length < 5) {
+            tx.insert(dailyFocusItems).values({
+              id: 'df-mt-' + item.id + '-' + todayDate, date: todayDate, taskId: item.id,
+              sortOrder: todayFocusRows.length, isCompleted: 0, createdAt: nowIso,
+            }).run();
           }
         }
       }
-    } catch {
-      // Ignore sync errors on non-DB environments
     }
+  }
+
+  async syncWithCoreTasksAndToday(): Promise<void> {
+    db.transaction(tx => this.syncCoreTasks(tx, this.readTasks(tx)));
   }
 
   async createTask(input: CreateManagedTaskInput): Promise<ManagedTaskEntity> {
@@ -268,113 +204,73 @@ export class ManagedTaskRepository {
       updatedAt: nowIso,
     };
 
-    const current = await this.getAllTasks();
-    const updated = [newTask, ...current];
-    await this.saveTasksArray(updated);
-    await this.syncWithCoreTasksAndToday(updated);
-    await TaskAlarmNotificationService.reconcileTaskAlarms(updated, true);
+    this.mutateTasks((current, tx) => {
+      const updated = [newTask, ...current];
+      this.syncCoreTasks(tx, updated);
+      return updated;
+    });
     notifyDataListeners();
+    await this.reconcileAlarms(true);
     return newTask;
   }
 
   async toggleTaskCompletion(id: string): Promise<void> {
-    const current = await this.getAllTasks();
-    const nowIso = new Date().toISOString();
-    const updated = current.map((item) => {
-      if (item.id !== id) return item;
-      const nextDone = !item.isCompleted;
-      return {
-        ...item,
-        isCompleted: nextDone,
-        completedAt: nextDone ? nowIso : null,
-        snoozedUntilIso: null,
-        updatedAt: nowIso,
-      };
+    this.mutateTasks((current, tx) => {
+      if (!current.some(item => item.id === id)) throw new Error('Tugas tidak ditemukan.');
+      const nowIso = new Date().toISOString();
+      const updated = current.map(item => item.id === id ? {
+        ...item, isCompleted: !item.isCompleted, completedAt: item.isCompleted ? null : nowIso,
+        snoozedUntilIso: null, updatedAt: nowIso,
+      } : item);
+      this.syncCoreTasks(tx, updated, id);
+      return updated;
     });
-
-    await this.saveTasksArray(updated);
-    await this.syncWithCoreTasksAndToday(updated);
-    await TaskAlarmNotificationService.reconcileTaskAlarms(updated, false);
-    if (currentRingingTask?.id === id) {
-      clearRingingAlarm();
-    }
+    if (currentRingingTask?.id === id) clearRingingAlarm();
     notifyDataListeners();
+    await this.reconcileAlarms();
   }
 
   async toggleSubtask(taskId: string, subtaskId: string): Promise<void> {
-    const current = await this.getAllTasks();
-    const nowIso = new Date().toISOString();
-    const updated = current.map((item) => {
-      if (item.id !== taskId) return item;
-      return {
-        ...item,
-        subtasks: item.subtasks.map((st) =>
-          st.id === subtaskId ? { ...st, isCompleted: !st.isCompleted } : st
-        ),
-        updatedAt: nowIso,
-      };
-    });
-    await this.saveTasksArray(updated);
+    this.mutateTasks(current => current.map(item => item.id === taskId ? {
+      ...item,
+      subtasks: item.subtasks.map(subtask => subtask.id === subtaskId
+        ? { ...subtask, isCompleted: !subtask.isCompleted } : subtask),
+      updatedAt: new Date().toISOString(),
+    } : item));
     notifyDataListeners();
   }
 
   async deleteTask(id: string): Promise<void> {
-    const current = await this.getAllTasks();
-    const updated = current.filter((item) => item.id !== id);
-    await this.saveTasksArray(updated);
-    try {
-      await db.delete(tasks).where(eq(tasks.id, id));
-    } catch {
-      // Ignore if core task already deleted
-    }
-    await TaskAlarmNotificationService.reconcileTaskAlarms(updated, false);
-    if (currentRingingTask?.id === id) {
-      clearRingingAlarm();
-    }
+    this.mutateTasks((current, tx) => {
+      tx.delete(tasks).where(eq(tasks.id, id)).run();
+      return current.filter(item => item.id !== id);
+    });
+    if (currentRingingTask?.id === id) clearRingingAlarm();
     notifyDataListeners();
+    await this.reconcileAlarms();
   }
 
   async snoozeTaskAlarm(id: string, minutes: number): Promise<void> {
-    const current = await this.getAllTasks();
-    const nowIso = new Date().toISOString();
-    const snoozeUntil = new Date(Date.now() + minutes * 60_000).toISOString();
-
-    const updated = current.map((item) =>
-      item.id === id
-        ? {
-            ...item,
-            snoozedUntilIso: snoozeUntil,
-            updatedAt: nowIso,
-          }
-        : item
-    );
-
-    await this.saveTasksArray(updated);
-    await TaskAlarmNotificationService.reconcileTaskAlarms(updated, false);
+    const snoozedUntilIso = new Date(Date.now() + minutes * 60_000).toISOString();
+    this.mutateTasks(current => current.map(item => item.id === id ? {
+      ...item, snoozedUntilIso, updatedAt: new Date().toISOString(),
+    } : item));
     clearRingingAlarm();
     notifyDataListeners();
+    await this.reconcileAlarms();
   }
 
   async dismissTaskAlarm(id: string): Promise<void> {
-    const current = await this.getAllTasks();
-    const nowIso = new Date().toISOString();
-    const todayKey = `${formatLocalDate(new Date())}-${new Date().getHours()}:${new Date().getMinutes()}`;
-
-    const updated = current.map((item) =>
-      item.id === id
-        ? {
-            ...item,
-            snoozedUntilIso: null,
-            lastAlarmFiredKey: `${item.executionDate}T${item.executionTime}|${todayKey}`,
-            updatedAt: nowIso,
-          }
-        : item
-    );
-
-    await this.saveTasksArray(updated);
-    await TaskAlarmNotificationService.reconcileTaskAlarms(updated, false);
+    const now = new Date();
+    const todayKey = formatLocalDate(now) + '-' + now.getHours() + ':' + now.getMinutes();
+    this.mutateTasks(current => current.map(item => item.id === id ? {
+      ...item, snoozedUntilIso: null,
+      lastAlarmFiredKey: item.executionDate + 'T' + item.executionTime + '|' + todayKey,
+      updatedAt: now.toISOString(),
+    } : item));
     clearRingingAlarm();
     notifyDataListeners();
+    await this.reconcileAlarms();
   }
 
   /**

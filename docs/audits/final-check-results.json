@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-21",
+  "root": "D:\\IT\\Software Engineer\\mobile\\MyLife",
+  "typecheck": {
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "chunk_id": "d2e312",
+    "wall_time_seconds": 0.0000222,
+    "exit_code": 0,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "lint": {
+    "command": "node node_modules/eslint/bin/eslint.js src scripts --no-cache",
+    "chunk_id": "e9db8a",
+    "wall_time_seconds": 0.0000406,
+    "exit_code": 0,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "auditHarnessSyntax": {
+    "status": "PASS",
+    "scope": "All docs/audits/*.cjs, node --check",
+    "exitCode": 0
+  },
+  "sourcePreservation": {
+    "status": "PASS",
+    "sourceFiles": 162,
+    "changedSourceFiles": 0
+  },
+  "reportValidation": {
+    "uniqueFindings": 24,
+    "severity": {
+      "HIGH": 7,
+      "MEDIUM": 16,
+      "LOW": 1
+    },
+    "brokenLocalLinks": 0,
+    "jsonFilesParse": true
+  },
+  "temporaryServers": {
+    "status": "STOPPED",
+    "pids": [
+      11476,
+      35160,
+      35316,
+      32660
+    ]
+  },
+  "interpretation": "Passing audit checks do not mean application findings are fixed or native QA passed."
+}

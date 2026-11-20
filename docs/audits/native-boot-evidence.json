@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-21",
+  "attempt": "New MyLifeAudit AVD in .expo/audit-native/avd; existing API36 system image; no existing user data copied",
+  "result": "BOOT FAILED before Expo Go or MyLife ran",
+  "cachedApkInstalled": false,
+  "changesToHostVirtualization": false,
+  "selectedLogLines": [
+    {
+      "file": ".expo/audit-native/emulator-out.log",
+      "line": "INFO         | Found systemPath C:\\Users\\ACER\\AppData\\Local\\Android\\Sdk\\system-images\\android-36\\google_apis_playstore_ps16k\\x86_64\\"
+    },
+    {
+      "file": ".expo/audit-native/emulator-out.log",
+      "line": "INFO         | Checking system compatibility:"
+    },
+    {
+      "file": ".expo/audit-native/emulator-out.log",
+      "line": "ERROR        | emuglConfig_init: Invalid GPU mode 'software', use one of: host swiftshader_indirect. If you're already using one of those modes, the emulator installation may be corrupt. Please re-install the emulator. angle angle_indirect mesa swiftshader swiftshader_indirect"
+    },
+    {
+      "file": ".expo/audit-native/emulator-out.log",
+      "line": "ERROR        | Invalid GPU mode 'software', use one of: host swiftshader_indirect. If you're already using one of those modes, the emulator installation may be corrupt. Please re-install the emulator. angle angle_indirect mesa swiftshader swiftshader_indirect"
+    },
+    {
+      "file": ".expo/audit-native/emulator-out.log",
+      "line": "WHPX on Windows 10.0.26300 detected."
+    },
+    {
+      "file": ".expo/audit-native/emulator-out.log",
+      "line": "WARNING      | QEMU main loop exits abnormally with code 1"
+    },
+    {
+      "file": ".expo/audit-native/emulator-err.log",
+      "line": "C:\\Users\\ACER\\AppData\\Local\\Android\\Sdk\\emulator\\qemu\\windows-x86_64\\qemu-system-x86_64-headless.exe: WHPX: Failed to setup partition, hr=80070005"
+    },
+    {
+      "file": ".expo/audit-native/emulator-err.log",
+      "line": "C:\\Users\\ACER\\AppData\\Local\\Android\\Sdk\\emulator\\qemu\\windows-x86_64\\qemu-system-x86_64-headless.exe: failed to initialize WHPX: Invalid argument"
+    }
+  ]
+}

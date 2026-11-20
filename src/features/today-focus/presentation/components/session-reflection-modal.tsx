@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { View, TextInput, Pressable, StyleSheet } from 'react-native';
 import { Star, Sparkles } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, fontFamily } from '@/theme/tokens';
+import { formInputBase, formLabelSpacing, formTextArea } from '@/shared/ui/form-control-styles';
+import { radius, space } from '@/theme/tokens';
 import { AppText, Button, AppBottomSheet, Banner } from '@/shared/ui';
 
 export interface SessionReflectionData { rating: number; obstacle?: string; nextAction?: string; }
@@ -54,9 +55,9 @@ export const SessionReflectionModal: React.FC<SessionReflectionModalProps> = ({ 
 };
 const styles = StyleSheet.create({
   intro: { backgroundColor: colors.secondaryContainer, padding: space[4], borderRadius: radius.lg, marginBottom: space[4] },
-  label: { marginBottom: space[2], marginTop: space[3] },
+  label: { marginBottom: space[2], marginTop: space[3], ...formLabelSpacing },
   stars: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: space[3] },
   star: { width: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
-  input: { minHeight: 56, borderWidth: 1, borderColor: colors.outline, borderRadius: radius.md, padding: space[3], color: colors.onSurface, fontSize: 14, fontFamily: fontFamily.regular },
-  multiline: { minHeight: 96, textAlignVertical: 'top' },
+  input: { ...formInputBase },
+  multiline: { ...formTextArea },
 });

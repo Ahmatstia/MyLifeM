@@ -1,0 +1,65 @@
+{
+  "finding": "AUD-01",
+  "date": "2026-11-21",
+  "status": "FIXED",
+  "productionChange": {
+    "file": "src/features/settings/data/backup-format.ts",
+    "description": "Allow ROUTINE alongside the four existing weekly schedule types in parseBackup; backup versions and schema unchanged."
+  },
+  "regressionTests": {
+    "file": "scripts/check-backup.cjs",
+    "newChecks": 7,
+    "coverage": [
+      "COLLEGE, WORK, STUDY, PERSONAL and ROUTINE retain schedules and daily logs in schema versions 1 and 2",
+      "Repository export and restore recovers a ROUTINE schedule and its daily logs after deletion in the in-memory test database",
+      "Unknown schedule types remain rejected"
+    ],
+    "beforeFix": {
+      "exitCode": 1,
+      "error": "Cadangan tidak valid: scheduleType tidak dikenal.",
+      "case": "ROUTINE schedules and daily logs survive current and legacy backup parsing"
+    },
+    "afterFix": {
+      "chunk_id": "c2e388",
+      "wall_time_seconds": 3.0506086,
+      "exit_code": 0,
+      "original_token_count": 734,
+      "output": "(node:17304) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: previous complete v1 backups upgrade to one owner, stage FKs and session labels\nPASS: all 13 tables round trip, including custom labels, nulls, legacy status and quoted SQL text\nPASS: COLLEGE schedules and daily logs survive current and legacy backup parsing\nPASS: WORK schedules and daily logs survive current and legacy backup parsing\nPASS: STUDY schedules and daily logs survive current and legacy backup parsing\nPASS: PERSONAL schedules and daily logs survive current and legacy backup parsing\nPASS: ROUTINE schedules and daily logs survive current and legacy backup parsing\nPASS: repository export/restore recovers ROUTINE schedules and their daily logs\nPASS: reject unknown version\nPASS: reject old incomplete snapshot\nPASS: reject extra tables\nPASS: reject extra columns\nPASS: reject missing columns\nPASS: reject duplicate IDs\nPASS: reject empty ID\nPASS: reject orphan references\nPASS: reject wrong stage owner\nPASS: reject two task owners\nPASS: reject invalid type\nPASS: reject invalid boolean\nPASS: reject invalid date\nPASS: reject invalid date-only\nPASS: reject duplicate daily priority\nPASS: reject negative duration\nPASS: reject unknown status\nPASS: reject unknown weekly schedule type\nPASS: reject rating outside range\nPASS: reject reversed session\nPASS: reject session without a clock\nPASS: reject timed agenda without a clock\nPASS: reject reversed agenda\nPASS: reject empty label\nPASS: reject invalid preferences\nPASS: reject duplicate category names\nPASS: invalid JSON and BOM, byte and row limits\nPASS: repository restores every table through staging and active transaction\nPASS: invalid input never opens staging or changes active data\nPASS: concurrent edits survive without replacement\nPASS: failure after deletes and partial inserts rolls everything back\nPASS: integrity failure rolls back replacement\nPASS: restart does not resurrect defaults or overwrite restored nulls/colors\nPASS: an intentionally empty restored database stays empty\nPASS: failed startup rolls back newly created tables\nPASS: startup can retry after a migration failure\nPASS: canceled picker and verified recovery file\nPASS: partial safety writes rejected and oversized files never read\nPASS: web recovery verifies persistence and quota failure preserves the earlier safety copy\nPASS: old agenda reminders canceled, unrelated reminders retained, zero-minute restored reminder scheduled\nPASS: safety-file failure stops before any active restore and keeps the confirmation\nPASS: failed restore never remounts or reschedules reminders\nPASS: successful commit resets stale screens before reminders, reminder failure is reported as a warning\nPASS: rapid duplicate backup actions are locked\nPASS: 52 backup checks. No user database accessed. Native dialogs are not covered.\n"
+    }
+  },
+  "typecheck": {
+    "chunk_id": "d71def",
+    "wall_time_seconds": 0.0000239,
+    "exit_code": 0,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "lint": {
+    "chunk_id": "1479bd",
+    "wall_time_seconds": 0.0000242,
+    "exit_code": 0,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "sourceReview": {
+    "expectedSourceFileChangesSinceAudit": [
+      "src/features/settings/data/backup-format.ts"
+    ],
+    "other161SourceFilesMatchAuditBaseline": true,
+    "existingUserEditsPreserved": true,
+    "diffWhitespaceCheck": "PASS"
+  },
+  "manualValidation": {
+    "date": "2026-11-21",
+    "status": "USER_REPORTED_PASS",
+    "report": "Pengguna menyatakan uji manual backup/pemulihan rutinitas berhasil mengikuti panduan Expo Go.",
+    "independentlyObserved": false,
+    "deviceModelAndOS": "Not supplied"
+  },
+  "limitations": [
+    "Only temporary SQLite :memory: and native mocks were used",
+    "Native backup/restore was subsequently reported successful by the user; it was not independently observed by the agent",
+    "Other audit findings remain open"
+  ],
+  "historicalEvidence": "Original audit JSON files and source hashes remain baseline snapshots; the F01 bug assertion is expected to stop reproducing after this fix."
+}

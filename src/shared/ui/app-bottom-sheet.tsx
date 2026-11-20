@@ -212,9 +212,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: space[4],
     paddingBottom: space[6],
+    gap: space[3],
   },
   staticContent: {
     flex: 1,
     padding: space[4],
+    gap: space[3],
   },
 });

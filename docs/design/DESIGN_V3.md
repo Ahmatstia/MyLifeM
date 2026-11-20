@@ -16,6 +16,8 @@ MyLife membantu pengguna menghubungkan tujuan, tindakan hari ini, agenda, dan pr
 - Gunakan `CapsuleDateStrip` untuk pemilih pekan yang sama. Kategori dikelola dari Pengaturan, bukan melalui layar navigasi baru.
 - Aksi yang bisa ditekan mempertahankan area sentuh minimum 44 dp; ikon boleh kecil, area tombol tetap cukup.
 - Gunakan satu pola navigasi bawah yang konsisten. Hindari FAB dekoratif jika tindakan yang sama sudah tersedia dalam layar.
+- Form memakai label yang selalu terlihat, placeholder berupa arahan umum, jarak label-field konsisten, input standar setinggi 48 dp, dan input multi-baris setinggi minimal 88 dp. Waktu/tanggal boleh ringkas tetapi tetap memakai border, radius, dan tipografi yang sama.
+- Letakkan satu kelompok field dalam satu card sederhana; hindari dekorasi besar yang mendorong input utama ke bawah.
 
 ## Pola layar
 

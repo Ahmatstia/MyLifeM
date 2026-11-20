@@ -24,7 +24,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { formInputBase } from '@/shared/ui/form-control-styles';
+import { formInputBase, formInputCompact } from '@/shared/ui/form-control-styles';
 import { fontFamily, radius, space } from '@/theme/tokens';
 import { AppBottomSheet, AppText, SunButton } from '@/shared/ui';
 import { formatLocalDate } from '@/shared/utils/local-date';
@@ -232,6 +232,8 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
       setSubtasks([]);
       setSubtaskDraft('');
       onClose();
+    } else {
+      setErrorMessage('Tugas belum tersimpan. Silakan coba lagi.');
     }
   };
 
@@ -257,8 +259,19 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
           </View>
         )}
 
-        {/* 1. Kategori & Mata Kuliah / Konteks */}
-        <AppText style={styles.sectionLabel}>1. IDENTITAS TUGAS</AppText>
+        <AppText style={styles.sectionLabel}>Nama tugas</AppText>
+        <TextInput
+          value={title}
+          onChangeText={(v) => {
+            setTitle(v);
+            if (errorMessage) setErrorMessage(null);
+          }}
+          placeholder="Masukkan nama tugas"
+          placeholderTextColor={s.inkSubtle}
+          style={styles.inputBox}
+        />
+
+        <AppText style={styles.sectionLabel}>Kategori dan konteks</AppText>
         <View style={styles.categoryRow}>
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
@@ -291,17 +304,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
           })}
         </View>
 
-        <TextInput
-          value={title}
-          onChangeText={(v) => {
-            setTitle(v);
-            if (errorMessage) setErrorMessage(null);
-          }}
-          placeholder="Masukkan nama tugas"
-          placeholderTextColor={s.inkSubtle}
-          style={styles.inputBox}
-        />
-
+        <AppText style={styles.fieldLabel}>Konteks (opsional)</AppText>
         <View style={styles.twoColRow}>
           <TextInput
             value={courseOrContext}
@@ -344,24 +347,21 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
           })}
         </View>
 
-        {/* 2. Pengaturan Waktu Ganda: Deadline vs Kapan Dikerjakan */}
-        <AppText style={styles.sectionLabel}>
-          2. KAPAN DEADLINE & KAPAN DIKERJAKAN?
-        </AppText>
+        <AppText style={styles.sectionLabel}>Waktu tugas</AppText>
 
         {/* Box A: Deadline Pengumpulan */}
         <View style={styles.dateCardDeadline}>
           <View style={styles.dateCardHeader}>
             <CalendarClock size={16} color="#B84A27" strokeWidth={2.4} />
             <AppText style={styles.dateCardTitleDeadline}>
-              BATAS PENGUMPULAN (DEADLINE)
+              Batas pengumpulan
             </AppText>
           </View>
 
           <View style={styles.presetChipsWrap}>
             {[
               {
-                label: 'Selasa Depan',
+                label: 'Selasa',
                 date: getNextWeekdayDateStr(todayStr, 2),
               },
               {
@@ -373,7 +373,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
                 date: addDaysToDateStr(todayStr, 3),
               },
               {
-                label: 'Minggu Depan',
+                label: 'Minggu',
                 date: addDaysToDateStr(todayStr, 7),
               },
             ].map((preset) => {
@@ -432,25 +432,25 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
           <View style={styles.dateCardHeader}>
             <Sparkles size={16} color={s.forest} strokeWidth={2.4} />
             <AppText style={styles.dateCardTitleExec}>
-              JADWAL EKSEKUSI (KAPAN MAU DIKERJAKAN?)
+              Jadwal pengerjaan
             </AppText>
           </View>
 
           <View style={styles.presetChipsWrap}>
             {[
               {
-                label: '🌟 H-2 Deadline (Saran)',
+                label: '2 hari sebelum',
                 date:
                   addDaysToDateStr(deadlineDate, -2) < todayStr
                     ? todayStr
                     : addDaysToDateStr(deadlineDate, -2),
               },
               {
-                label: 'Hari Minggu',
+                label: 'Minggu depan',
                 date: getNextWeekdayDateStr(todayStr, 0),
               },
               {
-                label: 'H-1 Deadline',
+                label: '1 hari sebelum',
                 date:
                   addDaysToDateStr(deadlineDate, -1) < todayStr
                     ? todayStr
@@ -544,10 +544,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
           </View>
         </View>
 
-        {/* 3. Mode Peringatan: Alarm Berisik vs Notifikasi */}
-        <AppText style={styles.sectionLabel}>
-          3. MODE PERINGATAN & LAGU ALARM
-        </AppText>
+        <AppText style={styles.sectionLabel}>Pengingat dan alarm</AppText>
 
         <View style={styles.alertModeStack}>
           {ALERT_MODES.map((mode) => {
@@ -739,10 +736,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
           </View>
         )}
 
-        {/* 4. Sub-tugas / Langkah Pengerjaan & Auto-Sync Hari Ini */}
-        <AppText style={styles.sectionLabel}>
-          4. CHECKLIST LANGKAH & SINKRONISASI
-        </AppText>
+        <AppText style={styles.sectionLabel}>Langkah tugas</AppText>
 
         <View style={styles.subtaskInputRow}>
           <TextInput
@@ -786,8 +780,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
               Otomatis Masuk ke &ldquo;Hari Ini&rdquo;
             </AppText>
             <AppText style={styles.autoSyncSub}>
-              Saat tanggal pengerjaan tiba, tugas otomatis tampil di layar Hari
-              Ini.
+              Tugas muncul otomatis pada tanggal pengerjaan.
             </AppText>
           </View>
           <Switch
@@ -819,10 +812,14 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
-    letterSpacing: 0.7,
-    color: s.forest,
-    marginTop: 4,
+    fontSize: 13,
+    color: s.ink,
+    marginTop: space[1],
+  },
+  fieldLabel: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+    color: s.inkMuted,
   },
   categoryRow: {
     flexDirection: 'row',
@@ -834,8 +831,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    paddingVertical: 10,
-    borderRadius: 14,
+    minHeight: 44,
+    paddingVertical: space[2],
+    borderRadius: radius.md,
     backgroundColor: '#F3EDE0',
     borderWidth: 1,
     borderColor: '#E5DEC9',
@@ -856,9 +854,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5DEC9',
-    borderRadius: 16,
+    borderRadius: radius.md,
     paddingHorizontal: space[3],
-    paddingVertical: 12,
+    paddingVertical: space[2],
     fontFamily: fontFamily.medium,
     fontSize: 14,
     color: s.ink,
@@ -901,7 +899,7 @@ const styles = StyleSheet.create({
   },
   dateCardDeadline: {
     backgroundColor: '#FFF7F2',
-    borderRadius: 20,
+    borderRadius: radius.lg,
     padding: space[3],
     borderWidth: 1,
     borderColor: '#F3D5C5',
@@ -909,7 +907,7 @@ const styles = StyleSheet.create({
   },
   dateCardExec: {
     backgroundColor: '#F2F9F5',
-    borderRadius: 20,
+    borderRadius: radius.lg,
     padding: space[3],
     borderWidth: 1,
     borderColor: '#C9E5D4',
@@ -922,14 +920,12 @@ const styles = StyleSheet.create({
   },
   dateCardTitleDeadline: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
-    letterSpacing: 0.5,
+    fontSize: 12,
     color: '#B84A27',
   },
   dateCardTitleExec: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
-    letterSpacing: 0.5,
+    fontSize: 12,
     color: s.forest,
   },
   presetChipsWrap: {
@@ -938,9 +934,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   presetChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+    minHeight: 36,
+    paddingHorizontal: space[2],
+    paddingVertical: space[1],
+    borderRadius: radius.sm,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E3DAC6',
@@ -981,6 +978,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
     fontSize: 13,
     color: s.ink,
+    ...formInputCompact,
   },
   quickTimeRow: {
     flexDirection: 'row',

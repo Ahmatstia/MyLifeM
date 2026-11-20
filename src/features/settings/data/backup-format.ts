@@ -200,7 +200,7 @@ export function parseBackup(json: string): BackupDocument {
     if ((row.key === 'haptics_enabled' || row.key === 'keep_awake_enabled') && row.value !== 'true' && row.value !== 'false') return invalid('preferensi harus true/false.');
   }
   for (const row of typed.weeklySchedules) {
-    choice(row, 'scheduleType', ['COLLEGE', 'WORK', 'STUDY', 'PERSONAL']);
+    choice(row, 'scheduleType', ['COLLEGE', 'WORK', 'STUDY', 'PERSONAL', 'ROUTINE']);
     if (typeof row.dayOfWeek !== 'number' || row.dayOfWeek < 1 || row.dayOfWeek > 7) return invalid('hari jadwal rutin harus 1–7.');
     if (typeof row.startTime !== 'string' || typeof row.endTime !== 'string' || !/^\d{2}:\d{2}$/.test(row.startTime) || !/^\d{2}:\d{2}$/.test(row.endTime) || row.startTime >= row.endTime) return invalid('jam mulai dan selesai jadwal rutin tidak valid.');
     if (row.isActive !== 0 && row.isActive !== 1) return invalid('isActive jadwal rutin harus 0 atau 1.');

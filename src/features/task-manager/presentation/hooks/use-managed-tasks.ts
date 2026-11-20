@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { formatLocalDate } from '@/shared/utils/local-date';
 import {
@@ -21,11 +21,13 @@ export function useManagedTasks() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const errorVersion = useRef(0);
   const [previewingTrackId, setPreviewingTrackId] = useState<string | null>(
     null
   );
 
   const loadAll = useCallback(async () => {
+    const version = errorVersion.current;
     try {
       await managedTaskRepository.syncWithCoreTasksAndToday();
       const [taskList, trackList] = await Promise.all([
@@ -34,9 +36,9 @@ export function useManagedTasks() {
       ]);
       setTasks(taskList);
       setAlarmTracks(trackList);
-      setError(null);
+      if (version === errorVersion.current) setError(null);
     } catch (err) {
-      setError(
+      if (version === errorVersion.current) setError(
         err instanceof Error ? err.message : 'Gagal memuat daftar tugas.'
       );
     } finally {
@@ -66,6 +68,7 @@ export function useManagedTasks() {
       await loadAll();
       return true;
     } catch (err) {
+      errorVersion.current++;
       setError(
         err instanceof Error ? err.message : 'Gagal menyimpan tugas baru.'
       );
@@ -73,20 +76,19 @@ export function useManagedTasks() {
     }
   };
 
-  const toggleTask = async (id: string) => {
-    await managedTaskRepository.toggleTaskCompletion(id);
-    await loadAll();
+  const mutateTask = async (work: () => Promise<void>) => {
+    try {
+      await work();
+      await loadAll();
+    } catch (err) {
+      errorVersion.current++;
+      setError(err instanceof Error ? err.message : 'Perubahan tugas belum tersimpan. Coba lagi.');
+    }
   };
 
-  const toggleSubtask = async (taskId: string, subtaskId: string) => {
-    await managedTaskRepository.toggleSubtask(taskId, subtaskId);
-    await loadAll();
-  };
-
-  const deleteTask = async (id: string) => {
-    await managedTaskRepository.deleteTask(id);
-    await loadAll();
-  };
+  const toggleTask = (id: string) => mutateTask(() => managedTaskRepository.toggleTaskCompletion(id));
+  const toggleSubtask = (taskId: string, subtaskId: string) => mutateTask(() => managedTaskRepository.toggleSubtask(taskId, subtaskId));
+  const deleteTask = (id: string) => mutateTask(() => managedTaskRepository.deleteTask(id));
 
   const pickAndSaveCustomSong = async (): Promise<CustomAlarmTrack | null> => {
     try {

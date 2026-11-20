@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-21",
+  "checkedAt": "2026-11-20T22:16:22.131Z",
+  "sourcePreservation": {
+    "files": 162,
+    "unchanged": true,
+    "changes": []
+  },
+  "bundles": [
+    {
+      "platform": "android",
+      "exportStatus": "PASS",
+      "bytecode": false,
+      "bundle": "_expo/static/js/android/entry-621fa6dd5e4fcc7d6c74a2ca7519c860.js",
+      "bytes": 4831029,
+      "assets": 55,
+      "nativeBinaryBuilt": false
+    },
+    {
+      "platform": "ios",
+      "exportStatus": "PASS",
+      "bytecode": false,
+      "bundle": "_expo/static/js/ios/entry-75d111e37e22e18aaf1945c6c212e0ce.js",
+      "bytes": 4568129,
+      "assets": 51,
+      "nativeBinaryBuilt": false
+    }
+  ],
+  "suites": [
+    {
+      "name": "integrity",
+      "exitCode": 0
+    },
+    {
+      "name": "calendar",
+      "exitCode": 0
+    },
+    {
+      "name": "progress",
+      "exitCode": 0
+    },
+    {
+      "name": "timer",
+      "exitCode": 0
+    }
+  ],
+  "layout": {
+    "platform": "Chromium SSR fixtures; fonts loaded; no hydration; no native keyboard/safe-area proof",
+    "cases": 112,
+    "casesWithOverflow": 26,
+    "screens": [
+      "today",
+      "targets",
+      "projects",
+      "agenda",
+      "target-detail",
+      "project-detail",
+      "settings",
+      "create-target",
+      "create-project",
+      "create-priority",
+      "create-agenda",
+      "task-manager",
+      "create-managed-task",
+      "quick-add"
+    ],
+    "widths": [
+      320,
+      360,
+      412,
+      768
+    ],
+    "fontScales": [
+      1,
+      2
+    ],
+    "interpretation": "Rendering and geometry only; mocked hooks, no hydration or native QA."
+  },
+  "native": {
+    "userWorkflow": "Expo Go; no MyLife APK/development build yet",
+    "cachedHost": "Expo-Go-58.0.5.apk",
+    "hostInstalledForAudit": false,
+    "attempted": "New isolated MyLifeAudit AVD; existing system image API36; no user data copied",
+    "status": "BLOCKED before Android boot",
+    "blocker": "WHPX Failed to setup partition hr=80070005; failed to initialize WHPX",
+    "additionalSetupError": "GPU mode software unsupported by installed emulator; swiftshader_indirect is advertised",
+    "deviceConnected": false,
+    "applicationTested": false,
+    "logs": ".expo/audit-native/emulator-out.log and emulator-err.log (ignored, local only)"
+  }
+}

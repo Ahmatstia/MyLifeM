@@ -30,8 +30,6 @@ import {
   ChoiceTile,
   SunButton,
   FieldLabel,
-  MascotHead,
-  sproutShadow,
 } from '@/shared/ui';
 import { localTimeToIso, shiftDate, formatLocalDate, isDateOnly } from '@/shared/utils/local-date';
 import { useAgenda } from '../hooks/use-agenda';
@@ -155,11 +153,8 @@ export const CreateAgendaScreen: React.FC = () => {
             </View>
           )}
 
-          {/* Mascot + Cloud Input */}
+          <FieldLabel>Nama kegiatan</FieldLabel>
           <View style={styles.cloudHeroWrap}>
-            <View style={styles.mascotHeadWrap} pointerEvents="none">
-            </View>
-
             <View style={styles.cloudOuterCard}>
               <View style={styles.cloudInnerPill}>
                 <TextInput
@@ -176,6 +171,7 @@ export const CreateAgendaScreen: React.FC = () => {
                 <Sparkles size={20} color={s.sun} fill={s.sun} />
               </View>
 
+              <FieldLabel>Catatan (opsional)</FieldLabel>
               <TextInput
                 value={description}
                 onChangeText={setDescription}
@@ -304,6 +300,7 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     flex: 1,
+    gap: space[3],
   },
   scrollContent: {
     paddingHorizontal: space[5],
@@ -317,33 +314,23 @@ const styles = StyleSheet.create({
   },
   cloudHeroWrap: {
     marginTop: space[2],
-    marginBottom: space[1],
-    position: 'relative',
-  },
-  mascotHeadWrap: {
-    position: 'absolute',
-    top: -68,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 3,
+    marginBottom: space[2],
   },
   cloudOuterCard: {
     backgroundColor: s.card,
-    borderRadius: 32,
-    padding: space[4],
+    borderRadius: radius.lg,
+    padding: space[3],
     borderWidth: 1,
     borderColor: '#F1EADA',
     gap: space[2],
-    ...sproutShadow,
   },
   cloudInnerPill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F4EFE3',
-    borderRadius: 22,
-    paddingHorizontal: space[4],
-    paddingVertical: space[3],
+    borderRadius: radius.md,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
     gap: space[2],
   },
   cloudInput: {
@@ -369,8 +356,8 @@ const styles = StyleSheet.create({
   },
   timeCard: {
     backgroundColor: '#F1EBDC',
-    borderRadius: 24,
-    padding: space[4],
+    borderRadius: radius.lg,
+    padding: space[3],
     borderWidth: 1,
     borderColor: '#E7DFCC',
     gap: space[3],
@@ -402,7 +389,7 @@ const styles = StyleSheet.create({
   timeFieldBox: {
     flex: 1,
     backgroundColor: s.card,
-    borderRadius: 16,
+    borderRadius: radius.md,
     paddingHorizontal: space[3],
     paddingVertical: space[2],
     borderWidth: 1,
@@ -450,9 +437,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F1EBDC',
-    borderRadius: 22,
-    paddingHorizontal: space[4],
-    paddingVertical: 12,
+    borderRadius: radius.md,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
     borderWidth: 1,
     borderColor: '#E7DFCC',
     gap: space[3],

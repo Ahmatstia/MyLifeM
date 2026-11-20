@@ -29,7 +29,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { formInputBase } from '@/shared/ui/form-control-styles';
+import { formInputBase, formInputCompact } from '@/shared/ui/form-control-styles';
 import { fontFamily, radius, space } from '@/theme/tokens';
 import {
   Screen,
@@ -112,6 +112,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
     alarmTracks,
     previewingTrackId,
     addTask,
+    error: saveError,
     pickAndSaveCustomSong,
     togglePreviewTrack,
     stopPreview,
@@ -257,496 +258,103 @@ export const CreateManagedTaskScreen: React.FC = () => {
           />
         </View>
 
-        {errorMessage && (
-          <View style={styles.errorBox}>
-            <AppText style={styles.errorText}>{errorMessage}</AppText>
-          </View>
-        )}
-
-        <AppText style={styles.sectionHeading}>Nama tugas</AppText>
-        <View style={styles.cloudHeroWrap}>
-          <View style={styles.cloudOuterCard}>
-            <View style={styles.cloudInnerPill}>
-              <TextInput
-                value={title}
-                onChangeText={(text) => {
-                  setTitle(text);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                placeholder="Masukkan nama tugas"
-                placeholderTextColor={s.inkSubtle}
-                style={styles.cloudInput}
-                autoFocus
-              />
-              <Sparkles size={20} color={s.sun} fill={s.sun} />
+        <View style={styles.formStack}>
+          {(errorMessage || saveError) && (
+            <View style={styles.errorBox}>
+              <AppText style={styles.errorText} accessibilityLiveRegion="polite">{errorMessage || saveError}</AppText>
             </View>
+          )}
 
-            <TextInput
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Masukkan catatan tugas (opsional)"
-              placeholderTextColor={s.inkSubtle}
-              multiline
-              style={styles.cloudDescInput}
-            />
-          </View>
-        </View>
-
-        {/* 1. Identitas Tugas */}
-        <AppText style={styles.sectionHeading}>1. KATEGORI & KONTEKS</AppText>
-        <View style={styles.categoryTilesRow}>
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const selected = categoryType === cat.id;
-            return (
-              <Pressable
-                key={cat.id}
-                onPress={() => setCategoryType(cat.id)}
-                accessibilityRole="button"
-                style={[
-                  styles.categoryPill,
-                  selected && styles.categoryPillActive,
-                ]}
-              >
-                <Icon
-                  size={15}
-                  color={selected ? '#FFFFFF' : s.ink}
-                  strokeWidth={2.4}
+          <AppText style={styles.sectionHeading}>Nama tugas</AppText>
+          <View style={styles.cloudHeroWrap}>
+            <View style={styles.cloudOuterCard}>
+              <View style={styles.cloudInnerPill}>
+                <TextInput
+                  value={title}
+                  onChangeText={(text) => {
+                    setTitle(text);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  placeholder="Masukkan nama tugas"
+                  placeholderTextColor={s.inkSubtle}
+                  style={styles.cloudInput}
+                  autoFocus
                 />
-                <AppText
-                  style={[
-                    styles.categoryPillText,
-                    selected && styles.categoryPillTextActive,
-                  ]}
-                >
-                  {cat.label}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </View>
+                <Sparkles size={16} color={s.sun} fill={s.sun} />
+              </View>
 
-        <TextInput
-          value={courseOrContext}
-          onChangeText={setCourseOrContext}
-          placeholder={
-            categoryType === 'COLLEGE'
-              ? 'Masukkan konteks tugas'
-              : 'Masukkan konteks tugas'
-          }
-          placeholderTextColor={s.inkSubtle}
-          style={styles.inputBox}
-        />
-
-        {/* Estimasi Durasi Pengerjaan */}
-        <View style={styles.durationCard}>
-          <View style={styles.durationCardLeft}>
-            <Clock size={16} color={s.forest} strokeWidth={2.4} />
-            <AppText style={styles.durationCardTitle}>
-              Estimasi Waktu Pengerjaan:
-            </AppText>
-          </View>
-          <View style={styles.durationChipsRow}>
-            {[30, 60, 90, 120].map((mins) => {
-              const active = estimatedMinutes === mins;
-              return (
-                <Pressable
-                  key={mins}
-                  onPress={() => setEstimatedMinutes(mins)}
-                  accessibilityRole="button"
-                  style={[
-                    styles.smallChip,
-                    active && styles.smallChipActive,
-                  ]}
-                >
-                  <AppText
-                    style={[
-                      styles.smallChipText,
-                      active && styles.smallChipTextActive,
-                    ]}
-                  >
-                    {mins >= 60 ? `${mins / 60}j` : `${mins}m`}
-                  </AppText>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* 2. Pengaturan Waktu Ganda: Deadline vs Kapan Dikerjakan */}
-        <AppText style={styles.sectionHeading}>
-          2. DEADLINE VS JADWAL KERJAKAN
-        </AppText>
-
-        {/* Box A: Deadline Pengumpulan */}
-        <View style={styles.dateCardDeadline}>
-          <View style={styles.dateCardHeader}>
-            <CalendarClock size={16} color="#B84A27" strokeWidth={2.4} />
-            <AppText style={styles.dateCardTitleDeadline}>
-              BATAS PENGUMPULAN (DEADLINE)
-            </AppText>
-          </View>
-
-          <View style={styles.presetChipsWrap}>
-            {[
-              {
-                label: 'Selasa Depan',
-                date: getNextWeekdayDateStr(todayStr, 2),
-              },
-              {
-                label: 'Besok',
-                date: addDaysToDateStr(todayStr, 1),
-              },
-              {
-                label: '+3 Hari',
-                date: addDaysToDateStr(todayStr, 3),
-              },
-              {
-                label: 'Minggu Depan',
-                date: addDaysToDateStr(todayStr, 7),
-              },
-            ].map((preset) => {
-              const active = deadlineDate === preset.date;
-              return (
-                <Pressable
-                  key={preset.label}
-                  onPress={() => handleSelectDeadlinePreset(preset.date)}
-                  accessibilityRole="button"
-                  style={[
-                    styles.presetChip,
-                    active && styles.presetChipDeadlineActive,
-                  ]}
-                >
-                  <AppText
-                    style={[
-                      styles.presetChipText,
-                      active && styles.presetChipTextActive,
-                    ]}
-                  >
-                    {preset.label}
-                  </AppText>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View style={styles.dateInputRow}>
-            <View style={{ flex: 1.4 }}>
-              <AppText style={styles.fieldTinyLabel}>
-                Tanggal Deadline ({formatDayAndDateIndo(deadlineDate)})
-              </AppText>
               <TextInput
-                value={deadlineDate}
-                onChangeText={setDeadlineDate}
-              placeholder="YYYY-MM-DD"
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Masukkan catatan tugas (opsional)"
                 placeholderTextColor={s.inkSubtle}
-                style={styles.compactDateInput}
-              />
-            </View>
-            <View style={{ flex: 0.9 }}>
-              <AppText style={styles.fieldTinyLabel}>Jam Batas Akhir</AppText>
-              <TextInput
-                value={deadlineTime}
-                onChangeText={setDeadlineTime}
-                placeholder="23:59"
-                placeholderTextColor={s.inkSubtle}
-                style={styles.compactDateInput}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Box B: Jadwal Eksekusi (Kapan Mau Dikerjakan?) */}
-        <View style={styles.dateCardExec}>
-          <View style={styles.dateCardHeader}>
-            <Sparkles size={16} color={s.forest} strokeWidth={2.4} />
-            <AppText style={styles.dateCardTitleExec}>
-              JADWAL EKSEKUSI (KAPAN MAU DIKERJAKAN?)
-            </AppText>
-          </View>
-
-          <View style={styles.presetChipsWrap}>
-            {[
-              {
-                label: '🌟 H-2 Deadline (Saran)',
-                date:
-                  addDaysToDateStr(deadlineDate, -2) < todayStr
-                    ? todayStr
-                    : addDaysToDateStr(deadlineDate, -2),
-              },
-              {
-                label: 'Hari Minggu',
-                date: getNextWeekdayDateStr(todayStr, 0),
-              },
-              {
-                label: 'H-1 Deadline',
-                date:
-                  addDaysToDateStr(deadlineDate, -1) < todayStr
-                    ? todayStr
-                    : addDaysToDateStr(deadlineDate, -1),
-              },
-              {
-                label: 'Hari Ini',
-                date: todayStr,
-              },
-            ].map((preset) => {
-              const active = executionDate === preset.date;
-              return (
-                <Pressable
-                  key={preset.label}
-                  onPress={() => setExecutionDate(preset.date)}
-                  accessibilityRole="button"
-                  style={[
-                    styles.presetChip,
-                    active && styles.presetChipExecActive,
-                  ]}
-                >
-                  <AppText
-                    style={[
-                      styles.presetChipText,
-                      active && styles.presetChipTextActive,
-                    ]}
-                  >
-                    {preset.label}
-                  </AppText>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View style={styles.dateInputRow}>
-            <View style={{ flex: 1.4 }}>
-              <AppText style={styles.fieldTinyLabel}>
-                Tanggal Kerjakan ({formatDayAndDateIndo(executionDate)})
-              </AppText>
-              <TextInput
-                value={executionDate}
-                onChangeText={setExecutionDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={s.inkSubtle}
-                style={styles.compactDateInput}
-              />
-            </View>
-            <View style={{ flex: 0.9 }}>
-              <AppText style={styles.fieldTinyLabel}>Jam Alarm Mulai</AppText>
-              <TextInput
-                value={executionTime}
-                onChangeText={setExecutionTime}
-                placeholder="19:00"
-                placeholderTextColor={s.inkSubtle}
-                style={styles.compactDateInput}
+                multiline
+                style={styles.cloudDescInput}
               />
             </View>
           </View>
 
-          {/* Quick Time Chips for Execution */}
-          <View style={styles.quickTimeRow}>
-            <AppText style={styles.fieldTinyLabel}>Pilih jam cepat:</AppText>
-            {QUICK_EXEC_TIMES.map((tm) => {
-              const selected = executionTime === tm;
+          {/* 1. Identitas Tugas */}
+          <AppText style={styles.sectionHeading}>Kategori dan konteks</AppText>
+          <View style={styles.categoryTilesRow}>
+            {CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              const selected = categoryType === cat.id;
               return (
                 <Pressable
-                  key={tm}
-                  onPress={() => setExecutionTime(tm)}
+                  key={cat.id}
+                  onPress={() => setCategoryType(cat.id)}
                   accessibilityRole="button"
                   style={[
-                    styles.timeQuickPill,
-                    selected && styles.timeQuickPillActive,
-                  ]}
-                >
-                  <AppText
-                    style={[
-                      styles.timeQuickPillText,
-                      selected && styles.timeQuickPillTextActive,
-                    ]}
-                  >
-                    {tm}
-                  </AppText>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {/* Buffer Status Indicator */}
-          <View style={styles.bufferInfoStrip}>
-            <AppText style={styles.bufferInfoText}>{bufferInfo.label}</AppText>
-          </View>
-        </View>
-
-        {/* 3. Mode Peringatan: Alarm Berisik vs Notifikasi */}
-        <AppText style={styles.sectionHeading}>
-          3. MODE PERINGATAN & LAGU ALARM
-        </AppText>
-
-        <View style={styles.alertModeStack}>
-          {ALERT_MODES.map((mode) => {
-            const Icon = mode.icon;
-            const selected = alertMode === mode.id;
-            return (
-              <Pressable
-                key={mode.id}
-                onPress={() => setAlertMode(mode.id)}
-                accessibilityRole="button"
-                style={[
-                  styles.alertModeCard,
-                  selected && styles.alertModeCardActive,
-                ]}
-              >
-                <View
-                  style={[
-                    styles.alertModeIconBox,
-                    selected && styles.alertModeIconBoxActive,
+                    styles.categoryPill,
+                    selected && styles.categoryPillActive,
                   ]}
                 >
                   <Icon
-                    size={18}
-                    color={selected ? '#FFFFFF' : s.forest}
+                    size={15}
+                    color={selected ? '#FFFFFF' : s.ink}
                     strokeWidth={2.4}
                   />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <AppText style={styles.alertModeTitle}>{mode.title}</AppText>
-                  <AppText style={styles.alertModeSub}>{mode.subtitle}</AppText>
-                </View>
-                <View
-                  style={[
-                    styles.radioDotOuter,
-                    selected && styles.radioDotOuterActive,
-                  ]}
-                >
-                  {selected && <View style={styles.radioDotInner} />}
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Custom Song Picker & Track List (Shown when Alarm is used) */}
-        {(alertMode === 'ALARM' || alertMode === 'BOTH') && (
-          <View style={styles.songPickerCard}>
-            <View style={styles.songPickerHeader}>
-              <View style={styles.songPickerTitleRow}>
-                <Music size={16} color={s.forest} strokeWidth={2.5} />
-                <AppText style={styles.songPickerTitle}>
-                  Pilih Lagu / Suara Alarm
-                </AppText>
-              </View>
-
-              <Pressable
-                onPress={handlePickSong}
-                accessibilityRole="button"
-                accessibilityLabel="Pilih lagu alarm dari penyimpanan HP"
-                style={({ pressed }) => [
-                  styles.uploadSongBtn,
-                  pressed && { opacity: 0.85 },
-                ]}
-              >
-                <FolderOpen size={14} color={s.ink} strokeWidth={2.5} />
-                <AppText style={styles.uploadSongBtnText}>
-                  + Lagu dari HP
-                </AppText>
-              </Pressable>
-            </View>
-
-            <View style={styles.trackListStack}>
-              {alarmTracks.map((track) => {
-                const isSelected = selectedTrack.id === track.id;
-                const isPreviewing = previewingTrackId === track.id;
-                return (
-                  <View
-                    key={track.id}
+                  <AppText
                     style={[
-                      styles.trackRow,
-                      isSelected && styles.trackRowSelected,
+                      styles.categoryPillText,
+                      selected && styles.categoryPillTextActive,
                     ]}
                   >
-                    <Pressable
-                      onPress={() => setSelectedTrack(track)}
-                      accessibilityRole="button"
-                      style={styles.trackSelectArea}
-                    >
-                      <View
-                        style={[
-                          styles.radioDotOuter,
-                          isSelected && styles.radioDotOuterActive,
-                        ]}
-                      >
-                        {isSelected && <View style={styles.radioDotInner} />}
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <AppText
-                          style={[
-                            styles.trackNameText,
-                            isSelected && styles.trackNameTextSelected,
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {track.isBuiltIn ? track.name : `🎵 ${track.name}`}
-                        </AppText>
-                        {track.description ? (
-                          <AppText
-                            style={styles.trackDescText}
-                            numberOfLines={1}
-                          >
-                            {track.description}
-                          </AppText>
-                        ) : null}
-                      </View>
-                    </Pressable>
+                    {cat.label}
+                  </AppText>
+                </Pressable>
+              );
+            })}
+          </View>
 
-                    <Pressable
-                      onPress={() => togglePreviewTrack(track)}
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        isPreviewing
-                          ? `Hentikan preview ${track.name}`
-                          : `Putar preview ${track.name}`
-                      }
-                      style={[
-                        styles.previewPlayBtn,
-                        isPreviewing && styles.previewPlayBtnActive,
-                      ]}
-                    >
-                      {isPreviewing ? (
-                        <Square
-                          size={12}
-                          color="#FFFFFF"
-                          fill="#FFFFFF"
-                          strokeWidth={2.4}
-                        />
-                      ) : (
-                        <Play
-                          size={13}
-                          color={s.forest}
-                          fill={s.forest}
-                          strokeWidth={2.4}
-                        />
-                      )}
-                      <AppText
-                        style={[
-                          styles.previewPlayBtnText,
-                          isPreviewing && { color: '#FFFFFF' },
-                        ]}
-                      >
-                        {isPreviewing ? 'Stop' : 'Tes'}
-                      </AppText>
-                    </Pressable>
-                  </View>
-                );
-              })}
-            </View>
+          <TextInput
+            value={courseOrContext}
+            onChangeText={setCourseOrContext}
+            placeholder={
+              categoryType === 'COLLEGE'
+                ? 'Masukkan konteks tugas'
+                : 'Masukkan konteks tugas'
+            }
+            placeholderTextColor={s.inkSubtle}
+            style={styles.inputBox}
+          />
 
-            {/* Snooze Duration Selector */}
-            <View style={styles.snoozeConfigRow}>
-              <AppText style={styles.fieldTinyLabel}>
-                Durasi Tunda (Snooze):
+          {/* Estimasi Durasi Pengerjaan */}
+          <View style={styles.durationCard}>
+            <View style={styles.durationCardLeft}>
+              <Clock size={16} color={s.forest} strokeWidth={2.4} />
+              <AppText style={styles.durationCardTitle}>
+                Estimasi Waktu Pengerjaan:
               </AppText>
-              {[5, 10, 15].map((mins) => {
-                const active = snoozeMinutes === mins;
+            </View>
+            <View style={styles.durationChipsRow}>
+              {[30, 60, 90, 120].map((mins) => {
+                const active = estimatedMinutes === mins;
                 return (
                   <Pressable
                     key={mins}
-                    onPress={() => setSnoozeMinutes(mins)}
+                    onPress={() => setEstimatedMinutes(mins)}
                     accessibilityRole="button"
                     style={[
                       styles.smallChip,
@@ -759,82 +367,476 @@ export const CreateManagedTaskScreen: React.FC = () => {
                         active && styles.smallChipTextActive,
                       ]}
                     >
-                      {mins} mnt
+                      {mins >= 60 ? `${mins / 60}j` : `${mins}m`}
                     </AppText>
                   </Pressable>
                 );
               })}
             </View>
           </View>
-        )}
 
-        {/* 4. Sub-tugas / Langkah Pengerjaan & Auto-Sync Hari Ini */}
-        <AppText style={styles.sectionHeading}>
-          4. LANGKAH & SINKRONISASI
-        </AppText>
+          {/* 2. Pengaturan Waktu Ganda: Deadline vs Kapan Dikerjakan */}
+          <AppText style={styles.sectionHeading}>
+            Waktu tugas
+          </AppText>
 
-        <View style={styles.subtaskInputRow}>
-          <TextInput
-            value={subtaskDraft}
-            onChangeText={setSubtaskDraft}
-            onSubmitEditing={handleAddSubtask}
-              placeholder="Masukkan langkah tugas"
-            placeholderTextColor={s.inkSubtle}
-            style={[styles.inputBox, { flex: 1 }]}
-          />
-          <Pressable
-            onPress={handleAddSubtask}
-            accessibilityRole="button"
-            style={styles.addSubtaskCircle}
-          >
-            <Plus size={18} color="#FFFFFF" strokeWidth={2.6} />
-          </Pressable>
-        </View>
+          {/* Box A: Deadline Pengumpulan */}
+          <View style={styles.dateCardDeadline}>
+            <View style={styles.dateCardHeader}>
+              <CalendarClock size={16} color="#B84A27" strokeWidth={2.4} />
+              <AppText style={styles.dateCardTitleDeadline}>
+                Batas pengumpulan
+              </AppText>
+            </View>
 
-        {subtasks.length > 0 && (
-          <View style={styles.subtaskChipsList}>
-            {subtasks.map((st, idx) => (
-              <View key={`${st}-${idx}`} style={styles.subtaskDraftItem}>
-                <AppText style={styles.subtaskDraftText} numberOfLines={1}>
-                  {idx + 1}. {st}
+            <View style={styles.presetChipsWrap}>
+              {[
+                {
+                  label: 'Selasa',
+                  date: getNextWeekdayDateStr(todayStr, 2),
+                },
+                {
+                  label: 'Besok',
+                  date: addDaysToDateStr(todayStr, 1),
+                },
+                {
+                  label: '+3 Hari',
+                  date: addDaysToDateStr(todayStr, 3),
+                },
+                {
+                  label: 'Minggu',
+                  date: addDaysToDateStr(todayStr, 7),
+                },
+              ].map((preset) => {
+                const active = deadlineDate === preset.date;
+                return (
+                  <Pressable
+                    key={preset.label}
+                    onPress={() => handleSelectDeadlinePreset(preset.date)}
+                    accessibilityRole="button"
+                    style={[
+                      styles.presetChip,
+                      active && styles.presetChipDeadlineActive,
+                    ]}
+                  >
+                    <AppText
+                      style={[
+                        styles.presetChipText,
+                        active && styles.presetChipTextActive,
+                      ]}
+                    >
+                      {preset.label}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={styles.dateInputRow}>
+              <View style={{ flex: 1.4 }}>
+                <AppText style={styles.fieldTinyLabel}>
+                  Tanggal Deadline ({formatDayAndDateIndo(deadlineDate)})
                 </AppText>
+                <TextInput
+                  value={deadlineDate}
+                  onChangeText={setDeadlineDate}
+                placeholder="YYYY-MM-DD"
+                  placeholderTextColor={s.inkSubtle}
+                  style={styles.compactDateInput}
+                />
+              </View>
+              <View style={{ flex: 0.9 }}>
+                <AppText style={styles.fieldTinyLabel}>Jam Batas Akhir</AppText>
+                <TextInput
+                  value={deadlineTime}
+                  onChangeText={setDeadlineTime}
+                  placeholder="23:59"
+                  placeholderTextColor={s.inkSubtle}
+                  style={styles.compactDateInput}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Box B: Jadwal Eksekusi (Kapan Mau Dikerjakan?) */}
+          <View style={styles.dateCardExec}>
+            <View style={styles.dateCardHeader}>
+              <Sparkles size={16} color={s.forest} strokeWidth={2.4} />
+              <AppText style={styles.dateCardTitleExec}>
+                Jadwal pengerjaan
+              </AppText>
+            </View>
+
+            <View style={styles.presetChipsWrap}>
+              {[
+                {
+                  label: '2 hari sebelum',
+                  date:
+                    addDaysToDateStr(deadlineDate, -2) < todayStr
+                      ? todayStr
+                      : addDaysToDateStr(deadlineDate, -2),
+                },
+                {
+                  label: 'Minggu depan',
+                  date: getNextWeekdayDateStr(todayStr, 0),
+                },
+                {
+                  label: '1 hari sebelum',
+                  date:
+                    addDaysToDateStr(deadlineDate, -1) < todayStr
+                      ? todayStr
+                      : addDaysToDateStr(deadlineDate, -1),
+                },
+                {
+                  label: 'Hari Ini',
+                  date: todayStr,
+                },
+              ].map((preset) => {
+                const active = executionDate === preset.date;
+                return (
+                  <Pressable
+                    key={preset.label}
+                    onPress={() => setExecutionDate(preset.date)}
+                    accessibilityRole="button"
+                    style={[
+                      styles.presetChip,
+                      active && styles.presetChipExecActive,
+                    ]}
+                  >
+                    <AppText
+                      style={[
+                        styles.presetChipText,
+                        active && styles.presetChipTextActive,
+                      ]}
+                    >
+                      {preset.label}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={styles.dateInputRow}>
+              <View style={{ flex: 1.4 }}>
+                <AppText style={styles.fieldTinyLabel}>
+                  Tanggal Kerjakan ({formatDayAndDateIndo(executionDate)})
+                </AppText>
+                <TextInput
+                  value={executionDate}
+                  onChangeText={setExecutionDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={s.inkSubtle}
+                  style={styles.compactDateInput}
+                />
+              </View>
+              <View style={{ flex: 0.9 }}>
+                <AppText style={styles.fieldTinyLabel}>Jam Alarm Mulai</AppText>
+                <TextInput
+                  value={executionTime}
+                  onChangeText={setExecutionTime}
+                  placeholder="19:00"
+                  placeholderTextColor={s.inkSubtle}
+                  style={styles.compactDateInput}
+                />
+              </View>
+            </View>
+
+            {/* Quick Time Chips for Execution */}
+            <View style={styles.quickTimeRow}>
+              <AppText style={styles.fieldTinyLabel}>Pilih jam cepat:</AppText>
+              {QUICK_EXEC_TIMES.map((tm) => {
+                const selected = executionTime === tm;
+                return (
+                  <Pressable
+                    key={tm}
+                    onPress={() => setExecutionTime(tm)}
+                    accessibilityRole="button"
+                    style={[
+                      styles.timeQuickPill,
+                      selected && styles.timeQuickPillActive,
+                    ]}
+                  >
+                    <AppText
+                      style={[
+                        styles.timeQuickPillText,
+                        selected && styles.timeQuickPillTextActive,
+                      ]}
+                    >
+                      {tm}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* Buffer Status Indicator */}
+            <View style={styles.bufferInfoStrip}>
+              <AppText style={styles.bufferInfoText}>{bufferInfo.label}</AppText>
+            </View>
+          </View>
+
+          {/* 3. Mode Peringatan: Alarm Berisik vs Notifikasi */}
+          <AppText style={styles.sectionHeading}>
+            Pengingat dan alarm
+          </AppText>
+
+          <View style={styles.alertModeStack}>
+            {ALERT_MODES.map((mode) => {
+              const Icon = mode.icon;
+              const selected = alertMode === mode.id;
+              return (
                 <Pressable
-                  onPress={() => handleRemoveSubtask(idx)}
-                  hitSlop={6}
+                  key={mode.id}
+                  onPress={() => setAlertMode(mode.id)}
+                  accessibilityRole="button"
+                  style={[
+                    styles.alertModeCard,
+                    selected && styles.alertModeCardActive,
+                  ]}
                 >
-                  <X size={14} color={s.inkMuted} />
+                  <View
+                    style={[
+                      styles.alertModeIconBox,
+                      selected && styles.alertModeIconBoxActive,
+                    ]}
+                  >
+                    <Icon
+                      size={18}
+                      color={selected ? '#FFFFFF' : s.forest}
+                      strokeWidth={2.4}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <AppText style={styles.alertModeTitle}>{mode.title}</AppText>
+                    <AppText style={styles.alertModeSub}>{mode.subtitle}</AppText>
+                  </View>
+                  <View
+                    style={[
+                      styles.radioDotOuter,
+                      selected && styles.radioDotOuterActive,
+                    ]}
+                  >
+                    {selected && <View style={styles.radioDotInner} />}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Custom Song Picker & Track List (Shown when Alarm is used) */}
+          {(alertMode === 'ALARM' || alertMode === 'BOTH') && (
+            <View style={styles.songPickerCard}>
+              <View style={styles.songPickerHeader}>
+                <View style={styles.songPickerTitleRow}>
+                  <Music size={16} color={s.forest} strokeWidth={2.5} />
+                  <AppText style={styles.songPickerTitle}>
+                    Pilih Lagu / Suara Alarm
+                  </AppText>
+                </View>
+
+                <Pressable
+                  onPress={handlePickSong}
+                  accessibilityRole="button"
+                  accessibilityLabel="Pilih lagu alarm dari penyimpanan HP"
+                  style={({ pressed }) => [
+                    styles.uploadSongBtn,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                >
+                  <FolderOpen size={14} color={s.ink} strokeWidth={2.5} />
+                  <AppText style={styles.uploadSongBtnText}>
+                    + Lagu dari HP
+                  </AppText>
                 </Pressable>
               </View>
-            ))}
-          </View>
-        )}
 
-        <View style={styles.autoSyncRow}>
-          <View style={{ flex: 1, gap: 2 }}>
-            <AppText style={styles.autoSyncTitle}>
-              Otomatis Masuk ke &ldquo;Hari Ini&rdquo;
-            </AppText>
-            <AppText style={styles.autoSyncSub}>
-              Saat tanggal pengerjaan tiba, tugas otomatis tampil di layar Hari
-              Ini.
-            </AppText>
-          </View>
-          <Switch
-            value={autoAddToToday}
-            onValueChange={setAutoAddToToday}
-            trackColor={{ false: '#D8D0BE', true: s.forest }}
-            thumbColor="#FFFFFF"
-          />
-        </View>
+              <View style={styles.trackListStack}>
+                {alarmTracks.map((track) => {
+                  const isSelected = selectedTrack.id === track.id;
+                  const isPreviewing = previewingTrackId === track.id;
+                  return (
+                    <View
+                      key={track.id}
+                      style={[
+                        styles.trackRow,
+                        isSelected && styles.trackRowSelected,
+                      ]}
+                    >
+                      <Pressable
+                        onPress={() => setSelectedTrack(track)}
+                        accessibilityRole="button"
+                        style={styles.trackSelectArea}
+                      >
+                        <View
+                          style={[
+                            styles.radioDotOuter,
+                            isSelected && styles.radioDotOuterActive,
+                          ]}
+                        >
+                          {isSelected && <View style={styles.radioDotInner} />}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <AppText
+                            style={[
+                              styles.trackNameText,
+                              isSelected && styles.trackNameTextSelected,
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {track.isBuiltIn ? track.name : `🎵 ${track.name}`}
+                          </AppText>
+                          {track.description ? (
+                            <AppText
+                              style={styles.trackDescText}
+                              numberOfLines={1}
+                            >
+                              {track.description}
+                            </AppText>
+                          ) : null}
+                        </View>
+                      </Pressable>
 
-        {/* Big Golden SunButton CTA */}
-        <View style={styles.ctaWrap}>
-          <SunButton
-            title="Simpan Tugas & Aktifkan Alarm"
-            onPress={handleSave}
-            loading={isSubmitting}
-            disabled={!title.trim()}
-          />
+                      <Pressable
+                        onPress={() => togglePreviewTrack(track)}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          isPreviewing
+                            ? `Hentikan preview ${track.name}`
+                            : `Putar preview ${track.name}`
+                        }
+                        style={[
+                          styles.previewPlayBtn,
+                          isPreviewing && styles.previewPlayBtnActive,
+                        ]}
+                      >
+                        {isPreviewing ? (
+                          <Square
+                            size={12}
+                            color="#FFFFFF"
+                            fill="#FFFFFF"
+                            strokeWidth={2.4}
+                          />
+                        ) : (
+                          <Play
+                            size={13}
+                            color={s.forest}
+                            fill={s.forest}
+                            strokeWidth={2.4}
+                          />
+                        )}
+                        <AppText
+                          style={[
+                            styles.previewPlayBtnText,
+                            isPreviewing && { color: '#FFFFFF' },
+                          ]}
+                        >
+                          {isPreviewing ? 'Stop' : 'Tes'}
+                        </AppText>
+                      </Pressable>
+                    </View>
+                  );
+                })}
+              </View>
+
+              {/* Snooze Duration Selector */}
+              <View style={styles.snoozeConfigRow}>
+                <AppText style={styles.fieldTinyLabel}>
+                  Durasi Tunda (Snooze):
+                </AppText>
+                {[5, 10, 15].map((mins) => {
+                  const active = snoozeMinutes === mins;
+                  return (
+                    <Pressable
+                      key={mins}
+                      onPress={() => setSnoozeMinutes(mins)}
+                      accessibilityRole="button"
+                      style={[
+                        styles.smallChip,
+                        active && styles.smallChipActive,
+                      ]}
+                    >
+                      <AppText
+                        style={[
+                          styles.smallChipText,
+                          active && styles.smallChipTextActive,
+                        ]}
+                      >
+                        {mins} mnt
+                      </AppText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* 4. Sub-tugas / Langkah Pengerjaan & Auto-Sync Hari Ini */}
+          <AppText style={styles.sectionHeading}>
+            Langkah tugas
+          </AppText>
+
+          <View style={styles.subtaskInputRow}>
+            <TextInput
+              value={subtaskDraft}
+              onChangeText={setSubtaskDraft}
+              onSubmitEditing={handleAddSubtask}
+                placeholder="Masukkan langkah tugas"
+              placeholderTextColor={s.inkSubtle}
+              style={[styles.inputBox, { flex: 1 }]}
+            />
+            <Pressable
+              onPress={handleAddSubtask}
+              accessibilityRole="button"
+              style={styles.addSubtaskCircle}
+            >
+              <Plus size={18} color="#FFFFFF" strokeWidth={2.6} />
+            </Pressable>
+          </View>
+
+          {subtasks.length > 0 && (
+            <View style={styles.subtaskChipsList}>
+              {subtasks.map((st, idx) => (
+                <View key={`${st}-${idx}`} style={styles.subtaskDraftItem}>
+                  <AppText style={styles.subtaskDraftText} numberOfLines={1}>
+                    {idx + 1}. {st}
+                  </AppText>
+                  <Pressable
+                    onPress={() => handleRemoveSubtask(idx)}
+                    hitSlop={6}
+                  >
+                    <X size={14} color={s.inkMuted} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <View style={styles.autoSyncRow}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <AppText style={styles.autoSyncTitle}>
+                Otomatis Masuk ke &ldquo;Hari Ini&rdquo;
+              </AppText>
+              <AppText style={styles.autoSyncSub}>
+                Tugas muncul otomatis pada tanggal pengerjaan.
+              </AppText>
+            </View>
+            <Switch
+              value={autoAddToToday}
+              onValueChange={setAutoAddToToday}
+              trackColor={{ false: '#D8D0BE', true: s.forest }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          {/* Big Golden SunButton CTA */}
+          <View style={styles.ctaWrap}>
+            <SunButton
+              title="Simpan Tugas & Aktifkan Alarm"
+              onPress={handleSave}
+              loading={isSubmitting}
+              disabled={!title.trim()}
+            />
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Screen>
@@ -847,6 +849,10 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     flex: 1,
+  },
+  formStack: {
+    gap: space[3],
+    paddingBottom: space[3],
   },
   scrollContent: {
     paddingHorizontal: space[5],
@@ -869,7 +875,7 @@ const styles = StyleSheet.create({
   cloudOuterCard: {
     backgroundColor: s.card,
     borderRadius: radius.lg,
-    padding: space[4],
+    padding: space[3],
     borderWidth: 1,
     borderColor: '#F1EADA',
     gap: space[2],
@@ -878,9 +884,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F4EFE3',
-    borderRadius: 22,
-    paddingHorizontal: space[4],
-    paddingVertical: space[3],
+    borderRadius: radius.md,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
     gap: space[2],
   },
   cloudInput: {
@@ -918,8 +924,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    paddingVertical: 12,
-    borderRadius: 16,
+    minHeight: 44,
+    paddingVertical: space[2],
+    borderRadius: radius.md,
     backgroundColor: '#F3EDE0',
     borderWidth: 1,
     borderColor: '#E5DEC9',
@@ -940,9 +947,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5DEC9',
-    borderRadius: 18,
-    paddingHorizontal: space[4],
-    paddingVertical: 14,
+    borderRadius: radius.md,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
     fontFamily: fontFamily.medium,
     fontSize: 14,
     color: s.ink,
@@ -950,7 +957,7 @@ const styles = StyleSheet.create({
   },
   durationCard: {
     backgroundColor: '#F1EBDC',
-    borderRadius: 20,
+    borderRadius: radius.lg,
     paddingHorizontal: space[3],
     paddingVertical: 12,
     borderWidth: 1,
@@ -997,19 +1004,19 @@ const styles = StyleSheet.create({
   },
   dateCardDeadline: {
     backgroundColor: '#FFF7F2',
-    borderRadius: 22,
-    padding: space[4],
+    borderRadius: radius.lg,
+    padding: space[3],
     borderWidth: 1,
     borderColor: '#F3D5C5',
-    gap: 12,
+    gap: space[2],
   },
   dateCardExec: {
     backgroundColor: '#F2F9F5',
-    borderRadius: 22,
-    padding: space[4],
+    borderRadius: radius.lg,
+    padding: space[3],
     borderWidth: 1,
     borderColor: '#C9E5D4',
-    gap: 12,
+    gap: space[2],
   },
   dateCardHeader: {
     flexDirection: 'row',
@@ -1034,9 +1041,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   presetChip: {
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    borderRadius: 12,
+    minHeight: 36,
+    paddingHorizontal: space[2],
+    paddingVertical: space[1],
+    borderRadius: radius.sm,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E3DAC6',
@@ -1077,6 +1085,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
     fontSize: 13,
     color: s.ink,
+    ...formInputCompact,
   },
   quickTimeRow: {
     flexDirection: 'row',

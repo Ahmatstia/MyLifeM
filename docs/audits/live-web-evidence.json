@@ -1,0 +1,19 @@
+{
+  "platform": "Chromium actual application via audit-only COI proxy; no native QA",
+  "checks": [
+    {
+      "name": "startup-0",
+      "body": "Data belum dapat dibuka\nInisialisasi database gagal. Data tidak dihapus. Coba buka kembali sebelum melanjutkan.\nSync operation timeout\nCoba lagi\nSimpan salinan pemulihan"
+    },
+    {
+      "name": "startup-1",
+      "body": "Data belum dapat dibuka\nInisialisasi database gagal. Data tidak dihapus. Coba buka kembali sebelum melanjutkan.\nCannot read properties of undefined (reading 'xFileControl')\nCoba lagi\nSimpan salinan pemulihan"
+    },
+    {
+      "name": "startup-2",
+      "body": "Data belum dapat dibuka\nInisialisasi database gagal. Data tidak dihapus. Coba buka kembali sebelum melanjutkan.\nCannot read properties of undefined (reading 'xFileControl')\nCoba lagi\nSimpan salinan pemulihan"
+    }
+  ],
+  "errors": [],
+  "failure": "Live web did not pass database initialization even after retries."
+}

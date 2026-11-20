@@ -34,6 +34,7 @@ export const AlarmRingingModal: React.FC = () => {
   const [ringingTask, setRingingTask] = useState<ManagedTaskEntity | null>(
     null
   );
+  const [actionError, setActionError] = useState<string | null>(null);
   const [nowClock, setNowClock] = useState(() => {
     const d = new Date();
     return `${String(d.getHours()).padStart(2, '0')}:${String(
@@ -44,6 +45,7 @@ export const AlarmRingingModal: React.FC = () => {
   useEffect(() => {
     const unsubscribe = subscribeRingingAlarm((task) => {
       setRingingTask(task);
+      setActionError(null);
       if (task) {
         void TaskAlarmAudioService.startAlarmRinging(task.alarmTrackUri);
       } else {
@@ -58,7 +60,9 @@ export const AlarmRingingModal: React.FC = () => {
           d.getMinutes()
         ).padStart(2, '0')}`
       );
-      void managedTaskRepository.checkDueAlarmsNow();
+      void managedTaskRepository.checkDueAlarmsNow().catch(error => {
+        console.error('[AlarmRingingModal] Gagal memeriksa alarm:', error);
+      });
     }, 6000);
 
     return () => {
@@ -70,31 +74,26 @@ export const AlarmRingingModal: React.FC = () => {
 
   if (!ringingTask) return null;
 
-  const handleStartFocusNow = async () => {
-    const id = ringingTask.id;
-    TaskAlarmAudioService.stopAlarmRinging();
-    await managedTaskRepository.dismissTaskAlarm(id);
-    await managedTaskRepository.syncWithCoreTasksAndToday();
+  const runAction = async (work: () => Promise<void>) => {
+    try {
+      setActionError(null);
+      await work();
+      TaskAlarmAudioService.stopAlarmRinging();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Perubahan alarm belum tersimpan. Coba lagi.');
+    }
+  };
+
+  const handleStartFocusNow = () => runAction(async () => {
+    await managedTaskRepository.dismissTaskAlarm(ringingTask.id);
     router.push('/(tabs)' as any);
-  };
+  });
 
-  const handleSnooze = async (minutes: number) => {
-    const id = ringingTask.id;
-    TaskAlarmAudioService.stopAlarmRinging();
-    await managedTaskRepository.snoozeTaskAlarm(id, minutes);
-  };
+  const handleSnooze = (minutes: number) => runAction(() => managedTaskRepository.snoozeTaskAlarm(ringingTask.id, minutes));
 
-  const handleDismiss = async () => {
-    const id = ringingTask.id;
-    TaskAlarmAudioService.stopAlarmRinging();
-    await managedTaskRepository.dismissTaskAlarm(id);
-  };
+  const handleDismiss = () => runAction(() => managedTaskRepository.dismissTaskAlarm(ringingTask.id));
 
-  const handleMarkDone = async () => {
-    const id = ringingTask.id;
-    TaskAlarmAudioService.stopAlarmRinging();
-    await managedTaskRepository.toggleTaskCompletion(id);
-  };
+  const handleMarkDone = () => runAction(() => managedTaskRepository.toggleTaskCompletion(ringingTask.id));
 
   return (
     <Modal
@@ -105,6 +104,7 @@ export const AlarmRingingModal: React.FC = () => {
       onRequestClose={handleDismiss}
     >
       <View style={styles.fullScreenRoot}>
+        {actionError && <AppText color="error" accessibilityLiveRegion="polite">{actionError}</AppText>}
         {/* Top Pulsing Badge */}
         <View style={styles.topAlertPill}>
           <BellRing size={16} color={s.ink} strokeWidth={2.6} />

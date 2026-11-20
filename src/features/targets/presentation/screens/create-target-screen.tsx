@@ -218,6 +218,7 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     flex: 1,
+    gap: space[3],
   },
   scrollContent: {
     paddingHorizontal: space[4],
@@ -245,9 +246,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F4EFE3',
-    borderRadius: 22,
-    paddingHorizontal: space[4],
-    paddingVertical: space[3],
+    borderRadius: radius.md,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
     gap: space[2],
   },
   cloudInput: {
