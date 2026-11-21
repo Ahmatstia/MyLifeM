@@ -149,7 +149,7 @@ export const TaskManagerScreen: React.FC = () => {
     const buffer = computeDeadlineBufferInfo(item, todayDate);
     const isAlarmLoud =
       item.alertMode === 'ALARM' || item.alertMode === 'BOTH';
-    const isExecToday = item.executionDate === todayDate && !item.isCompleted;
+    const isExecToday = item.executionDate === todayDate && !item.isCompleted && !item.excludedFocusDates?.includes(todayDate);
 
     const bufferColors =
       buffer.tone === 'safe'

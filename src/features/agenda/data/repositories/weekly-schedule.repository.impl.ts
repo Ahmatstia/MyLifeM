@@ -13,7 +13,7 @@ import type {
   UpdateWeeklyScheduleInput,
   ProjectedWeeklyOccurrence,
 } from '../../domain/entities/weekly-schedule.entity';
-import { getDayOfWeekFromDate } from '../../domain/entities/weekly-schedule.entity';
+import { getDayOfWeekFromDate, validateWeeklySchedule } from '../../domain/entities/weekly-schedule.entity';
 import type { WeeklyScheduleRepository } from '../../domain/repositories/weekly-schedule.repository';
 
 function generateId(): string {
@@ -72,15 +72,8 @@ export class WeeklyScheduleRepositoryImpl implements WeeklyScheduleRepository {
   }
 
   async createWeeklySchedule(input: CreateWeeklyScheduleInput): Promise<WeeklyScheduleEntity> {
+    validateWeeklySchedule(input);
     const title = input.title.trim();
-    if (!title) throw new Error('Judul agenda tidak boleh kosong.');
-    if (input.dayOfWeek < 1 || input.dayOfWeek > 7) throw new Error('Hari tidak valid (1-7).');
-    if (!/^\d{2}:\d{2}$/.test(input.startTime) || !/^\d{2}:\d{2}$/.test(input.endTime)) {
-      throw new Error('Format jam harus JJ:MM (misal 08:00).');
-    }
-    if (input.startTime >= input.endTime) {
-      throw new Error('Jam mulai harus lebih awal dari jam selesai.');
-    }
 
     const id = generateId();
     const now = new Date().toISOString();
@@ -120,9 +113,7 @@ export class WeeklyScheduleRepositoryImpl implements WeeklyScheduleRepository {
     const reminderMinutes = input.reminderMinutes !== undefined ? input.reminderMinutes : existing.reminderMinutes;
     const isActive = input.isActive !== undefined ? (input.isActive ? 1 : 0) : (existing.isActive ? 1 : 0);
 
-    if (!title) throw new Error('Judul agenda tidak boleh kosong.');
-    if (dayOfWeek < 1 || dayOfWeek > 7) throw new Error('Hari tidak valid (1-7).');
-    if (startTime >= endTime) throw new Error('Jam mulai harus lebih awal dari jam selesai.');
+    validateWeeklySchedule({ title, dayOfWeek, startTime, endTime, scheduleType, reminderMinutes });
 
     const now = new Date().toISOString();
     await db

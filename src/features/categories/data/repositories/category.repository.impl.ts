@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { categories, targets } from '@/db/schema';
+import { normalizeCategoryName } from '../../domain/entities/category.entity';
 import type { CategoryRepository } from '../../domain/repositories/category.repository';
 import type {
   CategoryEntity,
@@ -8,6 +9,12 @@ import type {
   CreateCategoryInput,
   UpdateCategoryInput,
 } from '../../domain/entities/category.entity';
+
+function hasDuplicateName(connection: Pick<typeof db, 'select'>, name: string, excludeId?: string): boolean {
+  const normalized = normalizeCategoryName(name);
+  return connection.select({ id: categories.id, name: categories.name }).from(categories).all()
+    .some(category => category.id !== excludeId && normalizeCategoryName(category.name) === normalized);
+}
 
 export class CategoryRepositoryImpl implements CategoryRepository {
   async getAll(): Promise<CategoryWithCount[]> {
@@ -45,11 +52,7 @@ export class CategoryRepositoryImpl implements CategoryRepository {
   }
 
   async isNameDuplicate(name: string, excludeId?: string): Promise<boolean> {
-    const trimmed = name.trim().toLowerCase();
-    const all = await db.select({ id: categories.id, name: categories.name }).from(categories);
-    return all.some(
-      (c) => c.name.trim().toLowerCase() === trimmed && c.id !== excludeId
-    );
+    return hasDuplicateName(db, name, excludeId);
   }
 
   async create(input: CreateCategoryInput): Promise<CategoryEntity> {
@@ -58,27 +61,15 @@ export class CategoryRepositoryImpl implements CategoryRepository {
       throw new Error('Nama kategori wajib diisi.');
     }
 
-    const isDuplicate = await this.isNameDuplicate(cleanName);
-    if (isDuplicate) {
-      throw new Error(`Kategori "${cleanName}" sudah ada.`);
-    }
-
     const now = new Date().toISOString();
     const id = `cat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-    await db.insert(categories).values({
-      id,
-      name: cleanName,
-      createdAt: now,
-      updatedAt: now,
+    return db.transaction(tx => {
+      if (hasDuplicateName(tx, cleanName)) throw new Error(`Kategori "${cleanName}" sudah ada.`);
+      const category = { id, name: cleanName, createdAt: now, updatedAt: now };
+      tx.insert(categories).values(category).run();
+      return category;
     });
-
-    return {
-      id,
-      name: cleanName,
-      createdAt: now,
-      updatedAt: now,
-    };
   }
 
   async update(id: string, input: UpdateCategoryInput): Promise<CategoryEntity> {
@@ -87,26 +78,12 @@ export class CategoryRepositoryImpl implements CategoryRepository {
       throw new Error('Nama kategori tidak boleh kosong.');
     }
 
-    const isDuplicate = await this.isNameDuplicate(cleanName, id);
-    if (isDuplicate) {
-      throw new Error(`Kategori "${cleanName}" sudah digunakan.`);
-    }
-
     const now = new Date().toISOString();
-    await db
-      .update(categories)
-      .set({
-        name: cleanName,
-        updatedAt: now,
-      })
-      .where(eq(categories.id, id));
-
-    return {
-      id,
-      name: cleanName,
-      createdAt: now,
-      updatedAt: now,
-    };
+    return db.transaction(tx => {
+      if (hasDuplicateName(tx, cleanName, id)) throw new Error(`Kategori "${cleanName}" sudah digunakan.`);
+      tx.update(categories).set({ name: cleanName, updatedAt: now }).where(eq(categories.id, id)).run();
+      return { id, name: cleanName, createdAt: now, updatedAt: now };
+    });
   }
 
   async delete(id: string): Promise<{ success: boolean; message?: string }> {

@@ -9,6 +9,10 @@ export function isDateOnly(value: string): boolean {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+export function isTimeOnly(value: unknown): value is string {
+  return typeof value === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
 export function shiftDate(value: string, days: number): string {
   if (!isDateOnly(value)) throw new Error('Tanggal harus valid dalam format TTTT-BB-HH.');
   const date = new Date(value + 'T00:00:00.000Z');

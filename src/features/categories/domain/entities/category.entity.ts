@@ -10,6 +10,10 @@ export interface CategoryEntity {
   updatedAt: string;
 }
 
+export function normalizeCategoryName(name: string): string {
+  return name.trim().toLocaleLowerCase('id-ID');
+}
+
 export interface CreateCategoryInput {
   name: string;
 }

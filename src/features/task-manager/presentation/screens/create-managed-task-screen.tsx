@@ -47,6 +47,7 @@ import {
   type TaskAlertMode,
   type TaskCategoryType,
 } from '../../domain/entities/managed-task.entity';
+import { validateManagedTaskTiming } from '../../domain/managed-task-validation';
 import { useManagedTasks } from '../hooks/use-managed-tasks';
 
 const s = colors.sprout;
@@ -183,19 +184,10 @@ export const CreateManagedTaskScreen: React.FC = () => {
       setErrorMessage('Judul tugas wajib diisi.');
       return;
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(deadlineDate)) {
-      setErrorMessage('Format tanggal deadline harus YYYY-MM-DD.');
-      return;
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(executionDate)) {
-      setErrorMessage('Format tanggal pengerjaan harus YYYY-MM-DD.');
-      return;
-    }
-    if (
-      !/^\d{2}:\d{2}$/.test(executionTime) ||
-      !/^\d{2}:\d{2}$/.test(deadlineTime)
-    ) {
-      setErrorMessage('Format jam harus HH:mm (contoh 19:00).');
+    try {
+      validateManagedTaskTiming({ executionDate, executionTime, deadlineDate, deadlineTime });
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Tanggal atau jam tidak valid.');
       return;
     }
 

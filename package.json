@@ -64,6 +64,7 @@
     "test:backup": "node scripts/check-backup.cjs",
     "test:integrity": "node scripts/check-integrity.cjs",
     "test:managed": "node scripts/check-managed.cjs",
+    "test:contracts": "node scripts/check-data-contracts.cjs",
     "test:calendar": "node scripts/check-calendar.cjs",
     "test:progress": "node scripts/check-progress.cjs",
     "test:timer": "node scripts/check-timer.cjs",

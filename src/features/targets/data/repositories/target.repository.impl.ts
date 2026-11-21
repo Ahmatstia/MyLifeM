@@ -98,7 +98,7 @@ export class TargetRepositoryImpl implements TargetRepository {
 
       return {
         id: t.id,
-        categoryId: t.categoryId || 'cat-karier',
+        categoryId: t.categoryId,
         categoryName: catName,
         pillarId: t.pillarId,
         title: t.title,

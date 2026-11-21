@@ -12,7 +12,9 @@ Metode: discovery, penelusuran source, lint/typecheck, suite regresi, reproduksi
 
 **Paket managed task — AUD-02/03/04/16 DIPERBAIKI.** Status core menjadi acuan; transaksi SQLite sinkron melindungi metadata/core/prioritas dari penulisan sebagian dan kehilangan metadata saat operasi bersamaan. Kegagalan database diteruskan ke UI; pekerjaan notifikasi dipisahkan setelah commit. Harness resmi kini memock adapter notifikasi secara eksplisit. Delapan suite, lint dan typecheck lulus; suite baru `npm run test:managed` memuat 24 pemeriksaan. Dari 24 temuan baseline, **19 masih terbuka: 3 HIGH, 15 MEDIUM, 1 LOW**. Bukti: [managed-task-remediation.json](./managed-task-remediation.json). Pengguna kemudian melaporkan keenam uji manual alur data managed task berhasil mengikuti panduan Expo Go (**USER REPORTED PASS**, tidak diamati langsung; model perangkat/OS tidak dicatat). UI kegagalan simpan dan perilaku alarm native tetap perlu verifikasi terpisah.
 
-JSON dan hash audit sebelumnya tetap merupakan snapshot sebelum remediation. Harness reproduce-findings.cjs mengharapkan bug baseline (termasuk F01–F04), dan check-source-preservation.cjs membandingkan hash baseline; keduanya akan menandai perubahan yang memang disengaja setelah fix. Gunakan suite resmi untuk regresi terkini. AUD-01 mengubah parser backup dan suite backup; paket managed mengubah repository, hook, form tambah/modal alarm, harness integrity dan menambah check-managed.cjs beserta perintah npm-nya. Tidak ada dependency, lockfile, skema atau database pengguna yang diubah.
+**Paket kontrak data/prioritas — AUD-05/06 DIPERBAIKI.** Validasi managed task dan jadwal mingguan disatukan pada form/repository/backup; JSON nested dan tipe enum diperiksa ketat. Pemeriksaan nama kategori dan penulisannya menjadi atomik, sementara categoryId target legacy tetap null. Pelepasan prioritas managed mencatat pengecualian per tanggal; refresh tidak memasukkannya kembali, penambahan manual menghapus pengecualian, dan tugas tetap tersimpan. Pengecualian bertahan melalui backup–restore; backup lama tanpa field tersebut tetap diterima. Seluruh sembilan suite, lint dan typecheck lulus, termasuk **39 pemeriksaan kontrak baru**. Tersisa **17 temuan terbuka: 3 HIGH, 13 MEDIUM, 1 LOW**. Bukti: [data-contracts-remediation.json](./data-contracts-remediation.json). Uji manual paket ini belum dilakukan di perangkat.
+
+JSON dan hash audit sebelumnya tetap merupakan snapshot sebelum remediation. Harness reproduce-findings.cjs/continuation-checks.cjs mengharapkan bug baseline (termasuk F01–F09 dan race kategori C03), dan check-source-preservation.cjs membandingkan hash baseline; alat tersebut akan menandai perubahan yang memang disengaja setelah fix. Gunakan suite resmi untuk regresi terkini. Paket kontrak menambah satu validator domain dan check-data-contracts.cjs; field metadata excludedFocusDates bersifat opsional. Tidak ada dependency, lockfile, skema SQLite, versi backup atau database pengguna yang diubah oleh alat remediation.
 
 ## 1. Executive Summary
 
@@ -456,6 +458,7 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-05 — Kontrak data tidak konsisten pada write, backup, dan legacy read
 
+- **Status tindak lanjut:** **DIPERBAIKI**. Form dan repository managed memakai validator tanggal/jam yang sama dengan parser metadata backup. Nested JSON memeriksa tipe/enum, ID, subtask, angka dan timestamp. Weekly create/update serta backup memakai kontrak jam/hari/type/reminder yang sama. Kategori memakai normalisasi bersama dan transaksi check+write; categoryId legacy null dipertahankan. VERIFIED melalui check-data-contracts.cjs; bukti berikut adalah baseline. Dukungan editor NUMERIC/MAINTENANCE tetap batas fitur terpisah, tanpa perubahan nilai legacy.
 - **Kategori / severity / confidence:** validasi dan representasi data / **MEDIUM** / HIGH.
 - **Lokasi:** src/features/task-manager/presentation/screens/create-managed-task-screen.tsx:180–226; src/features/task-manager/presentation/components/add-managed-task-modal.tsx:179–225; src/features/task-manager/data/repositories/managed-task.repository.ts:60–108, 232–269; src/features/agenda/data/repositories/weekly-schedule.repository.impl.ts:74–125; src/features/settings/data/backup-format.ts:189–207 dan validasi nama kategori; src/features/targets/data/repositories/target.repository.impl.ts:97–102; src/features/categories/data/repositories/category.repository.impl.ts (check duplicate → insert), src/db/schema-sql.ts (unique name dengan collation default).
 - **Bukti / actual:** (a) 2026-02-30 dan 99:99 lolos regex managed; core dueDate kemudian membuat backup ekspor tidak dapat diparse. (b) weekly 24:00–25:00 lolos repository/backup, tetapi proyeksi melempar error. (c) user_settings managed payload “[null]” diterima parser; getAllTasks menelan error sebagai daftar kosong. (d) kategori target NULL dipetakan menjadi ID cat-karier dengan label Umum, tetapi target tidak muncul saat filter ID tersebut.
@@ -469,6 +472,7 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-06 — Melepas prioritas managed task dibatalkan oleh refresh
 
+- **Status tindak lanjut:** **DIPERBAIKI**. Metadata opsional excludedFocusDates mencatat opt-out per tanggal dalam transaksi yang sama dengan perubahan daily_focus_items. Sync menghormati pengecualian, add manual membersihkannya, dan tugas tetap dapat ditawarkan pada hari berikutnya. Uji refresh, instance repository baru, backup–restore, konkurensi, rollback, tugas non-managed dan batas lima prioritas lulus. VERIFIED otomatis; uji native paket ini masih terbuka. Bukti F05 berikut adalah baseline.
 - **Kategori / severity / confidence:** aturan prioritas/UX / **MEDIUM** / HIGH.
 - **Lokasi:** src/features/task-manager/data/repositories/managed-task.repository.ts:191–222; src/features/today-focus/data/repositories/daily-focus.repository.impl.ts:123, 161–162.
 - **Actual / expected:** removeFocusItem menghapus hubungan, tetapi sync langsung menambah kembali task autoAddToToday dengan executionDate ≤ hari ini. Pelepasan prioritas seharusnya bertahan pada tanggal yang dipilih tanpa menghapus task.
@@ -756,7 +760,7 @@ Warna kontras yang diperiksa: ink/cream **11,23:1**; inkSubtle/card **3,73:1**; 
 
 Perintah dijalankan menggunakan dependency yang sudah terpasang. Tidak ada npm install, lockfile rewrite, database reset, seed, migration pada data pengguna, atau audit fix.
 
-Tabel berikut menyimpan hasil audit baseline. **Perintah yang dulu FAIL sudah diperbaiki pada AUD-16; hasil terkini seluruh delapan suite tersedia di bagian 11.3.** Log/snapshot lama dipertahankan sebagai riwayat, bukan hasil verifikasi setelah perbaikan.
+Tabel berikut menyimpan hasil audit baseline. **Perintah yang dulu FAIL sudah diperbaiki pada AUD-16; hasil paket managed tersedia di bagian 11.3 dan hasil terbaru sembilan suite pada bagian 11.4.** Log/snapshot lama dipertahankan sebagai riwayat, bukan hasil verifikasi setelah perbaikan.
 
 | Pemeriksaan | Hasil aktual | Batas cakupan |
 |---|---|---|
@@ -847,6 +851,27 @@ Eksekusi delapan suite di atas mencakup 167 pemeriksaan bernomor dari enam suite
 
 UI tambah managed task kini menampilkan error hook dan mempertahankan draft; toggle/subtask/delete serta aksi modal alarm menangani rejection database. Komponen tersebut diperiksa source, lint dan typecheck. Pengguna kemudian melaporkan enam langkah uji manual paket managed berhasil: dua tugas tersimpan, completion/reopen selaras antara Hari Ini dan Manajemen Tugas, subtask bertahan, data tetap ada setelah buka ulang, serta tugas yang dihapus tidak muncul kembali. Ini USER REPORTED PASS sesuai panduan Expo Go, bukan observasi langsung agen. Model perangkat/OS tidak diberikan. Error penyimpanan native, penulisan bersamaan di perangkat, dan alarm/background tidak tercakup enam langkah tersebut; kasus database/concurrency tetap memiliki bukti otomatis.
 
+### 11.4 Hasil setelah perbaikan kontrak data dan opt-out prioritas
+
+Basis paket ini adalah commit 1707919a57ea6b7023f9cf156973390cfa4a17b1, dengan working tree bersih ketika mulai. Semua pengujian memakai database memory; waktu pada uji pergantian hari diubah hanya pada proses Node uji, bukan jam sistem.
+
+| Pemeriksaan | Hasil |
+|---|---|
+| npm run test:contracts | PASS, 39 pemeriksaan; tanggal/jam invalid, JSON nested, enum array, backup v1/v2, weekly, kategori konkuren, null legacy, opt-out dan rollback |
+| npm run test:managed | PASS, 24 pemeriksaan |
+| npm run test:backup | PASS, 52 pemeriksaan |
+| npm run test:integrity | PASS, 30 pemeriksaan |
+| npm run test:calendar | PASS, 33 pemeriksaan |
+| npm run test:progress | PASS, 15 pemeriksaan |
+| npm run test:timer | PASS, 13 pemeriksaan |
+| npm run test:ui | PASS, suite assertion/render yang sudah ada; bukan QA native form managed |
+| npm run test:db-imports | PASS, 16 modul tanpa static runtime cycle dari entry database |
+| TypeScript --noEmit / ESLint src scripts --no-cache | PASS / PASS |
+
+Total tujuh suite database/domain memuat 206 pemeriksaan bernomor, dengan suite UI dan graph import dihitung terpisah. Suite kontrak awal membuktikan 30 kegagalan sebelum perbaikan; tambahan kasus enum array membuktikan tiga kegagalan coercion sebelum pemeriksaan tipe diperketat. Seluruh hasil akhir, termasuk log, ada di data-contracts-remediation.json.
+
+Data lama yang invalid dilaporkan dan dipertahankan, bukan dinormalisasi atau dihapus otomatis. Pengecualian prioritas hanya berlaku pada tanggal terkait dan tidak menonaktifkan jadwal/alarm. Field baru opsional sehingga metadata lama dan schemaVersion 1/2 tetap terbaca. Uji native yang diperlukan: pesan validasi mempertahankan draft, pelepasan prioritas tetap bertahan setelah pindah layar/buka ulang, task tetap ada di Manajemen Tugas, dan penambahan manual kembali berhasil.
+
 ## 12. Prioritized Remediation Backlog
 
 Effort relatif: S = satu area kecil; M = beberapa boundary/tes; L = lifecycle/native lintas fitur. Bukan estimasi hari kerja.
@@ -868,7 +893,7 @@ Effort relatif: S = satu area kecil; M = beberapa boundary/tes; L = lifecycle/na
 | Sesudah integritas; awal bila web memang didukung | AUD-21 | HIGH (web) / M | Startup SQLite web, worker, CRUD dan persistensi reload; proxy audit belum membuktikan fix |
 | Bersama aksesibilitas/form | AUD-22 | MEDIUM / M | Tutup overflow fixture kecil/teks besar, lalu cek Android/keyboard/native font |
 
-**AUD-01/02/03/04/16 telah diterapkan dan diverifikasi otomatis.** AUD-01 dan enam alur data managed task juga mendapat konfirmasi uji manual pengguna. Berikutnya: validasi dan opt-out prioritas (AUD-05/06), partial-save weekly/error settings (AUD-23/24), serta akses Proyek (AUD-07). Alarm lifecycle, UI error penyimpanan native dan dependensi tetap perlu paket lanjutan.
+**AUD-01/02/03/04/05/06/16 telah diterapkan dan diverifikasi otomatis.** AUD-01 dan enam alur data paket managed sebelumnya juga mendapat konfirmasi uji manual pengguna; paket AUD-05/06 menunggu uji manual tersendiri. Berikutnya: partial-save weekly/error settings (AUD-23/24) serta akses Proyek (AUD-07). Alarm lifecycle, UI error penyimpanan native dan dependensi tetap perlu paket lanjutan.
 
 ## 13. Regression Risk
 
@@ -892,7 +917,7 @@ Proyek memiliki fungsi lokal dan mekanisme proteksi data yang nyata. Keberhasila
 
 Coverage source mencakup seluruh 10 modul, 24 kemampuan, 14 screen, 16 file form/54 TextInput dan 51 file komponen, termasuk pemeriksaan source template lanjutan. Seluruh screen mendapat fixture browser (112 kasus, 28 screenshot), tetapi hydration, state data hasil effect, ilustrasi expo-image, dan interaksi native tidak tercakup. Nilai target legacy terbukti terjaga di backup; authoring/editor legacy belum didukung penuh. **Audit runtime native belum selesai** karena tidak ada perangkat dan emulator gagal boot; laporan ini tidak menyatakan seluruh fitur VERIFIED.
 
-Pada audit baseline tidak ada perbaikan source, penambahan dependency atau perubahan data pengguna; hash 162 source saat itu dicatat di continuation-verification.json. Setelah remediation diizinkan, AUD-01 diperbaiki dan pengguna melaporkan uji manualnya berhasil. Paket berikutnya menutup AUD-02/03/04/16 dengan status core yang konsisten, transaksi, error recovery dan harness resmi yang berjalan; enam langkah manual alur data managed juga dilaporkan berhasil. Hasil penutup berada di aud-01-remediation.json dan managed-task-remediation.json. Enam source berbeda dari baseline sesuai cakupan dua paket; 156 source lain tetap cocok pada verifikasi paket, termasuk perubahan pengguna yang tidak terkait. Tidak ada dependency, lockfile, skema atau data pengguna yang diubah oleh remediation. Tersisa 19 temuan terbuka dan QA native error/alarm lanjutan pada bagian 11.2/11.3.
+Pada audit baseline tidak ada perbaikan source, penambahan dependency atau perubahan data pengguna; hash 162 source saat itu dicatat di continuation-verification.json. AUD-01 dan paket AUD-02/03/04/16 sudah diperbaiki dengan konfirmasi manual alur pengguna. Paket selanjutnya menutup AUD-05/06 melalui validasi bersama, kategori atomik, null legacy yang jujur, dan opt-out prioritas per tanggal. Hasil tiap paket tersimpan pada aud-01-remediation.json, managed-task-remediation.json dan data-contracts-remediation.json; angka/hash lama tetap snapshot pada saat pengujian masing-masing. Tidak ada dependency, lockfile, skema SQLite, versi backup atau database pengguna yang diubah oleh alat remediation. Tersisa 17 temuan terbuka; uji native paket AUD-05/06 dan alarm lanjutan dibedakan pada bagian 11.2–11.4.
 
 ### Lampiran: baseline dan referensi verifikasi
 

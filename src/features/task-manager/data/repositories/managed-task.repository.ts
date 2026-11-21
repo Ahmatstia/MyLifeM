@@ -3,7 +3,8 @@ import { db } from '@/db/client';
 import { normalizeTaskStatus } from '@/shared/domain/task-status';
 import { writeTaskStatus } from '@/shared/data/task-status';
 import { userSettings, tasks, dailyFocusItems } from '@/db/schema';
-import { formatLocalDate } from '@/shared/utils/local-date';
+import { formatLocalDate, isDateOnly } from '@/shared/utils/local-date';
+import { MANAGED_TASKS_KEY, parseManagedTasks, validateManagedTask } from '../../domain/managed-task-validation';
 import {
   BUILT_IN_ALARM_TRACKS,
   type CreateManagedTaskInput,
@@ -12,7 +13,6 @@ import {
 } from '../../domain/entities/managed-task.entity';
 import { TaskAlarmNotificationService } from '../services/task-alarm-notification.service';
 
-const MANAGED_TASKS_KEY = 'managed_tasks_v1';
 const CUSTOM_TRACKS_KEY = 'custom_alarm_tracks_v1';
 
 type TaskConnection = Pick<typeof db, 'select' | 'insert' | 'update' | 'delete'>;
@@ -68,8 +68,7 @@ export class ManagedTaskRepository {
     const row = connection.select().from(userSettings)
       .where(eq(userSettings.key, MANAGED_TASKS_KEY)).get();
     if (!row) return [];
-    const parsed = JSON.parse(row.value);
-    if (!Array.isArray(parsed)) throw new Error('Data tugas terjadwal tidak valid.');
+    const parsed = parseManagedTasks(row.value);
 
     const coreMap = new Map(connection.select().from(tasks).all().map(task => [task.id, task]));
     return parsed.map((item: ManagedTaskEntity) => {
@@ -94,11 +93,29 @@ export class ManagedTaskRepository {
   private mutateTasks(update: (current: ManagedTaskEntity[], tx: TaskConnection) => ManagedTaskEntity[]): ManagedTaskEntity[] {
     return db.transaction(tx => {
       const updated = update(this.readTasks(tx), tx);
-      const value = JSON.stringify(updated), updatedAt = new Date().toISOString();
-      tx.insert(userSettings).values({ key: MANAGED_TASKS_KEY, value, updatedAt })
-        .onConflictDoUpdate({ target: userSettings.key, set: { value, updatedAt } }).run();
+      this.writeTasks(tx, updated);
       return updated;
     });
+  }
+
+  private writeTasks(connection: TaskConnection, list: ManagedTaskEntity[]): void {
+    list.forEach(validateManagedTask);
+    const value = JSON.stringify(list), updatedAt = new Date().toISOString();
+    connection.insert(userSettings).values({ key: MANAGED_TASKS_KEY, value, updatedAt })
+      .onConflictDoUpdate({ target: userSettings.key, set: { value, updatedAt } }).run();
+  }
+
+  /** Update the opt-out inside the same transaction as the caller's priority mutation. */
+  setDailyFocusExcluded(connection: TaskConnection, taskId: string, date: string, excluded: boolean): void {
+    if (!isDateOnly(date)) throw new Error('Tanggal prioritas tidak valid.');
+    const current = this.readTasks(connection), task = current.find(item => item.id === taskId);
+    if (!task) return;
+    const dates = task.excludedFocusDates ?? [];
+    if (dates.includes(date) === excluded) return;
+    this.writeTasks(connection, current.map(item => item.id === taskId ? {
+      ...item, excludedFocusDates: excluded ? [...dates, date] : dates.filter(value => value !== date),
+      updatedAt: new Date().toISOString(),
+    } : item));
   }
 
   private reconcileAlarms(askPermission = false): Promise<void> {
@@ -144,7 +161,8 @@ export class ManagedTaskRepository {
       }
       writeTaskStatus(tx, item.id, status, nowIso);
 
-      if (item.autoAddToToday && ['TODO', 'IN_PROGRESS'].includes(status) && item.executionDate <= todayDate) {
+      if (item.autoAddToToday && ['TODO', 'IN_PROGRESS'].includes(status) && item.executionDate <= todayDate
+        && !item.excludedFocusDates?.includes(todayDate)) {
         const existingFocus = tx.select().from(dailyFocusItems).where(
           and(eq(dailyFocusItems.date, todayDate), eq(dailyFocusItems.taskId, item.id))
         ).get();
@@ -204,6 +222,7 @@ export class ManagedTaskRepository {
       updatedAt: nowIso,
     };
 
+    validateManagedTask(newTask);
     this.mutateTasks((current, tx) => {
       const updated = [newTask, ...current];
       this.syncCoreTasks(tx, updated);
@@ -251,6 +270,7 @@ export class ManagedTaskRepository {
   }
 
   async snoozeTaskAlarm(id: string, minutes: number): Promise<void> {
+    if (!Number.isSafeInteger(minutes) || minutes <= 0) throw new Error('Durasi tunda harus berupa menit positif.');
     const snoozedUntilIso = new Date(Date.now() + minutes * 60_000).toISOString();
     this.mutateTasks(current => current.map(item => item.id === id ? {
       ...item, snoozedUntilIso, updatedAt: new Date().toISOString(),

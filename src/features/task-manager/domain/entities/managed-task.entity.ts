@@ -51,6 +51,7 @@ export interface ManagedTaskEntity {
 
   // Integration & Subtasks
   autoAddToToday: boolean;
+  excludedFocusDates?: string[];
   subtasks: ManagedTaskSubtask[];
   isCompleted: boolean;
   completedAt: string | null;

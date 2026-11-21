@@ -16,7 +16,7 @@ export interface LifePillarEntity {
 
 export interface TargetEntity {
   id: string;
-  categoryId: string;
+  categoryId: string | null;
   categoryName: string;
   pillarId?: string | null;
   title: string;

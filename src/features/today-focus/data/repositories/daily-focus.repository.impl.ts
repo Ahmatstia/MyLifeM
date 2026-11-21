@@ -155,11 +155,19 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   }
 
   async addFocusItem(date: string, taskId: string): Promise<void> {
-    db.transaction(tx => addPriority(tx, date, taskId));
+    db.transaction(tx => {
+      addPriority(tx, date, taskId);
+      managedTaskRepository.setDailyFocusExcluded(tx, taskId, date, false);
+    });
   }
 
   async removeFocusItem(id: string): Promise<void> {
-    await db.delete(dailyFocusItems).where(eq(dailyFocusItems.id, id));
+    db.transaction(tx => {
+      const item = tx.select().from(dailyFocusItems).where(eq(dailyFocusItems.id, id)).get();
+      if (!item) return;
+      managedTaskRepository.setDailyFocusExcluded(tx, item.taskId, item.date, true);
+      tx.delete(dailyFocusItems).where(eq(dailyFocusItems.id, id)).run();
+    });
   }
 
   async toggleTaskCompletion(taskId: string, isCompleted: boolean): Promise<void> {

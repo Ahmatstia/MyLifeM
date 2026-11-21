@@ -1,6 +1,9 @@
 import { getTableColumns, getTableName } from 'drizzle-orm';
 import * as schema from '@/db/schema';
-import { parseInstant } from '@/shared/utils/local-date';
+import { isDateOnly as dateOnly, parseInstant } from '@/shared/utils/local-date';
+import { MANAGED_TASKS_KEY, parseManagedTasks } from '@/features/task-manager/domain/managed-task-validation';
+import { validateWeeklySchedule } from '@/features/agenda/domain/entities/weekly-schedule.entity';
+import { normalizeCategoryName } from '@/features/categories/domain/entities/category.entity';
 import { allDayDates } from '@/features/agenda/domain/agenda-time';
 import { TIMER_KEY, parseTimer } from '@/features/today-focus/domain/focus-timer';
 
@@ -48,12 +51,6 @@ function invalid(message: string): never {
 
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function dateOnly(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(value + 'T00:00:00.000Z');
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
 function dateText(value: string): boolean {
@@ -182,11 +179,15 @@ export function parseBackup(json: string): BackupDocument {
   }
   const names = new Set<string>();
   for (const row of typed.categories) {
-    const name = String(row.name).trim().toLocaleLowerCase('id-ID');
+    const name = normalizeCategoryName(row.name);
     if (!name || names.has(name)) return invalid('nama kategori kosong/duplikat.');
     names.add(name);
   }
   for (const row of typed.userSettings) {
+    if (row.key === MANAGED_TASKS_KEY) {
+      try { parseManagedTasks(row.value); }
+      catch (error) { return invalid(error instanceof Error ? error.message : 'data tugas terjadwal tidak benar.'); }
+    }
     if (row.key === TIMER_KEY) {
       try {
         const timer = parseTimer(row.value);
@@ -200,9 +201,8 @@ export function parseBackup(json: string): BackupDocument {
     if ((row.key === 'haptics_enabled' || row.key === 'keep_awake_enabled') && row.value !== 'true' && row.value !== 'false') return invalid('preferensi harus true/false.');
   }
   for (const row of typed.weeklySchedules) {
-    choice(row, 'scheduleType', ['COLLEGE', 'WORK', 'STUDY', 'PERSONAL', 'ROUTINE']);
-    if (typeof row.dayOfWeek !== 'number' || row.dayOfWeek < 1 || row.dayOfWeek > 7) return invalid('hari jadwal rutin harus 1–7.');
-    if (typeof row.startTime !== 'string' || typeof row.endTime !== 'string' || !/^\d{2}:\d{2}$/.test(row.startTime) || !/^\d{2}:\d{2}$/.test(row.endTime) || row.startTime >= row.endTime) return invalid('jam mulai dan selesai jadwal rutin tidak valid.');
+    try { validateWeeklySchedule(row); }
+    catch (error) { return invalid(error instanceof Error ? error.message : 'jadwal rutin tidak benar.'); }
     if (row.isActive !== 0 && row.isActive !== 1) return invalid('isActive jadwal rutin harus 0 atau 1.');
     nonnegative(row, ['reminderMinutes']);
   }

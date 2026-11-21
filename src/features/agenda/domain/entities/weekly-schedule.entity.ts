@@ -3,7 +3,23 @@
  * Represents weekly repeating schedules (Classes / Work Shifts) and their daily overrides.
  */
 
-export type WeeklyScheduleType = 'COLLEGE' | 'WORK' | 'STUDY' | 'PERSONAL' | 'ROUTINE';
+import { isTimeOnly } from '@/shared/utils/local-date';
+
+export const WEEKLY_SCHEDULE_TYPES = ['COLLEGE', 'WORK', 'STUDY', 'PERSONAL', 'ROUTINE'] as const;
+export type WeeklyScheduleType = typeof WEEKLY_SCHEDULE_TYPES[number];
+
+export function validateWeeklySchedule(input: {
+  title: unknown; dayOfWeek: unknown; startTime: unknown; endTime: unknown;
+  scheduleType?: unknown; reminderMinutes?: unknown;
+}): void {
+  if (typeof input.title !== 'string' || !input.title.trim()) throw new Error('Judul agenda tidak boleh kosong.');
+  if (typeof input.dayOfWeek !== 'number' || !Number.isInteger(input.dayOfWeek) || input.dayOfWeek < 1 || input.dayOfWeek > 7) throw new Error('Hari jadwal harus bilangan bulat 1–7.');
+  if (!isTimeOnly(input.startTime) || !isTimeOnly(input.endTime)) throw new Error('Jam jadwal harus HH:mm antara 00:00 dan 23:59.');
+  if (input.startTime >= input.endTime) throw new Error('Jam mulai harus lebih awal dari jam selesai.');
+  if (input.scheduleType !== undefined && !WEEKLY_SCHEDULE_TYPES.some(type => type === input.scheduleType)) throw new Error('Jenis jadwal tidak dikenal.');
+  if (input.reminderMinutes !== undefined && input.reminderMinutes !== null
+    && (typeof input.reminderMinutes !== 'number' || !Number.isSafeInteger(input.reminderMinutes) || input.reminderMinutes < 0)) throw new Error('Pengingat harus berupa menit tidak negatif.');
+}
 
 export function isDailyRoutine(scheduleType: WeeklyScheduleType): boolean {
   return scheduleType === 'ROUTINE';
