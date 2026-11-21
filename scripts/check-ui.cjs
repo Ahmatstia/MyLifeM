@@ -194,7 +194,7 @@ for (const scale of [1, 2]) {
     '@/features/today-focus/presentation/hooks/use-today-focus': { useTodayFocus: () => ({ ...focus, focusItems: [], availableTasks: [] }) },
   })('src/features/today-focus/presentation/screens/today-focus-screen.tsx').TodayFocusScreen;
   const pausedHtml = renderToStaticMarkup(React.createElement(PausedScreen));
-  assert.ok(pausedHtml.includes('SESI SEDANG DIJEDA') && pausedHtml.includes('Lihat sesi fokus'));
+  assert.ok(pausedHtml.includes('Sesi dijeda') && pausedHtml.includes('Lihat sesi fokus'));
   previews.push(['timer-paused-independent' + (scale === 2 ? '-large-text' : ''), 320, pausedHtml]);
 }
 fontScale = 1;
@@ -631,7 +631,7 @@ function checkTargetNavigation() {
     reset(); const QuickAdd = navLoader('src/features/quick-add/presentation/screens/quick-add-screen.tsx').QuickAddScreen;
     const buttons = descendants(QuickAdd()).filter(element => element.type === native.Pressable);
     assert.ok(!buttons.some(element => element.props.accessibilityLabel === 'Proyek'));
-    for (const [label, route] of [['Tugas Hari Ini', '/today/new'], ['Manajemen Tugas & Alarm', '/task-manager/new'], ['Target Hidup', '/targets/new'], ['Agenda & Kalender', '/agenda/new']]) {
+    for (const [label, route] of [['Tugas Hari Ini', '/today/new'], ['Tugas & Alarm', '/task-manager/new'], ['Target Hidup', '/targets/new'], ['Agenda & Kalender', '/agenda/new']]) {
       const item = buttons.find(element => element.props.accessibilityLabel === label); assert.ok(item, label); item.props.onPress(); assert.equal(replaced.at(-1), route);
     }
   });

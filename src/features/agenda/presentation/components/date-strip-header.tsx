@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { fontFamily, space } from '@/theme/tokens';
+import { fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { formatLocalDate } from '@/shared/utils/local-date';
 
@@ -98,7 +98,7 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
         ))}
       </View>
 
-      {/* 5-Week Month Grid matching Reference UI */}
+      {/* Complete month, including months that span six weeks. */}
       <View style={styles.gridContainer}>
         {monthWeeks.map((week, wIdx) => (
           <View key={wIdx} style={styles.weekRow}>
@@ -141,20 +141,8 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
 };
 
 const styles = StyleSheet.create({
-  wrap: {
-    gap: space[3],
-  },
-  monthPillBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F1EBDC',
-    borderRadius: 24,
-    paddingHorizontal: space[3],
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#E7DFCC',
-  },
+  wrap: { gap: 6, },
+  monthPillBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 2, borderBottomWidth: 1, borderBottomColor: colors.border, },
   navArrow: {
     width: 38,
     height: 38,
@@ -167,49 +155,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  monthTitleText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 17,
-    color: s.ink,
-  },
-  weekdayRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
-    marginTop: 4,
-  },
-  weekdayCell: {
-    width: 40,
-    alignItems: 'center',
-  },
+  monthTitleText: { fontFamily: fontFamily.bold, fontSize: 15, color: s.ink, },
+  weekdayRow: { flexDirection: 'row', gap: 2, paddingVertical: 4, },
+  weekdayCell: { flex: 1, minWidth: 0, alignItems: 'center', },
   weekdayText: {
     fontFamily: fontFamily.semibold,
     fontSize: 12,
     color: s.inkMuted,
   },
-  gridContainer: {
-    gap: 6,
-  },
-  weekRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
-  },
-  dayCell: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayCellSelected: {
-    backgroundColor: s.forest,
-    shadowColor: '#0E2E26',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
-  },
+  gridContainer: { gap: 2, },
+  weekRow: { flexDirection: 'row', gap: 2, },
+  dayCell: { flex: 1, minWidth: 0, minHeight: 44, paddingVertical: 5, borderRadius: 10, alignItems: 'center', justifyContent: 'center', },
+  dayCellSelected: { backgroundColor: s.forest, },
   dayCellToday: {
     backgroundColor: s.leafSoft,
   },
@@ -218,10 +175,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: s.ink,
   },
-  dayNumberOutside: {
-    fontFamily: fontFamily.medium,
-    color: '#B5AE9E',
-  },
+  dayNumberOutside: { fontFamily: fontFamily.medium, color: s.inkMuted, },
   dayNumberSelected: {
     color: '#FFFFFF',
     fontFamily: fontFamily.bold,

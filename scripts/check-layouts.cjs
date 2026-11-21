@@ -15,7 +15,7 @@ const fixture = fs.readFileSync(path.join(root, 'scripts/check-ui.cjs'), 'utf8')
 const prefix = fixture.slice(0, fixture.indexOf('const load = createLoader();'));
 const toolkit = new Function('require', 'module', 'exports', '__dirname', prefix + '\nreturn { createLoader, native, target, task, categories, base, setViewport(w,s){width=w;fontScale=s;}, restore(){Module._load=originalLoad;} };')(
   requireProject, { exports: {} }, {}, path.join(root, 'scripts'));
-const output = path.join(root, '.expo/remaining-ui');
+const output = path.resolve(root, process.env.MYLIFE_LAYOUT_OUTPUT || '.expo/remaining-ui');
 fs.mkdirSync(path.join(output, 'fonts'), { recursive: true });
 fs.mkdirSync(path.join(output, 'assets'), { recursive: true });
 let fonts = '';
@@ -40,6 +40,11 @@ const specs = [
   ['task-manager', 'task-manager/presentation/screens/task-manager-screen.tsx', 'TaskManagerScreen'],
   ['create-managed-task', 'task-manager/presentation/screens/create-managed-task-screen.tsx', 'CreateManagedTaskScreen'],
   ['quick-add', 'quick-add/presentation/screens/quick-add-screen.tsx', 'QuickAddScreen'],
+  ['timer', 'today-focus/presentation/components/focus-timer-widget.tsx', 'FocusTimerWidget', {
+    mode: 'POMODORO', formattedTime: '24:59', isRunning: true, hasSession: true,
+    activeTask: { id: 'fixture', title: 'Selesaikan satu langkah yang berarti' }, progressRatio: 0.2,
+    onChangeMode() {}, onStart() {}, onPause() {}, onReset() {}, onFinish() {},
+  }],
 ];
 const noop = () => {};
 const tracks = [{ id: 'builtin', name: 'Alarm bawaan', uri: 'builtin://siren-energize', isBuiltIn: true }];
@@ -92,13 +97,24 @@ async function main() {
         });
       });
       results.push({ ...item, overflow });
-      if (item.width === 320 && item.fontScale === 2) await page.screenshot({ path: path.join(output, item.name + '-320-2x.png'), fullPage: true });
+      if (item.name === 'quick-add') {
+        const close = page.getByRole('button', { name: 'Tutup', exact: true });
+        const bounds = await close.boundingBox();
+        assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= 844, 'Quick Add close control must stay visible at large font sizes');
+        const lastAction = page.getByRole('button', { name: 'Agenda & Kalender', exact: true });
+        await lastAction.scrollIntoViewIfNeeded();
+        assert.ok(await lastAction.isVisible(), 'Last Quick Add action must remain reachable by scrolling');
+        await page.evaluate(() => { for (const el of document.querySelectorAll('div')) if (el.scrollTop) el.scrollTop = 0; });
+      }
+      if ((item.width === 320 && item.fontScale === 2) || (item.width === 360 && item.fontScale === 1)) {
+        await page.screenshot({ path: path.join(output, `${item.name}-${item.width}-${item.fontScale}x.png`), fullPage: true });
+      }
     }
   } finally { await browser?.close(); await new Promise(resolve => server.close(resolve)); }
   fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify({ platform: 'Chromium SSR fixtures; no hydration/native/keyboard proof', cases: results }, null, 2));
   const failed = results.filter(item => item.overflow.length);
   console.log(JSON.stringify({ cases: results.length, failed: failed.map(item => ({ name: item.name, width: item.width, scale: item.fontScale, overflow: item.overflow })) }));
   assert.equal(failed.length, 0, 'Visible controls/text exceed the fixture width; see .expo/remaining-ui/results.json');
-  console.log('PASS: 88 browser layout cases, no horizontal overflow; native layout unverified.');
+  console.log(`PASS: ${results.length} browser layout cases, no horizontal overflow; native layout unverified.`);
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

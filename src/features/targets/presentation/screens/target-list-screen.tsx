@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Plus, Sparkles, CheckCircle2, Clock, Star, Compass } from 'lucide-react-native';
+import { Plus, Sparkles, ArrowUpRight } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, fontFamily } from '@/theme/tokens';
+import { fontFamily } from '@/theme/tokens';
 import {
   Screen,
   AppText,
   Banner,
   EmptyState,
   WaveBackdrop,
-  MascotRocket,
 } from '@/shared/ui';
 import { useTargets } from '../hooks/use-targets';
 import { CategoryFilterChips } from '../components/category-filter-chips';
@@ -79,11 +78,12 @@ export const TargetListScreen: React.FC = () => {
       {/* Header over Sprout Home Wave */}
       <View style={styles.header}>
         <View style={styles.headerTextCol}>
+          <AppText style={styles.eyebrow}>MYLIFE / ARAH & TUJUAN</AppText>
           <AppText variant="headlineMedium" style={styles.headerTitle}>
             Target Hidup
           </AppText>
           <AppText style={styles.headerSubtitle}>
-            Langkah kecil menuju impian besarmu ✨
+            Hal besar, langkah yang terukur.
           </AppText>
         </View>
       </View>
@@ -113,93 +113,23 @@ export const TargetListScreen: React.FC = () => {
       ) : (
         !error && (
           <>
-            {/* Unified Storybook Growth Showcase (Rocket Mascot + Meadow Wave + Ringkasan Target) */}
-            <View style={styles.growthShowcase}>
-              <View style={styles.growthTopRow}>
-                <MascotRocket width={160} height={144} style={styles.rocketMascot} />
-
-                <View style={styles.growthRightCol}>
-                  <View style={styles.growthPillBadge}>
-                    <AppText style={styles.growthPillBadgeText}>PROGRES TARGET</AppText>
-                  </View>
-                  <AppText style={styles.growthHeadline}>
-                    Tugas yang{'\n'}terselesaikan
-                  </AppText>
-                  <AppText style={styles.growthPercentText} tabularNums>
-                    {`${progress}%`}
-                  </AppText>
-                  <AppText style={styles.growthCaptionText}>
-                    {totalTasks > 0
-                      ? `${completedTasks} dari ${totalTasks} langkah tuntas`
-                      : 'Belum ada rencana'}
-                  </AppText>
-                </View>
+            <View style={styles.progressLedger}>
+              <View style={styles.progressCopy}>
+                <AppText style={styles.eyebrow}>PROGRES TARGET</AppText>
+                <AppText style={styles.progressCaption}>Tugas yang terselesaikan</AppText>
+                <AppText style={styles.progressFraction}>{completedTasks} dari {totalTasks} langkah tuntas</AppText>
               </View>
-
-              {/* Integrated 3-Column Summary Dock ("Ringkasan Target") */}
-              <View style={styles.ringkasanDock}>
-                <View style={styles.ringkasanHeaderRow}>
-                  <AppText style={styles.ringkasanHeading}>Ringkasan Target</AppText>
-                  <AppText style={styles.ringkasanSubheading}>Total Pencapaian</AppText>
-                </View>
-
-                <View style={styles.statsColumnsRow}>
-                  <View style={styles.statCol}>
-                    <View style={[styles.statIconCircle, { backgroundColor: s.leafSoft }]}>
-                      <CheckCircle2 size={16} color={s.forest} strokeWidth={2.5} />
-                    </View>
-                    <AppText style={styles.statValue} tabularNums>
-                      {completedTasks}
-                    </AppText>
-                    <AppText style={styles.statLabel}>Tugas Selesai</AppText>
-                  </View>
-
-                  <View style={styles.statDivider} />
-
-                  <View style={styles.statCol}>
-                    <View style={[styles.statIconCircle, { backgroundColor: s.tealSoft }]}>
-                      <Clock size={16} color={s.teal} strokeWidth={2.5} />
-                    </View>
-                    <AppText style={styles.statValue} tabularNums>
-                      {totalEstimatedHours} jam
-                    </AppText>
-                    <AppText style={styles.statLabel}>Waktu Fokus</AppText>
-                  </View>
-
-                  <View style={styles.statDivider} />
-
-                  <View style={styles.statCol}>
-                    <View style={[styles.statIconCircle, { backgroundColor: s.sunSoft }]}>
-                      <Star size={16} color="#B87E00" fill={s.sun} strokeWidth={2.2} />
-                    </View>
-                    <AppText style={styles.statValue} tabularNums>
-                      {targets.length}
-                    </AppText>
-                    <AppText style={styles.statLabel}>Target Aktif</AppText>
-                  </View>
-                </View>
-              </View>
+              <AppText style={styles.progressNumber} tabularNums>{progress}%</AppText>
+              <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${progress}%` }]} /></View>
             </View>
-
-            {/* Clean Journey Trail Section Header */}
-            <View style={styles.trailSectionHeader}>
-              <View style={styles.trailHeaderLeft}>
-                <View style={styles.trailHeaderIcon}>
-                  <Compass size={16} color={s.forest} strokeWidth={2.5} />
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <AppText style={styles.trailHeaderTitle}>Peta Perjalanan Target</AppText>
-                  <AppText style={styles.trailHeaderSub}>
-                    Ketuk salah satu misi untuk mengatur tahapan & langkah
-                  </AppText>
-                </View>
-              </View>
-
-              <View style={styles.trailCountPill}>
-                <AppText style={styles.trailCountText} tabularNums>
-                  {targets.length} misi
-                </AppText>
-              </View>
+            <View style={styles.summaryLine}>
+              <AppText style={styles.summaryText}>{targets.length} target</AppText>
+              <AppText style={styles.summaryText}>{totalEstimatedHours} jam estimasi</AppText>
+              <ArrowUpRight size={16} color={s.forest} />
+            </View>
+            <View style={styles.listHeading}>
+              <AppText style={styles.listTitle}>Tujuanmu</AppText>
+              <AppText style={styles.listHint}>Pilih untuk menyusun langkah</AppText>
             </View>
 
             {targets.length === 0 ? (
@@ -240,247 +170,29 @@ export const TargetListScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  screenBg: {
-    backgroundColor: s.cream,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: space[3],
-    paddingBottom: space[1],
-  },
-  headerTextCol: {
-    minWidth: 0,
-    flex: 1,
-    gap: 2,
-  },
-  headerTitle: {
-    fontSize: 27,
-    lineHeight: 33,
-    fontFamily: fontFamily.bold,
-    color: s.ink,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontFamily: fontFamily.medium,
-    color: s.inkMuted,
-  },
-  addPillBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: s.sun,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 999,
-  },
-  addPillText: {
-    color: s.ink,
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-  },
-  scrollContent: {
-    paddingBottom: 110,
-    gap: space[3],
-  },
-  notice: {
-    marginVertical: space[2],
-  },
-  loading: {
-    alignItems: 'center',
-    gap: space[3],
-    paddingVertical: space[10],
-  },
-  growthShowcase: {
-    backgroundColor: '#FFFDF8',
-    borderRadius: 30,
-    paddingTop: space[2],
-    overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: '#ECE3CE',
-    marginTop: 2,
-  },
-  growthTopRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space[3],
-  },
-  rocketMascot: {
-    marginLeft: -4,
-    marginBottom: -8,
-  },
-  growthRightCol: {
-    flexGrow: 1,
-    flexBasis: 140,
-    minWidth: 0,
-    alignItems: 'flex-end',
-    gap: 3,
-    paddingRight: space[1],
-  },
-  growthPillBadge: {
-    backgroundColor: s.leafSoft,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: 999,
-    marginBottom: 2,
-  },
-  growthPillBadgeText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 9.5,
-    letterSpacing: 0.6,
-    color: s.forest,
-  },
-  growthHeadline: {
-    fontFamily: fontFamily.bold,
-    fontSize: 16,
-    lineHeight: 21,
-    color: s.ink,
-    textAlign: 'right',
-  },
-  growthPercentText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 34,
-    lineHeight: 40,
-    color: s.forest,
-  },
-  growthCaptionText: {
-    fontFamily: fontFamily.medium,
-    fontSize: 11.5,
-    lineHeight: 15,
-    color: s.inkMuted,
-    textAlign: 'right',
-  },
-  ringkasanDock: {
-    backgroundColor: '#FAF5E8',
-    paddingHorizontal: space[4],
-    paddingTop: space[3],
-    paddingBottom: space[4],
-    borderTopWidth: 1,
-    borderTopColor: '#EAE0C8',
-    gap: space[3],
-  },
-  ringkasanHeaderRow: {
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  ringkasanHeading: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: s.ink,
-  },
-  ringkasanSubheading: {
-    fontFamily: fontFamily.medium,
-    fontSize: 11,
-    color: s.inkMuted,
-  },
-  statsColumnsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  statCol: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  statIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statValue: {
-    fontFamily: fontFamily.bold,
-    fontSize: 16.5,
-    color: s.ink,
-  },
-  statLabel: {
-    fontFamily: fontFamily.medium,
-    fontSize: 11,
-    color: s.inkMuted,
-  },
-  statDivider: {
-    width: 1,
-    height: 44,
-    backgroundColor: '#E5DCC6',
-  },
-  trailSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: space[2],
-    paddingBottom: 2,
-    gap: 10,
-  },
-  trailHeaderLeft: {
-    minWidth: 0,
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  trailHeaderIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: s.leafSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  trailHeaderTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 17,
-    lineHeight: 22,
-    color: s.ink,
-  },
-  trailHeaderSub: {
-    fontFamily: fontFamily.medium,
-    fontSize: 11.5,
-    lineHeight: 15,
-    color: s.inkMuted,
-  },
-  trailCountPill: {
-    backgroundColor: '#EFE8D5',
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  trailCountText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11.5,
-    color: s.forest,
-  },
-  trailListWrap: {
-    paddingTop: 4,
-  },
-  floatingFabContainer: {
-    position: 'absolute',
-    right: space[4],
-    bottom: space[4],
-    zIndex: 20,
-  },
-  fabSquare: {
-    width: 54,
-    height: 54,
-    borderRadius: 18,
-    backgroundColor: s.sun,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#B58105',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  fabSquarePressed: {
-    transform: [{ scale: 0.94 }],
-    backgroundColor: s.sunDeep,
-  },
+  screenBg: { backgroundColor: s.cream },
+  scrollContent: { paddingBottom: 100, gap: 12 },
+  header: { paddingTop: 20, paddingBottom: 8 },
+  headerTextCol: { gap: 4 },
+  eyebrow: { fontFamily: fontFamily.bold, fontSize: 10, lineHeight: 16, letterSpacing: 1.4, color: s.inkMuted },
+  headerTitle: { fontFamily: fontFamily.bold, fontSize: 28, lineHeight: 36, letterSpacing: -1, color: s.ink },
+  headerSubtitle: { fontSize: 12, color: s.inkMuted },
+  notice: { marginBottom: 8 },
+  loading: { paddingVertical: 40, alignItems: 'center', gap: 12 },
+  progressLedger: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, padding: 16, borderRadius: 16, borderTopLeftRadius: 4, backgroundColor: s.sunSoft },
+  progressCopy: { flex: 1, minWidth: 130, gap: 4 },
+  progressCaption: { fontFamily: fontFamily.semibold, fontSize: 14, color: s.ink },
+  progressFraction: { fontSize: 11, color: s.inkMuted },
+  progressNumber: { fontFamily: fontFamily.bold, fontSize: 36, lineHeight: 46, letterSpacing: -1.5, color: s.forest },
+  progressTrack: { width: '100%', height: 4, backgroundColor: '#D6DFBB', borderRadius: 2, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: s.forest },
+  summaryLine: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.border },
+  summaryText: { fontSize: 12, color: s.inkMuted },
+  listHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, marginTop: 8 },
+  listTitle: { fontFamily: fontFamily.bold, fontSize: 17, color: s.ink },
+  listHint: { fontSize: 11, color: s.inkMuted },
+  trailListWrap: { gap: 10 },
+  floatingFabContainer: { position: 'absolute', right: 16, bottom: 16, zIndex: 20 },
+  fabSquare: { width: 48, height: 48, borderRadius: 14, backgroundColor: s.sun, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: s.forest },
+  fabSquarePressed: { opacity: 0.8, transform: [{ scale: 0.96 }] },
 });

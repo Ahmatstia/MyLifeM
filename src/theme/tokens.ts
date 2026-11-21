@@ -56,12 +56,12 @@ export const elevation = {
   },
 } as const;
 
-/** Pasangan font bundar estetik bergaya buku cerita: Quicksand (body/label) & Fredoka (heading/aksen). */
+/** Plus Jakarta Sans: compact editorial hierarchy, using the existing bundled fonts. */
 export const fontFamily = {
-  regular: 'Quicksand_500Medium',
-  medium: 'Quicksand_600SemiBold',
-  semibold: 'Fredoka_600SemiBold',
-  bold: 'Fredoka_700Bold',
+  regular: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semibold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
 } as const;
 
 export const touchTarget = {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
-import { fontFamily, space } from '@/theme/tokens';
+import { fontFamily } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText } from './app-text';
 
@@ -42,40 +42,12 @@ export const FormScreenHeader: React.FC<FormScreenHeaderProps> = ({
 };
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space[4],
-    paddingVertical: space[3],
-    backgroundColor: 'transparent',
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: s.card,
-    borderWidth: 1,
-    borderColor: '#EBE3D0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#8A7A50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border, },
+  backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: s.card, alignItems: 'center', justifyContent: 'center', },
   backBtnPressed: {
     transform: [{ scale: 0.95 }],
   },
-  headerTitle: {
-    fontSize: 18,
-    fontFamily: fontFamily.bold,
-    color: s.ink,
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: space[2],
-  },
+  headerTitle: { fontSize: 16, fontFamily: fontFamily.bold, color: s.ink, flex: 1, textAlign: 'left', },
   rightSlot: {
     minWidth: 40,
     alignItems: 'flex-end',

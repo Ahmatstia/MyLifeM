@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  useWindowDimensions,
   Pressable,
   StyleSheet,
   View,
@@ -8,7 +9,6 @@ import {
 import { router } from 'expo-router';
 import Svg, { Line } from 'react-native-svg';
 import {
-  ArrowRight,
   ArrowUpRight,
   BellRing,
   CalendarDays,
@@ -26,11 +26,8 @@ import {
   AppText,
   Banner,
   EmptyState,
-  HeroBlob,
-  MascotPeek,
   Screen,
   SproutCheck,
-  SproutPlant,
   WaveBackdrop,
 } from '@/shared/ui';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
@@ -46,6 +43,8 @@ import { useTodayFocus } from '../hooks/use-today-focus';
 const s = colors.sprout;
 
 export const TodayFocusScreen: React.FC = () => {
+  const { fontScale } = useWindowDimensions();
+  const largeText = fontScale >= 1.5;
   const {
     focusItems,
     completedMinutes,
@@ -151,16 +150,13 @@ export const TodayFocusScreen: React.FC = () => {
     >
       <WaveBackdrop variant="home" height={285} />
 
-      {/* 1. Storybook Greeting Header */}
       <View style={styles.header}>
         <View style={styles.headerTextCol}>
-          <AppText variant="headlineMedium" style={styles.greetingTitle}>
-            Halo, Pejuang!
-          </AppText>
-          <AppText variant="bodySmall" style={styles.greetingSubtext}>
-            Hari ini yuk, lebih produktif{'\n'}dari kemarin ✨
-          </AppText>
+          <AppText style={styles.eyebrow}>MYLIFE / RUANG HARIAN</AppText>
+          <AppText style={styles.greetingTitle}>Satu per satu.</AppText>
+          <AppText style={styles.greetingSubtext}>Beri ruang untuk yang berarti.</AppText>
         </View>
+        <View style={styles.headerMark} accessible={false}><ArrowUpRight size={24} color={s.forest} /></View>
       </View>
 
       {timer.error && (
@@ -190,42 +186,36 @@ export const TodayFocusScreen: React.FC = () => {
       ) : (
         !error && (
           <>
-            {/* 2. Wavy Forest Green Hero Banner with Peeking Mascot */}
-            <View style={styles.heroWrap}>
-              <View style={styles.sproutLeftBadge} pointerEvents="none">
-                <SproutPlant size={36} />
-              </View>
-              <View style={styles.mascotPeekWrap} pointerEvents="none">
-                <MascotPeek width={152} height={109} />
-              </View>
-
-              <HeroBlob
-                onPress={handleHeroPress}
+            <View style={styles.focusGrid}>
+              <Pressable onPress={handleHeroPress}
+                accessibilityRole="button"
                 accessibilityLabel={timer.hasSession ? 'Lihat sesi fokus' : 'Mulai sesi fokus'}
-                style={styles.heroBlob}
-              >
-                <View style={styles.heroInnerRow}>
-                  <View style={styles.heroTextCol}>
-                    <AppText style={styles.heroBigNum}>{activeItems.length || 0}</AppText>
-                    <AppText style={styles.heroLabel}>Target Aktif</AppText>
-                    <AppText style={styles.heroStatusSub}>
-                      {timer.reflection
-                        ? 'SESI TERCATAT'
-                        : timer.isRunning
-                          ? `SESI BERJALAN · ${timer.formattedTime}`
-                          : timer.hasSession
-                            ? `SESI SEDANG DIJEDA · Lihat sesi fokus`
-                            : completedMinutes > 0
-                              ? `${completedMinutes} menit fokus hari ini`
-                              : `${remainingCount} tugas siap dikerjakan`}
-                    </AppText>
-                  </View>
-
-                  <View style={styles.heroCircleArrow}>
-                    <ArrowRight size={17} color={s.forest} strokeWidth={2.8} />
-                  </View>
+                style={({ pressed }) => [styles.focusPanel, largeText && styles.fullPanel, pressed && { opacity: 0.9 }]}>
+                <View style={styles.focusTopRow}>
+                  <AppText style={styles.focusEyebrow}>RUANG FOKUS</AppText>
+                  <ArrowUpRight size={18} color={s.sun} />
                 </View>
-              </HeroBlob>
+                <AppText style={styles.focusTitle}>
+                  {timer.hasSession ? timer.formattedTime : 'Mulai dari sini'}
+                </AppText>
+                <AppText style={styles.focusTask}>
+                  {timer.activeTask?.title || nextTask?.title || 'Pilih satu tugas untuk hari ini.'}
+                </AppText>
+                <View style={styles.focusFooter}>
+                  <View style={styles.liveDot} />
+                  <AppText style={styles.focusStatus}>
+                    {timer.reflection ? 'Sesi tercatat' : timer.isRunning ? 'Sesi berjalan' : timer.hasSession ? 'Sesi dijeda' : `${remainingCount} tugas menanti`}
+                  </AppText>
+                </View>
+              </Pressable>
+              <View style={[styles.dayLedger, largeText && styles.fullPanel]}>
+                <AppText style={styles.eyebrow}>HARI INI</AppText>
+                <AppText style={styles.ledgerNumber} tabularNums>{completedCount}<AppText style={styles.ledgerDenominator}>/{activeItems.length}</AppText></AppText>
+                <AppText style={styles.ledgerLabel}>tugas tuntas</AppText>
+                <View style={styles.ledgerRule} />
+                <AppText style={styles.ledgerMinutes} tabularNums>{completedMinutes} mnt</AppText>
+                <AppText style={styles.ledgerLabel}>waktu fokus</AppText>
+              </View>
             </View>
 
             {/* Expanded Focus Timer Widget when opened */}
@@ -640,29 +630,13 @@ const styles = StyleSheet.create({
   screenBg: {
     backgroundColor: s.cream,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    paddingTop: space[3],
-    paddingBottom: space[2],
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 20, paddingBottom: 8, gap: 12, },
   headerTextCol: {
     gap: 4,
     flex: 1,
   },
-  greetingTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 26,
-    lineHeight: 32,
-    color: s.ink,
-  },
-  greetingSubtext: {
-    fontFamily: fontFamily.medium,
-    color: '#3B564B',
-    fontSize: 13,
-    lineHeight: 19,
-  },
+  greetingTitle: { fontFamily: fontFamily.bold, fontSize: 28, lineHeight: 36, letterSpacing: -1, color: s.ink, },
+  greetingSubtext: { fontFamily: fontFamily.regular, color: s.inkMuted, fontSize: 12, lineHeight: 18, },
   notice: {
     marginBottom: space[2],
   },
@@ -677,60 +651,24 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
     gap: space[3],
   },
-  heroWrap: {
-    marginTop: 68,
-    marginBottom: space[1],
-    position: 'relative',
-  },
-  sproutLeftBadge: {
-    position: 'absolute',
-    top: -19,
-    left: 20,
-    zIndex: 3,
-  },
-  mascotPeekWrap: {
-    position: 'absolute',
-    top: -82,
-    right: 12,
-    zIndex: 3,
-  },
-  heroBlob: {
-    minHeight: 116,
-  },
-  heroInnerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-  },
-  heroTextCol: {
-    gap: 2,
-    flex: 1,
-  },
-  heroBigNum: {
-    fontFamily: fontFamily.bold,
-    fontSize: 34,
-    lineHeight: 38,
-    color: '#FFFFFF',
-  },
-  heroLabel: {
-    fontFamily: fontFamily.bold,
-    fontSize: 15,
-    color: '#FFFFFF',
-  },
-  heroStatusSub: {
-    fontFamily: fontFamily.medium,
-    fontSize: 11,
-    color: '#D5EBDD',
-    marginTop: 2,
-  },
-  heroCircleArrow: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: s.leafSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  eyebrow: { fontFamily: fontFamily.bold, fontSize: 10, lineHeight: 16, letterSpacing: 1.5, color: s.inkMuted },
+  headerMark: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  fullPanel: { flexBasis: '100%' },
+  focusGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  focusPanel: { flexGrow: 2, flexBasis: 170, minWidth: 0, padding: 16, borderRadius: 18, borderTopRightRadius: 4, backgroundColor: s.forest, gap: 8 },
+  focusTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  focusEyebrow: { fontFamily: fontFamily.bold, fontSize: 10, letterSpacing: 1.3, color: s.sun },
+  focusTitle: { fontFamily: fontFamily.bold, fontSize: 22, lineHeight: 30, letterSpacing: -0.6, color: '#FFFFFF' },
+  focusTask: { fontSize: 12, lineHeight: 19, color: '#E7EDDC' },
+  focusFooter: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  liveDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: s.sun },
+  focusStatus: { fontSize: 11, color: '#E7EDDC' },
+  dayLedger: { flexGrow: 1, flexBasis: 90, minWidth: 0, padding: 12, backgroundColor: s.sunSoft, borderRadius: 14, justifyContent: 'center' },
+  ledgerNumber: { fontFamily: fontFamily.bold, fontSize: 32, lineHeight: 42, letterSpacing: -1, color: s.ink },
+  ledgerDenominator: { fontSize: 16, color: s.inkMuted },
+  ledgerLabel: { fontSize: 11, color: s.inkMuted },
+  ledgerRule: { height: 1, backgroundColor: '#D6DFBB', marginVertical: 10 },
+  ledgerMinutes: { fontFamily: fontFamily.bold, fontSize: 16, color: s.forest },
   sectionHeaderBlock: {
     paddingTop: space[2],
     gap: 8,
@@ -740,11 +678,7 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     justifyContent: 'space-between',
   },
-  sectionTitleGroup: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 8,
-  },
+  sectionTitleGroup: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8, },
   sectionHeading: {
     fontFamily: fontFamily.bold,
     fontSize: 19,
@@ -756,26 +690,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: s.forest,
   },
-  sectionActionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  actionTextPrimary: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12.5,
-    color: s.forest,
-  },
-  actionSeparator: {
-    fontFamily: fontFamily.medium,
-    fontSize: 12,
-    color: '#C9BEA4',
-  },
-  actionTextSecondary: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12.5,
-    color: s.forest,
-  },
+
   headerProgressTrack: {
     height: 3,
     borderRadius: 999,
@@ -841,12 +756,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     flexShrink: 1,
   },
-  timelineTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 16,
-    lineHeight: 21,
-    color: s.ink,
-  },
+  timelineTitle: { fontFamily: fontFamily.semibold, fontSize: 14, lineHeight: 21, color: s.ink, },
   timelineTitleDone: {
     textDecorationLine: 'line-through',
     color: s.inkMuted,
@@ -892,19 +802,7 @@ const styles = StyleSheet.create({
     bottom: space[4],
     zIndex: 20,
   },
-  fabSquare: {
-    width: 54,
-    height: 54,
-    borderRadius: 18,
-    backgroundColor: s.sun,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#B58105',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-  },
+  fabSquare: { width: 48, height: 48, borderRadius: 14, backgroundColor: s.sun, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: s.forest, },
   fabSquarePressed: {
     transform: [{ scale: 0.94 }],
     backgroundColor: s.sunDeep,

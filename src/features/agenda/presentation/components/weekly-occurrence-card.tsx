@@ -101,7 +101,7 @@ export const WeeklyOccurrenceCard: React.FC<WeeklyOccurrenceCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 26,
+    borderRadius: 16,
     marginBottom: space[3],
   },
   cancelledCard: {

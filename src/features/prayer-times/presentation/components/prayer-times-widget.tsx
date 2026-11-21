@@ -5,7 +5,6 @@ import { Moon, Bell, MapPin, ChevronRight } from 'lucide-react-native';
 import { fontFamily, space } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText } from '@/shared/ui/app-text';
-import { sproutShadow } from '@/shared/ui/sprout';
 import type { TodayPrayerSchedule } from '../../domain/entities/prayer-times.entity';
 
 const s = colors.sprout;
@@ -115,15 +114,7 @@ export const PrayerTimesWidget: React.FC<PrayerTimesWidgetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: s.card,
-    borderRadius: 26,
-    padding: space[4],
-    borderWidth: 1,
-    borderColor: '#F1EADA',
-    gap: space[3],
-    ...sproutShadow,
-  },
+  container: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 8, },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -131,11 +122,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: space[2],
   },
-  headerTitleGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[2],
-  },
+  headerTitleGroup: { flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: 8, flexShrink: 1, },
   iconSquircle: {
     width: 34,
     height: 34,
@@ -144,9 +131,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleColumn: {
-    gap: 1,
-  },
+  titleColumn: { gap: 1, flexShrink: 1, },
   widgetHeaderLabel: {
     fontFamily: fontFamily.bold,
     fontSize: 13,
@@ -162,45 +147,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: s.forest,
   },
-  nextPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: s.sunSoft,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
+  nextPill: { flexDirection: 'row', alignItems: 'center', gap: 5, maxWidth: '100%', paddingVertical: 4, },
   nextPillText: {
     fontFamily: fontFamily.bold,
     fontSize: 11,
     color: s.ink,
   },
-  prayersRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  prayerPill: {
-    flex: 1,
-    backgroundColor: s.cream,
-    borderRadius: 16,
-    paddingVertical: 9,
-    paddingHorizontal: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#EDE5D2',
-    gap: 3,
-  },
+  prayersRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, },
+  prayerPill: { flexGrow: 1, flexBasis: 46, minWidth: 0, borderRadius: 8, paddingVertical: 7, paddingHorizontal: 3, alignItems: 'center', gap: 2, },
   prayerPillNext: {
     backgroundColor: s.forest,
     borderColor: s.forest,
   },
-  prayerPillPassed: {
-    backgroundColor: '#F7F3E8',
-    borderColor: '#EFE9D9',
-    opacity: 0.65,
-  },
+  prayerPillPassed: { backgroundColor: 'transparent', },
   prayerName: {
     fontFamily: fontFamily.medium,
     fontSize: 10,

@@ -87,28 +87,12 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#F1EBDC',
-    borderRadius: 999,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: '#E7DFCC',
-  },
+  container: { borderBottomWidth: 1, borderBottomColor: colors.border, },
   scrollContent: {
     gap: 6,
   },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 38,
-    paddingVertical: 7,
-    paddingHorizontal: 18,
-    borderRadius: 999,
-  },
-  chipSelected: {
-    backgroundColor: s.forest,
-  },
+  chip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingVertical: 7, paddingHorizontal: 12, borderBottomWidth: 2, borderBottomColor: 'transparent', },
+  chipSelected: { borderBottomColor: s.forest, },
   chipUnselected: {
     backgroundColor: 'transparent',
   },
@@ -116,10 +100,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: fontFamily.semibold,
   },
-  chipTextSelected: {
-    color: '#FFFFFF',
-    fontFamily: fontFamily.bold,
-  },
+  chipTextSelected: { color: s.forest, fontFamily: fontFamily.bold, },
   chipTextUnselected: {
     color: s.inkMuted,
   },

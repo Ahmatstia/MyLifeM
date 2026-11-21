@@ -1,58 +1,58 @@
 /**
  * MyLife Mobile Design System - Color Tokens
- * Sumber kebenaran: docs/design/DESIGN_V3.md (MyLife Sprout).
+ * Sumber kebenaran: docs/design/DESIGN_V3.md (MyLife Fieldnotes).
  * Nama key lama dipertahankan agar seluruh layar otomatis mengikuti tema baru.
  */
 
 export const colors = {
-  // Warm cream "storybook" canvas (MyLife Sprout theme).
-  background: '#FAF6EC',
-  surface: '#FAF6EC',
-  surfaceContainerLowest: '#FFFDF8',
-  surfaceContainerLow: '#F3EEE2',
-  surfaceContainer: '#EDE7D8',
-  surfaceContainerHigh: '#E5DFCD',
-  surfaceContainerHighest: '#D9D2BE',
+  // Paper canvas (MyLife Fieldnotes).
+  background: '#F7F8F2',
+  surface: '#F7F8F2',
+  surfaceContainerLowest: '#FFFFFF',
+  surfaceContainerLow: '#EEF0E8',
+  surfaceContainer: '#E5E9DF',
+  surfaceContainerHigh: '#DAE0D3',
+  surfaceContainerHighest: '#CAD3C3',
 
   // Deep forest green actions & hero blobs.
-  primary: '#1E5A4C',
-  primaryHover: '#174A3E',
-  primaryContainer: '#E3EED3',
+  primary: '#203E35',
+  primaryHover: '#172E27',
+  primaryContainer: '#E7EDDC',
   onPrimary: '#FFFFFF',
   onPrimaryContainer: '#1B4A3F',
-  hero: '#1E5A4C',
+  hero: '#203E35',
   onHero: '#FFFFFF',
-  onHeroMuted: '#E3EED3',
-  heroDecoration: '#2D6E5E',
+  onHeroMuted: '#E7EDDC',
+  heroDecoration: '#36594C',
   heroTrack: '#5E8F80',
 
-  // Warm sunshine yellow accent (CTA & FAB).
+  // Citron accent (CTA & FAB).
   secondary: '#8A5A00',
-  secondaryContainer: '#F7C948',
+  secondaryContainer: '#D7EF78',
   onSecondary: '#FFFFFF',
   onSecondaryContainer: '#3D2A00',
 
   // Leaf green
   tertiary: '#3F7A2E',
-  tertiaryContainer: '#E3EED3',
+  tertiaryContainer: '#E7EDDC',
   onTertiary: '#FFFFFF',
   onTertiaryContainer: '#244A1A',
 
   // Highlight (sunshine)
-  highlight: '#F7C948',
-  highlightContainer: '#FCEFC4',
+  highlight: '#D7EF78',
+  highlightContainer: '#EFF6D4',
   onHighlight: '#3D2A00',
   onHighlightContainer: '#3D2A00',
 
   // Text hierarchy (deep green ink).
-  onSurface: '#1F3B34',
+  onSurface: '#202E29',
   onSurfaceVariant: '#5E6B64',
   onSurfaceSubtle: '#646F68',
 
   // Border & divider: soft warm lines
   outline: '#8A9389',
-  outlineVariant: '#E8E1D0',
-  border: '#E8E1D0',
+  outlineVariant: '#DDE3D8',
+  border: '#DDE3D8',
 
   // Status
   success: '#236341',
@@ -78,31 +78,31 @@ export const colors = {
   // Scrim modal (hitam 32%)
   scrim: 'rgba(20, 38, 30, 0.48)',
 
-  // MyLife Sprout palette (reference storybook UI)
+  // Fieldnotes palette; legacy sprout keys keep existing consumers compatible
   sprout: {
-    cream: '#FAF6EC',
-    creamDeep: '#F3EEE2',
-    card: '#FFFDF8',
-    cardShade: '#EFE8D8',
-    forest: '#1E5A4C',
-    forestDeep: '#174A3E',
-    forestSoft: '#2D6E5E',
+    cream: '#F7F8F2',
+    creamDeep: '#EEF0E8',
+    card: '#FFFFFF',
+    cardShade: '#E9EDE3',
+    forest: '#203E35',
+    forestDeep: '#172E27',
+    forestSoft: '#36594C',
     leaf: '#8CC152',
-    leafSoft: '#E3EED3',
+    leafSoft: '#E7EDDC',
     leafMist: '#EEF4E2',
-    sun: '#F7C948',
-    sunDeep: '#EDB82E',
-    sunSoft: '#FCEFC4',
-    ink: '#1F3B34',
+    sun: '#D7EF78',
+    sunDeep: '#C3DC60',
+    sunSoft: '#EFF6D4',
+    ink: '#202E29',
     inkMuted: '#5E6B64',
     inkSubtle: '#5E6B64',
     inkFaint: '#646F68',
-    rose: '#E8636B',
+    rose: '#AD4B40',
     roseSoft: '#FBE3E1',
     teal: '#2F8F83',
     tealSoft: '#DDEFEA',
-    grape: '#7B6CD9',
-    grapeSoft: '#E9E5FA',
+    grape: '#66528C',
+    grapeSoft: '#EEE8F5',
   },
 
   // Neo-Bento Pop Palette (High-Contrast, Playful & Vibrant)

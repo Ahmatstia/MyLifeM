@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useWindowDimensions } from 'react-native';
 import { Tabs, router } from 'expo-router';
 import { Home, Target, CalendarDays, Menu } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ const s = colors.sprout;
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
   const bottomInset = Math.max(0, insets.bottom);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
@@ -29,32 +31,35 @@ export default function TabLayout() {
           headerShown: false,
           tabBarHideOnKeyboard: true,
           tabBarStyle: {
-            height: 68 + bottomInset,
-            backgroundColor: s.forest,
-            borderTopLeftRadius: 32,
-            borderTopRightRadius: 32,
-            borderTopWidth: 0,
+            height: 60 + bottomInset + Math.max(0, fontScale - 1) * 16,
+            backgroundColor: s.card,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
             paddingBottom: bottomInset + 4,
-            paddingTop: 8,
+            paddingTop: 4,
             paddingHorizontal: 10,
             shadowColor: '#0E2E26',
             shadowOffset: { width: 0, height: -6 },
-            shadowOpacity: 0.16,
+            shadowOpacity: 0.03,
             shadowRadius: 16,
-            elevation: 10,
+            elevation: 2,
           },
-          tabBarActiveTintColor: '#FFFFFF',
-          tabBarInactiveTintColor: '#8FB9AA',
+          tabBarActiveTintColor: s.forest,
+          tabBarInactiveTintColor: s.inkMuted,
           tabBarItemStyle: {
             borderRadius: 16,
-            marginVertical: 2,
+            marginVertical: 0,
             marginHorizontal: 2,
             paddingVertical: 0,
           },
+          tabBarIconStyle: { width: 24, height: 24 },
           tabBarLabelStyle: {
             fontSize: 10,
+            lineHeight: 14,
             fontFamily: fontFamily.bold,
-            marginTop: 2,
+            marginTop: 0,
           },
         }}
       >

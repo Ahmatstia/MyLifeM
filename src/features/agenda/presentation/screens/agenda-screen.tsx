@@ -15,7 +15,6 @@ import {
   EmptyState,
   WaveBackdrop,
   PillTabs,
-  SproutPlant,
 } from '@/shared/ui';
 import { useAgenda } from '../hooks/use-agenda';
 import { useWeeklySchedules } from '../hooks/use-weekly-schedules';
@@ -175,6 +174,7 @@ export const AgendaScreen: React.FC = () => {
 
       {/* Top Header matching Sprout Home Wave (Non-sticky) */}
       <View style={styles.header}>
+        <AppText style={{ fontFamily: fontFamily.bold, fontSize: 10, letterSpacing: 1.4, color: s.inkMuted }}>MYLIFE / RITME & WAKTU</AppText>
         <AppText variant="headlineMedium" style={styles.headerTitle}>
           Kalender
         </AppText>
@@ -207,7 +207,7 @@ export const AgendaScreen: React.FC = () => {
               ]}
             >
               <View style={styles.sproutBannerLeft}>
-                <SproutPlant size={38} />
+                <CalendarDays size={20} color={s.forest} />
                 <View style={styles.sproutBannerTexts}>
                   <AppText style={styles.sproutBannerTitle}>
                     {selectedDate === todayDate ? 'Hari Ini' : 'Tanggal'} · {shortDateLabel}
@@ -418,44 +418,20 @@ const styles = StyleSheet.create({
   screenBg: {
     backgroundColor: s.cream,
   },
-  header: {
-    paddingTop: space[3],
-    paddingBottom: space[2],
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerTitle: {
-    fontSize: 26,
-    lineHeight: 32,
-    fontFamily: fontFamily.bold,
-    color: s.ink,
-  },
+  header: { paddingTop: 20, paddingBottom: 8, gap: 4, },
+  headerTitle: { fontSize: 28, lineHeight: 36, letterSpacing: -1, fontFamily: fontFamily.bold, color: s.ink, },
   calendarIconBtn: {
     width: 42,
     height: 42,
     borderRadius: 14,
     backgroundColor: s.card,
     borderWidth: 1,
-    borderColor: '#EDE4D1',
+    borderColor: '#DDE3D8',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollContent: {
-    paddingBottom: 100,
-    gap: space[4],
-  },
-  sproutSummaryBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F1EBDC',
-    borderRadius: 26,
-    paddingHorizontal: space[4],
-    paddingVertical: space[3],
-    borderWidth: 1,
-    borderColor: '#E7DFCC',
-  },
+  scrollContent: { paddingBottom: 100, gap: 12, },
+  sproutSummaryBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: s.sunSoft, borderRadius: 12, padding: 12, },
   sproutBannerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -491,19 +467,7 @@ const styles = StyleSheet.create({
     bottom: space[4],
     zIndex: 20,
   },
-  fabSquare: {
-    width: 54,
-    height: 54,
-    borderRadius: 18,
-    backgroundColor: s.sun,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#B58105',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-  },
+  fabSquare: { width: 48, height: 48, borderRadius: 14, backgroundColor: s.sun, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: s.forest, },
   fabSquarePressed: {
     transform: [{ scale: 0.94 }],
     backgroundColor: s.sunDeep,

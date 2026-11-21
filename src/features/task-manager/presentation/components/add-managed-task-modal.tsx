@@ -873,7 +873,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#F1EBDC',
+    backgroundColor: '#EEF0E8',
     borderWidth: 1,
     borderColor: '#E5DEC9',
   },
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E7DFCC',
+    borderColor: '#DDE3D8',
   },
   alertModeCardActive: {
     borderColor: s.forest,
@@ -1066,7 +1066,7 @@ const styles = StyleSheet.create({
     backgroundColor: s.forest,
   },
   songPickerCard: {
-    backgroundColor: '#FAF6EC',
+    backgroundColor: '#F7F8F2',
     borderRadius: 20,
     padding: space[3],
     borderWidth: 1,
@@ -1206,7 +1206,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E7DFCC',
+    borderColor: '#DDE3D8',
   },
   autoSyncTitle: {
     fontFamily: fontFamily.bold,

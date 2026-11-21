@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   taskCommandCard: {
     width: '100%',
     backgroundColor: s.cream,
-    borderRadius: 30,
+    borderRadius: 16,
     padding: space[5],
     gap: space[3],
     borderWidth: 2,
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     backgroundColor: s.sun,
-    borderRadius: 24,
+    borderRadius: 16,
     paddingVertical: 18,
     borderWidth: 2,
     borderColor: '#FFF3C4',

@@ -29,10 +29,10 @@ async function main() {
     await page.getByRole('button', { name: 'Simpan', exact: true }).click();
     await page.waitForURL(url => !url.pathname.endsWith('/today/new'), { timeout: 30000 });
     await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 120000 });
-    await page.getByText(title, { exact: true }).waitFor({ timeout: 120000 });
-    assert.equal(await page.getByText(title, { exact: true }).count(), 1); evidence.checks.push('Quick task writes through the actual web database without duplicates');
+    await page.getByRole('checkbox', { name: 'Selesaikan ' + title, exact: true }).waitFor({ timeout: 120000 });
+    assert.equal(await page.getByRole('checkbox', { name: 'Selesaikan ' + title, exact: true }).count(), 1); evidence.checks.push('Quick task writes through the actual web database without duplicates');
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 120000 });
-    await page.getByText(title, { exact: true }).waitFor({ timeout: 120000 });
+    await page.getByRole('checkbox', { name: 'Selesaikan ' + title, exact: true }).waitFor({ timeout: 120000 });
     assert.ok((await page.locator('body').innerText()).includes('Kerja')); evidence.checks.push('Task/category persist across a full page reload');
     const label = await page.getByRole('checkbox').evaluateAll(elements => elements.map(el => el.getAttribute('aria-label')));
     const own = label.find(value => value?.includes(title));

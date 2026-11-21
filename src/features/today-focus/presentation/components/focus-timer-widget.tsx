@@ -6,7 +6,6 @@ import {
   useWindowDimensions,
   type ViewStyle,
 } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
 import {
   Play,
   Pause,
@@ -15,8 +14,8 @@ import {
   ChevronUp,
   Check,
   Target,
-  Flame,
 } from 'lucide-react-native';
+import { colors } from '@/theme/colors';
 import { space, fontFamily } from '@/theme/tokens';
 import type { UserSettingsEntity } from '@/features/settings/domain/entities/settings.entity';
 import { DEFAULT_SETTINGS } from '@/features/settings/domain/entities/settings.entity';
@@ -73,13 +72,6 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   );
 
 
-  // Circular gauge dimension
-  const circleSize = 180;
-  const strokeWidth = 10;
-  const radiusVal = (circleSize - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radiusVal;
-  const strokeDashoffset = circumference * (1 - Math.min(Math.max(progressRatio, 0), 1));
-
   return (
     <View style={[styles.container, style]}>
       {/* 1. Active Focus Task Strip */}
@@ -95,7 +87,6 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
             <AppText
               variant="titleSmall"
               style={styles.activeTaskTitle}
-              numberOfLines={1}
             >
               {activeTask ? activeTask.title : 'Fokus Mandiri'}
             </AppText>
@@ -129,69 +120,17 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         </View>
       </View>
 
-      {/* 2. Central Countdown Ring */}
       <View style={styles.orbitDisplayCard}>
-        <View style={styles.circleSvgWrapper}>
-          <Svg width={circleSize} height={circleSize} style={styles.svgRotate}>
-            {/* Background track */}
-            <Circle
-              cx={circleSize / 2}
-              cy={circleSize / 2}
-              r={radiusVal}
-              stroke="#EFECFF"
-              strokeWidth={strokeWidth}
-              fill="none"
-            />
-            {/* Progress Arc */}
-            {mode !== 'STOPWATCH' && (
-              <Circle
-                cx={circleSize / 2}
-                cy={circleSize / 2}
-                r={radiusVal}
-                stroke={isRunning ? '#E8A838' : '#E06B52'}
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${circumference} ${circumference}`}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                fill="none"
-              />
-            )}
-          </Svg>
-
-          {/* Inner Display Console */}
-          <View style={styles.orbitInnerContent}>
-            <AppText
-              variant="timer"
-              align="center"
-              tabularNums
-              style={[styles.timerDigits, { fontSize: digitSize }]}
-            >
-              {formattedTime}
-            </AppText>
-            <AppText variant="bodySmall" style={styles.timerSubtitle}>
-              {isRunning ? 'Konsentrasi penuh' : 'Tetap tenang dan fokus'}
-            </AppText>
-          </View>
-        </View>
-
-        {/* Pomodoro Interval Indicator */}
-        <View style={styles.cycleBadge}>
-          <Flame size={14} color="#E06B52" />
-          <AppText variant="labelSmall" style={styles.cycleBadgeText}>
-            Interval Pomodoro
-          </AppText>
-          <View style={styles.cycleDotsRow}>
-            <View style={[styles.cycleDot, styles.cycleDotActive]} />
-            <View style={[styles.cycleDot, isRunning && styles.cycleDotActive]} />
-            <View style={styles.cycleDot} />
-            <View style={styles.cycleDot} />
-          </View>
-        </View>
+        <AppText variant="timer" tabularNums style={[styles.timerDigits, { fontSize: digitSize }]}>{formattedTime}</AppText>
+        <AppText style={styles.timerSubtitle}>{isRunning ? 'Konsentrasi penuh' : 'Ruang untuk satu hal.'}</AppText>
+        {mode !== 'STOPWATCH' && <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${Math.min(100, Math.max(0, progressRatio * 100))}%` }]} />
+        </View>}
       </View>
 
       {/* 3. Session Mode Selector */}
       <View style={styles.modeSection}>
-        <View style={styles.modeCardsRow}>
+        <View style={[styles.modeCardsRow, fontScale >= 1.5 && styles.stackedControls]}>
           {/* Mode 1: Pomodoro */}
           <Pressable
             onPress={() => onChangeMode('POMODORO')}
@@ -348,7 +287,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         </Pressable>
 
         {/* Secondary Actions Row */}
-        <View style={styles.secondaryActionsRow}>
+        <View style={[styles.secondaryActionsRow, fontScale >= 1.5 && styles.stackedControls]}>
           {/* Finish & Record Button */}
           {hasSession && onFinish && (
             <Pressable
@@ -394,52 +333,18 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    backgroundColor: '#FAF5EB',
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    padding: space[4],
-    marginBottom: space[4],
-    shadowColor: '#1E1E2E',
-    shadowOpacity: 1,
-    shadowOffset: { width: 3, height: 3 },
-    shadowRadius: 0,
-    elevation: 4,
-  },
-  activeTaskStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    padding: space[3],
-    marginBottom: space[3],
-    shadowColor: '#1E1E2E',
-    shadowOpacity: 1,
-    shadowOffset: { width: 2, height: 2 },
-    shadowRadius: 0,
-    elevation: 2,
-  },
+  stackedControls: { flexDirection: 'column' },
+  progressTrack: { width: '100%', height: 3, backgroundColor: '#456252', marginTop: 12 },
+  progressFill: { height: '100%', backgroundColor: colors.sprout.sun },
+  container: { width: '100%', backgroundColor: colors.sprout.card, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 12, gap: 12, },
+  activeTaskStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, },
   activeTaskLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[2],
     flex: 1,
   },
-  targetIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFDDAF',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  targetIconCircle: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.sprout.sunSoft, alignItems: 'center', justifyContent: 'center', },
   activeTaskTexts: {
     flex: 1,
     gap: 2,
@@ -460,118 +365,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  stripSmallBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#EFECFF',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  orbitDisplayCard: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    paddingVertical: space[4],
-    paddingHorizontal: space[3],
-    marginBottom: space[3],
-    shadowColor: '#1E1E2E',
-    shadowOpacity: 1,
-    shadowOffset: { width: 2, height: 2 },
-    shadowRadius: 0,
-    elevation: 2,
-  },
-  circleSvgWrapper: {
-    position: 'relative',
-    width: 180,
-    height: 180,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  svgRotate: {
-    transform: [{ rotate: '-90deg' }],
-  },
-  orbitInnerContent: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space[2],
-  },
-  timerDigits: {
-    fontFamily: fontFamily.bold,
-    color: '#1E1E2E',
-    letterSpacing: -1,
-  },
-  timerSubtitle: {
-    fontSize: 11,
-    color: '#504535',
-    marginTop: 2,
-  },
-  cycleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#EFECFF',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    paddingHorizontal: space[3],
-    paddingVertical: 5,
-    borderRadius: 9999,
-    marginTop: space[3],
-  },
-  cycleBadgeText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#1E1E2E',
-  },
-  cycleDotsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginLeft: 4,
-  },
-  cycleDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#DAD8EE',
-  },
-  cycleDotActive: {
-    backgroundColor: '#E8A838',
-  },
-  modeSection: {
-    marginBottom: space[3],
-  },
+  stripSmallBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.sprout.creamDeep, alignItems: 'center', justifyContent: 'center', },
+  orbitDisplayCard: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.sprout.forest, borderRadius: 12, padding: 16, },
+
+
+
+  timerDigits: { fontFamily: fontFamily.bold, color: '#FFFFFF', letterSpacing: -2, lineHeight: 60, },
+  timerSubtitle: { fontSize: 11, color: '#E7EDDC', },
+
+
+
+
+
+  modeSection: { gap: 4, },
   modeCardsRow: {
     flexDirection: 'row',
     gap: space[2],
     marginBottom: space[1],
   },
-  modeCard: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    borderRadius: 14,
-    paddingVertical: space[2],
-    paddingHorizontal: 4,
-    shadowColor: '#1E1E2E',
-    shadowOpacity: 1,
-    shadowOffset: { width: 2, height: 2 },
-    shadowRadius: 0,
-    elevation: 2,
-  },
-  modeCardActive: {
-    backgroundColor: '#FFDDAF',
-    shadowOffset: { width: 1, height: 1 },
-  },
+  modeCard: { flex: 1, minWidth: 0, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 9, paddingVertical: 8, paddingHorizontal: 4, },
+  modeCardActive: { backgroundColor: colors.sprout.sunSoft, borderColor: colors.sprout.forest, },
   modeCardTitle: {
     fontFamily: fontFamily.bold,
     fontSize: 12,
@@ -596,84 +409,28 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-  controlsSection: {
-    gap: space[2],
-    marginBottom: space[3],
-  },
-  mainActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space[3],
-    paddingVertical: space[3],
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#1E1E2E',
-    shadowColor: '#1E1E2E',
-    shadowOpacity: 1,
-    shadowOffset: { width: 3, height: 3 },
-    shadowRadius: 0,
-    elevation: 4,
-  },
-  mainActionIdle: {
-    backgroundColor: '#E8A838',
-  },
-  mainActionRunning: {
-    backgroundColor: '#E06B52',
-  },
+  controlsSection: { gap: 8, },
+  mainActionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 48, paddingVertical: 10, borderRadius: 10, },
+  mainActionIdle: { backgroundColor: colors.sprout.sun, },
+  mainActionRunning: { backgroundColor: colors.sprout.forest, },
   mainActionButtonText: {
     fontFamily: fontFamily.bold,
     fontSize: 16,
     color: '#1E1E2E',
     letterSpacing: 0.3,
   },
-  buttonPressed: {
-    transform: [{ translate: [2, 2] }],
-    shadowOffset: { width: 0, height: 0 },
-  },
+  buttonPressed: { opacity: 0.8, },
   secondaryActionsRow: {
     flexDirection: 'row',
     gap: space[2],
   },
-  finishBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#BFEECC',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    borderRadius: 12,
-    paddingVertical: space[2],
-    shadowColor: '#1E1E2E',
-    shadowOpacity: 1,
-    shadowOffset: { width: 2, height: 2 },
-    shadowRadius: 0,
-    elevation: 2,
-  },
+  finishBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingVertical: 8, },
   finishBtnText: {
     fontFamily: fontFamily.bold,
     fontSize: 12,
     color: '#1E1E2E',
   },
-  resetBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    borderRadius: 12,
-    paddingVertical: space[2],
-    shadowColor: '#1E1E2E',
-    shadowOpacity: 1,
-    shadowOffset: { width: 2, height: 2 },
-    shadowRadius: 0,
-    elevation: 2,
-  },
+  resetBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingVertical: 8, },
   resetBtnText: {
     fontFamily: fontFamily.bold,
     fontSize: 12,

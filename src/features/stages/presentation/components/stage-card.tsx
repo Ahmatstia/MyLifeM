@@ -261,7 +261,7 @@ export const StageCard: React.FC<StageCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     marginBottom: space[3],
-    borderRadius: 28,
+    borderRadius: 16,
   },
   header: {
     flexDirection: 'row',

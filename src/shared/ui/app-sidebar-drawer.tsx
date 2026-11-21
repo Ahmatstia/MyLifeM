@@ -22,7 +22,6 @@ import {
 import { colors } from '@/theme/colors';
 import { fontFamily, space } from '@/theme/tokens';
 import { AppText } from './app-text';
-import { MascotAvatar, SproutPlant, sproutShadow } from './sprout';
 
 const s = colors.sprout;
 
@@ -115,7 +114,7 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
           {/* Drawer Header */}
           <View style={styles.drawerHeader}>
             <View style={styles.headerIdentityRow}>
-              <MascotAvatar size={46} />
+              <View style={styles.monogram}><AppText style={styles.monogramText}>m.</AppText></View>
               <View style={styles.headerTexts}>
                 <AppText style={styles.drawerTitle}>Menu MyLife</AppText>
                 <AppText style={styles.drawerSubtitle}>
@@ -148,7 +147,7 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
                 iconBg={s.sunSoft}
                 iconColor={s.forest}
                 title="Manajemen Tugas & Alarm"
-                subtitle="Jadwal pengerjaan sebelum deadline & alarm lagu"
+                subtitle="Jadwal kerja dan pengingat"
                 onPress={() => navigateTo('/task-manager')}
               />
 
@@ -157,7 +156,7 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
                 iconBg={s.tealSoft}
                 iconColor={s.forest}
                 title="Target & Peta Jalan"
-                subtitle="Sasaran hidup, tahapan ekspedisi & progres"
+                subtitle="Tujuan, tahapan, dan progres"
                 onPress={() => navigateTo('/(tabs)/targets')}
               />
 
@@ -184,7 +183,7 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
           {/* Footer Sprout Badge pinned neatly at bottom */}
           <View style={styles.sidebarFooter}>
             <View style={styles.footerRow}>
-              <SproutPlant size={26} />
+              <ShieldCheck size={22} color={s.forest} />
               <View style={{ flex: 1 }}>
                 <AppText style={styles.footerTitle}>
                   100% Tersimpan di Perangkat
@@ -242,6 +241,8 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
 );
 
 const styles = StyleSheet.create({
+  monogram: { width: 38, height: 38, borderRadius: 10, backgroundColor: s.forest, alignItems: 'center', justifyContent: 'center' },
+  monogramText: { fontFamily: fontFamily.bold, fontSize: 22, color: s.sun },
   root: {
     flex: 1,
     flexDirection: 'row',
@@ -282,12 +283,7 @@ const styles = StyleSheet.create({
     gap: 2,
     flex: 1,
   },
-  drawerTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 20,
-    lineHeight: 25,
-    color: s.ink,
-  },
+  drawerTitle: { fontFamily: fontFamily.bold, fontSize: 17, lineHeight: 24, color: s.ink, },
   drawerSubtitle: {
     fontFamily: fontFamily.medium,
     fontSize: 12,
@@ -299,7 +295,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     backgroundColor: s.card,
     borderWidth: 1,
-    borderColor: '#E7DFCC',
+    borderColor: '#DDE3D8',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -315,33 +311,12 @@ const styles = StyleSheet.create({
     marginTop: space[1],
     marginLeft: 4,
   },
-  menuCardGroup: {
-    backgroundColor: s.card,
-    borderRadius: 24,
-    padding: 6,
-    borderWidth: 1,
-    borderColor: '#F1EADA',
-    gap: 4,
-    ...sproutShadow,
-  },
-  menuItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-    paddingHorizontal: space[2],
-    paddingVertical: 12,
-    borderRadius: 18,
-  },
+  menuCardGroup: { borderTopWidth: 1, borderTopColor: colors.border, gap: 0, },
+  menuItemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border, },
   menuItemPressed: {
     backgroundColor: '#F5EFE2',
   },
-  menuIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  menuIconBox: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', },
   menuItemTextCol: {
     flex: 1,
     gap: 2,
@@ -357,7 +332,7 @@ const styles = StyleSheet.create({
     color: s.inkMuted,
   },
   sidebarFooter: {
-    backgroundColor: '#F1EBDC',
+    backgroundColor: '#EEF0E8',
     borderRadius: 20,
     paddingHorizontal: space[3],
     paddingVertical: 10,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, fontFamily } from '@/theme/tokens';
-import { AppText, IconTile, MascotHead, sproutShadow } from '@/shared/ui';
+import { AppText, IconTile } from '@/shared/ui';
 
 const s = colors.sprout;
 
@@ -37,8 +37,8 @@ const ITEMS: QuickAddItem[] = [
   },
   {
     id: 'task-manager',
-    label: 'Manajemen Tugas & Alarm',
-    subtitle: 'Jadwalkan tugas sebelum deadline + alarm lagu HP',
+    label: 'Tugas & Alarm',
+    subtitle: 'Atur waktu kerja dan pengingat',
     pathname: '/task-manager/new',
     icon: BellRing,
     tone: 'grape',
@@ -46,7 +46,7 @@ const ITEMS: QuickAddItem[] = [
   {
     id: 'target',
     label: 'Target Hidup',
-    subtitle: 'Sasaran, rencana tahapan & peta jalan ekspedisi',
+    subtitle: 'Tujuan besar, dipecah jadi langkah',
     pathname: '/targets/new',
     icon: Target,
     tone: 'teal',
@@ -82,15 +82,11 @@ export const QuickAddScreen: React.FC = () => {
           { paddingBottom: Math.max(insets.bottom, 20) + space[3] },
         ]}
       >
-        <View style={styles.mascotPeekTop} pointerEvents="none">
-          <MascotHead width={128} height={82} />
-        </View>
-
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <AppText style={styles.sheetTitle}>Tambah Baru ✨</AppText>
+            <AppText style={styles.sheetTitle}>Apa langkah berikutnya?</AppText>
             <AppText style={styles.sheetSubtitle}>
-              Pilih apa yang ingin kamu mulai hari ini
+              Tangkap ide, lalu beri tempat.
             </AppText>
           </View>
 
@@ -105,7 +101,7 @@ export const QuickAddScreen: React.FC = () => {
           </Pressable>
         </View>
 
-        <View style={styles.actionList}>
+        <ScrollView style={styles.actionScroll} contentContainerStyle={styles.actionList} showsVerticalScrollIndicator={false}>
           {ITEMS.map((item) => (
             <Pressable
               key={item.id}
@@ -117,17 +113,17 @@ export const QuickAddScreen: React.FC = () => {
                 pressed && styles.actionRowPressed,
               ]}
             >
-              <IconTile icon={item.icon} tone={item.tone} size={44} />
+              <IconTile icon={item.icon} tone={item.tone} size={36} />
               <View style={styles.actionCopy}>
                 <AppText style={styles.actionTitle}>{item.label}</AppText>
-                <AppText style={styles.actionSub} numberOfLines={1}>
+                <AppText style={styles.actionSub}>
                   {item.subtitle}
                 </AppText>
               </View>
               <ChevronRight size={18} color={s.inkMuted} />
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
       </View>
     </View>
   );
@@ -142,21 +138,9 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.scrim,
   },
-  sheet: {
-    backgroundColor: s.cream,
-    borderTopLeftRadius: 34,
-    borderTopRightRadius: 34,
-    paddingHorizontal: space[4],
-    paddingTop: space[5],
-    position: 'relative',
-  },
-  mascotPeekTop: {
-    position: 'absolute',
-    top: -64,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
+  sheet: { maxHeight: '92%', backgroundColor: s.cream, borderTopLeftRadius: 22, borderTopRightRadius: 22, paddingHorizontal: 20, paddingTop: 20, },
+  actionScroll: { flexShrink: 1 },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -167,42 +151,11 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
-  sheetTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 20,
-    color: s.ink,
-  },
-  sheetSubtitle: {
-    fontFamily: fontFamily.medium,
-    fontSize: 13,
-    color: s.inkMuted,
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: s.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#EBE3D0',
-  },
-  actionList: {
-    gap: space[2],
-  },
-  actionRow: {
-    minHeight: 72,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-    paddingHorizontal: space[4],
-    paddingVertical: space[3],
-    backgroundColor: s.card,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#F1EADA',
-    ...sproutShadow,
-  },
+  sheetTitle: { fontFamily: fontFamily.bold, fontSize: 20, lineHeight: 28, letterSpacing: -0.5, color: s.ink, },
+  sheetSubtitle: { fontFamily: fontFamily.regular, fontSize: 12, color: s.inkMuted, },
+  closeButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: s.card, alignItems: 'center', justifyContent: 'center', },
+  actionList: { gap: 0, },
+  actionRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, },
   actionRowPressed: {
     transform: [{ scale: 0.985 }],
   },
