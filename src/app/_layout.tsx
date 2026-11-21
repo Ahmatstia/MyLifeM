@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { View, ScrollView, ActivityIndicator } from 'react-native';
 import { initDatabase } from '@/db/client';
 import { useDataRevision } from '@/db/data-revision';
+import { AlarmRingingModal } from '@/features/task-manager/presentation/components/alarm-ringing-modal';
 import { colors } from '@/theme/colors';
 import { AppText, Button } from '@/shared/ui';
 import { readMigrationBackup, saveBackupFile } from '@/features/settings/data/services/backup-file.service';
@@ -137,6 +138,7 @@ export default function RootLayout() {
           options={{ presentation: 'transparentModal', animation: 'fade' }}
         />
       </Stack>
+      <AlarmRingingModal key={'alarm-' + dataRevision} />
     </ThemeProvider>
   );
 }

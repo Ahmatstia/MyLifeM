@@ -5,7 +5,13 @@
     "AUD-05",
     "AUD-06"
   ],
-  "status": "FIXED; automated verification complete; manual Expo Go verification pending",
+  "status": "FIXED; automated verification complete; manual validation USER_REPORTED_PASS",
+  "manualValidation": {
+    "status": "USER_REPORTED_PASS",
+    "userStatement": "ya udah aman.lanjutkan",
+    "context": "Confirmation following the AUD-05/06 manual guidance; the subsequently reported alarm defect is tracked separately under AUD-13.",
+    "limitations": "Not observed by the agent; device/OS and detailed negative-form/storage-failure results were not provided."
+  },
   "changes": [
     "Shared calendar-date and HH:mm validators are used by managed forms, repository writes and backup parsing.",
     "Managed JSON validates fields, enum types, task/subtask IDs, booleans, numbers, timestamps and optional per-date exclusions.",

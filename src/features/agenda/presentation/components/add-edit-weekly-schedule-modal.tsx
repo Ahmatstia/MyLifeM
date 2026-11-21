@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -66,6 +66,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
   const [isActive, setIsActive] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitting = useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -122,6 +123,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
   };
 
   const handleSubmit = async () => {
+    if (submitting.current) return;
     if (!title.trim()) {
       setErrorMessage('Judul agenda mingguan tidak boleh kosong.');
       return;
@@ -130,12 +132,13 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
       setErrorMessage('Format jam harus JJ:MM (misal 08:00 atau 14:30).');
       return;
     }
-    if (startTime >= endTime) {
+    if (startTime.trim() >= endTime.trim()) {
       setErrorMessage('Jam mulai harus lebih awal dari jam selesai.');
       return;
     }
 
     setErrorMessage(null);
+    submitting.current = true;
     setIsSubmitting(true);
     const input: CreateWeeklyScheduleInput = {
       dayOfWeek: selectedDays[0] || dayOfWeek,
@@ -149,20 +152,24 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
       isActive,
     };
 
-    const ok = await onSubmit(input, initialData ? undefined : selectedDays);
-    setIsSubmitting(false);
-
-    if (ok) {
-      onClose();
-    } else {
-      setErrorMessage('Gagal menyimpan jadwal rutin. Silakan periksa kembali.');
+    try {
+      const ok = await onSubmit(input, initialData ? undefined : selectedDays);
+      if (ok) onClose();
+      else setErrorMessage('Jadwal belum tersimpan. Silakan coba lagi.');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Jadwal belum tersimpan. Silakan coba lagi.');
+    } finally {
+      submitting.current = false;
+      setIsSubmitting(false);
     }
   };
+
+  const handleClose = () => { if (!submitting.current) onClose(); };
 
   return (
     <AppBottomSheet
       visible={visible}
-      onClose={onClose}
+      onClose={handleClose}
       title={initialData ? 'Ubah Jadwal Rutin' : 'Jadwal Rutin Baru'}
       subtitle="Jadwal kegiatan atau jam kerja yang berulang setiap minggu."
     >
@@ -427,7 +434,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
           <Button
             title="Batal"
             variant="outlined"
-            onPress={onClose}
+            onPress={handleClose}
             disabled={isSubmitting}
             style={styles.actionBtn}
           />

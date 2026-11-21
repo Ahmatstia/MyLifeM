@@ -65,6 +65,8 @@
     "test:integrity": "node scripts/check-integrity.cjs",
     "test:managed": "node scripts/check-managed.cjs",
     "test:contracts": "node scripts/check-data-contracts.cjs",
+    "test:alarms": "node scripts/check-alarms.cjs",
+    "test:weekly-settings": "node scripts/check-weekly-settings.cjs",
     "test:calendar": "node scripts/check-calendar.cjs",
     "test:progress": "node scripts/check-progress.cjs",
     "test:timer": "node scripts/check-timer.cjs",

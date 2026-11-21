@@ -100,6 +100,7 @@ function harness(stubs) {
   const React = {
     useState(initial) { const i = index++; if (!(i in values)) values[i] = typeof initial === 'function' ? initial() : initial; return [values[i], value => { values[i] = typeof value === 'function' ? value(values[i]) : value; }]; },
     useRef(initial) { const i = index++; return values[i] ??= { current: initial }; },
+    useMemo(factory, next) { const i = index++; if (!dependencies[i] || next.some((v, j) => v !== dependencies[i][j])) { values[i] = factory(); dependencies[i] = next; } return values[i]; },
     useCallback(callback, next) { const i = index++; if (!dependencies[i] || next.some((v, j) => v !== dependencies[i][j])) { values[i] = callback; dependencies[i] = next; } return values[i]; },
     useEffect(callback, next) { const i = index++; if (!dependencies[i] || next.some((v, j) => v !== dependencies[i][j])) { effects.push(() => { cleanups[i]?.(); cleanups[i] = callback(); }); dependencies[i] = next; } },
   };

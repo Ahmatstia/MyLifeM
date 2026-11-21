@@ -18,6 +18,9 @@ export interface WeeklyScheduleRepository {
   /** Create a new master schedule entry */
   createWeeklySchedule(input: CreateWeeklyScheduleInput): Promise<WeeklyScheduleEntity>;
 
+  /** Save every selected day together, or leave the database unchanged. */
+  createWeeklySchedulesForDays(days: number[], input: Omit<CreateWeeklyScheduleInput, 'dayOfWeek'>): Promise<WeeklyScheduleEntity[]>;
+
   /** Update an existing master schedule entry */
   updateWeeklySchedule(id: string, input: UpdateWeeklyScheduleInput): Promise<WeeklyScheduleEntity>;
 

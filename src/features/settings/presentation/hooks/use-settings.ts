@@ -11,7 +11,6 @@ import type {
 } from '../../domain/entities/settings.entity';
 import { DEFAULT_SETTINGS } from '../../domain/entities/settings.entity';
 import { settingsRepository } from '../../data/repositories/settings.repository.impl';
-import { setPrayerLocation } from '@/features/prayer-times/data/prayer-location-store';
 
 export function useSettings() {
   const [settings, setSettings] = useState<UserSettingsEntity>(DEFAULT_SETTINGS);
@@ -23,6 +22,11 @@ export function useSettings() {
     agendaEventsCount: 0,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const settingsVersion = useRef(0);
+  const settingsSaveQueue = useRef<Promise<void>>(Promise.resolve());
+  const pendingSaves = useRef(0);
   const busy = useRef(false);
   const [backupBusy, setBackupBusy] = useState<string | null>(null);
   const [backupError, setBackupError] = useState<string | null>(null);
@@ -31,15 +35,19 @@ export function useSettings() {
   const [recoveryAvailable, setRecoveryAvailable] = useState(false);
 
   const loadData = useCallback(async () => {
+    const version = settingsVersion.current;
     try {
       const [currentSettings, currentStats] = await Promise.all([
         settingsRepository.getSettings(),
         settingsRepository.getDatabaseStats(),
       ]);
-      setSettings(currentSettings);
+      if (version === settingsVersion.current) {
+        setSettings(currentSettings);
+        setSettingsError(null);
+      }
       setStats(currentStats);
     } catch (err) {
-      console.error('[useSettings] loadData error:', err);
+      if (version === settingsVersion.current) setSettingsError('Pengaturan belum dapat dimuat. ' + (err instanceof Error ? err.message : 'Coba lagi.'));
     } finally {
       setIsLoading(false);
     }
@@ -56,25 +64,30 @@ export function useSettings() {
     readRecoveryBackup().then(json => setRecoveryAvailable(json !== null)).catch(() => {});
   }, [loadData]);
 
-  const updateSetting = async (partial: Partial<UserSettingsEntity>) => {
-    try {
-      // Optimistic update
-      setSettings((prev) => {
-        const next = { ...prev, ...partial };
-        setPrayerLocation({
-          cityName: next.prayerCity,
-          latitude: next.prayerLatitude,
-          longitude: next.prayerLongitude,
-        });
-        return next;
-      });
-      const updated = await settingsRepository.saveSettings(partial);
-      setSettings(updated);
-    } catch (err) {
-      console.error('[useSettings] updateSetting error:', err);
-      // Revert
-      loadData();
-    }
+  const updateSetting = (partial: Partial<UserSettingsEntity>): Promise<boolean> => {
+    settingsVersion.current++;
+    pendingSaves.current++;
+    setIsSavingSettings(true);
+    setSettingsError(null);
+    const save = settingsSaveQueue.current.then(async () => {
+      settingsVersion.current++;
+      try {
+        const updated = await settingsRepository.saveSettings(partial);
+        settingsVersion.current++;
+        setSettings(updated);
+        setSettingsError(null);
+        return true;
+      } catch (err) {
+        settingsVersion.current++;
+        setSettingsError('Perubahan pengaturan belum tersimpan. ' + (err instanceof Error ? err.message : 'Coba lagi.'));
+        return false;
+      } finally {
+        pendingSaves.current--;
+        setIsSavingSettings(pendingSaves.current > 0);
+      }
+    });
+    settingsSaveQueue.current = save.then(() => {});
+    return save;
   };
 
   const runBackupAction = async (action: string, work: () => Promise<void>) => {
@@ -128,6 +141,7 @@ export function useSettings() {
     settings,
     stats,
     isLoading,
+    settingsError, isSavingSettings,
     backupBusy, backupError, backupNotice, pendingBackup, recoveryAvailable,
     closeBackup: () => { if (!busy.current) { setPendingBackup(null); setBackupError(null); } },
     updateSetting,

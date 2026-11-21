@@ -116,7 +116,8 @@ export function useManagedTasks() {
       return;
     }
     setPreviewingTrackId(track.id);
-    await TaskAlarmAudioService.previewTrack(track);
+    const started = await TaskAlarmAudioService.previewTrack(track);
+    if (!started) setPreviewingTrackId(current => current === track.id ? null : current);
   };
 
   const stopPreview = () => {

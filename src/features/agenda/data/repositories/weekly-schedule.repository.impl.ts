@@ -72,28 +72,33 @@ export class WeeklyScheduleRepositoryImpl implements WeeklyScheduleRepository {
   }
 
   async createWeeklySchedule(input: CreateWeeklyScheduleInput): Promise<WeeklyScheduleEntity> {
-    validateWeeklySchedule(input);
-    const title = input.title.trim();
+    return (await this.createWeeklySchedulesForDays([input.dayOfWeek], input))[0];
+  }
 
-    const id = generateId();
+  async createWeeklySchedulesForDays(
+    days: number[], input: Omit<CreateWeeklyScheduleInput, 'dayOfWeek'>
+  ): Promise<WeeklyScheduleEntity[]> {
+    if (!days.length || new Set(days).size !== days.length) throw new Error('Pilih hari yang berbeda untuk jadwal.');
     const now = new Date().toISOString();
-    const newRow = {
-      id,
-      dayOfWeek: input.dayOfWeek,
-      title,
-      startTime: input.startTime,
-      endTime: input.endTime,
-      scheduleType: input.scheduleType || 'COLLEGE',
-      location: input.location?.trim() || null,
-      notes: input.notes?.trim() || null,
-      reminderMinutes: input.reminderMinutes === undefined ? 15 : input.reminderMinutes,
-      isActive: input.isActive === false ? 0 : 1,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await db.insert(weeklySchedules).values(newRow);
-    return mapToEntity(newRow);
+    const rows = days.map(dayOfWeek => {
+      validateWeeklySchedule({ ...input, dayOfWeek });
+      return {
+        id: generateId(),
+        dayOfWeek,
+        title: input.title.trim(),
+        startTime: input.startTime,
+        endTime: input.endTime,
+        scheduleType: input.scheduleType || 'COLLEGE',
+        location: input.location?.trim() || null,
+        notes: input.notes?.trim() || null,
+        reminderMinutes: input.reminderMinutes === undefined ? 15 : input.reminderMinutes,
+        isActive: input.isActive === false ? 0 : 1,
+        createdAt: now,
+        updatedAt: now,
+      };
+    });
+    db.transaction(tx => tx.insert(weeklySchedules).values(rows).run());
+    return rows.map(mapToEntity);
   }
 
   async updateWeeklySchedule(

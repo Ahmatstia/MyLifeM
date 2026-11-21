@@ -12,7 +12,9 @@ Metode: discovery, penelusuran source, lint/typecheck, suite regresi, reproduksi
 
 **Paket managed task — AUD-02/03/04/16 DIPERBAIKI.** Status core menjadi acuan; transaksi SQLite sinkron melindungi metadata/core/prioritas dari penulisan sebagian dan kehilangan metadata saat operasi bersamaan. Kegagalan database diteruskan ke UI; pekerjaan notifikasi dipisahkan setelah commit. Harness resmi kini memock adapter notifikasi secara eksplisit. Delapan suite, lint dan typecheck lulus; suite baru `npm run test:managed` memuat 24 pemeriksaan. Dari 24 temuan baseline, **19 masih terbuka: 3 HIGH, 15 MEDIUM, 1 LOW**. Bukti: [managed-task-remediation.json](./managed-task-remediation.json). Pengguna kemudian melaporkan keenam uji manual alur data managed task berhasil mengikuti panduan Expo Go (**USER REPORTED PASS**, tidak diamati langsung; model perangkat/OS tidak dicatat). UI kegagalan simpan dan perilaku alarm native tetap perlu verifikasi terpisah.
 
-**Paket kontrak data/prioritas — AUD-05/06 DIPERBAIKI.** Validasi managed task dan jadwal mingguan disatukan pada form/repository/backup; JSON nested dan tipe enum diperiksa ketat. Pemeriksaan nama kategori dan penulisannya menjadi atomik, sementara categoryId target legacy tetap null. Pelepasan prioritas managed mencatat pengecualian per tanggal; refresh tidak memasukkannya kembali, penambahan manual menghapus pengecualian, dan tugas tetap tersimpan. Pengecualian bertahan melalui backup–restore; backup lama tanpa field tersebut tetap diterima. Seluruh sembilan suite, lint dan typecheck lulus, termasuk **39 pemeriksaan kontrak baru**. Tersisa **17 temuan terbuka: 3 HIGH, 13 MEDIUM, 1 LOW**. Bukti: [data-contracts-remediation.json](./data-contracts-remediation.json). Uji manual paket ini belum dilakukan di perangkat.
+**Paket kontrak data/prioritas — AUD-05/06 DIPERBAIKI.** Validasi managed task dan jadwal mingguan disatukan pada form/repository/backup; JSON nested dan tipe enum diperiksa ketat. Pemeriksaan nama kategori dan penulisannya menjadi atomik, sementara categoryId target legacy tetap null. Pelepasan prioritas managed mencatat pengecualian per tanggal; refresh tidak memasukkannya kembali, penambahan manual menghapus pengecualian, dan tugas tetap tersimpan. Pengecualian bertahan melalui backup–restore; backup lama tanpa field tersebut tetap diterima. Seluruh sembilan suite, lint dan typecheck lulus, termasuk **39 pemeriksaan kontrak baru**. Pada akhir paket ini tersisa **17 temuan terbuka: 3 HIGH, 13 MEDIUM, 1 LOW**. Bukti: [data-contracts-remediation.json](./data-contracts-remediation.json). Pengguna kemudian menyatakan "ya udah aman.lanjutkan": **USER REPORTED PASS**, tidak diamati agen, tanpa rincian perangkat atau hasil tiap kasus negatif. Laporan alarm berikutnya dicatat terpisah di AUD-13.
+
+**Paket penghentian alarm dan penyimpanan — AUD-23/24 DIPERBAIKI; AUD-13 SEBAGIAN.** Pengguna melaporkan semua tombol tidak menghentikan Tes Alarm. Dua modal alarm membuat pemutar/getaran berjalan ganda; operasi audio yang masih menunggu juga dapat memulai suara setelah stop. Kini satu modal di root aplikasi mengelola alarm, stop membatalkan startup tertunda dan membersihkan pemutar/timer, serta semua aksi menghentikan suara sebelum akses penyimpanan. Tes alarm terpisah dari aksi tugas dan berhenti otomatis setelah 10 detik. Snooze tidak jatuh kembali ke menit jadwal awal; task CANCELLED tidak dipilih sebagai alarm. Batch jadwal mingguan disimpan atomik; pengaturan menampilkan error dan mempertahankan formulir/nilai persisten ketika gagal. Sebelas suite, lint dan typecheck lulus; terdapat **12 pemeriksaan alarm dan 21 pemeriksaan weekly/settings baru**. Tersisa **15 temuan terbuka: 3 HIGH, 11 MEDIUM, 1 LOW**. Bukti: [alarm-weekly-settings-remediation.json](./alarm-weekly-settings-remediation.json). AUD-13 tetap terbuka untuk lifecycle/background/cold-start/restore/media dan QA perangkat; pengujian alarm perbaikan ini belum diamati di HP.
 
 JSON dan hash audit sebelumnya tetap merupakan snapshot sebelum remediation. Harness reproduce-findings.cjs/continuation-checks.cjs mengharapkan bug baseline (termasuk F01–F09 dan race kategori C03), dan check-source-preservation.cjs membandingkan hash baseline; alat tersebut akan menandai perubahan yang memang disengaja setelah fix. Gunakan suite resmi untuk regresi terkini. Paket kontrak menambah satu validator domain dan check-data-contracts.cjs; field metadata excludedFocusDates bersifat opsional. Tidak ada dependency, lockfile, skema SQLite, versi backup atau database pengguna yang diubah oleh alat remediation.
 
@@ -20,7 +22,7 @@ JSON dan hash audit sebelumnya tetap merupakan snapshot sebelum remediation. Har
 
 MyLife adalah aplikasi produktivitas pribadi lokal: target → proyek/tahapan → tugas → prioritas harian → sesi fokus, dengan agenda, jadwal mingguan/rutinitas, manajemen tugas beralarm, waktu salat, kategori, dan cadangan. Beban yang dinilai adalah satu pemilik di satu perangkat; tidak diasumsikan ada backend, kolaborasi, atau sinkronisasi cloud.
 
-Pada baseline, fondasi database memiliki perlindungan nyata: foreign key, trigger kepemilikan, transaksi, arsip pra-migrasi, staging restore, dan penyimpanan sesi sebelum refleksi. Fitur manajemen tugas menyimpan metadata/status dalam JSON user_settings sekaligus tabel tasks dan melewati sebagian aturan status/transaksi/validasi. Paket managed telah menyambungkan aturan status bersama dan transaksi; penyimpanan metadata tetap JSON dengan format yang kompatibel. Celah validasi AUD-05 tetap menjadi backlog.
+Pada baseline, fondasi database memiliki perlindungan nyata: foreign key, trigger kepemilikan, transaksi, arsip pra-migrasi, staging restore, dan penyimpanan sesi sebelum refleksi. Fitur manajemen tugas menyimpan metadata/status dalam JSON user_settings sekaligus tabel tasks dan melewati sebagian aturan status/transaksi/validasi. Paket managed telah menyambungkan aturan status bersama dan transaksi; penyimpanan metadata tetap JSON dengan format yang kompatibel. Celah validasi AUD-05 telah ditangani pada paket kontrak data.
 
 **Ditemukan 24 temuan utama: 0 CRITICAL, 7 HIGH, 16 MEDIUM, 1 LOW.** Empat temuan lanjutan adalah startup web, overflow layout fixture, partial-save jadwal mingguan, dan kegagalan pengaturan tanpa feedback. Confidence HIGH untuk bukti source/reproduksi, kecuali konsekuensi alarm native, transfer geometri fixture ke native, dan keterjangkauan eksploit dependensi yang masih terbatas. Tidak ada skor kualitas spekulatif.
 
@@ -553,6 +555,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-13 — Janji alarm lagu/full-screen melampaui jalur lifecycle yang tersedia
 
+**Perbaikan parsial:** bug suara Tes Alarm yang tidak berhenti ditangani dengan satu pemilik modal/audio, pembatalan startup tertunda, cleanup audio/getaran independen, stop sebelum penyimpanan, dan pemisahan simulasi dari mutasi tugas. Pengujian baru membuktikan kegagalan sebelumnya pada 12 kasus service/repository; seluruh kasus kini lulus, disertai uji interaksi komponen untuk semua tombol/back/timeout/gagal simpan. Ini belum menutup temuan lifecycle di bawah; notifikasi OS dan audio perangkat tetap belum diamati. Lihat bagian 11.5.
+
 - **Kategori / severity / confidence:** alarm/recovery / **HIGH** / HIGH untuk source, MEDIUM untuk efek perangkat.
 - **Lokasi:** src/features/task-manager/data/services/task-alarm-notification.service.ts:89–177; src/features/task-manager/presentation/components/alarm-ringing-modal.tsx:44–68; src/features/task-manager/data/repositories/managed-task.repository.ts:383–416; src/features/settings/presentation/hooks/use-settings.ts:115–120; src/features/task-manager/data/services/task-alarm-audio.service.ts:184–205, 262–297.
 - **Actual:** loop custom audio dipicu polling React setiap 6 detik; jadwal OS hanya sound default. Tidak ditemukan notification-response handler/cold-start handoff. Firing biasa mensyaratkan tanggal dan menit sama persis, sehingga resume lewat menit dapat melewatkannya. Restore hanya merekonsiliasi agenda, bukan managed-task-*; audio kustom dicadangkan sebagai URI tanpa berkas.
@@ -614,6 +618,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-23 — Simpan jadwal beberapa hari dapat commit sebagian dan duplikat saat retry
 
+**DIPERBAIKI, otomatis terverifikasi:** satu operasi batch repository dalam transaksi SQLite sinkron; kegagalan salah satu dari tujuh hari atau COMMIT tidak meninggalkan row. Retry dua hari menghasilkan tepat dua row. Form mempertahankan draft, menangani rejection dan mencegah submit ganda. Uji native masih menunggu. Bukti baseline berikut dipertahankan sebagai riwayat.
+
 - **Kategori / severity / confidence:** integritas data/atomicity / **MEDIUM** / HIGH.
 - **Fitur / lokasi:** jadwal rutin multi-hari; src/features/agenda/presentation/hooks/use-weekly-schedules.ts:67–83; src/features/agenda/data/repositories/weekly-schedule.repository.impl.ts (createWeeklySchedule).
 - **Actual / bukti:** C01 menyuntik kegagalan INSERT hari kedua pada addSchedulesForDays([1,2]). Hook mengembalikan false tetapi satu row sudah tersimpan. Retry sukses membuat total tiga row, padahal pilihan pengguna hanya dua hari.
@@ -625,6 +631,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 - **Verifikasi:** VERIFIED C01 pada kode hook/repository aktual dengan batas React/native mock; UI error native belum diuji.
 
 ### AUD-24 — Kegagalan menyimpan pengaturan tidak memberi feedback pengguna
+
+**DIPERBAIKI, otomatis terverifikasi:** update mengembalikan boolean dan error publik, menampilkan nilai yang sudah commit, serta mengantre perubahan cepat. Pembacaan hasil berada di dalam transaksi; read/write/commit yang gagal melakukan rollback dan tidak memublikasikan lokasi baru. Form lokasi tetap terbuka beserta draft sampai sukses; kontrol dinonaktifkan saat menyimpan. Uji native kegagalan penyimpanan belum dilakukan. Bukti baseline berikut dipertahankan sebagai riwayat.
 
 - **Kategori / severity / confidence:** error recovery/UX / **MEDIUM** / HIGH.
 - **Fitur / lokasi:** preferensi durasi, getaran, keep-awake dan lokasi salat; src/features/settings/presentation/hooks/use-settings.ts:59–78; src/features/settings/presentation/screens/settings-screen.tsx:106–140.
@@ -760,7 +768,7 @@ Warna kontras yang diperiksa: ink/cream **11,23:1**; inkSubtle/card **3,73:1**; 
 
 Perintah dijalankan menggunakan dependency yang sudah terpasang. Tidak ada npm install, lockfile rewrite, database reset, seed, migration pada data pengguna, atau audit fix.
 
-Tabel berikut menyimpan hasil audit baseline. **Perintah yang dulu FAIL sudah diperbaiki pada AUD-16; hasil paket managed tersedia di bagian 11.3 dan hasil terbaru sembilan suite pada bagian 11.4.** Log/snapshot lama dipertahankan sebagai riwayat, bukan hasil verifikasi setelah perbaikan.
+Tabel berikut menyimpan hasil audit baseline. **Perintah yang dulu FAIL sudah diperbaiki pada AUD-16; hasil paket managed tersedia di bagian 11.3, kontrak data di 11.4, dan hasil terbaru sebelas suite di 11.5.** Log/snapshot lama dipertahankan sebagai riwayat, bukan hasil verifikasi setelah perbaikan.
 
 | Pemeriksaan | Hasil aktual | Batas cakupan |
 |---|---|---|
@@ -872,6 +880,27 @@ Total tujuh suite database/domain memuat 206 pemeriksaan bernomor, dengan suite 
 
 Data lama yang invalid dilaporkan dan dipertahankan, bukan dinormalisasi atau dihapus otomatis. Pengecualian prioritas hanya berlaku pada tanggal terkait dan tidak menonaktifkan jadwal/alarm. Field baru opsional sehingga metadata lama dan schemaVersion 1/2 tetap terbaca. Uji native yang diperlukan: pesan validasi mempertahankan draft, pelepasan prioritas tetap bertahan setelah pindah layar/buka ulang, task tetap ada di Manajemen Tugas, dan penambahan manual kembali berhasil.
 
+### 11.5 Penghentian alarm, weekly atomik dan feedback pengaturan
+
+Basis source paket ini adalah commit c9455e2110d832ea3438e4f7613f28d23b44c98c. Pengguna menyela kelanjutan AUD-23/24 dengan laporan alarm tidak berhenti; perbaikan alarm didahulukan, kemudian kedua perbaikan penyimpanan diselesaikan. Tidak ada perubahan dependency, lockfile, skema, format cadangan atau database pengguna.
+
+- `test:alarms`: **12 PASS / 0 FAIL**; sebelum perbaikan 0 PASS / 12 FAIL. Memakai service audio/repository produksi dengan player, timer, haptics dan native adapter yang dikontrol. Stop saat startup pending, dua start bersamaan, gagal pause/play, preview vs alarm, callback getaran tertunda, snooze, test tanpa mutasi dan CANCELLED tercakup.
+- `test:weekly-settings`: **21 PASS / 0 FAIL**. Suite awal membuktikan 17 kegagalan dari 19 pemeriksaan; dua kasus tambahan mencakup kegagalan setiap hari dan COMMIT. Batch fault/retry, reminder null/0, rollback settings pada write/read/commit, error hook, antrean update dan pembacaan lama tercakup.
+- `test:ui`: **PASS**. Komponen alarm aktual diuji untuk tombol stop tes, timeout 10 detik, semua enam aksi alarm asli, back, storage failure, ketukan ganda dan cleanup. Root menunggu database siap dan memasang satu controller. Komponen weekly dan lokasi settings mempertahankan draft saat gagal/pending serta hanya menutup setelah sukses. Rendering web/native boundary mock tetap bukan QA perangkat.
+- `test:contracts` **39 PASS**, `test:managed` **24 PASS**, `test:backup` **52 PASS**, `test:integrity` **30 PASS**, `test:calendar` **33 PASS**, `test:progress` **15 PASS**, `test:timer` **13 PASS** dan `test:db-imports` **PASS, 16 modul**.
+- TypeScript `--noEmit` dan ESLint `src scripts --no-cache`: **PASS**. Sebelas suite mencakup **239 pemeriksaan bernomor** dalam sembilan suite domain/database, ditambah suite UI dan graph import yang dihitung terpisah. Fault pada log adalah injeksi test pada SQLite memory.
+- Ekspor Android Metro/Hermes: **PASS**, 3.776 modul, 55 asset, bundle 6.670.883 byte di `.expo/remediation-alarm-export`. Ini bundle JavaScript/bytecode, bukan APK atau uji runtime perangkat.
+
+Panduan uji manual perbaikan alarm:
+
+1. Tutup paksa Expo Go lalu buka ulang proyek sekali untuk melepaskan pemutar lama yang sudah kehilangan referensi. Tidak perlu menghapus data aplikasi.
+2. Pilih Tes Alarm → Hentikan Tes Alarm. Suara harus langsung berhenti dan tidak kembali; ulangi beberapa kali, termasuk segera menekan stop setelah tes dimulai.
+3. Biarkan satu tes berjalan tanpa menekan tombol. Tes harus berhenti otomatis setelah paling lama 10 detik; status tugas dan jadwal asli tidak berubah.
+4. Buat tugas uji terjadwal 1–2 menit mendatang dengan aplikasi tetap terbuka. Uji Matikan Alarm, Tandai Selesai dan Tunda 5 menit pada tugas uji terpisah. Suara berhenti setelah aksi; snooze tidak berbunyi lagi sebelum waktunya. Setelah itu hapus tugas uji sesuai kebutuhan.
+5. Untuk paket penyimpanan: buat jadwal pada dua hari dan pastikan masing-masing hanya sekali; ubah durasi/lokasi, pindah layar dan buka ulang. UI kegagalan simpan tetap hanya diuji secara otomatis, tanpa merusak storage perangkat.
+
+Konfirmasi manual AUD-05/06 terdahulu dicatat sebagai USER REPORTED PASS. Perbaikan alarm dan AUD-23/24 pada bagian ini masih **NATIVE RETEST PENDING**. Background, notifikasi yang diketuk setelah menit jadwal, terminated/reboot/Doze/DND, pemulihan jadwal OS dan portability file custom tetap bagian AUD-13; tidak dinyatakan selesai oleh suite foreground ini.
+
 ## 12. Prioritized Remediation Backlog
 
 Effort relatif: S = satu area kecil; M = beberapa boundary/tes; L = lifecycle/native lintas fitur. Bukan estimasi hari kerja.
@@ -893,7 +922,7 @@ Effort relatif: S = satu area kecil; M = beberapa boundary/tes; L = lifecycle/na
 | Sesudah integritas; awal bila web memang didukung | AUD-21 | HIGH (web) / M | Startup SQLite web, worker, CRUD dan persistensi reload; proxy audit belum membuktikan fix |
 | Bersama aksesibilitas/form | AUD-22 | MEDIUM / M | Tutup overflow fixture kecil/teks besar, lalu cek Android/keyboard/native font |
 
-**AUD-01/02/03/04/05/06/16 telah diterapkan dan diverifikasi otomatis.** AUD-01 dan enam alur data paket managed sebelumnya juga mendapat konfirmasi uji manual pengguna; paket AUD-05/06 menunggu uji manual tersendiri. Berikutnya: partial-save weekly/error settings (AUD-23/24) serta akses Proyek (AUD-07). Alarm lifecycle, UI error penyimpanan native dan dependensi tetap perlu paket lanjutan.
+**AUD-01/02/03/04/05/06/16/23/24 telah diterapkan dan diverifikasi otomatis.** AUD-01, alur managed dan paket AUD-05/06 mendapat konfirmasi manual pengguna, dengan batas yang dicatat pada tiap bukti. AUD-13 telah mendapat perbaikan penghentian foreground/test tetapi tetap terbuka. Berikutnya: uji ulang alarm/perbaikan penyimpanan di perangkat, akses Proyek (AUD-07), dan lifecycle alarm. Dependensi serta temuan lain tetap terbuka.
 
 ## 13. Regression Risk
 
@@ -917,7 +946,7 @@ Proyek memiliki fungsi lokal dan mekanisme proteksi data yang nyata. Keberhasila
 
 Coverage source mencakup seluruh 10 modul, 24 kemampuan, 14 screen, 16 file form/54 TextInput dan 51 file komponen, termasuk pemeriksaan source template lanjutan. Seluruh screen mendapat fixture browser (112 kasus, 28 screenshot), tetapi hydration, state data hasil effect, ilustrasi expo-image, dan interaksi native tidak tercakup. Nilai target legacy terbukti terjaga di backup; authoring/editor legacy belum didukung penuh. **Audit runtime native belum selesai** karena tidak ada perangkat dan emulator gagal boot; laporan ini tidak menyatakan seluruh fitur VERIFIED.
 
-Pada audit baseline tidak ada perbaikan source, penambahan dependency atau perubahan data pengguna; hash 162 source saat itu dicatat di continuation-verification.json. AUD-01 dan paket AUD-02/03/04/16 sudah diperbaiki dengan konfirmasi manual alur pengguna. Paket selanjutnya menutup AUD-05/06 melalui validasi bersama, kategori atomik, null legacy yang jujur, dan opt-out prioritas per tanggal. Hasil tiap paket tersimpan pada aud-01-remediation.json, managed-task-remediation.json dan data-contracts-remediation.json; angka/hash lama tetap snapshot pada saat pengujian masing-masing. Tidak ada dependency, lockfile, skema SQLite, versi backup atau database pengguna yang diubah oleh alat remediation. Tersisa 17 temuan terbuka; uji native paket AUD-05/06 dan alarm lanjutan dibedakan pada bagian 11.2–11.4.
+Pada audit baseline tidak ada perbaikan source, penambahan dependency atau perubahan data pengguna; hash 162 source saat itu dicatat di continuation-verification.json. AUD-01 dan paket AUD-02/03/04/16 sudah diperbaiki dengan konfirmasi manual alur pengguna. Paket kontrak menutup AUD-05/06 melalui validasi bersama, kategori atomik, null legacy yang jujur, dan opt-out prioritas per tanggal. Paket terbaru menutup AUD-23/24 serta memperbaiki sebagian AUD-13 untuk penghentian alarm foreground/test. Hasil tiap paket tersimpan pada aud-01-remediation.json, managed-task-remediation.json, data-contracts-remediation.json dan alarm-weekly-settings-remediation.json; angka/hash lama tetap snapshot saat pengujian masing-masing. Tidak ada dependency, lockfile, skema SQLite, versi backup atau database pengguna yang diubah oleh alat remediation. Tersisa 15 temuan terbuka (3 HIGH, 11 MEDIUM, 1 LOW); uji native dibedakan pada bagian 11.2–11.5.
 
 ### Lampiran: baseline dan referensi verifikasi
 

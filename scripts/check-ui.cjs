@@ -128,7 +128,7 @@ const state = [], dependencies = [];
 let stateIndex = 0, effectIndex = 0;
 const effects = [];
 const fakeReact = { ...React,
-  useState(initial) { const index = stateIndex++; if (!(index in state)) state[index] = initial; return [state[index], value => { state[index] = typeof value === 'function' ? value(state[index]) : value; }]; },
+  useState(initial) { const index = stateIndex++; if (!(index in state)) state[index] = typeof initial === 'function' ? initial() : initial; return [state[index], value => { state[index] = typeof value === 'function' ? value(state[index]) : value; }]; },
   useRef(initial) { const index = stateIndex++; return state[index] ??= { current: initial }; },
   useEffect(callback, next) { const index = effectIndex++; if (!dependencies[index] || next.some((value, i) => value !== dependencies[index][i])) effects.push(callback); dependencies[index] = next; },
 };
@@ -347,6 +347,7 @@ async function checkReflection() {
 async function checkStartup() {
   state.length = 0; dependencies.length = 0; effects.length = 0;
   let fails = true;
+  const Alarm = () => null;
   const Stack = () => null; Stack.Screen = function TestStackScreen() { return null; };
   const { default: RootLayout } = createLoader({
     react: { ...fakeReact, useMemo: work => work(), useCallback: work => work },
@@ -358,17 +359,20 @@ async function checkStartup() {
     '@/db/client': { initDatabase: async () => { if (fails) throw new Error('Relasi legacy bermasalah'); } },
     '@/db/data-revision': { useDataRevision: () => 0 },
     '@/features/settings/data/services/backup-file.service': {},
+    '@/features/task-manager/presentation/components/alarm-ringing-modal': { AlarmRingingModal: Alarm },
   })('src/app/_layout.tsx');
   const render = () => { stateIndex = 0; effectIndex = 0; return RootLayout(); };
   render(); while (effects.length) effects.shift()();
   await Promise.resolve(); await Promise.resolve();
   const blocked = render();
   assert.ok(!descendants(blocked).some(element => element.type === Stack), 'Failed migration must never mount CRUD navigation.');
+  assert.ok(!descendants(blocked).some(element => element.type === Alarm), 'Alarm polling waits for a ready database.');
   assert.ok(descendants(blocked).some(element => element.props?.children === 'Relasi legacy bermasalah'));
   assert.ok(descendants(blocked).some(element => element.props?.title === 'Simpan salinan pemulihan'));
   fails = false;
   await descendants(blocked).find(element => element.props?.title === 'Coba lagi').props.onPress();
   assert.ok(descendants(render()).some(element => element.type === Stack), 'Successful retry opens navigation.');
+  assert.equal(descendants(render()).filter(element => element.type === Alarm).length, 1, 'The app shell mounts one alarm controller.');
 }
 async function checkAgendaForm() {
   state.length = 0; dependencies.length = 0; effects.length = 0;
@@ -395,4 +399,121 @@ async function checkAgendaForm() {
   render().props.onClose(); assert.equal(closed, false, 'Saving cannot be dismissed while awaiting completion.');
   release(); await pending; assert.equal(closed, true);
 }
-checkReflection().then(checkAgendaForm).then(checkStartup).then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle, error state, async reflection retry, agenda validation/overnight/off reminder/save retry/double tap, restore confirmation, startup migration failure/retry, 42 screen renders + 6 timer states + 10 cancellation/empty-plan scenarios + 2 agenda warning scenarios (simulated text 100/200%) and 12 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });
+async function checkAlarmControls() {
+  state.length = 0; dependencies.length = 0; effects.length = 0;
+  const originalTimers = { setTimeout, clearTimeout, setInterval, clearInterval };
+  const timers = new Map(), events = [], alerts = [];
+  let nextId = 0, listener, releaseSave, rejectSave, writes = 0;
+  globalThis.setTimeout = (fn, ms) => { const id = ++nextId; timers.set(id, { fn, ms }); return id; };
+  globalThis.setInterval = globalThis.setTimeout;
+  globalThis.clearTimeout = globalThis.clearInterval = id => timers.delete(id);
+  const save = () => { events.push('save'); writes++; return new Promise((resolve, reject) => { releaseSave = resolve; rejectSave = reject; }); };
+  const { AlarmRingingModal } = createLoader({
+    react: fakeReact,
+    'react-native': { ...native, Alert: { alert: (...args) => alerts.push(args) } },
+    '@/features/task-manager/data/repositories/managed-task.repository': {
+      subscribeRingingAlarm: fn => { listener = fn; fn(null, false); return () => { listener = null; }; },
+      clearRingingAlarm: () => { events.push('clear'); listener?.(null, false); },
+      managedTaskRepository: { checkDueAlarmsNow: async () => null,
+        dismissTaskAlarm: save, snoozeTaskAlarm: save, toggleTaskCompletion: save },
+    },
+    '@/features/task-manager/data/services/task-alarm-audio.service': { TaskAlarmAudioService: {
+      startAlarmRinging: async () => { events.push('start'); }, stopAlarmRinging: () => { events.push('stop'); },
+    } },
+  })('src/features/task-manager/presentation/components/alarm-ringing-modal.tsx');
+  const render = () => { stateIndex = 0; effectIndex = 0; return AlarmRingingModal(); };
+  const alarmTask = { ...task, executionDate: '2026-11-21', executionTime: '09:00', deadlineDate: '2026-11-22',
+    deadlineTime: '23:59', estimatedMinutes: 30, alarmTrackName: 'Test', alarmTrackUri: 'file://test.wav' };
+  let cleanup;
+  try {
+    render(); while (effects.length) cleanup = effects.shift()();
+    listener(alarmTask, true);
+    let dialog = render();
+    assert.equal(descendants(dialog).filter(element => element.type === native.Pressable).length, 1);
+    events.length = 0;
+    await descendants(dialog).find(element => element.props?.accessibilityLabel === 'Hentikan tes alarm').props.onPress();
+    assert.equal(render(), null); assert.equal(writes, 0); assert.deepEqual(events.slice(0, 2), ['stop', 'clear']);
+    listener(alarmTask, true); dialog = render(); await dialog.props.onRequestClose();
+    assert.equal(render(), null); assert.equal(writes, 0, 'Back during a test must never change task metadata.');
+    listener(alarmTask, true);
+    const timeout = [...timers.values()].find(timer => timer.ms === 10_000);
+    assert.ok(timeout, 'A test has a ten-second safety timeout.'); timeout.fn();
+    assert.equal(render(), null); assert.equal(writes, 0);
+
+    for (const label of ['Matikan alarm', 'Tandai tugas sudah selesai', 'Tunda alarm 5 menit', 'Tunda alarm 10 menit', 'Tunda alarm 15 menit', 'Mulai kerjakan tugas sekarang']) {
+      listener(alarmTask, false); dialog = render(); events.length = 0;
+      const button = descendants(dialog).find(element => element.props?.accessibilityLabel === label);
+      const before = writes, pending = button.props.onPress();
+      assert.equal(render(), null, label + ' must close immediately, before storage finishes.');
+      assert.deepEqual(events.slice(0, 2), ['stop', 'clear']);
+      assert.ok(events.indexOf('save') > events.indexOf('stop'), 'Audio must stop before any storage work.');
+      await button.props.onPress(); assert.equal(writes, before + 1, 'Repeated taps cannot toggle completion twice.');
+      rejectSave(new Error('Injected storage failure')); await pending;
+      assert.equal(render(), null); assert.ok(alerts.at(-1)[1].includes('Injected storage failure'));
+    }
+    listener(alarmTask, false); dialog = render();
+    const saved = dialog.props.onRequestClose(); releaseSave(); await saved;
+    assert.equal(render(), null, 'Hardware back must stop a real alarm too.');
+    listener(alarmTask, true); cleanup(); cleanup = null;
+    assert.equal(listener, null); assert.equal(timers.size, 0, 'Unmount cancels polling and the test timeout.');
+    assert.equal(events.at(-2), 'stop');
+  } finally { cleanup?.(); Object.assign(globalThis, originalTimers); }
+}
+async function checkWeeklyForm() {
+  state.length = 0; dependencies.length = 0; effects.length = 0;
+  let closed = false, calls = 0, mode = 'false', release, received;
+  const { AddEditWeeklyScheduleModal } = formLoader('src/features/agenda/presentation/components/add-edit-weekly-schedule-modal.tsx');
+  const render = () => { stateIndex = 0; effectIndex = 0;
+    const dialog = AddEditWeeklyScheduleModal({ visible: true, onClose: () => { closed = true; }, onSubmit: async (input, days) => {
+      calls++; received = { input, days };
+      if (mode === 'false') return false;
+      if (mode === 'throw') throw new Error('Injected weekly failure');
+      return new Promise(resolve => { release = resolve; });
+    } }); while (effects.length) effects.shift()(); return dialog;
+  };
+  const submit = dialog => descendants(dialog).find(element => element.props?.title === 'Buat Jadwal Tetap').props.onPress();
+  render(); let dialog = render();
+  descendants(dialog).find(element => element.props?.placeholder === 'Masukkan nama kegiatan').props.onChangeText('Keep this weekly draft');
+  descendants(dialog).find(element => element.props?.accessibilityLabel === 'Selasa').props.onPress();
+  await submit(render()); assert.equal(closed, false);
+  assert.ok(descendants(render()).some(element => element.props?.value === 'Keep this weekly draft'));
+  assert.deepEqual(received.days, [1, 2]);
+  assert.ok(descendants(render()).some(element => element.props?.children?.includes?.('belum tersimpan')));
+  mode = 'throw'; await submit(render()); assert.equal(closed, false);
+  assert.ok(descendants(render()).some(element => element.props?.children === 'Injected weekly failure'));
+  mode = 'pending'; dialog = render(); const before = calls, pending = submit(dialog);
+  await submit(dialog); assert.equal(calls, before + 1, 'Weekly double tap must not submit a second batch.');
+  render().props.onClose(); assert.equal(closed, false, 'Weekly draft cannot be dismissed while saving.');
+  release(true); await pending; assert.equal(closed, true);
+}
+async function checkSettingsSaveFeedback() {
+  state.length = 0; dependencies.length = 0; effects.length = 0;
+  let settingsError = null, saving = false, succeeds = false, pendingSave = false, release;
+  const { SettingsScreen } = createLoader({ react: fakeReact,
+    '@/features/settings/presentation/hooks/use-settings': { useSettings: () => ({ ...settingsFixture, settingsError, isSavingSettings: saving,
+      updateSetting: async () => {
+        saving = true;
+        if (pendingSave) await new Promise(resolve => { release = resolve; });
+        saving = false; settingsError = succeeds ? null : 'Lokasi belum tersimpan. Injected failure'; return succeeds;
+      },
+    }) },
+  })('src/features/settings/presentation/screens/settings-screen.tsx');
+  const render = () => { stateIndex = 0; effectIndex = 0; return SettingsScreen(); };
+  const sheet = () => descendants(render()).find(element => element.props?.title === 'Pilih Lokasi Jadwal Azan');
+  const open = () => descendants(render()).find(element => element.props?.accessibilityLabel === 'Lokasi jadwal azan').props.onPress();
+  const customField = placeholder => descendants(sheet()).find(element => element.props?.placeholder === placeholder);
+  const saveCustom = () => descendants(sheet()).find(element => element.props?.title === 'Simpan Lokasi Kustom').props.onPress();
+  open(); customField('Masukkan nama kota atau kabupaten').props.onChangeText('My city draft');
+  customField('Masukkan latitude').props.onChangeText('-6.2'); customField('Masukkan longitude').props.onChangeText('106.8');
+  await saveCustom(); assert.equal(sheet().props.visible, true);
+  assert.equal(customField('Masukkan nama kota atau kabupaten').props.value, 'My city draft');
+  assert.ok(descendants(sheet()).some(element => element.props?.message === settingsError));
+  const preset = () => descendants(sheet()).find(element => element.type === native.Pressable && element.props.accessibilityState?.selected !== undefined);
+  await preset().props.onPress(); assert.equal(sheet().props.visible, true, 'Preset failure keeps location picker open too.');
+  succeeds = true; await preset().props.onPress(); assert.equal(sheet().props.visible, false);
+  open(); pendingSave = true; const pending = saveCustom();
+  assert.equal(sheet().props.visible, true); assert.equal(customField('Masukkan latitude').props.editable, false);
+  sheet().props.onClose(); assert.equal(sheet().props.visible, true, 'Pending location save retains its draft.');
+  release(); await pending; assert.equal(sheet().props.visible, false);
+}
+checkReflection().then(checkAgendaForm).then(checkStartup).then(checkAlarmControls).then(checkWeeklyForm).then(checkSettingsSaveFeedback).then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle, error state, async reflection retry, agenda validation/overnight/off reminder/save retry/double tap, restore confirmation, startup migration failure/retry, alarm test/auto-stop/all actions/storage failure/double tap/back/unmount, weekly draft/failure/retry/double tap, settings location draft/preset/failure/pending/success, 42 screen renders + 6 timer states + 10 cancellation/empty-plan scenarios + 2 agenda warning scenarios (simulated text 100/200%) and 12 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });

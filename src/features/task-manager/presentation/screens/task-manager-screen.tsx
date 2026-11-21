@@ -47,7 +47,6 @@ import {
   type TaskCategoryType,
 } from '../../domain/entities/managed-task.entity';
 import { AddManagedTaskModal } from '../components/add-managed-task-modal';
-import { AlarmRingingModal } from '../components/alarm-ringing-modal';
 import { useManagedTasks } from '../hooks/use-managed-tasks';
 
 const s = colors.sprout;
@@ -432,7 +431,6 @@ export const TaskManagerScreen: React.FC = () => {
             onPickCustomSong={pickAndSaveCustomSong}
             onTogglePreviewTrack={togglePreviewTrack}
           />
-          <AlarmRingingModal />
         </>
       }
     >

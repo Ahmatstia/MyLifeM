@@ -20,65 +20,60 @@ import { INTEGRITY_DDL } from '@/db/integrity';
 import { setPrayerLocation } from '@/features/prayer-times/data/prayer-location-store';
 
 export class SettingsRepositoryImpl implements SettingsRepository {
-  async getSettings(): Promise<UserSettingsEntity> {
-    try {
-      const rows = await db.select().from(userSettings);
-      const settingsMap = new Map<string, string>();
-      for (const row of rows) {
-        settingsMap.set(row.key, row.value);
-      }
-
-      const pomodoroMinutes = settingsMap.has('pomodoro_minutes')
-        ? parseInt(settingsMap.get('pomodoro_minutes')!, 10)
-        : DEFAULT_SETTINGS.pomodoroMinutes;
-
-      const deepFlowMinutes = settingsMap.has('deep_flow_minutes')
-        ? parseInt(settingsMap.get('deep_flow_minutes')!, 10)
-        : DEFAULT_SETTINGS.deepFlowMinutes;
-
-      const hapticsEnabled = settingsMap.has('haptics_enabled')
-        ? settingsMap.get('haptics_enabled') === 'true'
-        : DEFAULT_SETTINGS.hapticsEnabled;
-
-      const keepAwakeEnabled = settingsMap.has('keep_awake_enabled')
-        ? settingsMap.get('keep_awake_enabled') === 'true'
-        : DEFAULT_SETTINGS.keepAwakeEnabled;
-
-      const prayerCity = settingsMap.get('prayer_city') || DEFAULT_SETTINGS.prayerCity;
-
-      const parsedLat = settingsMap.has('prayer_latitude')
-        ? parseFloat(settingsMap.get('prayer_latitude')!)
-        : NaN;
-      const prayerLatitude = Number.isFinite(parsedLat)
-        ? parsedLat
-        : DEFAULT_SETTINGS.prayerLatitude;
-
-      const parsedLng = settingsMap.has('prayer_longitude')
-        ? parseFloat(settingsMap.get('prayer_longitude')!)
-        : NaN;
-      const prayerLongitude = Number.isFinite(parsedLng)
-        ? parsedLng
-        : DEFAULT_SETTINGS.prayerLongitude;
-
-      setPrayerLocation({
-        cityName: prayerCity,
-        latitude: prayerLatitude,
-        longitude: prayerLongitude,
-      });
-
-      return {
-        pomodoroMinutes,
-        deepFlowMinutes,
-        hapticsEnabled,
-        keepAwakeEnabled,
-        prayerCity,
-        prayerLatitude,
-        prayerLongitude,
-      };
-    } catch (error) {
-      console.error('[SettingsRepositoryImpl] getSettings error:', error);
-      return DEFAULT_SETTINGS;
+  private readSettings(connection: Pick<typeof db, 'select'>): UserSettingsEntity {
+    const rows = connection.select().from(userSettings).all();
+    const settingsMap = new Map<string, string>();
+    for (const row of rows) {
+      settingsMap.set(row.key, row.value);
     }
+
+    const pomodoroMinutes = settingsMap.has('pomodoro_minutes')
+      ? parseInt(settingsMap.get('pomodoro_minutes')!, 10)
+      : DEFAULT_SETTINGS.pomodoroMinutes;
+
+    const deepFlowMinutes = settingsMap.has('deep_flow_minutes')
+      ? parseInt(settingsMap.get('deep_flow_minutes')!, 10)
+      : DEFAULT_SETTINGS.deepFlowMinutes;
+
+    const hapticsEnabled = settingsMap.has('haptics_enabled')
+      ? settingsMap.get('haptics_enabled') === 'true'
+      : DEFAULT_SETTINGS.hapticsEnabled;
+
+    const keepAwakeEnabled = settingsMap.has('keep_awake_enabled')
+      ? settingsMap.get('keep_awake_enabled') === 'true'
+      : DEFAULT_SETTINGS.keepAwakeEnabled;
+
+    const prayerCity = settingsMap.get('prayer_city') || DEFAULT_SETTINGS.prayerCity;
+
+    const parsedLat = settingsMap.has('prayer_latitude')
+      ? parseFloat(settingsMap.get('prayer_latitude')!)
+      : NaN;
+    const prayerLatitude = Number.isFinite(parsedLat)
+      ? parsedLat
+      : DEFAULT_SETTINGS.prayerLatitude;
+
+    const parsedLng = settingsMap.has('prayer_longitude')
+      ? parseFloat(settingsMap.get('prayer_longitude')!)
+      : NaN;
+    const prayerLongitude = Number.isFinite(parsedLng)
+      ? parsedLng
+      : DEFAULT_SETTINGS.prayerLongitude;
+
+    return {
+      pomodoroMinutes,
+      deepFlowMinutes,
+      hapticsEnabled,
+      keepAwakeEnabled,
+      prayerCity,
+      prayerLatitude,
+      prayerLongitude,
+    };
+  }
+
+  async getSettings(): Promise<UserSettingsEntity> {
+    const settings = this.readSettings(db);
+    setPrayerLocation({ cityName: settings.prayerCity, latitude: settings.prayerLatitude, longitude: settings.prayerLongitude });
+    return settings;
   }
 
   async saveSettings(
@@ -87,7 +82,7 @@ export class SettingsRepositoryImpl implements SettingsRepository {
     try {
       const now = new Date().toISOString();
 
-      db.transaction(tx => {
+      const updated = db.transaction(tx => {
         if (partial.pomodoroMinutes !== undefined) {
           tx
             .insert(userSettings)
@@ -207,9 +202,10 @@ export class SettingsRepositoryImpl implements SettingsRepository {
             }).run();
         }
 
+        return this.readSettings(tx);
       });
-
-      return await this.getSettings();
+      setPrayerLocation({ cityName: updated.prayerCity, latitude: updated.prayerLatitude, longitude: updated.prayerLongitude });
+      return updated;
     } catch (error) {
       console.error('[SettingsRepositoryImpl] saveSettings error:', error);
       throw error;

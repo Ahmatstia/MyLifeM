@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
+  Alert,
   View,
   Pressable,
   StyleSheet,
@@ -25,6 +26,7 @@ import {
 import {
   managedTaskRepository,
   subscribeRingingAlarm,
+  clearRingingAlarm,
 } from '../../data/repositories/managed-task.repository';
 import { TaskAlarmAudioService } from '../../data/services/task-alarm-audio.service';
 
@@ -35,6 +37,8 @@ export const AlarmRingingModal: React.FC = () => {
     null
   );
   const [actionError, setActionError] = useState<string | null>(null);
+  const [isTest, setIsTest] = useState(false);
+  const pendingActions = useRef(new Set<string>());
   const [nowClock, setNowClock] = useState(() => {
     const d = new Date();
     return `${String(d.getHours()).padStart(2, '0')}:${String(
@@ -43,11 +47,24 @@ export const AlarmRingingModal: React.FC = () => {
   });
 
   useEffect(() => {
-    const unsubscribe = subscribeRingingAlarm((task) => {
+    let testStopTimer: ReturnType<typeof setTimeout> | null = null;
+    let generation = 0;
+    const unsubscribe = subscribeRingingAlarm((task, testing) => {
+      const currentGeneration = ++generation;
+      if (testStopTimer) clearTimeout(testStopTimer);
+      testStopTimer = null;
       setRingingTask(task);
       setActionError(null);
+      setIsTest(testing);
       if (task) {
-        void TaskAlarmAudioService.startAlarmRinging(task.alarmTrackUri);
+        void TaskAlarmAudioService.startAlarmRinging(task.alarmTrackUri).catch(() => {
+          if (currentGeneration === generation) setActionError('Suara alarm belum dapat diputar.');
+        });
+        if (testing) testStopTimer = setTimeout(() => {
+          if (currentGeneration !== generation) return;
+          TaskAlarmAudioService.stopAlarmRinging();
+          clearRingingAlarm();
+        }, 10_000);
       } else {
         TaskAlarmAudioService.stopAlarmRinging();
       }
@@ -66,22 +83,30 @@ export const AlarmRingingModal: React.FC = () => {
     }, 6000);
 
     return () => {
+      generation++;
       unsubscribe();
       clearInterval(interval);
+      if (testStopTimer) clearTimeout(testStopTimer);
       TaskAlarmAudioService.stopAlarmRinging();
+      clearRingingAlarm();
     };
   }, []);
 
   if (!ringingTask) return null;
 
   const runAction = async (work: () => Promise<void>) => {
+    const taskId = ringingTask.id;
+    TaskAlarmAudioService.stopAlarmRinging();
+    clearRingingAlarm();
+    if (isTest || pendingActions.current.has(taskId)) return;
+    pendingActions.current.add(taskId);
     try {
-      setActionError(null);
       await work();
-      TaskAlarmAudioService.stopAlarmRinging();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : 'Perubahan alarm belum tersimpan. Coba lagi.');
-    }
+      Alert.alert('Alarm sudah dihentikan', error instanceof Error
+        ? 'Perubahan tugas belum tersimpan: ' + error.message
+        : 'Perubahan tugas belum tersimpan. Coba lagi dari Manajemen Tugas.');
+    } finally { pendingActions.current.delete(taskId); }
   };
 
   const handleStartFocusNow = () => runAction(async () => {
@@ -109,7 +134,7 @@ export const AlarmRingingModal: React.FC = () => {
         <View style={styles.topAlertPill}>
           <BellRing size={16} color={s.ink} strokeWidth={2.6} />
           <AppText style={styles.topAlertPillText}>
-            ALARM EKSEKUSI TUGAS AKTIF
+            {isTest ? 'TES ALARM · MAKSIMAL 10 DETIK' : 'ALARM EKSEKUSI TUGAS AKTIF'}
           </AppText>
         </View>
 
@@ -119,7 +144,7 @@ export const AlarmRingingModal: React.FC = () => {
             {nowClock}
           </AppText>
           <AppText style={styles.wakeHeadline}>
-            Waktunya Kerjakan Tugasmu! 🔥
+            {isTest ? 'Uji suara alarm' : 'Waktunya Kerjakan Tugasmu! 🔥'}
           </AppText>
         </View>
 
@@ -172,6 +197,13 @@ export const AlarmRingingModal: React.FC = () => {
 
         {/* Bottom Action Buttons */}
         <View style={styles.actionsStack}>
+          {isTest ? (
+            <Pressable onPress={handleDismiss} accessibilityRole="button"
+              accessibilityLabel="Hentikan tes alarm" style={styles.startNowButton}>
+              <X size={20} color={s.ink} />
+              <AppText style={styles.startNowButtonText}>Hentikan Tes Alarm</AppText>
+            </Pressable>
+          ) : <>
           {/* 1. Primary Action: Start Working Now */}
           <Pressable
             onPress={handleStartFocusNow}
@@ -217,6 +249,7 @@ export const AlarmRingingModal: React.FC = () => {
             <Pressable
               onPress={handleMarkDone}
               accessibilityRole="button"
+              accessibilityLabel="Tandai tugas sudah selesai"
               style={styles.secondaryActionBtn}
             >
               <CheckCircle2 size={16} color="#B8F1D0" strokeWidth={2.4} />
@@ -228,6 +261,7 @@ export const AlarmRingingModal: React.FC = () => {
             <Pressable
               onPress={handleDismiss}
               accessibilityRole="button"
+              accessibilityLabel="Matikan alarm"
               style={styles.secondaryActionBtn}
             >
               <X size={16} color="#E2E8F0" strokeWidth={2.4} />
@@ -236,6 +270,7 @@ export const AlarmRingingModal: React.FC = () => {
               </AppText>
             </Pressable>
           </View>
+          </>}
         </View>
       </View>
     </Modal>

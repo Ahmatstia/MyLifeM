@@ -17,16 +17,18 @@ const CUSTOM_TRACKS_KEY = 'custom_alarm_tracks_v1';
 
 type TaskConnection = Pick<typeof db, 'select' | 'insert' | 'update' | 'delete'>;
 
-type AlarmListener = (ringingTask: ManagedTaskEntity | null) => void;
+type AlarmListener = (ringingTask: ManagedTaskEntity | null, isTest: boolean) => void;
 type DataListener = () => void;
 
 let currentRingingTask: ManagedTaskEntity | null = null;
+let currentAlarmIsTest = false;
+const silencedOccurrences = new Map<string, string>();
 const alarmListeners = new Set<AlarmListener>();
 const dataListeners = new Set<DataListener>();
 
 function notifyAlarmListeners() {
   for (const fn of alarmListeners) {
-    fn(currentRingingTask);
+    fn(currentRingingTask, currentAlarmIsTest);
   }
 }
 
@@ -38,7 +40,7 @@ function notifyDataListeners() {
 
 export function subscribeRingingAlarm(fn: AlarmListener): () => void {
   alarmListeners.add(fn);
-  fn(currentRingingTask);
+  fn(currentRingingTask, currentAlarmIsTest);
   return () => {
     alarmListeners.delete(fn);
   };
@@ -53,12 +55,21 @@ export function subscribeManagedTasksChange(fn: DataListener): () => void {
 
 export function triggerAlarmNow(task: ManagedTaskEntity): void {
   currentRingingTask = task;
+  currentAlarmIsTest = true;
   notifyAlarmListeners();
 }
 
 export function clearRingingAlarm(): void {
+  if (currentRingingTask && !currentAlarmIsTest) {
+    silencedOccurrences.set(currentRingingTask.id, alarmOccurrenceKey(currentRingingTask));
+  }
   currentRingingTask = null;
+  currentAlarmIsTest = false;
   notifyAlarmListeners();
+}
+
+function alarmOccurrenceKey(task: ManagedTaskEntity): string {
+  return task.snoozedUntilIso ? 'snooze:' + task.snoozedUntilIso : task.executionDate + 'T' + task.executionTime;
 }
 
 export class ManagedTaskRepository {
@@ -121,11 +132,16 @@ export class ManagedTaskRepository {
   private reconcileAlarms(askPermission = false): Promise<void> {
     // Native work follows commit, in order, and always reads the latest committed tasks.
     this.alarmUpdates = this.alarmUpdates.then(() =>
-      TaskAlarmNotificationService.reconcileTaskAlarms(this.readTasks(db), askPermission)
+      TaskAlarmNotificationService.reconcileTaskAlarms(this.readAlarmTasks(), askPermission)
     ).catch(error => {
       console.warn('[ManagedTaskRepository] Pengingat belum dapat diselaraskan:', error);
     });
     return this.alarmUpdates;
+  }
+
+  private readAlarmTasks(): ManagedTaskEntity[] {
+    const cancelled = new Set(db.select({ id: tasks.id }).from(tasks).where(eq(tasks.status, 'CANCELLED')).all().map(task => task.id));
+    return this.readTasks(db).filter(task => !cancelled.has(task.id));
   }
 
   private syncCoreTasks(tx: TaskConnection, all: ManagedTaskEntity[], completionId?: string): void {
@@ -299,7 +315,7 @@ export class ManagedTaskRepository {
   async checkDueAlarmsNow(): Promise<ManagedTaskEntity | null> {
     if (currentRingingTask) return currentRingingTask;
 
-    const all = await this.getAllTasks();
+    const all = this.readAlarmTasks();
     const now = new Date();
     const todayStr = formatLocalDate(now);
     const hh = String(now.getHours()).padStart(2, '0');
@@ -307,6 +323,7 @@ export class ManagedTaskRepository {
     const currentHm = `${hh}:${mm}`;
 
     for (const item of all) {
+      if (silencedOccurrences.get(item.id) === alarmOccurrenceKey(item)) continue;
       if (item.isCompleted) continue;
       if (item.alertMode !== 'ALARM' && item.alertMode !== 'BOTH') continue;
 
@@ -315,9 +332,11 @@ export class ManagedTaskRepository {
         const snoozeMs = Date.parse(item.snoozedUntilIso);
         if (Number.isFinite(snoozeMs) && Date.now() >= snoozeMs) {
           currentRingingTask = item;
+          currentAlarmIsTest = false;
           notifyAlarmListeners();
           return item;
         }
+        continue;
       }
 
       // 2. Check if scheduled executionDate + executionTime matches current minute
@@ -328,6 +347,7 @@ export class ManagedTaskRepository {
         !item.lastAlarmFiredKey?.startsWith(fireKey)
       ) {
         currentRingingTask = item;
+        currentAlarmIsTest = false;
         notifyAlarmListeners();
         return item;
       }

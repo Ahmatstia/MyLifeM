@@ -58,6 +58,8 @@ export const SettingsScreen: React.FC = () => {
     settings,
     stats,
     isLoading,
+    settingsError,
+    isSavingSettings,
     backupBusy,
     backupError,
     backupNotice,
@@ -69,6 +71,7 @@ export const SettingsScreen: React.FC = () => {
     inspectBackup,
     restoreBackup,
     exportRecovery,
+    refresh,
   } = useSettings();
 
   const [confirmation, setConfirmation] = useState('');
@@ -103,16 +106,16 @@ export const SettingsScreen: React.FC = () => {
     return matchesRegion && matchesQuery;
   });
 
-  const handleSelectCityPreset = (preset: PrayerLocationPreset) => {
-    updateSetting({
+  const handleSelectCityPreset = async (preset: PrayerLocationPreset) => {
+    const saved = await updateSetting({
       prayerCity: preset.cityName,
       prayerLatitude: preset.latitude,
       prayerLongitude: preset.longitude,
     });
-    setIsLocationPickerVisible(false);
+    if (saved) setIsLocationPickerVisible(false);
   };
 
-  const handleSaveCustomLocation = () => {
+  const handleSaveCustomLocation = async () => {
     const nameTrim = customCityName.trim();
     const latNum = parseFloat(customLat.replace(',', '.'));
     const lngNum = parseFloat(customLng.replace(',', '.'));
@@ -131,12 +134,12 @@ export const SettingsScreen: React.FC = () => {
     }
 
     setCustomLocError(null);
-    updateSetting({
+    const saved = await updateSetting({
       prayerCity: nameTrim,
       prayerLatitude: latNum,
       prayerLongitude: lngNum,
     });
-    setIsLocationPickerVisible(false);
+    if (saved) setIsLocationPickerVisible(false);
   };
 
   return (
@@ -165,6 +168,13 @@ export const SettingsScreen: React.FC = () => {
           </AppText>
         </View>
       </View>
+
+      {settingsError && (
+        <View style={styles.cardGroup}>
+          <Banner variant="error" message={settingsError} />
+          <Button title="Muat Ulang Pengaturan" variant="outlined" onPress={refresh} disabled={isLoading || isSavingSettings} />
+        </View>
+      )}
 
       {/* 2. Section: Lokasi & Jadwal Azan */}
       <View style={styles.sectionHeaderRow}>
@@ -274,10 +284,9 @@ export const SettingsScreen: React.FC = () => {
           </View>
           <Switch
             accessibilityLabel="Layar tetap terjaga"
+            disabled={isLoading || isSavingSettings}
             value={settings.keepAwakeEnabled}
-            onValueChange={(value) =>
-              updateSetting({ keepAwakeEnabled: value })
-            }
+            onValueChange={(value) => { void updateSetting({ keepAwakeEnabled: value }); }}
             trackColor={{
               false: '#D8D0BE',
               true: s.forest,
@@ -308,6 +317,7 @@ export const SettingsScreen: React.FC = () => {
                 <Pressable
                   key={mins}
                   onPress={() => updateSetting({ pomodoroMinutes: mins })}
+                  disabled={isLoading || isSavingSettings}
                   accessibilityRole="button"
                   accessibilityState={{ selected: isSelected }}
                   style={[
@@ -353,6 +363,7 @@ export const SettingsScreen: React.FC = () => {
                 <Pressable
                   key={mins}
                   onPress={() => updateSetting({ deepFlowMinutes: mins })}
+                  disabled={isLoading || isSavingSettings}
                   accessibilityRole="button"
                   accessibilityState={{ selected: isSelected }}
                   style={[
@@ -390,9 +401,10 @@ export const SettingsScreen: React.FC = () => {
             </AppText>
           </View>
           <Switch
+            disabled={isLoading || isSavingSettings}
             accessibilityLabel="Getaran haptik"
             value={settings.hapticsEnabled}
-            onValueChange={(value) => updateSetting({ hapticsEnabled: value })}
+            onValueChange={(value) => { void updateSetting({ hapticsEnabled: value }); }}
             trackColor={{
               false: '#D8D0BE',
               true: s.forest,
@@ -589,11 +601,12 @@ export const SettingsScreen: React.FC = () => {
       {/* Location Picker Sheet for Azan */}
       <AppBottomSheet
         visible={isLocationPickerVisible}
-        onClose={() => setIsLocationPickerVisible(false)}
+        onClose={() => { if (!isSavingSettings) setIsLocationPickerVisible(false); }}
         title="Pilih Lokasi Jadwal Azan"
         subtitle="Jadwal waktu shalat dihitung akurat menggunakan metode Kemenag RI sesuai titik koordinat kotamu."
       >
         <View style={styles.locationSheetBody}>
+          {settingsError && <Banner variant="error" message={settingsError} />}
           <TextInput
             value={citySearch}
             onChangeText={setCitySearch}
@@ -640,6 +653,7 @@ export const SettingsScreen: React.FC = () => {
                   <Pressable
                     key={preset.id}
                     onPress={() => handleSelectCityPreset(preset)}
+                    disabled={isLoading || isSavingSettings}
                     accessibilityRole="button"
                     accessibilityState={{ selected: isSelected }}
                     style={[
@@ -691,6 +705,7 @@ export const SettingsScreen: React.FC = () => {
 
             <TextInput
               value={customCityName}
+              editable={!isSavingSettings}
               onChangeText={setCustomCityName}
               placeholder="Masukkan nama kota atau kabupaten"
               placeholderTextColor={s.inkSubtle}
@@ -699,6 +714,7 @@ export const SettingsScreen: React.FC = () => {
             <View style={styles.customLatLngRow}>
               <TextInput
                 value={customLat}
+                editable={!isSavingSettings}
                 onChangeText={setCustomLat}
                 placeholder="Masukkan latitude"
                 placeholderTextColor={s.inkSubtle}
@@ -707,6 +723,7 @@ export const SettingsScreen: React.FC = () => {
               />
               <TextInput
                 value={customLng}
+                editable={!isSavingSettings}
                 onChangeText={setCustomLng}
                 placeholder="Masukkan longitude"
                 placeholderTextColor={s.inkSubtle}
@@ -720,6 +737,8 @@ export const SettingsScreen: React.FC = () => {
             <Button
               title="Simpan Lokasi Kustom"
               onPress={handleSaveCustomLocation}
+              disabled={isLoading || isSavingSettings}
+              loading={isSavingSettings}
             />
           </View>
         </View>
@@ -728,7 +747,7 @@ export const SettingsScreen: React.FC = () => {
       {/* Duration Picker Bottom Sheet */}
       <AppBottomSheet
         visible={durationPicker !== null}
-        onClose={() => setDurationPicker(null)}
+        onClose={() => { if (!isSavingSettings) setDurationPicker(null); }}
         title={
           durationPicker === 'POMODORO'
             ? 'Durasi Pomodoro'
@@ -748,13 +767,14 @@ export const SettingsScreen: React.FC = () => {
                 key={minutes}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                onPress={() => {
-                  updateSetting(
+                disabled={isLoading || isSavingSettings}
+                onPress={async () => {
+                  const saved = await updateSetting(
                     durationPicker === 'POMODORO'
                       ? { pomodoroMinutes: minutes }
                       : { deepFlowMinutes: minutes }
                   );
-                  setDurationPicker(null);
+                  if (saved) setDurationPicker(null);
                 }}
                 style={[
                   styles.durationSheetRow,

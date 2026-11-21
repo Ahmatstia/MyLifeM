@@ -17,6 +17,18 @@ let activeAlarmPlayer: AudioPlayerLike | null = null;
 let activePreviewPlayer: AudioPlayerLike | null = null;
 let vibrationTimer: ReturnType<typeof setInterval> | null = null;
 let previewStopTimer: ReturnType<typeof setTimeout> | null = null;
+let vibrationDelayTimer: ReturnType<typeof setTimeout> | null = null;
+let alarmGeneration = 0;
+let previewGeneration = 0;
+let alarmRequested = false;
+
+function releasePlayer(player: AudioPlayerLike | null): void {
+  if (!player) return;
+  // Each cleanup is independent: a failed pause must not prevent release.
+  try { player.volume = 0; } catch {}
+  try { player.pause(); } catch {}
+  try { player.remove(); } catch {}
+}
 
 /**
  * Menghasilkan berkas WAV PCM 16-bit mono asli secara programatik untuk nada alarm bawaan
@@ -211,109 +223,96 @@ export class TaskAlarmAudioService {
    */
   static async previewTrack(track: CustomAlarmTrack): Promise<boolean> {
     this.stopPreview();
+    if (alarmRequested) return false;
+    const generation = previewGeneration;
     await configureLoudAudioSession();
-
+    if (generation !== previewGeneration) return false;
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {
-      // Ignore haptics error
-    }
-
+    } catch {}
+    if (generation !== previewGeneration) return false;
     const playableUri = await resolvePlayableUri(track.uri);
-    if (!playableUri) return false;
+    if (!playableUri || generation !== previewGeneration) return false;
 
+    let player: AudioPlayerLike | null = null;
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { createAudioPlayer } = require('expo-audio');
-      const player: AudioPlayerLike = createAudioPlayer(playableUri);
-      player.loop = true;
-      player.volume = 1.0;
-      player.play();
+      const { createAudioPlayer }: typeof import('expo-audio') = require('expo-audio');
+      player = createAudioPlayer(playableUri);
       activePreviewPlayer = player;
-
+      player.loop = true;
+      player.volume = 1;
+      player.play();
       previewStopTimer = setTimeout(() => {
-        this.stopPreview();
-      }, 9000);
+        if (generation === previewGeneration) this.stopPreview();
+      }, 8000);
       return true;
     } catch {
+      releasePlayer(player);
+      if (activePreviewPlayer === player) activePreviewPlayer = null;
       return false;
     }
   }
 
   static stopPreview(): void {
-    if (previewStopTimer) {
-      clearTimeout(previewStopTimer);
-      previewStopTimer = null;
-    }
-    if (activePreviewPlayer) {
-      try {
-        activePreviewPlayer.pause();
-        activePreviewPlayer.remove();
-      } catch {
-        // Ignore cleanup errors
-      }
-      activePreviewPlayer = null;
-    }
+    previewGeneration++;
+    if (previewStopTimer) clearTimeout(previewStopTimer);
+    previewStopTimer = null;
+    const player = activePreviewPlayer;
+    activePreviewPlayer = null;
+    releasePlayer(player);
   }
 
-  /**
-   * Memulai dering alarm berisik secara berulang (looping audio + getaran haptik beruntun).
-   */
   static async startAlarmRinging(trackUri: string | null): Promise<void> {
     this.stopPreview();
     this.stopAlarmRinging();
-
+    alarmRequested = true;
+    const generation = alarmGeneration;
     await configureLoudAudioSession();
+    if (generation !== alarmGeneration) return;
+    const playableUri = (await resolvePlayableUri(trackUri))
+      ?? (await resolvePlayableUri(BUILT_IN_ALARM_TRACKS[0]!.uri));
+    if (generation !== alarmGeneration) return;
 
     const triggerVibrationBurst = () => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(
-        () => {}
-      );
-      setTimeout(() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+      if (generation !== alarmGeneration) return;
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+      vibrationDelayTimer = setTimeout(() => {
+        vibrationDelayTimer = null;
+        if (generation === alarmGeneration) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+        }
       }, 300);
     };
-
     triggerVibrationBurst();
     vibrationTimer = setInterval(triggerVibrationBurst, 1400);
-
-    const fallbackUri = BUILT_IN_ALARM_TRACKS[0]!.uri;
-    const playableUri =
-      (await resolvePlayableUri(trackUri)) ??
-      (await resolvePlayableUri(fallbackUri));
-
     if (!playableUri) return;
 
+    let player: AudioPlayerLike | null = null;
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { createAudioPlayer } = require('expo-audio');
-      const player: AudioPlayerLike = createAudioPlayer(playableUri);
-      player.loop = true;
-      player.volume = 1.0;
-      player.play();
+      const { createAudioPlayer }: typeof import('expo-audio') = require('expo-audio');
+      player = createAudioPlayer(playableUri);
       activeAlarmPlayer = player;
+      player.loop = true;
+      player.volume = 1;
+      player.play();
     } catch {
-      // Keep vibration loop running if audio fails
+      releasePlayer(player);
+      if (activeAlarmPlayer === player) activeAlarmPlayer = null;
     }
   }
 
-  /**
-   * Menghentikan dering alarm dan getaran.
-   */
   static stopAlarmRinging(): void {
-    if (vibrationTimer) {
-      clearInterval(vibrationTimer);
-      vibrationTimer = null;
-    }
-    if (activeAlarmPlayer) {
-      try {
-        activeAlarmPlayer.pause();
-        activeAlarmPlayer.remove();
-      } catch {
-        // Ignore cleanup errors
-      }
-      activeAlarmPlayer = null;
-    }
+    alarmGeneration++;
+    alarmRequested = false;
+    if (vibrationTimer) clearInterval(vibrationTimer);
+    if (vibrationDelayTimer) clearTimeout(vibrationDelayTimer);
+    vibrationTimer = null;
+    vibrationDelayTimer = null;
+    const player = activeAlarmPlayer;
+    activeAlarmPlayer = null;
+    releasePlayer(player);
   }
 }
 

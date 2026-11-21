@@ -67,12 +67,7 @@ export function useWeeklySchedules() {
   const addSchedulesForDays = useCallback(
     async (days: number[], input: Omit<CreateWeeklyScheduleInput, 'dayOfWeek'>): Promise<boolean> => {
       try {
-        for (const day of days) {
-          await weeklyScheduleRepository.createWeeklySchedule({
-            ...input,
-            dayOfWeek: day,
-          });
-        }
+        await weeklyScheduleRepository.createWeeklySchedulesForDays(days, input);
         await fetchSchedules();
         return true;
       } catch (err) {
