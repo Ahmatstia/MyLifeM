@@ -25,7 +25,6 @@ export const DEFAULT_SETTINGS: UserSettingsEntity = {
 
 export interface DatabaseStats {
   targetsCount: number;
-  projectsCount: number;
   tasksCount: number;
   focusSessionsCount: number;
   agendaEventsCount: number;

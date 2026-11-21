@@ -2,7 +2,7 @@ import { colors } from '@/theme/colors';
 import { fontFamily, radius, space } from '@/theme/tokens';
 
 export const formInputBase = Object.assign(Object.create(null), {
-  minHeight: 44,
+  minHeight: 48,
   paddingHorizontal: space[3],
   paddingVertical: space[1],
   borderRadius: radius.md,
@@ -15,7 +15,7 @@ export const formInputBase = Object.assign(Object.create(null), {
 });
 
 export const formInputCompact = Object.assign(Object.create(null), {
-  minHeight: 40,
+  minHeight: 48,
   paddingHorizontal: space[2],
   paddingVertical: space[1],
   borderRadius: radius.md,
@@ -25,7 +25,7 @@ export const formInputCompact = Object.assign(Object.create(null), {
 });
 
 export const formTextArea = Object.assign(Object.create(null), {
-  minHeight: 80,
+  minHeight: 88,
   textAlignVertical: 'top' as const,
 });
 

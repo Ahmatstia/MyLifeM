@@ -165,6 +165,21 @@ async function controller() {
     assert.ok(timer.reflection); assert.equal(e.raw.getFirstSync('SELECT count(*) n FROM focus_sessions').n, 3);
     timer.dismissReflection(); ui.h.close();
     passed('failed auto-save retains the timer without a retry loop; explicit retry commits once despite native effect failures');
+    nativeFails = false;
+    const quick = await e.load('src/features/today-focus/data/repositories/daily-focus.repository.impl.ts').dailyFocusRepository
+      .createQuickTask('Explicit task duration', '2026-10-27', undefined, { category: 'Kerja', estimatedMinutes: 45 });
+    ui = make(); ui.render(); await tick(); ui.render().setActiveTask(quick);
+    assert.equal(ui.render().selectedMinutes, 45);
+    ui.render().changeMode('DEEP_FLOW'); assert.equal(ui.render().selectedMinutes, 90);
+    ui.render().changeMode('STOPWATCH'); ui.render().setActiveTask(quick); assert.equal(ui.render().selectedMinutes, 0);
+    ui.render().changeMode('POMODORO'); assert.equal(ui.render().selectedMinutes, 1);
+    ui.render().setActiveTask(quick); ui.render().startTimer();
+    assert.equal(repo.load().targetMs, 45 * 60_000);
+    ui.render().setActiveTask({ ...quick, focusMinutes: 15 }); assert.equal(ui.render().selectedMinutes, 45);
+    ui.h.close(); await settings.saveSettings({ pomodoroMinutes: 15 });
+    ui = make(); ui.render(); await tick(); assert.equal(ui.render().selectedMinutes, 45);
+    ui.render().finishTimer(); ui.render().dismissReflection(); ui.h.close();
+    passed('explicit quick duration drives the persisted timer; mode selection uses preferences, stopwatch stays zero and active/restored sessions stay locked');
   } finally { globalThis.Date = OriginalDate; globalThis.setInterval = set; globalThis.clearInterval = clear; e.close(); }
 }
 async function main() { await repositories(); await controller(); console.log(`PASS: ${checks} timer/session checks. No user database or native effects accessed.`); }

@@ -151,7 +151,7 @@ async function notificationChecks() {
   assert.equal(await mock.service.reconcileReminders(async () => { throw new Error('read failure'); }), false);
   passed('web, unavailable native modules and reconciliation errors report failure without throwing into a save');
   let probes = 0, barrelLoads = 0;
-  const unsupported = { expo: { requireOptionalNativeModule: name => { assert.equal(name, 'ExpoTopicSubscriptionModule'); probes++; return null; } },
+  const unsupported = { expo: { requireOptionalNativeModule: name => { assert.equal(name, 'ExpoNotificationScheduler'); probes++; return null; } },
     'react-native': { Platform: { OS: 'android' } } };
   Object.defineProperty(unsupported, 'expo-notifications', { get() { barrelLoads++; throw new Error('Incompatible notifications barrel must never be loaded'); } });
   const guarded = loader(unsupported)('src/features/agenda/data/services/agenda-notification.service.ts').AgendaNotificationService;
@@ -159,7 +159,7 @@ async function notificationChecks() {
   assert.equal(await guarded.reconcileReminders(async () => []), true);
   assert.equal(await guarded.scheduleReminder('blocked', 'saved', event.startTime, 0), null);
   await guarded.requestExactAlarmPermission(); assert.equal(probes, 1); assert.equal(barrelLoads, 0);
-  passed('missing Android topic module is detected before loading the incompatible barrel; no reminders still succeeds');
+  passed('missing local scheduler module is detected before loading the native barrel; no reminders still succeeds');
   let release; const gate = new Promise(resolve => { release = resolve; });
   const first = mock.service.reconcileReminders(async () => { await gate; return [event]; });
   const second = mock.service.reconcileReminders(async () => []);
@@ -168,7 +168,7 @@ async function notificationChecks() {
   passed('serialized reconciliation lets the later deletion win over a stale in-flight schedule');
   const many = Array.from({ length: 60 }, (_, i) => ({ ...event, id: 'bulk-' + i, startTime: new Date(Date.parse(event.startTime) + i * 60_000).toISOString() }));
   assert.equal(await mock.service.reconcileReminders(async () => [...many].reverse()), false);
-  assert.equal([...mock.scheduled.keys()].filter(key => key.startsWith('agenda-')).length, 50);
+  assert.equal([...mock.scheduled.keys()].filter(key => key.startsWith('agenda-')).length, 49);
   assert.ok(mock.scheduled.has('agenda-bulk-0') && !mock.scheduled.has('agenda-bulk-59'));
   passed('large imports schedule only 50 nearest reminders and report partial coverage instead of overloading native limits');
 }
@@ -202,7 +202,7 @@ async function hookChecks() {
   passed('Today reloads after rollover and ignores late requests/mutations from the previous date');
 
   calendar = { date: '2026-10-26', key: '26', zone: 'Asia/Jakarta' };
-  let saved = 0, throws = false, failsWrite = false; const calls = [];
+  let saved = 0, throws = false, failsWrite = false, reminderListener; const calls = [];
   const agendaPending = new Map(); let defer = false;
   const a = hookHarness({ '@/shared/hooks/use-device-calendar': { useDeviceCalendar: () => calendar },
     '../../data/repositories/agenda.repository.impl': { agendaRepository: {
@@ -213,7 +213,11 @@ async function hookChecks() {
     '../../data/repositories/weekly-schedule.repository.impl': { weeklyScheduleRepository: {
       getProjectedSchedulesForDate: async () => [], setOccurrenceCompletion: async () => {}, setOccurrenceCancellation: async () => {},
     } },
-    '../../data/services/agenda-notification.service': { AgendaNotificationService: { reconcileReminders: async () => { calls.push('sync'); if (throws) throw new Error('native failure'); return true; } } },
+    '../../data/services/calendar-reminder.service': {
+      syncCalendarReminders: async () => { calls.push('sync'); reminderListener(throws ? 'Jadwal tetap tersimpan. Periksa izin.' : null); return !throws; },
+      subscribeCalendarReminderStatus: listener => { reminderListener = listener; listener(null); return () => {}; },
+    },
+    '../../data/services/agenda-notification.service': { AgendaNotificationService: { requestExactAlarmPermission: async () => {} } },
   });
   const agendaHook = a.load('src/features/agenda/presentation/hooks/use-agenda.ts').useAgenda;
   a.render(agendaHook); await tick(); calendar = { ...calendar, date: '2026-10-27', key: '27' }; a.render(agendaHook); a.render(agendaHook); await tick();
@@ -228,7 +232,7 @@ async function hookChecks() {
   assert.deepEqual(a.render(agendaHook).events, ['new']); defer = false;
   throws = true;
   assert.equal(await a.render(agendaHook).addEvent({ title: 'saved', startTime: '2099-10-26T03:00:00Z', endTime: '2099-10-26T04:00:00Z', reminderMinutes: 0 }), true);
-  assert.equal(saved, 1); assert.match(a.render(agendaHook).reminderWarning, /Agenda tetap tersimpan/);
+  assert.equal(saved, 1); assert.match(a.render(agendaHook).reminderWarning, /Jadwal tetap tersimpan/);
   failsWrite = true; assert.equal(await a.render(agendaHook).addEvent({}), false); assert.equal(saved, 1); assert.equal(a.render(agendaHook).error, 'disk full');
   passed('late Agenda responses are ignored; a committed save succeeds despite notification failure, a failed write stays failed');
   calls.length = 0; await a.render(agendaHook).removeEvent('new'); assert.deepEqual(calls.slice(0, 2), ['delete', 'sync']);

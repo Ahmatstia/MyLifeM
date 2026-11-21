@@ -28,6 +28,7 @@ import { WeeklyScheduleManager } from '../components/weekly-schedule-manager';
 import { AddEditWeeklyScheduleModal } from '../components/add-edit-weekly-schedule-modal';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 import { conflictingEventIds } from '../../domain/agenda-time';
+import { WEEKLY_REMINDER_DAYS } from '../../domain/weekly-reminders';
 import type {
   WeeklyScheduleEntity,
   WeeklyScheduleType,
@@ -70,6 +71,8 @@ export const AgendaScreen: React.FC = () => {
     setSelectedDay = () => {},
     isLoading: isWeeklyLoading,
     error: weeklyError,
+    reminderWarning: weeklyReminderWarning,
+    retryReminders: retryWeeklyReminders,
     refresh: refreshWeekly,
     addSchedule,
     addSchedulesForDays,
@@ -345,6 +348,20 @@ export const AgendaScreen: React.FC = () => {
 
         {viewMode === 'WEEKLY_MASTER' && (
           <>
+            <Banner
+              variant="info"
+              message={`Pengingat disiapkan untuk ${WEEKLY_REMINDER_DAYS} hari ke depan, maksimal 50 pengingat kalender terdekat. Buka aplikasi secara berkala untuk memperbaruinya.`}
+              style={styles.notice}
+            />
+            {weeklyReminderWarning && (
+              <Banner
+                variant="warning"
+                message={weeklyReminderWarning}
+                actionText="Periksa izin pengingat"
+                onActionPress={retryWeeklyReminders}
+                style={styles.notice}
+              />
+            )}
             {weeklyError && (
               <Banner
                 variant="error"

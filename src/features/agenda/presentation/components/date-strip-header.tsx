@@ -27,27 +27,13 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
   const selected = new Date(year, month - 1, day);
   const today = todayDate || formatLocalDate();
 
-  // Displayed week starting Monday (guaranteed by check-ui.cjs)
-  const monday = new Date(selected);
-  monday.setDate(selected.getDate() - ((selected.getDay() + 6) % 7));
-
-  const weekDays = Array.from({ length: 7 }, (_, offset) => {
-    const date = new Date(monday);
-    date.setDate(monday.getDate() + offset);
-    return {
-      key: formatLocalDate(date),
-      name: WEEKDAY_LABELS[offset],
-      day: date.getDate(),
-      inMonth: date.getMonth() === selected.getMonth(),
-    };
-  });
-
-  // Also build full 5-week calendar grid for the current month (like the Reference UI "Kalender")
   const firstOfMonth = new Date(year, month - 1, 1);
   const gridStart = new Date(firstOfMonth);
   gridStart.setDate(1 - ((firstOfMonth.getDay() + 6) % 7));
 
-  const monthWeeks = Array.from({ length: 5 }, (_, w) =>
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const rows = Math.ceil((((firstOfMonth.getDay() + 6) % 7) + daysInMonth) / 7);
+  const monthWeeks = Array.from({ length: rows }, (_, w) =>
     Array.from({ length: 7 }, (__, d) => {
       const cell = new Date(gridStart);
       cell.setDate(gridStart.getDate() + w * 7 + d);
@@ -58,10 +44,6 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
       };
     })
   );
-
-  // Ensure the selected week's days are always exposed with accessibilityLabel={item.key...}
-  const gridKeys = new Set(monthWeeks.flat().map((c) => c.key));
-  const missingWeekDays = weekDays.filter((wd) => !gridKeys.has(wd.key));
 
   const moveWeek = (offset: number) => {
     const date = new Date(selected);
@@ -152,36 +134,7 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
           </View>
         ))}
 
-        {/* Hidden/auxiliary week buttons if week spans outside 5-row grid (e.g., Dec 31 -> Jan 3) */}
-        {missingWeekDays.length > 0 && (
-          <View style={styles.weekRow}>
-            {weekDays.map((item) => {
-              const isSelected = item.key === selectedDate;
-              const isToday = item.key === today;
-              return (
-                <Pressable
-                  key={'wk-' + item.key}
-                  onPress={() => onSelectDate(item.key)}
-                  accessibilityRole="button"
-                  accessibilityLabel={item.key + (isToday ? ', hari ini' : '')}
-                  accessibilityState={{ selected: isSelected }}
-                  style={[styles.dayCell, isSelected && styles.dayCellSelected]}
-                >
-                  <AppText
-                    tabularNums
-                    style={[
-                      styles.dayNumber,
-                      !item.inMonth && styles.dayNumberOutside,
-                      isSelected && styles.dayNumberSelected,
-                    ]}
-                  >
-                    {item.day}
-                  </AppText>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
+
       </View>
     </View>
   );

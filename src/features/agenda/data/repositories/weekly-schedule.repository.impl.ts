@@ -15,6 +15,7 @@ import type {
 } from '../../domain/entities/weekly-schedule.entity';
 import { getDayOfWeekFromDate, validateWeeklySchedule } from '../../domain/entities/weekly-schedule.entity';
 import type { WeeklyScheduleRepository } from '../../domain/repositories/weekly-schedule.repository';
+import { projectWeeklyReminders } from '../../domain/weekly-reminders';
 
 function generateId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -45,6 +46,12 @@ function mapToEntity(row: WeeklySchedule): WeeklyScheduleEntity {
 }
 
 export class WeeklyScheduleRepositoryImpl implements WeeklyScheduleRepository {
+  async getReminderEvents(now = new Date()) {
+    const schedules = db.select().from(weeklySchedules).where(eq(weeklySchedules.isActive, 1)).all().map(mapToEntity);
+    const logs = db.select().from(weeklyScheduleLogs).all();
+    return projectWeeklyReminders(schedules, logs, now);
+  }
+
   async getAllWeeklySchedules(): Promise<WeeklyScheduleEntity[]> {
     const rows = await db
       .select()

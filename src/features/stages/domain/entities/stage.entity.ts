@@ -6,7 +6,7 @@ export type { TaskStatus } from '@/shared/domain/task-status';
  * Strictly follows MYLIFE_MOBILE_PRD_MVP.md specifications.
  */
 
-export type StageParentType = 'TARGET' | 'PROJECT';
+export type StageParentType = 'TARGET';
 export type StageStatus = 'NO_TASKS' | 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -108,7 +108,7 @@ export function getStageStatusLabel(status: StageStatus): string {
 }
 
 /**
- * PRD 8: Progres Target dan Project
+ * Progres Target
  * Progres (%) = (Jumlah tugas berstatus Selesai / Jumlah seluruh tugas) × 100
  */
 export function calculateOverallProgress(allTasks: TaskItemEntity[]): {

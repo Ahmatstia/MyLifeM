@@ -33,5 +33,4 @@ export interface CreateAgendaInput {
   location?: string;
   reminderMinutes?: number | null;
   targetId?: string | null;
-  projectId?: string | null;
 }

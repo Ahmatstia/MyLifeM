@@ -233,7 +233,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
             {[1, 2, 3, 4, 5, 6, 7].map((day) => {
               const selected = initialData ? day === dayOfWeek : selectedDays.includes(day);
               return (
-                <Pressable
+                <Pressable accessibilityState={{ selected: selected }}
                   key={day}
                   onPress={() => handleToggleDay(day)}
                   accessibilityRole="button"
@@ -267,7 +267,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
           <AppText variant="labelMedium" color="onSurfaceVariant" style={styles.label}>
             {scheduleType === 'ROUTINE' ? 'NAMA RUTINITAS KESEHARIAN *' : 'NAMA JADWAL / KEGIATAN *'}
           </AppText>
-          <TextInput
+          <TextInput accessibilityLabel="Nama kegiatan"
             style={styles.input}
             value={title}
             onChangeText={setTitle}
@@ -319,7 +319,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
             <View style={styles.timeInputCol}>
               <View style={styles.timeBox}>
                 <Clock size={16} color={colors.primary} />
-                <TextInput
+                <TextInput accessibilityLabel="Jam mulai"
                   style={styles.timeTextInput}
                   value={startTime}
                   onChangeText={setStartTime}
@@ -339,7 +339,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
             <View style={styles.timeInputCol}>
               <View style={styles.timeBox}>
                 <Clock size={16} color={colors.primary} />
-                <TextInput
+                <TextInput accessibilityLabel="Jam selesai"
                   style={styles.timeTextInput}
                   value={endTime}
                   onChangeText={setEndTime}
@@ -361,7 +361,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
           </AppText>
           <View style={styles.inputWithIcon}>
             <MapPin size={18} color={colors.onSurfaceVariant} />
-            <TextInput
+            <TextInput accessibilityLabel="Lokasi atau tautan"
               style={styles.flexInput}
               value={location}
               onChangeText={setLocation}
@@ -378,7 +378,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
           </AppText>
           <View style={styles.inputWithIcon}>
             <FileText size={18} color={colors.onSurfaceVariant} />
-            <TextInput
+            <TextInput accessibilityLabel="Catatan"
               style={styles.flexInput}
               value={notes}
               onChangeText={setNotes}
@@ -397,7 +397,7 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
             {REMINDER_OPTIONS.map((opt) => {
               const selected = opt.minutes === reminderMinutes;
               return (
-                <Pressable
+                <Pressable accessibilityState={{ selected: selected }}
                   key={String(opt.minutes)}
                   onPress={() => setReminderMinutes(opt.minutes)}
                   accessibilityRole="button"

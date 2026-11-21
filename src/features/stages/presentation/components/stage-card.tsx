@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     color: s.inkMuted,
   },
   menuButton: {
-    width: 40,
+    width: 44,
     minHeight: 40,
     alignItems: 'center',
     justifyContent: 'center',

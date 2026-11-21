@@ -3,6 +3,17 @@ import * as SQLite from 'expo-sqlite';
 export const DB_NAME = 'mylife.db';
 
 let _activeSqliteDb: SQLite.SQLiteDatabase | null = null;
+let openingWebDatabase: Promise<void> | null = null;
+
+/** Web must finish loading its worker before any synchronous Drizzle migration runs. */
+export async function prepareSqliteDb(): Promise<void> {
+  if (process.env.EXPO_OS !== 'web' || _activeSqliteDb) return;
+  if (!openingWebDatabase) openingWebDatabase = SQLite.openDatabaseAsync(DB_NAME).then(connection => {
+    connection.execSync('PRAGMA foreign_keys = ON;');
+    _activeSqliteDb = connection;
+  }).finally(() => { openingWebDatabase = null; });
+  await openingWebDatabase;
+}
 
 /**
  * Memastikan koneksi native SQLite aktif dan tidak berstatus closed resource.

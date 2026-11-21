@@ -1,5 +1,9 @@
 # MyLife PRD v2 — tujuan menjadi tindakan yang terlihat
 
+**Perilaku terbaru 22 November 2026:** ringkasan Target memakai progres faktual; tidak ada klaim tren tanpa baseline. Kalender memuat semua tanggal bulan. Salat berikutnya mengikuti lima waktu yang ditampilkan. Hapus managed task meminta konfirmasi. Lagu/layar alarm didukung saat aplikasi aktif; saat background/tertutup memakai notifikasi OS dengan izin/pembatasan perangkat. Alarm terlambat dapat ditampilkan sekali saat kembali dalam 24 jam. Backup data tidak menyertakan file lagu; pemulihan menjelaskan kebutuhan memilih ulang. QA native tetap terpisah.
+
+Pembaruan implementasi 22 November 2026: tugas cepat menyimpan kategori kegiatan serta estimasi/durasi fokus pilihan. Tanpa pilihan durasi, timer mengikuti pengaturan fokus. Memilih mode timer menggunakan preset mode; sesi yang sudah dimulai tetap menggunakan durasi tersimpan. Pengingat weekly memakai occurrence per tanggal agar selesai/batal hari ini tidak mematikan minggu berikutnya. Jendela 28 hari dan batas 50 pengingat kalender terdekat dijelaskan pada layar, disertai warning jika izin/cakupan belum memadai. Pengiriman notifikasi OS tetap memerlukan QA perangkat.
+
 Tanggal: 26 Oktober 2026. Status: keputusan arah produk, belum implementasi. Pemilik: pengguna; pelaksana analisis/rekayasa mengikuti dokumen dan backlog ini. Asumsi persona dijelaskan dalam RESEARCH_2026-10-26.md.
 
 ## 1. Janji produk
@@ -25,8 +29,7 @@ Masalah pertama yang diselesaikan: roadmap sudah ada tetapi tidak berubah menjad
 
 - **Area kehidupan:** konteks jangka panjang seperti Belajar & Karier, Kesehatan, Keuangan, Pribadi. Pada rilis fondasi gunakan kategori yang dapat dikelola; jangan menambah pilihan wajib pilar kedua.
 - **Target:** hasil yang ingin dicapai, alasan, kriteria berhasil, tenggat opsional.
-- **Proyek:** hasil kerja konkret dengan akhir yang jelas, opsional mendukung satu target. Target sederhana tidak wajib punya proyek.
-- **Tahapan:** urutan langkah roadmap pada satu target atau satu proyek.
+- **Tahapan:** urutan langkah roadmap pada satu Target. Hasil kerja konkret seperti portofolio dicatat sebagai Target; modul Proyek terpisah dihapus sesuai keputusan pengguna.
 - **Tugas:** tindakan yang dapat dikerjakan, dengan estimasi menit, status, dan tenggat opsional.
 - **Prioritas harian:** pemilihan tugas yang sama untuk hari tertentu, bukan salinan tugas.
 - **Agenda:** alokasi waktu atau kegiatan nyata; bisa mengacu pada tugas yang sama. Deadline berbeda dengan waktu pengerjaan.
@@ -50,15 +53,15 @@ Review Minggu: apa yang selesai, bagian mana belum dipahami, bukti apa tersedia,
 
 ### R0 — data yang dapat dipercaya
 
-Foreign key/migrasi, cadangan lengkap dan restore teruji, transaksi, hari lokal, rollup target/proyek, status tugas tunggal, refresh antarlayar, startup error state, timer/refleksi tidak membuang data, pengingat jujur. Belum menambah modul domain besar.
+Foreign key/migrasi, cadangan lengkap dan restore teruji, transaksi, hari lokal, rollup Target, status tugas tunggal, refresh antarlayar, startup error state, timer/refleksi tidak membuang data, pengingat jujur. Proyek lama dikonversi menjadi Target tanpa mengganti ID tugas/sesi/prioritas.
 
 ### R1 — redesign seluruh alur yang sudah ada
 
-Semua layar utama, detail, form, pengaturan, kartu, dialog/error/loading/empty mengikuti DESIGN_V2. Pengelolaan kategori masuk Pengaturan. Struktur navigasi tetap empat tujuan; aksi tambah membuka pilihan kontekstual. Pemilik bisa membaca dan menekan seluruh kontrol pada perangkat kecil dan teks besar.
+Semua layar utama, detail, form, pengaturan, kartu, dialog/error/loading/empty mengikuti desain aktif. Pengelolaan kategori masuk Pengaturan. Tiga layar utama Hari Ini/Target/Agenda didampingi Tambah dan Menu. Pemilik bisa membaca dan menekan seluruh kontrol pada perangkat kecil dan teks besar.
 
 ### R2 — monitoring tujuan yang berguna
 
-Kriteria berhasil dan next action pada target, proyek terkait terlihat di detail target, daftar tugas fleksibel/backlog, penjadwalan tugas tanpa duplikasi, catatan bukti sederhana, review mingguan dan ringkasan yang berasal dari data nyata. Dahulukan teks/link; lampiran besar menunggu strategi penyimpanan/backup.
+Kriteria berhasil dan next action pada Target, daftar tugas fleksibel/backlog, penjadwalan tugas tanpa duplikasi, catatan bukti sederhana, review mingguan dan ringkasan yang berasal dari data nyata. Dahulukan teks/link; lampiran besar menunggu strategi penyimpanan/backup.
 
 ### R3 — konteks kehidupan yang tervalidasi
 
@@ -66,11 +69,11 @@ Rutinitas berulang; konteks kuliah/kerja/pribadi; check-in kapasitas/energi opsi
 
 ## 6. Aturan bisnis wajib
 
-1. Satu tugas memiliki satu pemilik yang konsisten: mandiri, langsung pada target, atau pada proyek; tahapan harus sesuai pemilik. Proyek menghubungkan tugasnya ke target lewat relasi proyek, tidak lewat salinan yang mudah kedaluwarsa.
+1. Satu tugas memiliki satu pemilik yang konsisten: mandiri atau Target; tahapan harus sesuai Target. Proyek lama beserta tahapan/milestone/tugas dikonversi sebelum UI siap dan saat restore.
 2. Status persist tugas adalah TODO, IN_PROGRESS, COMPLETED, CANCELLED. UI boleh menerjemahkan label; DONE hanya dibaca sebagai legacy saat migrasi.
 3. Progres rencana = tugas COMPLETED / seluruh tugas yang tidak CANCELLED × 100, dibulatkan; tiap taskId dihitung sekali. Tanpa tugas, tampilkan “Belum ada rencana”, bukan kesimpulan gagal.
-4. Tugas di proyek tertaut ikut progres target. Filter kategori mengubah cakupan ringkasan dan diberi label; jangan menyebut agregasi seluruh tugas sebagai rata-rata target.
-5. Checklist selesai tidak otomatis menyatakan tujuan hidup tercapai. Target/proyek dapat ditutup setelah kriteria hasil ditinjau; status lifecycle dan persen rencana mempunyai arti berbeda.
+4. Tugas langsung dan tugas tahapan ikut progres Target tepat sekali. Filter kategori mengubah cakupan ringkasan dan diberi label; jangan menyebut agregasi seluruh tugas sebagai rata-rata target.
+5. Checklist selesai tidak otomatis menyatakan tujuan hidup tercapai. Target dapat ditutup setelah kriteria hasil ditinjau; status lifecycle dan persen rencana mempunyai arti berbeda.
 6. Target numerik dan maintenance legacy tidak diubah diam-diam menjadi checklist. Rilis fondasi mempertahankan data; UI tipe baru menunggu aturan yang lengkap. Angka progres numerik kelak perlu baseline, target, arah naik/turun, unit, dan riwayat pengukuran.
 7. Tugas dapat masuk prioritas suatu hari satu kali. Default menonjolkan tiga, maksimal lima komitmen terpilih; backlog tidak dibatasi lima. Batas ini keputusan produk awal, bukan hukum psikologi.
 8. Menyelesaikan tugas dari mana pun memperbarui tampilan terkini di semua tempat. Mengubah jadwal atau melepas prioritas tidak menghapus tugas.
@@ -79,18 +82,17 @@ Rutinitas berulang; konteks kuliah/kerja/pribadi; check-in kapasitas/energi opsi
 11. Reminder nonaktif = null; 0 = saat mulai; nilai positif = menit sebelumnya. Penolakan izin ditampilkan; agenda tetap tersimpan.
 12. Maksimal satu sesi timer aktif; pergantian tugas/mode memerlukan keputusan jelas terhadap sesi lama. Durasi aktif mengecualikan jeda. Finalisasi idempoten; refleksi opsional dan tidak menentukan apakah sesi tersimpan.
 13. Kategori nama kosong/duplikat ditolak; kategori yang dipakai tidak bisa dihapus sebelum target dipindah. Kategori belum menjadi manajemen screen/tab tersendiri.
-14. Arsip menjadi aksi umum untuk target/proyek selesai. Penghapusan permanen menjelaskan akibat dan menjaga histori sesi/agenda sesuai kebijakan relasi; tidak menghapus proyek independen tanpa penjelasan.
+14. Penghapusan Target menjelaskan akibat dan menjaga histori sesi/agenda sesuai kebijakan relasi. Jurnal konversi mencegah Target yang sudah dihapus muncul kembali dari catatan proyek lama.
 15. Semua aksi simpan menampilkan hasil, tidak menutup dialog ketika gagal, dan aman dicoba ulang. Preferensi mengubah perilaku yang diiklankan.
 16. Tidak ada skor “kualitas hidup”, perbandingan orang, streak menghukum, atau klaim kesehatan dari data produktivitas.
 
 ## 7. Struktur navigasi dan isi layar
 
 - **Hari Ini:** tanggal; tindakan berikutnya; prioritas; agenda terdekat; timer yang dapat dibuka; akses review mingguan ketika fiturnya siap. Tampilkan sedikit informasi yang membantu keputusan sekarang.
-- **Target:** daftar tujuan, filter kategori, kemajuan rencana, next action; detail menyatukan roadmap langsung, proyek terkait, dan bukti hasil.
-- **Proyek:** hasil kerja aktif/selesai; detail tahapan/tugas dan target terkait. Proyek mandiri tetap diperbolehkan.
+- **Target:** daftar tujuan/hasil kerja, filter kategori dan kemajuan rencana; detail memuat tahapan/tugas. Next action dan bukti hasil tetap rencana pengembangan.
 - **Agenda:** tanggal yang dapat dipilih, timeline kegiatan, bagian sepanjang hari, akses menjadwalkan tugas yang ada.
 - **Pengaturan:** Kategori; preferensi fokus; notifikasi; data/cadangan/pemulihan; informasi privasi/versi. Bukan tab utama.
-- **Tambah:** tugas, target, proyek, atau agenda sesuai konteks. Membuat tugas cepat tidak wajib membuat target dahulu.
+- **Tambah:** tugas, target, atau agenda sesuai konteks. Membuat tugas cepat tidak wajib membuat target dahulu.
 
 ## 8. Ukuran keberhasilan
 

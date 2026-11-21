@@ -4,8 +4,10 @@ import type {
   UpdateWeeklyScheduleInput,
   ProjectedWeeklyOccurrence,
 } from '../entities/weekly-schedule.entity';
+import type { CalendarReminder } from '../weekly-reminders';
 
 export interface WeeklyScheduleRepository {
+  getReminderEvents(now?: Date): Promise<CalendarReminder[]>;
   /** Get all master schedules, ordered by dayOfWeek then startTime */
   getAllWeeklySchedules(): Promise<WeeklyScheduleEntity[]>;
 

@@ -301,20 +301,15 @@ export const TodayFocusScreen: React.FC = () => {
                       ? `${item.task.estimatedMinutes / 60} jam`
                       : `${item.task.estimatedMinutes} menit`;
 
-                  const isFromTarget = Boolean(item.task.targetId || item.task.projectId);
+                  const isLinkedTask = Boolean(item.task.targetId);
                   const isFromManagedTask =
-                    !isFromTarget && item.task.id.startsWith('mtask-');
+                    !isLinkedTask && item.task.id.startsWith('mtask-');
                   const accentColor = s.forest;
 
-                  const originKicker = isFromTarget
-                    ? item.task.targetTitle
-                      ? `Target · ${item.task.targetTitle}`
-                      : item.task.projectTitle
-                        ? `Target · ${item.task.projectTitle}`
-                        : 'Dari Target'
-                    : isFromManagedTask
-                      ? 'Manajemen Tugas · Jadwal Eksekusi'
-                      : 'Fokus Hari Ini';
+                  const originKicker = item.task.targetId
+                    ? item.task.targetTitle ? `Target · ${item.task.targetTitle}` : 'Dari Target'
+                    : isFromManagedTask ? 'Manajemen Tugas · Jadwal Eksekusi'
+                      : item.task.quickCategory ? `Fokus Hari Ini · ${item.task.quickCategory}` : 'Fokus Hari Ini';
 
                   const handleRowPress = () => {
                     if (item.task.targetId) {
@@ -322,8 +317,6 @@ export const TodayFocusScreen: React.FC = () => {
                         pathname: '/targets/[id]',
                         params: { id: item.task.targetId },
                       });
-                    } else if (item.task.projectId) {
-                      router.push('/(tabs)/targets' as any);
                     } else if (isFromManagedTask) {
                       router.push('/task-manager' as any);
                     } else if (!isCompleted && !isCancelled) {
@@ -333,16 +326,7 @@ export const TodayFocusScreen: React.FC = () => {
                   };
 
                   return (
-                    <Pressable
-                      key={item.id}
-                      onPress={handleRowPress}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Buka ${originKicker}: ${item.task.title}`}
-                      style={({ pressed }) => [
-                        styles.timelineItem,
-                        pressed && styles.timelineItemPressed,
-                      ]}
-                    >
+                    <View key={item.id} style={styles.timelineItem}>
                       {/* Left Column: Timeline Node + Continuous Vertical Spine */}
                       <View style={styles.timelineRail}>
                         <View style={styles.checkNodeWrap}>
@@ -369,10 +353,12 @@ export const TodayFocusScreen: React.FC = () => {
                       {/* Right Column: Editorial Content + Dashed Notebook Divider */}
                       <View style={styles.timelineBody}>
                         <View style={styles.timelineMainRow}>
-                          <View style={styles.timelineTextCol}>
+                          <Pressable onPress={handleRowPress}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Buka ${originKicker}: ${item.task.title}`} style={({ pressed }) => [styles.timelineTextCol, pressed && styles.timelineItemPressed]}>
                             {/* Plain Editorial Kicker Line (No Badge Box!) */}
                             <View style={styles.kickerInlineRow}>
-                              {isFromTarget ? (
+                              {item.task.targetId ? (
                                 <Target size={11} color={accentColor} strokeWidth={2.4} />
                               ) : isFromManagedTask ? (
                                 <BellRing size={11} color={accentColor} strokeWidth={2.4} />
@@ -385,7 +371,7 @@ export const TodayFocusScreen: React.FC = () => {
                               >
                                 {originKicker}
                               </AppText>
-                              {(isFromTarget || isFromManagedTask) && (
+                              {(isLinkedTask || isFromManagedTask) && (
                                 <ArrowUpRight size={11} color={accentColor} strokeWidth={2.4} />
                               )}
                             </View>
@@ -414,7 +400,7 @@ export const TodayFocusScreen: React.FC = () => {
                                       ? `${durationLabel} · ${item.task.description}`
                                       : `Estimasi fokus ${durationLabel}`}
                             </AppText>
-                          </View>
+                          </Pressable>
 
                           {/* Right Actions: Tactile Play/Pause Circle & Subtle Remove */}
                           <View style={styles.timelineActions}>
@@ -477,7 +463,7 @@ export const TodayFocusScreen: React.FC = () => {
                           </View>
                         )}
                       </View>
-                    </Pressable>
+                    </View>
                   );
                 })}
 
@@ -495,16 +481,7 @@ export const TodayFocusScreen: React.FC = () => {
                   const agendaColor = s.forest;
 
                   return (
-                    <Pressable
-                      key={ev.id}
-                      onPress={() => router.push('/(tabs)/agenda')}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Buka Agenda: ${ev.title}`}
-                      style={({ pressed }) => [
-                        styles.timelineItem,
-                        pressed && styles.timelineItemPressed,
-                      ]}
-                    >
+                    <View key={ev.id} style={styles.timelineItem}>
                       <View style={styles.timelineRail}>
                         <View style={styles.checkNodeWrap}>
                           <SproutCheck
@@ -526,7 +503,9 @@ export const TodayFocusScreen: React.FC = () => {
 
                       <View style={styles.timelineBody}>
                         <View style={styles.timelineMainRow}>
-                          <View style={styles.timelineTextCol}>
+                          <Pressable onPress={() => router.push('/(tabs)/agenda')}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Buka Agenda: ${ev.title}`} style={({ pressed }) => [styles.timelineTextCol, pressed && styles.timelineItemPressed]}>
                             <View style={styles.kickerInlineRow}>
                               <CalendarDays size={11} color={agendaColor} strokeWidth={2.4} />
                               <AppText style={[styles.kickerText, { color: agendaColor }]}>
@@ -547,7 +526,7 @@ export const TodayFocusScreen: React.FC = () => {
                                 ? `Lokasi: ${ev.location}`
                                 : 'Ketuk untuk melihat di Kalender Agenda'}
                             </AppText>
-                          </View>
+                          </Pressable>
                         </View>
 
                         {!isLastNode && (
@@ -566,7 +545,7 @@ export const TodayFocusScreen: React.FC = () => {
                           </View>
                         )}
                       </View>
-                    </Pressable>
+                    </View>
                   );
                 })}
 
@@ -579,16 +558,7 @@ export const TodayFocusScreen: React.FC = () => {
                   const routineColor = s.forest;
 
                   return (
-                    <Pressable
-                      key={occ.schedule.id}
-                      onPress={() => router.push('/(tabs)/agenda')}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Buka Jadwal Rutin: ${occ.schedule.title}`}
-                      style={({ pressed }) => [
-                        styles.timelineItem,
-                        pressed && styles.timelineItemPressed,
-                      ]}
-                    >
+                    <View key={occ.schedule.id} style={styles.timelineItem}>
                       <View style={styles.timelineRail}>
                         <View style={styles.checkNodeWrap}>
                           <SproutCheck
@@ -612,7 +582,9 @@ export const TodayFocusScreen: React.FC = () => {
 
                       <View style={styles.timelineBody}>
                         <View style={styles.timelineMainRow}>
-                          <View style={styles.timelineTextCol}>
+                          <Pressable onPress={() => router.push('/(tabs)/agenda')}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Buka Jadwal Rutin: ${occ.schedule.title}`} style={({ pressed }) => [styles.timelineTextCol, pressed && styles.timelineItemPressed]}>
                             <View style={styles.kickerInlineRow}>
                               <Repeat size={11} color={routineColor} strokeWidth={2.4} />
                               <AppText style={[styles.kickerText, { color: routineColor }]}>
@@ -631,7 +603,7 @@ export const TodayFocusScreen: React.FC = () => {
                             <AppText style={styles.timelineSubtext} numberOfLines={1}>
                               Rutinitas mingguan · Ketuk untuk buka kalender
                             </AppText>
-                          </View>
+                          </Pressable>
                         </View>
 
                         {!isLastNode && (
@@ -650,7 +622,7 @@ export const TodayFocusScreen: React.FC = () => {
                           </View>
                         )}
                       </View>
-                    </Pressable>
+                    </View>
                   );
                 })}
               </View>

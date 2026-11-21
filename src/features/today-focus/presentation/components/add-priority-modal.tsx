@@ -92,7 +92,7 @@ export const AddPriorityModal: React.FC<AddPriorityModalProps> = ({
       </AppText>
 
       <View style={styles.quickAddRow}>
-        <TextInput
+        <TextInput accessibilityLabel="Nama tugas"
           value={quickTitle}
           onChangeText={setQuickTitle}
           placeholder="Masukkan nama tugas"

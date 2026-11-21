@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
+import { localTimeToIso } from '@/shared/utils/local-date';
 import type { ManagedTaskEntity } from '../../domain/entities/managed-task.entity';
 
 let notificationsModule: typeof import('expo-notifications') | null = null;
@@ -12,7 +13,7 @@ function getNotifications() {
   try {
     if (
       Platform.OS === 'android' &&
-      !requireOptionalNativeModule('ExpoTopicSubscriptionModule')
+      !requireOptionalNativeModule('ExpoNotificationScheduler')
     ) {
       return null;
     }
@@ -33,20 +34,18 @@ function getNotifications() {
   return notificationsModule;
 }
 
-function toLocalEpochMs(dateStr: string, timeStr: string): number {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const [hh, mm] = timeStr.split(':').map(Number);
-  const dt = new Date(
-    y || 2026,
-    (m || 1) - 1,
-    d || 1,
-    hh || 0,
-    mm || 0,
-    0,
-    0
-  );
-  return dt.getTime();
+let alarmWarning: string | null = null;
+const statusListeners = new Set<(warning: string | null) => void>();
+export function subscribeTaskAlarmStatus(listener: (warning: string | null) => void): () => void {
+  statusListeners.add(listener); listener(alarmWarning);
+  return () => { statusListeners.delete(listener); };
 }
+function publishStatus(ready: boolean) {
+  alarmWarning = ready ? null : 'Tugas tersimpan, tetapi sebagian pengingat belum aktif. Periksa izin notifikasi/alarm tepat waktu dan dukungan perangkat.';
+  for (const listener of statusListeners) { try { listener(alarmWarning); } catch { /* A screen cannot fail a committed write. */ } }
+  return ready;
+}
+export interface TaskAlarmResponse { taskId: string; occurrence: string | null; isAlarm: boolean; }
 
 export class TaskAlarmNotificationService {
   static async ensureChannelsAndPermissions(askUser = true): Promise<boolean> {
@@ -80,7 +79,7 @@ export class TaskAlarmNotificationService {
       ) {
         perm = await notifications.requestPermissionsAsync();
       }
-      return perm.status === 'granted';
+      return perm.status === 'granted' || perm.ios?.status === notifications.IosAuthorizationStatus.PROVISIONAL;
     } catch {
       return false;
     }
@@ -89,9 +88,9 @@ export class TaskAlarmNotificationService {
   static async reconcileTaskAlarms(
     tasks: ManagedTaskEntity[],
     askPermission = false
-  ): Promise<void> {
+  ): Promise<boolean> {
     const notifications = getNotifications();
-    if (!notifications) return;
+    if (!notifications) return publishStatus(!tasks.some(task => !task.isCompleted && task.alertMode !== 'NONE'));
 
     try {
       const scheduled = await notifications.getAllScheduledNotificationsAsync();
@@ -102,19 +101,20 @@ export class TaskAlarmNotificationService {
       }
 
       const activeTasks = tasks.filter(
-        (t) => !t.isCompleted && t.alertMode !== 'NONE'
+        (t) => !t.isCompleted && t.alertMode !== 'NONE' && (t.snoozedUntilIso || !t.lastAlarmFiredKey?.startsWith(t.executionDate + 'T' + t.executionTime))
       );
-      if (activeTasks.length === 0) return;
+      if (activeTasks.length === 0) return publishStatus(true);
 
       const granted = await this.ensureChannelsAndPermissions(askPermission);
-      if (!granted) return;
+      if (!granted) return publishStatus(false);
 
       const now = Date.now();
+      const requests: Parameters<typeof notifications.scheduleNotificationAsync>[0][] = [];
 
       for (const task of activeTasks) {
         const execMs = task.snoozedUntilIso
           ? Date.parse(task.snoozedUntilIso)
-          : toLocalEpochMs(task.executionDate, task.executionTime);
+          : Date.parse(localTimeToIso(task.executionDate, task.executionTime));
 
         const contextPrefix = task.courseOrContext
           ? `[${task.courseOrContext}] `
@@ -127,7 +127,7 @@ export class TaskAlarmNotificationService {
         ) {
           const prepMs = execMs - 15 * 60_000;
           if (prepMs > now) {
-            await notifications.scheduleNotificationAsync({
+            requests.push({
               identifier: `managed-task-prep-${task.id}`,
               content: {
                 title: '⏳ 15 Menit Lagi Waktunya Kerjakan Tugas',
@@ -136,6 +136,7 @@ export class TaskAlarmNotificationService {
                 data: {
                   managedTaskId: task.id,
                   isTaskAlarm: false,
+                  occurrence: task.executionDate + 'T' + task.executionTime,
                 },
               },
               trigger: {
@@ -152,7 +153,7 @@ export class TaskAlarmNotificationService {
           const isLoudAlarm =
             task.alertMode === 'ALARM' || task.alertMode === 'BOTH';
 
-          await notifications.scheduleNotificationAsync({
+          requests.push({
             identifier: `managed-task-exec-${task.id}`,
             content: {
               title: isLoudAlarm
@@ -163,6 +164,7 @@ export class TaskAlarmNotificationService {
               data: {
                 managedTaskId: task.id,
                 isTaskAlarm: isLoudAlarm,
+                occurrence: task.snoozedUntilIso ? 'snooze:' + task.snoozedUntilIso : task.executionDate + 'T' + task.executionTime,
               },
             },
             trigger: {
@@ -173,9 +175,50 @@ export class TaskAlarmNotificationService {
           });
         }
       }
-    } catch {
-      // Ignore notification scheduling errors so DB writes never fail
-    }
+      requests.sort((a, b) => Number((a.trigger as { date: Date }).date) - Number((b.trigger as { date: Date }).date));
+      let ready = requests.length <= 50;
+      for (const request of requests.slice(0, 50)) {
+        try { await notifications.scheduleNotificationAsync(request); } catch { ready = false; }
+      }
+      if (Platform.OS === 'android' && !(await notifications.getExactAlarmPermissionsAsync()).granted) ready = false;
+      return publishStatus(ready);
+    } catch { return publishStatus(false); }
+  }
+
+  static async requestExactAlarmPermission(): Promise<void> {
+    if (Platform.OS !== 'android') return;
+    const notifications = getNotifications();
+    if (!notifications) return;
+    try {
+      const permission = await notifications.getExactAlarmPermissionsAsync();
+      if (!permission.granted && permission.canAskAgain) await notifications.requestExactAlarmPermissionsAsync();
+    } catch { /* Reconciliation publishes the permission warning. */ }
+  }
+
+  static observeResponses(onResponse: (response: TaskAlarmResponse) => Promise<void>): () => void {
+    const notifications = getNotifications();
+    if (!notifications) return () => {};
+    let alive = true;
+    const handled = new Set<string>();
+    const receive = async (response: import('expo-notifications').NotificationResponse | null) => {
+      if (!alive || !response || response.actionIdentifier !== notifications.DEFAULT_ACTION_IDENTIFIER) return;
+      const { request, date } = response.notification;
+      if (!request.identifier.startsWith('managed-task-')) return;
+      const data = request.content.data;
+      if (typeof data?.managedTaskId !== 'string') return;
+      const key = request.identifier + '|' + date;
+      if (handled.has(key)) return;
+      handled.add(key);
+      try {
+        await onResponse({ taskId: data.managedTaskId, occurrence: typeof data.occurrence === 'string' ? data.occurrence : null,
+          isAlarm: data.isTaskAlarm === true });
+        if (alive) notifications.clearLastNotificationResponse();
+      } catch { handled.delete(key); }
+    };
+    try {
+      const subscription = notifications.addNotificationResponseReceivedListener(response => { void receive(response); });
+      void receive(notifications.getLastNotificationResponse());
+      return () => { alive = false; subscription.remove(); };
+    } catch { return () => { alive = false; }; }
   }
 }
-

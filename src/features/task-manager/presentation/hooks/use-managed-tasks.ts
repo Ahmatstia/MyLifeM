@@ -13,6 +13,7 @@ import {
   triggerAlarmNow,
 } from '../../data/repositories/managed-task.repository';
 import { TaskAlarmAudioService } from '../../data/services/task-alarm-audio.service';
+import { TaskAlarmNotificationService, subscribeTaskAlarmStatus } from '../../data/services/task-alarm-notification.service';
 
 export function useManagedTasks() {
   const [tasks, setTasks] = useState<ManagedTaskEntity[]>([]);
@@ -21,6 +22,8 @@ export function useManagedTasks() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [alarmWarning, setAlarmWarning] = useState<string | null>(null);
+  useEffect(() => subscribeTaskAlarmStatus(setAlarmWarning), []);
   const errorVersion = useRef(0);
   const [previewingTrackId, setPreviewingTrackId] = useState<string | null>(
     null
@@ -137,6 +140,11 @@ export function useManagedTasks() {
     alarmTracks,
     isLoading,
     error,
+    alarmWarning,
+    retryAlarms: async () => {
+      await TaskAlarmNotificationService.requestExactAlarmPermission();
+      await managedTaskRepository.syncAlarms(true);
+    },
     todayDate,
     previewingTrackId,
     refresh: loadAll,

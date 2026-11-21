@@ -1,11 +1,10 @@
 import React from 'react';
-import { useLocalSearchParams } from 'expo-router';
-import { ProjectDetailScreen } from '@/features/projects/presentation/screens/project-detail-screen';
+import { Redirect, useLocalSearchParams } from 'expo-router';
+import { getSqliteDb } from '@/db/connection';
+import { getConvertedProjectTarget } from '@/db/project-consolidation';
 
-/**
- * Thin Route Adapter for Stack: Project Detail Screen
- */
-export default function ProjectDetailRoute() {
+export default function LegacyProjectDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  return <ProjectDetailScreen projectId={id || ''} />;
+  const targetId = id ? getConvertedProjectTarget(getSqliteDb(), id) : null;
+  return <Redirect href={targetId ? { pathname: '/targets/[id]', params: { id: targetId } } : '/(tabs)/targets'} />;
 }

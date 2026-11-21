@@ -1,6 +1,6 @@
 /**
  * MyLife Mobile Design System - Color Tokens
- * Sumber kebenaran: docs/DESIGN_V2.md (Botanical Pop).
+ * Sumber kebenaran: docs/design/DESIGN_V3.md (MyLife Sprout).
  * Nama key lama dipertahankan agar seluruh layar otomatis mengikuti tema baru.
  */
 
@@ -95,8 +95,8 @@ export const colors = {
     sunSoft: '#FCEFC4',
     ink: '#1F3B34',
     inkMuted: '#5E6B64',
-    inkSubtle: '#7A867F',
-    inkFaint: '#9AA39C',
+    inkSubtle: '#5E6B64',
+    inkFaint: '#646F68',
     rose: '#E8636B',
     roseSoft: '#FBE3E1',
     teal: '#2F8F83',

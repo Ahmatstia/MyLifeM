@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -7,7 +7,7 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native';
-import { router } from 'expo-router';
+import { backOrHome } from '@/shared/utils/back-or-home';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Plus,
@@ -33,6 +33,7 @@ import {
   FieldLabel,
 } from '@/shared/ui';
 import { useTodayFocus } from '../hooks/use-today-focus';
+import type { QuickTaskCategory } from '../../domain/quick-task';
 
 const s = colors.sprout;
 
@@ -47,10 +48,11 @@ const DURATION_OPTIONS = [15, 30, 45, 60];
 
 export const CreatePriorityScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { focusItems = [], availableTasks = [], addQuickTask, addTaskToToday } = useTodayFocus();
+  const { focusItems = [], availableTasks = [], addQuickTask, addTaskToToday, isLoading, error } = useTodayFocus();
 
   const [quickTitle, setQuickTitle] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Belajar');
+  const [selectedCategory, setSelectedCategory] = useState<QuickTaskCategory>('Belajar');
+  const submitting = useRef(false);
   const [durationIdx, setDurationIdx] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -68,44 +70,30 @@ export const CreatePriorityScreen: React.FC = () => {
     });
   };
 
+  const savePriority = async (work: () => Promise<boolean>) => {
+    if (submitting.current || isLoading) return;
+    if (isFull) {
+      setErrorMessage('Maksimal 5 tugas prioritas per hari.');
+      return;
+    }
+
+    submitting.current = true; setErrorMessage(null); setIsSubmitting(true);
+    try {
+      if (await work()) backOrHome();
+      else setErrorMessage('Tugas belum tersimpan. Silakan coba lagi.');
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Tugas belum tersimpan. Silakan coba lagi.');
+    } finally { submitting.current = false; setIsSubmitting(false); }
+  };
+
   const handleQuickAdd = async () => {
-    if (!quickTitle.trim()) {
-      setErrorMessage('Judul tugas tidak boleh kosong.');
-      return;
-    }
-
-    if (isFull) {
-      setErrorMessage('Maksimal 5 tugas prioritas per hari.');
-      return;
-    }
-
-    setErrorMessage(null);
-    setIsSubmitting(true);
-
-    const success = await addQuickTask(quickTitle.trim());
-    setIsSubmitting(false);
-
-    if (success) {
-      router.back();
-    } else {
-      setErrorMessage('Gagal menambahkan tugas prioritas.');
-    }
+    if (!quickTitle.trim()) { setErrorMessage('Judul tugas tidak boleh kosong.'); return; }
+    await savePriority(() => addQuickTask(quickTitle.trim(), undefined, {
+      category: selectedCategory, ...(selectedMinutes === null ? {} : { estimatedMinutes: selectedMinutes }),
+    }));
   };
 
-  const handleSelectTask = async (taskId: string) => {
-    if (isFull) {
-      setErrorMessage('Maksimal 5 tugas prioritas per hari.');
-      return;
-    }
-
-    setErrorMessage(null);
-    const success = await addTaskToToday(taskId);
-    if (success) {
-      router.back();
-    } else {
-      setErrorMessage('Gagal menambahkan tugas ke hari ini.');
-    }
-  };
+  const handleSelectTask = (taskId: string) => savePriority(() => addTaskToToday(taskId));
 
   return (
     <Screen
@@ -120,13 +108,13 @@ export const CreatePriorityScreen: React.FC = () => {
         style={styles.keyboardContainer}
       >
         <View style={{ marginHorizontal: -space[4] }}>
-          <FormScreenHeader title="Tambah Tugas" onBack={() => router.back()} />
+          <FormScreenHeader title="Tambah Tugas" onBack={() => { if (!submitting.current) backOrHome(); }} />
         </View>
 
-        {errorMessage && (
+        {(errorMessage || error) && (
             <View style={styles.errorBox}>
               <AppText variant="bodySmall" color="onErrorContainer">
-                {errorMessage}
+                {errorMessage || error}
               </AppText>
             </View>
           )}
@@ -135,7 +123,7 @@ export const CreatePriorityScreen: React.FC = () => {
           <View style={styles.cloudHeroWrap}>
             <View style={styles.cloudOuterCard}>
               <View style={styles.cloudInnerPill}>
-                <TextInput
+                <TextInput accessibilityLabel="Nama tugas"
                   value={quickTitle}
                   onChangeText={(text) => {
                     setQuickTitle(text);
@@ -145,7 +133,7 @@ export const CreatePriorityScreen: React.FC = () => {
                   placeholderTextColor={s.inkSubtle}
                   style={styles.cloudInput}
                   autoFocus
-                  editable={!isFull}
+                  editable={!isFull && !isSubmitting && !isLoading}
                 />
                 <Sparkles size={20} color={s.sun} fill={s.sun} />
               </View>
@@ -162,16 +150,18 @@ export const CreatePriorityScreen: React.FC = () => {
                 icon={cat.icon}
                 tone={cat.tone}
                 selected={selectedCategory === cat.id}
-                onPress={() => setSelectedCategory(cat.id)}
+                onPress={() => { if (!submitting.current) setSelectedCategory(cat.id as QuickTaskCategory); }}
               />
             ))}
           </View>
 
           {/* Waktu (Optional Pill Row matching Reference UI) */}
-          <FieldLabel>Waktu</FieldLabel>
+          <FieldLabel>Durasi fokus (opsional)</FieldLabel>
           <Pressable
             onPress={cycleDuration}
             accessibilityRole="button"
+            accessibilityLabel="Pilih durasi fokus"
+            disabled={isSubmitting || isLoading || isFull}
             style={({ pressed }) => [styles.timePillRow, pressed && { opacity: 0.9 }]}
           >
             <View style={styles.timePillLeft}>
@@ -179,7 +169,7 @@ export const CreatePriorityScreen: React.FC = () => {
               <AppText style={styles.timePillText}>
                 {selectedMinutes
                   ? `${selectedMinutes} menit · ${selectedCategory}`
-                  : 'Atur waktu (opsional)'}
+                  : 'Ikuti pengaturan fokus'}
               </AppText>
             </View>
             <ChevronRight size={20} color={s.ink} strokeWidth={2.2} />
@@ -202,7 +192,7 @@ export const CreatePriorityScreen: React.FC = () => {
                           {t.title}
                         </AppText>
                         <AppText style={styles.taskOptionSub}>
-                          {t.estimatedMinutes} menit
+                          {t.estimatedMinutes} menit{t.quickCategory ? ` · ${t.quickCategory}` : ''}
                         </AppText>
                       </View>
                       <View style={styles.selectCircle}>
@@ -221,7 +211,7 @@ export const CreatePriorityScreen: React.FC = () => {
               title="Simpan"
               onPress={handleQuickAdd}
               loading={isSubmitting}
-              disabled={isFull || !quickTitle.trim()}
+              disabled={isFull || isLoading || isSubmitting || !quickTitle.trim()}
             />
           </View>
       </KeyboardAvoidingView>
@@ -277,6 +267,7 @@ const styles = StyleSheet.create({
   },
   categoryTilesRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: space[2],
   },
@@ -292,11 +283,14 @@ const styles = StyleSheet.create({
     borderColor: '#E7DFCC',
   },
   timePillLeft: {
+    minWidth: 0,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[3],
   },
   timePillText: {
+    flexShrink: 1,
     fontFamily: fontFamily.medium,
     fontSize: 14,
     color: s.ink,

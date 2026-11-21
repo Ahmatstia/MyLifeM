@@ -130,7 +130,7 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
       <AppText variant="labelLarge" style={styles.inputLabel}>
         Nama Tugas
       </AppText>
-      <TextInput
+      <TextInput accessibilityLabel="Nama tugas"
         value={name}
         onChangeText={(text) => {
           setName(text);
@@ -144,7 +144,7 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
       <AppText variant="labelLarge" style={styles.inputLabel}>
         Deskripsi (Opsional)
       </AppText>
-      <TextInput
+      <TextInput accessibilityLabel="Deskripsi tugas (opsional)"
         value={description}
         onChangeText={setDescription}
         placeholder="Masukkan deskripsi tugas (opsional)"
@@ -168,7 +168,7 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
         ).map((p) => {
           const isSelected = priority === p.key;
           return (
-            <Pressable
+            <Pressable accessibilityState={{ selected: isSelected }}
               key={p.key}
               onPress={() => setPriority(p.key)}
               style={[styles.choiceChip, isSelected && styles.choiceChipSelected]}
@@ -188,7 +188,7 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
       <AppText variant="labelLarge" style={styles.inputLabel}>
         Estimasi Waktu (Jam)
       </AppText>
-      <TextInput
+      <TextInput accessibilityLabel="Estimasi durasi dalam jam"
         value={estimatedHours}
         onChangeText={setEstimatedHours}
         placeholder="Masukkan estimasi dalam jam"

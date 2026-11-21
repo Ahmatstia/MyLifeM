@@ -20,6 +20,7 @@ async function audioCase(work, options = {}) {
       NotificationFeedbackType: { Success: 'success', Warning: 'warning' }, ImpactFeedbackStyle: { Heavy: 'heavy' },
       notificationAsync: options.haptic || (async () => {}), impactAsync: async () => { impacts++; },
     },
+    'expo-file-system': { File: class { constructor(...parts) { this.uri = parts.join('/'); this.exists = !(options.missingFile && parts[0] === 'file://missing.wav'); } write() { this.exists = true; } }, Paths: { document: 'file://test/', cache: 'file://cache' } },
     'expo-audio': {
       setAudioModeAsync: options.configure || (async () => {}),
       createAudioPlayer(uri) {
@@ -50,6 +51,10 @@ async function repositoryCase(work) {
   } finally { e.close(); globalThis.Date = RealDate; }
 }
 async function main() {
+  await check('a missing custom file falls back to the bundled/generated alarm instead of retaining a broken URI', () => audioCase(async ({ service, players }) => {
+    await service.startAlarmRinging('file://missing.wav'); assert.equal(players.length, 1);
+    assert.ok(players[0].uri.includes('file://cache')); service.stopAlarmRinging(); assert.ok(players[0].removed);
+  }, { missingFile: true }));
   await check('two simultaneous alarm starts leave no orphan player or vibration loop after stop', async () => {
     const releases = [];
     await audioCase(async ({ service, players, timers }) => {
@@ -81,7 +86,7 @@ async function main() {
     assert.ok(players.every(player => player.removed && !player.playing)); assert.equal(timers.size, 0);
   }, { pauseThrows: true }));
   await check('a player that fails during play is released', () => audioCase(async ({ service, players }) => {
-    await service.startAlarmRinging('file://a.wav'); service.stopAlarmRinging();
+    await assert.rejects(service.startAlarmRinging('file://a.wav'), /belum dapat diputar/); service.stopAlarmRinging();
     assert.ok(players.every(player => player.removed && !player.playing));
   }, { playThrows: true }));
   await check('a queued haptic callback cannot vibrate after stop', () => audioCase(async ({ service, callbacks, impacts }) => {

@@ -1,11 +1,7 @@
 import { Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 import { parseInstant } from '@/shared/utils/local-date';
-
-interface ReminderEvent {
-  id: string; title: string; startTime: string; reminderMinutes: number | null;
-  isAllDay: boolean | number; isCompleted: boolean | number;
-}
+import type { CalendarReminder as ReminderEvent } from '../../domain/weekly-reminders';
 let notificationsModule: typeof import('expo-notifications') | null = null;
 let isLoaded = false;
 export const MAX_PENDING_REMINDERS = 50;
@@ -14,8 +10,8 @@ function getNotifications() {
   isLoaded = true;
   if (Platform.OS === 'web') return null;
   try {
-    // SDK 58's barrel eagerly imports this Android push module, even for local-only usage.
-    if (Platform.OS === 'android' && !requireOptionalNativeModule('ExpoTopicSubscriptionModule')) return null;
+    // SDK 58.1.9 makes push topics optional; guard the local scheduler required by this feature.
+    if (Platform.OS === 'android' && !requireOptionalNativeModule('ExpoNotificationScheduler')) return null;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const module: typeof import('expo-notifications') = require('expo-notifications');
     module.setNotificationHandler({ handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }) });
@@ -31,14 +27,14 @@ export class AgendaNotificationService {
     const notifications = getNotifications();
     if (!notifications) return false;
     try {
-      if (Platform.OS === 'android') await notifications.setNotificationChannelAsync('agenda', { name: 'Pengingat agenda', importance: notifications.AndroidImportance.DEFAULT });
+      if (Platform.OS === 'android') await notifications.setNotificationChannelAsync('agenda', { name: 'Pengingat agenda & jadwal rutin', importance: notifications.AndroidImportance.DEFAULT });
       let permission = await notifications.getPermissionsAsync();
       if (permission.status !== 'granted' && request && permission.canAskAgain !== false) permission = await notifications.requestPermissionsAsync();
       return permission.status === 'granted' || (permission.ios !== undefined && permission.ios.status === notifications.IosAuthorizationStatus.PROVISIONAL);
     } catch { return false; }
   }
 
-  static async scheduleReminder(eventId: string, title: string, startTimeIso: string, reminderMinutes: number | null, requestPermission = true): Promise<string | null> {
+  static async scheduleReminder(eventId: string, title: string, startTimeIso: string, reminderMinutes: number | null, requestPermission = true, kind: 'agenda' | 'weekly' = 'agenda'): Promise<string | null> {
     if (reminderMinutes === null || !Number.isSafeInteger(reminderMinutes) || reminderMinutes < 0) return null;
     try {
       const trigger = parseInstant(startTimeIso).getTime() - reminderMinutes * 60_000;
@@ -46,8 +42,8 @@ export class AgendaNotificationService {
       const notifications = getNotifications();
       if (!notifications || !await this.requestPermissions(requestPermission)) return null;
       return await notifications.scheduleNotificationAsync({
-        identifier: `agenda-${eventId}`,
-        content: { title: 'Pengingat Agenda MyLife', body: reminderMinutes === 0 ? `"${title}" dimulai sekarang.` : `"${title}" akan dimulai dalam ${reminderMinutes} menit.`, sound: 'default' },
+        identifier: `${kind}-${eventId}`,
+        content: { title: kind === 'weekly' ? 'Pengingat Jadwal Rutin MyLife' : 'Pengingat Agenda MyLife', body: reminderMinutes === 0 ? `"${title}" dimulai sekarang.` : `"${title}" akan dimulai dalam ${reminderMinutes} menit.`, sound: 'default' },
         trigger: { type: notifications.SchedulableTriggerInputTypes.DATE, date: new Date(trigger), channelId: 'agenda' },
       });
     } catch { return null; }
@@ -72,13 +68,15 @@ export class AgendaNotificationService {
         const notifications = getNotifications();
         if (!notifications) return events.length === 0;
         const scheduled = await notifications.getAllScheduledNotificationsAsync();
-        for (const item of scheduled) if (item.identifier.startsWith('agenda-')) await notifications.cancelScheduledNotificationAsync(item.identifier);
+        for (const item of scheduled) if (item.identifier.startsWith('agenda-') || item.identifier.startsWith('weekly-')) await notifications.cancelScheduledNotificationAsync(item.identifier);
         if (!events.length) return true;
         if (!await this.requestPermissions(requestPermission)) return false;
-        let ready = events.length <= MAX_PENDING_REMINDERS;
+        const otherCount = scheduled.filter(item => !item.identifier.startsWith('agenda-') && !item.identifier.startsWith('weekly-')).length;
+        const available = Math.max(0, MAX_PENDING_REMINDERS - otherCount);
+        let ready = events.length <= available;
         events.sort((a, b) => parseInstant(a.startTime).getTime() - Number(a.reminderMinutes) * 60_000 - (parseInstant(b.startTime).getTime() - Number(b.reminderMinutes) * 60_000));
         // shortcut: enqueue only the 50 nearest reminders; refill on reopen/resume/midnight, and report partial coverage.
-        for (const event of events.slice(0, MAX_PENDING_REMINDERS)) if (!await this.scheduleReminder(event.id, event.title, event.startTime, event.reminderMinutes, false)) ready = false;
+        for (const event of events.slice(0, available)) if (!await this.scheduleReminder(event.id, event.title, event.startTime, event.reminderMinutes, false, event.kind)) ready = false;
         if (Platform.OS === 'android' && !(await notifications.getExactAlarmPermissionsAsync()).granted) ready = false;
         return ready;
       } catch { return false; }

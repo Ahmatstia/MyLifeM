@@ -221,7 +221,7 @@ export const SproutTopBar: React.FC<SproutTopBarProps> = ({ title, onBack, right
         </Pressable>
       )}
     </View>
-    <AppText style={[styles.topTitle, light && { color: '#FFFFFF' }]} numberOfLines={1}>
+    <AppText style={[styles.topTitle, light && { color: '#FFFFFF' }]}>
       {title}
     </AppText>
     <View style={[styles.topSide, { alignItems: 'flex-end' }]}>{right}</View>
@@ -276,7 +276,7 @@ export function PillTabs<T extends string>({ options, value, onChange, style }: 
             accessibilityState={{ selected: active }}
             style={[styles.pillTab, active && styles.pillTabActive]}
           >
-            <AppText style={[styles.pillTabText, active && styles.pillTabTextActive]} numberOfLines={1}>
+            <AppText style={[styles.pillTabText, active && styles.pillTabTextActive]}>
               {opt.label}
             </AppText>
           </Pressable>
@@ -312,7 +312,7 @@ export const ChoiceTile: React.FC<ChoiceTileProps> = ({ label, icon: Icon, tone 
       ]}
     >
       <Icon size={22} color={selected ? s.forest : t.fg} strokeWidth={2.3} />
-      <AppText style={[styles.choiceLabel, selected && styles.choiceLabelSelected]} numberOfLines={1}>
+      <AppText style={[styles.choiceLabel, selected && styles.choiceLabelSelected]}>
         {label}
       </AppText>
     </Pressable>
@@ -370,7 +370,8 @@ const styles = StyleSheet.create({
   checkDone: { backgroundColor: s.forest, borderColor: s.forest },
   tile: { alignItems: 'center', justifyContent: 'center' },
   sun: {
-    height: 58,
+    minHeight: 58,
+    paddingVertical: space[3],
     borderRadius: 29,
     backgroundColor: s.sun,
     flexDirection: 'row',
@@ -394,7 +395,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[1],
   },
   topSide: { width: 48, justifyContent: 'center' },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   topTitle: {
     flex: 1,
     textAlign: 'center',
@@ -411,7 +412,7 @@ const styles = StyleSheet.create({
   sectionLeft: { flexDirection: 'row', alignItems: 'baseline', gap: space[2], flexShrink: 1 },
   sectionTitle: { fontFamily: fontFamily.bold, fontSize: 18, color: s.ink },
   sectionHint: { fontFamily: fontFamily.medium, fontSize: 12, color: s.inkMuted },
-  sectionAction: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32 },
+  sectionAction: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44 },
   sectionActionText: { fontFamily: fontFamily.medium, fontSize: 13, color: s.ink },
   pillTabs: {
     flexDirection: 'row',
@@ -422,18 +423,22 @@ const styles = StyleSheet.create({
   },
   pillTab: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: space[2],
   },
   pillTabActive: { backgroundColor: s.forest },
-  pillTabText: { fontFamily: fontFamily.semibold, fontSize: 13, color: s.inkMuted },
+  pillTabText: { textAlign: 'center', flexShrink: 1, fontFamily: fontFamily.semibold, fontSize: 13, color: s.inkMuted },
   pillTabTextActive: { color: '#FFFFFF', fontFamily: fontFamily.bold },
   choice: {
-    width: 76,
-    height: 84,
+    flexGrow: 1,
+    flexBasis: 100,
+    minWidth: 0,
+    minHeight: 84,
+    paddingVertical: space[2],
+    paddingHorizontal: space[1],
     borderRadius: 22,
     backgroundColor: s.card,
     alignItems: 'center',
@@ -444,7 +449,7 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   choiceSelected: { backgroundColor: s.leafSoft, borderColor: s.forest },
-  choiceLabel: { fontFamily: fontFamily.medium, fontSize: 11, color: s.inkMuted },
+  choiceLabel: { textAlign: 'center', flexShrink: 1, fontFamily: fontFamily.medium, fontSize: 11, color: s.inkMuted },
   choiceLabelSelected: { fontFamily: fontFamily.bold, color: s.forest },
   fieldLabel: {
     fontFamily: fontFamily.bold,

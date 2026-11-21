@@ -29,8 +29,6 @@ const task = { id: 'task', title: 'Latihan Python: fungsi dan list', name: 'Lati
   priority: 'HIGH', status: 'TODO', estimatedMinutes: 30, estimatedHours: 0.5, actualMinutes: 0, isCompleted: false, stageId: 'stage', createdAt: now, updatedAt: now };
 const target = { id: 'target', title: 'Siap menjadi AI Engineer', categoryId: 'learning', categoryName: 'Belajar',
   description: 'Belajar, bangun portofolio, dan dokumentasikan hasilnya.', status: 'ACTIVE', priority: 'HIGH', totalTasks: 8, completedTasks: 3, progressPercent: 38, totalEstimatedHours: 12 };
-const project = { id: 'project', title: 'Demo klasifikasi teks', targetTitle: target.title, description: 'Baseline dan evaluasi yang bisa dijelaskan.',
-  status: 'ACTIVE', priority: 'HIGH', stagesCount: 1, milestonesCount: 0, taskSummary: { totalTasks: 8, completedTasks: 3, progressPercent: 38, totalEstimatedHours: 12 } };
 const stage = { id: 'stage', name: 'Bangun baseline', description: 'Mulai dari model sederhana.', status: 'IN_PROGRESS', tasks: [task], completedTasks: 0, totalTasks: 1 };
 const categories = [{ id: 'learning', name: 'Belajar', targetCount: 1 }, { id: 'career', name: 'Karier', targetCount: 0 }];
 const base = { isLoading: false, error: null, refresh: noop, addTarget: noop, addProject: noop, addStage: noop, editStage: noop,
@@ -42,7 +40,7 @@ const events = [{ id: 'event', title: 'Ruang belajar Python', eventType: 'LEARNI
 const stubs = {
   'expo-haptics': { selectionAsync: noop, impactAsync: noop, notificationAsync: noop, ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' } },
   'expo-image': { Image: native.Image },
-  'expo-router': { router: { push: noop, back: noop, navigate: noop, setParams: noop }, useFocusEffect: noop, useLocalSearchParams: () => ({}) },
+  'expo-router': { router: { canGoBack: () => true, replace: noop, push: noop, back: noop, navigate: noop, setParams: noop }, useFocusEffect: noop, useLocalSearchParams: () => ({}) },
   'expo-status-bar': { StatusBar: () => null },
   'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) },
   'lucide-react-native': icons,
@@ -50,9 +48,7 @@ const stubs = {
   '@/features/today-focus/presentation/hooks/use-today-focus': { useTodayFocus: () => todayState },
   '@/features/today-focus/presentation/hooks/use-focus-timer': { useFocusTimer: () => ({ mode: 'POMODORO', formattedTime: '25:00', isRunning: false, activeTask: null, progressRatio: 0, changeMode: noop, startTimer: noop, pauseTimer: noop, resetTimer: noop, setActiveTask: noop }) },
   '@/features/targets/presentation/hooks/use-targets': { useTargets: () => ({ ...base, targets: [target], categories, selectedCategoryId: null, setSelectedCategoryId: noop }) },
-  '@/features/projects/presentation/hooks/use-projects': { useProjects: () => ({ ...base, projects: [project], statusFilter: null, setStatusFilter: noop }) },
   '@/features/targets/presentation/hooks/use-target-detail': { useTargetDetail: () => ({ ...base, target, stages: [stage] }) },
-  '@/features/projects/presentation/hooks/use-project-detail': { useProjectDetail: () => ({ ...base, project, stages: [stage] }) },
   '@/features/agenda/presentation/hooks/use-agenda': { useAgenda: () => ({ ...base, selectedDate: '2026-10-26', setSelectedDate: noop, events, weeklyOccurrences: [], addEvent: noop, toggleEvent: noop, removeEvent: noop, toggleWeeklyOccurrence: noop, toggleWeeklyOccurrenceCancellation: noop }) },
   '@/features/agenda/presentation/hooks/use-weekly-schedules': { useWeeklySchedules: () => ({ ...base, schedules: [], schedulesByDay: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] }, selectedDay: 1, setSelectedDay: noop, addSchedule: noop, editSchedule: noop, removeSchedule: noop }) },
   '@/features/agenda/presentation/hooks/use-next-schedule': { useNextSchedule: () => ({ nextSchedule: null, refreshNextSchedule: noop }) },
@@ -76,6 +72,7 @@ function createLoader(overrides = {}) {
       if (Object.hasOwn(stubs, specifier)) return stubs[specifier];
       if (specifier === 'react-native') return {
         ...native,
+        AppState: { currentState: 'active', addEventListener: () => ({ remove: noop }) },
         useWindowDimensions: () => ({ width, height: 844, fontScale, scale: 1 }),
         Text: fontScale === 1 ? native.Text : props => {
           const style = native.StyleSheet.flatten(props.style) || {};
@@ -120,9 +117,6 @@ for (const [zone, offset] of [['Asia/Jakarta', '+07:00'], ['Asia/Makassar', '+08
 }
 if (initialTZ === undefined) delete process.env.TZ; else process.env.TZ = initialTZ;
 
-const { ProjectCard } = load('src/features/projects/presentation/components/project-card.tsx');
-assert.ok(!renderToStaticMarkup(React.createElement(ProjectCard, { project: { ...project, taskSummary: { ...project.taskSummary, progressPercent: 100 } }, onPress: noop })).includes('line-through'), '100% checklist must not cross out an ACTIVE project.');
-
 // Drive the actual form hooks: editing category must preserve the user's draft.
 const state = [], dependencies = [];
 let stateIndex = 0, effectIndex = 0;
@@ -144,6 +138,14 @@ assert.equal(selectedDay, '2027-01-07', 'Week navigation must cross the year bou
 descendants(calendar).find(element => element.props?.accessibilityLabel === 'Minggu sebelumnya').props.onPress();
 assert.equal(selectedDay, '2026-12-24');
 assert.ok(descendants(calendar).some(element => element.props?.accessibilityLabel?.startsWith('2027-01-03')), 'The displayed week may span two years.');
+for (const year of [2024, 2026, 2027]) for (let month = 1; month <= 12; month++) {
+  const date = `${year}-${String(month).padStart(2, '0')}-21`;
+  const grid = DateStripHeader({ selectedDate: date, onSelectDate: noop });
+  const dates = descendants(grid).map(element => element.props?.accessibilityLabel?.slice(0, 10)).filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value || ''));
+  assert.equal(dates.length, new Set(dates).size, 'Calendar dates must never be duplicated.');
+  assert.ok([28, 35, 42].includes(dates.length));
+  for (let day = 1; day <= new Date(year, month, 0).getDate(); day++) assert.ok(dates.includes(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`), 'Missing month date: ' + date + '/' + day);
+}
 renderForm();
 let form = renderForm();
 descendants(form).find(element => element.type === native.TextInput && element.props.value === '').props.onChangeText('My draft goal');
@@ -171,11 +173,9 @@ assert.equal(restoreDialog.props.footer.props.disabled, false);
 const screenSpecs = [
   ['today', 'today-focus', 'today-focus-screen', 'TodayFocusScreen', {}],
   ['targets', 'targets', 'target-list-screen', 'TargetListScreen', {}],
-  ['projects', 'projects', 'project-list-screen', 'ProjectListScreen', {}],
   ['agenda', 'agenda', 'agenda-screen', 'AgendaScreen', {}],
   ['settings', 'settings', 'settings-screen', 'SettingsScreen', {}],
   ['target-detail', 'targets', 'target-detail-screen', 'TargetDetailScreen', { targetId: 'target' }],
-  ['project-detail', 'projects', 'project-detail-screen', 'ProjectDetailScreen', { projectId: 'project' }],
 ];
 const previews = [];
 for (const scale of [1, 2]) {
@@ -204,20 +204,17 @@ for (const scale of [1, 2]) {
   const cancelled = { ...task, status: 'CANCELLED' };
   const emptySummary = { totalTasks: 0, completedTasks: 0, progressPercent: 0, totalEstimatedHours: 0 };
   const emptyTarget = { ...target, ...emptySummary };
-  const emptyProject = { ...project, taskSummary: emptySummary };
   const cancelledStage = { ...stage, status: 'NO_TASKS', tasks: [cancelled], completedTasks: 0, totalTasks: 0 };
   const scenarios = createLoader({
     '@/features/targets/presentation/hooks/use-targets': { useTargets: () => ({ ...base, targets: [emptyTarget], categories, selectedCategoryId: 'learning', setSelectedCategoryId: noop }) },
-    '@/features/projects/presentation/hooks/use-projects': { useProjects: () => ({ ...base, projects: [emptyProject], statusFilter: 'ACTIVE', setStatusFilter: noop }) },
     '@/features/targets/presentation/hooks/use-target-detail': { useTargetDetail: () => ({ ...base, target: emptyTarget, stages: [cancelledStage] }) },
-    '@/features/projects/presentation/hooks/use-project-detail': { useProjectDetail: () => ({ ...base, project: emptyProject, stages: [cancelledStage] }) },
     '@/features/today-focus/presentation/hooks/use-today-focus': { useTodayFocus: () => ({ ...focus, focusItems: [{ id: 'daily', taskId: task.id, task: cancelled, isCompleted: false }], availableTasks: [] }) },
   });
-  for (const [name, feature, file, exported, props] of screenSpecs.filter(spec => ['targets', 'projects', 'target-detail', 'project-detail', 'today'].includes(spec[0]))) {
+  for (const [name, feature, file, exported, props] of screenSpecs.filter(spec => ['targets', 'target-detail', 'today'].includes(spec[0]))) {
     const Component = scenarios(`src/features/${feature}/presentation/screens/${file}.tsx`)[exported];
     const html = renderToStaticMarkup(React.createElement(Component, props));
     if (name.includes('detail')) assert.ok(html.includes('Dibatalkan') && html.includes('Buka kembali'));
-    if (name.startsWith('target') || name === 'project-detail') assert.ok(html.includes('Belum ada rencana'));
+    if (name.startsWith('target')) assert.ok(html.includes('Belum ada rencana'));
     if (name === 'today') { assert.ok(html.includes('aria-checked="false"')); assert.ok(html.includes('Dibatalkan') && html.includes('Buka kembali')); assert.ok(!html.includes('Fokus pada tugas ini')); }
     previews.push([name + '-cancelled-plan' + (scale === 2 ? '-large-text' : ''), 320, html]);
   }
@@ -246,7 +243,6 @@ for (const viewport of [320, 360, 412]) {
 fontScale = 1;
 const forms = [
   ['form-target', 'targets/presentation/components/add-target-modal.tsx', 'AddTargetModal', { categories }],
-  ['form-project', 'projects/presentation/components/add-project-modal.tsx', 'AddProjectModal', {}],
   ['form-stage', 'stages/presentation/components/add-edit-stage-modal.tsx', 'AddEditStageModal', {}],
   ['form-task', 'stages/presentation/components/add-edit-task-modal.tsx', 'AddEditTaskModal', { stageId: 'stage', stageName: 'Bangun baseline' }],
   ['form-agenda', 'agenda/presentation/components/add-event-modal.tsx', 'AddEventModal', { selectedDate: '2026-10-26' }],
@@ -348,6 +344,7 @@ async function checkStartup() {
   state.length = 0; dependencies.length = 0; effects.length = 0;
   let fails = true;
   const Alarm = () => null;
+  const CalendarSync = () => null;
   const Stack = () => null; Stack.Screen = function TestStackScreen() { return null; };
   const { default: RootLayout } = createLoader({
     react: { ...fakeReact, useMemo: work => work(), useCallback: work => work },
@@ -360,6 +357,8 @@ async function checkStartup() {
     '@/db/data-revision': { useDataRevision: () => 0 },
     '@/features/settings/data/services/backup-file.service': {},
     '@/features/task-manager/presentation/components/alarm-ringing-modal': { AlarmRingingModal: Alarm },
+    '@/features/task-manager/presentation/components/managed-alarm-sync': { ManagedAlarmSync: () => null },
+    '@/features/agenda/presentation/components/calendar-reminder-sync': { CalendarReminderSync: CalendarSync },
   })('src/app/_layout.tsx');
   const render = () => { stateIndex = 0; effectIndex = 0; return RootLayout(); };
   render(); while (effects.length) effects.shift()();
@@ -367,12 +366,14 @@ async function checkStartup() {
   const blocked = render();
   assert.ok(!descendants(blocked).some(element => element.type === Stack), 'Failed migration must never mount CRUD navigation.');
   assert.ok(!descendants(blocked).some(element => element.type === Alarm), 'Alarm polling waits for a ready database.');
+  assert.ok(!descendants(blocked).some(element => element.type === CalendarSync), 'Reminder reads wait for a ready database.');
   assert.ok(descendants(blocked).some(element => element.props?.children === 'Relasi legacy bermasalah'));
   assert.ok(descendants(blocked).some(element => element.props?.title === 'Simpan salinan pemulihan'));
   fails = false;
   await descendants(blocked).find(element => element.props?.title === 'Coba lagi').props.onPress();
   assert.ok(descendants(render()).some(element => element.type === Stack), 'Successful retry opens navigation.');
   assert.equal(descendants(render()).filter(element => element.type === Alarm).length, 1, 'The app shell mounts one alarm controller.');
+  assert.equal(descendants(render()).filter(element => element.type === CalendarSync).length, 1, 'The app shell mounts one calendar reminder controller.');
 }
 async function checkAgendaForm() {
   state.length = 0; dependencies.length = 0; effects.length = 0;
@@ -403,14 +404,14 @@ async function checkAlarmControls() {
   state.length = 0; dependencies.length = 0; effects.length = 0;
   const originalTimers = { setTimeout, clearTimeout, setInterval, clearInterval };
   const timers = new Map(), events = [], alerts = [];
-  let nextId = 0, listener, releaseSave, rejectSave, writes = 0;
+  let nextId = 0, listener, appStateListener, releaseSave, rejectSave, writes = 0;
   globalThis.setTimeout = (fn, ms) => { const id = ++nextId; timers.set(id, { fn, ms }); return id; };
   globalThis.setInterval = globalThis.setTimeout;
   globalThis.clearTimeout = globalThis.clearInterval = id => timers.delete(id);
   const save = () => { events.push('save'); writes++; return new Promise((resolve, reject) => { releaseSave = resolve; rejectSave = reject; }); };
   const { AlarmRingingModal } = createLoader({
     react: fakeReact,
-    'react-native': { ...native, Alert: { alert: (...args) => alerts.push(args) } },
+    'react-native': { ...native, AppState: { currentState: 'active', addEventListener: (_event, callback) => { appStateListener = callback; return { remove: noop }; } }, Alert: { alert: (...args) => alerts.push(args) } },
     '@/features/task-manager/data/repositories/managed-task.repository': {
       subscribeRingingAlarm: fn => { listener = fn; fn(null, false); return () => { listener = null; }; },
       clearRingingAlarm: () => { events.push('clear'); listener?.(null, false); },
@@ -439,6 +440,9 @@ async function checkAlarmControls() {
     const timeout = [...timers.values()].find(timer => timer.ms === 10_000);
     assert.ok(timeout, 'A test has a ten-second safety timeout.'); timeout.fn();
     assert.equal(render(), null); assert.equal(writes, 0);
+
+    listener(alarmTask, false); events.length = 0; appStateListener('background'); assert.equal(events.at(-1), 'stop');
+    appStateListener('active'); assert.equal(events.at(-1), 'start'); listener(null, false);
 
     for (const label of ['Matikan alarm', 'Tandai tugas sudah selesai', 'Tunda alarm 5 menit', 'Tunda alarm 10 menit', 'Tunda alarm 15 menit', 'Mulai kerjakan tugas sekarang']) {
       listener(alarmTask, false); dialog = render(); events.length = 0;
@@ -486,6 +490,74 @@ async function checkWeeklyForm() {
   render().props.onClose(); assert.equal(closed, false, 'Weekly draft cannot be dismissed while saving.');
   release(true); await pending; assert.equal(closed, true);
 }
+async function checkSafeDeleteAndHonestSummary() {
+  state.length = 0; dependencies.length = 0; effects.length = 0;
+  const calls = []; let options;
+  const managed = { id: 'mtask-delete', title: 'Delete safely', categoryType: 'WORK', courseOrContext: 'Work', estimatedMinutes: 30,
+    executionDate: '2026-11-22', executionTime: '09:00', deadlineDate: '2026-11-24', deadlineTime: '10:00', isCompleted: false,
+    alertMode: 'NONE', subtasks: [], notes: null, alarmTrackName: 'Default' };
+  const { TaskManagerScreen } = createLoader({ react: fakeReact,
+    'lucide-react-native': require('lucide-react-native'),
+    'react-native': { ...native, Alert: { alert: (_title, message, buttons) => { options = buttons; assert.ok(message.includes('Catatan sesi fokus tetap disimpan')); } } },
+    '@/features/task-manager/presentation/hooks/use-managed-tasks': { useManagedTasks: () => ({ ...base, tasks: [managed], alarmTracks: [], todayDate: '2026-11-22',
+      deleteTask: async id => calls.push(id), alarmWarning: null,
+    }) },
+  })('src/features/task-manager/presentation/screens/task-manager-screen.tsx');
+  stateIndex = 0; effectIndex = 0; const screen = TaskManagerScreen();
+  descendants(screen).find(element => element.props?.accessibilityLabel === 'Hapus tugas Delete safely').props.onPress();
+  assert.deepEqual(calls, []); assert.ok(options.find(option => option.text === 'Batal'));
+  await options.find(option => option.style === 'destructive').onPress(); assert.deepEqual(calls, ['mtask-delete']);
+  const html = renderToStaticMarkup(React.createElement(load('src/features/targets/presentation/screens/target-list-screen.tsx').TargetListScreen));
+  assert.ok(html.includes('PROGRES TARGET')); assert.ok(!html.includes('Produktivitasmu') && !html.includes('+38%'));
+  console.log('PASS: destructive task deletion requires explicit confirmation; target summary uses factual progress.');
+}
+async function checkWeeklyReminderFeedback() {
+  state.length = 0; dependencies.length = 0; effects.length = 0;
+  let retries = 0;
+  const { AgendaScreen } = createLoader({ react: fakeReact,
+    '@/features/agenda/presentation/hooks/use-weekly-schedules': { useWeeklySchedules: () => ({ ...base,
+      reminderWarning: 'Jadwal tetap tersimpan. Pengingat belum aktif.', retryReminders: () => { retries++; },
+    }) },
+  })('src/features/agenda/presentation/screens/agenda-screen.tsx');
+  const render = () => { stateIndex = 0; effectIndex = 0; return AgendaScreen(); };
+  descendants(render()).find(element => element.props?.options?.some(option => option.value === 'WEEKLY_MASTER')).props.onChange('WEEKLY_MASTER');
+  const elements = descendants(render());
+  assert.ok(elements.some(element => element.props?.message?.includes('28 hari ke depan, maksimal 50')));
+  const warning = elements.find(element => element.props?.message === 'Jadwal tetap tersimpan. Pengingat belum aktif.');
+  assert.ok(warning); warning.props.onActionPress(); assert.equal(retries, 1);
+  console.log('PASS: weekly reminder window/limit and unavailable-permission warning/retry are visible in the active weekly screen.');
+}
+async function checkQuickTaskForm() {
+  state.length = 0; dependencies.length = 0; effects.length = 0;
+  let mode = 'false', calls = 0, selected = 0, backs = 0, received, release;
+  const { CreatePriorityScreen } = createLoader({ react: fakeReact,
+    'expo-router': { router: { canGoBack: () => true, back: () => { backs++; } } },
+    '@/features/today-focus/presentation/hooks/use-today-focus': { useTodayFocus: () => ({ ...focus,
+      addQuickTask: async (...args) => { calls++; received = args; if (mode === 'throw') throw new Error('Quick task disk failure');
+        if (mode === 'pending') return new Promise(resolve => { release = resolve; }); return false; },
+      addTaskToToday: async () => { selected++; return true; },
+    }) },
+  })('src/features/today-focus/presentation/screens/create-priority-screen.tsx');
+  const render = () => { stateIndex = 0; effectIndex = 0; return CreatePriorityScreen(); };
+  const find = predicate => descendants(render()).find(predicate);
+  const save = () => find(element => element.props?.title === 'Simpan').props.onPress();
+  find(element => element.type === native.TextInput).props.onChangeText('Keep quick draft');
+  find(element => element.props?.label === 'Kerja').props.onPress();
+  for (let i = 0; i < 3; i++) find(element => element.props?.accessibilityLabel === 'Pilih durasi fokus').props.onPress();
+  await save(); assert.equal(backs, 0);
+  assert.deepEqual(received, ['Keep quick draft', undefined, { category: 'Kerja', estimatedMinutes: 45 }]);
+  assert.equal(find(element => element.type === native.TextInput).props.value, 'Keep quick draft');
+  assert.equal(find(element => element.props?.label === 'Kerja').props.selected, true);
+  mode = 'throw'; await save(); assert.equal(backs, 0);
+  assert.ok(find(element => element.props?.children === 'Quick task disk failure'));
+  mode = 'pending'; const before = calls, pending = save(); await save();
+  // The saved-task card shares the same submission guard as the quick-task button.
+  const card = descendants(render()).find(element => String(element.key).endsWith(task.id) && element.props?.onPress);
+  assert.ok(card); await card.props.onPress(); assert.equal(selected, 0);
+  find(element => element.props?.onBack).props.onBack(); assert.equal(backs, 0);
+  assert.equal(calls, before + 1); release(true); await pending; assert.equal(backs, 1);
+  console.log('PASS: quick task form forwards category/duration, preserves failed drafts, guards duplicate/cross-action saves and back during pending.');
+}
 async function checkSettingsSaveFeedback() {
   state.length = 0; dependencies.length = 0; effects.length = 0;
   let settingsError = null, saving = false, succeeds = false, pendingSave = false, release;
@@ -508,7 +580,7 @@ async function checkSettingsSaveFeedback() {
   await saveCustom(); assert.equal(sheet().props.visible, true);
   assert.equal(customField('Masukkan nama kota atau kabupaten').props.value, 'My city draft');
   assert.ok(descendants(sheet()).some(element => element.props?.message === settingsError));
-  const preset = () => descendants(sheet()).find(element => element.type === native.Pressable && element.props.accessibilityState?.selected !== undefined);
+  const preset = () => descendants(sheet()).find(element => element.type === native.Pressable && element.props.accessibilityLabel?.startsWith('Pilih kota '));
   await preset().props.onPress(); assert.equal(sheet().props.visible, true, 'Preset failure keeps location picker open too.');
   succeeds = true; await preset().props.onPress(); assert.equal(sheet().props.visible, false);
   open(); pendingSave = true; const pending = saveCustom();
@@ -516,4 +588,84 @@ async function checkSettingsSaveFeedback() {
   sheet().props.onClose(); assert.equal(sheet().props.visible, true, 'Pending location save retains its draft.');
   release(); await pending; assert.equal(sheet().props.visible, false);
 }
-checkReflection().then(checkAgendaForm).then(checkStartup).then(checkAlarmControls).then(checkWeeklyForm).then(checkSettingsSaveFeedback).then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle, error state, async reflection retry, agenda validation/overnight/off reminder/save retry/double tap, restore confirmation, startup migration failure/retry, alarm test/auto-stop/all actions/storage failure/double tap/back/unmount, weekly draft/failure/retry/double tap, settings location draft/preset/failure/pending/success, 42 screen renders + 6 timer states + 10 cancellation/empty-plan scenarios + 2 agenda warning scenarios (simulated text 100/200%) and 12 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });
+function checkTargetNavigation() {
+  const pushed = [], replaced = [], selected = [], failures = [];
+  let checked = 0;
+  const verify = (name, work) => { checked++; try { work(); } catch (error) { failures.push(new Error(name, { cause: error })); console.error('FAIL navigation:', name, error.message); } };
+  const reset = () => { state.length = 0; dependencies.length = 0; effects.length = 0; stateIndex = 0; effectIndex = 0; pushed.length = 0; replaced.length = 0; selected.length = 0; };
+  const Tabs = () => null; Tabs.Screen = function TestTabScreen() { return null; };
+  const Redirect = () => null;
+  let oldProjectId = 'old-project';
+  const navLoader = createLoader({ react: fakeReact,
+    'expo-router': { ...stubs['expo-router'], Tabs, Redirect, useLocalSearchParams: () => ({ id: oldProjectId }), router: { canGoBack: () => true, push: route => pushed.push(route), replace: route => replaced.push(route), back: noop } },
+    '@/db/connection': { getSqliteDb: () => ({}) },
+    '@/db/project-consolidation': { getConvertedProjectTarget: (_db, id) => id === 'old-project' ? 'converted-target' : null },
+    '@/features/today-focus/presentation/hooks/use-focus-timer': { useFocusTimer: () => ({
+      mode: 'POMODORO', formattedTime: '25:00', isRunning: false, hasSession: false, ready: true,
+      activeTask: null, progressRatio: 0, setActiveTask: value => selected.push(value),
+    }) },
+  });
+  verify('Menu tab opens the drawer', () => {
+    reset(); const TabLayout = navLoader('src/app/(tabs)/_layout.tsx').default;
+    let shell = TabLayout(), prevented = false;
+    assert.equal(descendants(shell).filter(element => element.type === Tabs.Screen)[0].props.name, 'index');
+    descendants(shell).find(element => element.props?.options?.title === 'Menu').props.listeners.tabPress({ preventDefault() { prevented = true; } });
+    stateIndex = 0; effectIndex = 0; shell = TabLayout();
+    assert.equal(prevented, true); assert.equal(descendants(shell).find(element => element.props?.onClose).props.visible, true);
+    assert.equal(descendants(shell).find(element => element.props?.name === 'projects').props.options.href, null);
+    assert.equal(descendants(shell).find(element => element.props?.options?.title === 'Menu').props.name, 'menu');
+  });
+  verify('Only Target is offered in the drawer; it closes before navigating', () => {
+    reset(); let closed = false;
+    const Drawer = navLoader('src/shared/ui/app-sidebar-drawer.tsx').AppSidebarDrawer;
+    const items = descendants(Drawer({ visible: true, onClose: () => { closed = true; } }));
+    assert.ok(!items.some(element => element.props?.title === 'Proyek'));
+    const item = items.find(element => element.props?.title === 'Target & Peta Jalan');
+    assert.ok(item); assert.equal(item.type(item.props).props.accessibilityLabel, 'Target & Peta Jalan');
+    const original = globalThis.setTimeout; let navigate;
+    try { globalThis.setTimeout = callback => { navigate = callback; return 1; }; item.props.onPress(); }
+    finally { globalThis.setTimeout = original; }
+    assert.equal(closed, true); assert.equal(pushed.length, 0); navigate(); assert.deepEqual(pushed, ['/(tabs)/targets']);
+  });
+  verify('Quick Add retains target/task/agenda actions without a separate project choice', () => {
+    reset(); const QuickAdd = navLoader('src/features/quick-add/presentation/screens/quick-add-screen.tsx').QuickAddScreen;
+    const buttons = descendants(QuickAdd()).filter(element => element.type === native.Pressable);
+    assert.ok(!buttons.some(element => element.props.accessibilityLabel === 'Proyek'));
+    for (const [label, route] of [['Tugas Hari Ini', '/today/new'], ['Manajemen Tugas & Alarm', '/task-manager/new'], ['Target Hidup', '/targets/new'], ['Agenda & Kalender', '/agenda/new']]) {
+      const item = buttons.find(element => element.props.accessibilityLabel === label); assert.ok(item, label); item.props.onPress(); assert.equal(replaced.at(-1), route);
+    }
+  });
+  const Today = navLoader('src/features/today-focus/presentation/screens/today-focus-screen.tsx').TodayFocusScreen;
+  for (const [name, fields, route, prefix] of [
+    ['converted task', { targetId: 'converted-target', targetTitle: 'My former project' }, { pathname: '/targets/[id]', params: { id: 'converted-target' } }, 'Target · My former project'],
+    ['target without title', { targetId: 't-two' }, { pathname: '/targets/[id]', params: { id: 't-two' } }, 'Dari Target'],
+    ['cancelled target task', { targetId: 't-three', status: 'CANCELLED' }, { pathname: '/targets/[id]', params: { id: 't-three' } }, 'Dari Target'],
+    ['completed target task', { targetId: 't-four', status: 'COMPLETED', isCompleted: true }, { pathname: '/targets/[id]', params: { id: 't-four' } }, 'Dari Target'],
+    ['direct target task', { targetId: 't-one', targetTitle: 'Target' }, { pathname: '/targets/[id]', params: { id: 't-one' } }, 'Target · Target'],
+    ['managed task', { id: 'mtask-one' }, '/task-manager', 'Manajemen Tugas · Jadwal Eksekusi'],
+  ]) verify('Today opens the correct owner: ' + name, () => {
+    reset(); const fixture = { ...task, targetId: null, projectId: null, ...fields };
+    todayState = { ...focus, focusItems: [{ id: 'navigation-item', taskId: fixture.id, task: fixture, isCompleted: fixture.isCompleted }] };
+    const row = descendants(Today()).find(element => element.type === native.Pressable && element.props.accessibilityLabel?.endsWith(': ' + fixture.title));
+    assert.ok(row); row.props.onPress(); assert.deepEqual(pushed, [route]);
+    assert.equal(descendants(row).filter(element => element.type === native.Pressable).length, 1, 'Navigation must not wrap other interactive controls.');
+    assert.equal(row.props.accessibilityLabel, `Buka ${prefix}: ${fixture.title}`); assert.equal(selected.length, 0);
+  });
+  verify('An independent quick task still starts the timer without opening a project', () => {
+    reset(); todayState = focus;
+    descendants(Today()).find(element => element.type === native.Pressable && element.props.accessibilityLabel?.endsWith(': ' + task.title)).props.onPress();
+    assert.deepEqual(pushed, []); assert.equal(selected[0].id, task.id);
+  });
+  verify('Old project links redirect to Target and missing/deleted conversions return to the list', () => {
+    reset();
+    assert.equal(navLoader('src/app/(tabs)/projects.tsx').default().props.href, '/(tabs)/targets');
+    assert.equal(navLoader('src/app/projects/new.tsx').default().props.href, '/targets/new');
+    const Detail = navLoader('src/app/projects/[id].tsx').default;
+    assert.deepEqual(Detail().props.href, { pathname: '/targets/[id]', params: { id: 'converted-target' } });
+    oldProjectId = 'deleted-project'; assert.equal(Detail().props.href, '/(tabs)/targets');
+  });
+  reset(); todayState = focus;
+  if (failures.length) throw new AggregateError(failures, `${failures.length}/${checked} target navigation checks failed`);
+  console.log(`PASS: ${checked} unified target navigation checks; native router and hooks are mocked.`);
+}
+checkReflection().then(checkAgendaForm).then(checkStartup).then(checkAlarmControls).then(checkWeeklyForm).then(checkSafeDeleteAndHonestSummary).then(checkWeeklyReminderFeedback).then(checkQuickTaskForm).then(checkSettingsSaveFeedback).then(checkTargetNavigation).then(() => console.log('PASS: contrast, local dates WIB/WITA/WIT, target draft/navigation, error state, async reflection retry, agenda validation/overnight/off reminder/save retry/double tap, restore confirmation, startup migration failure/retry, alarm test/auto-stop/all actions/storage failure/double tap/back/unmount, weekly draft/failure/retry/double tap, settings location draft/preset/failure/pending/success, 30 screen renders + 6 timer states + 6 cancellation/empty-plan scenarios + 2 agenda warning scenarios (simulated text 100/200%) and 10 form renders. Native layout is not covered.')).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = originalLoad; });

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
+  AppState,
   Alert,
   View,
   Pressable,
@@ -49,14 +50,18 @@ export const AlarmRingingModal: React.FC = () => {
   useEffect(() => {
     let testStopTimer: ReturnType<typeof setTimeout> | null = null;
     let generation = 0;
+    let active = AppState.currentState !== 'background' && AppState.currentState !== 'inactive';
+    let currentTask: ManagedTaskEntity | null = null;
+    let testingAlarm = false;
     const unsubscribe = subscribeRingingAlarm((task, testing) => {
       const currentGeneration = ++generation;
       if (testStopTimer) clearTimeout(testStopTimer);
       testStopTimer = null;
       setRingingTask(task);
+      currentTask = task; testingAlarm = testing;
       setActionError(null);
       setIsTest(testing);
-      if (task) {
+      if (task && active) {
         void TaskAlarmAudioService.startAlarmRinging(task.alarmTrackUri).catch(() => {
           if (currentGeneration === generation) setActionError('Suara alarm belum dapat diputar.');
         });
@@ -70,6 +75,15 @@ export const AlarmRingingModal: React.FC = () => {
       }
     });
 
+    const appState = AppState.addEventListener('change', state => {
+      const wasActive = active;
+      active = state === 'active';
+      if (!active) TaskAlarmAudioService.stopAlarmRinging();
+      else if (!wasActive && currentTask && !testingAlarm) {
+        void TaskAlarmAudioService.startAlarmRinging(currentTask.alarmTrackUri).catch(() => setActionError('Suara alarm belum dapat diputar.'));
+      }
+    });
+
     const interval = setInterval(() => {
       const d = new Date();
       setNowClock(
@@ -77,7 +91,7 @@ export const AlarmRingingModal: React.FC = () => {
           d.getMinutes()
         ).padStart(2, '0')}`
       );
-      void managedTaskRepository.checkDueAlarmsNow().catch(error => {
+      if (active) void managedTaskRepository.checkDueAlarmsNow().catch(error => {
         console.error('[AlarmRingingModal] Gagal memeriksa alarm:', error);
       });
     }, 6000);
@@ -85,6 +99,7 @@ export const AlarmRingingModal: React.FC = () => {
     return () => {
       generation++;
       unsubscribe();
+      appState.remove();
       clearInterval(interval);
       if (testStopTimer) clearTimeout(testStopTimer);
       TaskAlarmAudioService.stopAlarmRinging();
@@ -190,7 +205,7 @@ export const AlarmRingingModal: React.FC = () => {
           <View style={styles.audioPlayingStrip}>
             <Volume2 size={16} color={s.forest} strokeWidth={2.5} />
             <AppText style={styles.audioPlayingText} numberOfLines={1}>
-              Memutar Lagu Alarm: {ringingTask.alarmTrackName}
+              Pilihan suara alarm: {ringingTask.alarmTrackName}
             </AppText>
           </View>
         </View>

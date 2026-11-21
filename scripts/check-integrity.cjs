@@ -79,23 +79,26 @@ async function migrations() {
   env = environment(); env.seedLegacy(); const before = env.state();
   await env.client.initDatabase();
   assert.ok(env.archive().includes('mylife-migration-snapshot'));
-  assert.equal(JSON.parse(env.archive()).version, 0);
-  assert.equal(env.raw.getFirstSync('SELECT target_id FROM tasks').target_id, null);
-  assert.equal(env.raw.getFirstSync('SELECT project_id FROM stages').project_id, 'projects');
+  assert.equal(JSON.parse(env.archive()).version, 1);
+  assert.equal(env.raw.getFirstSync('SELECT target_id FROM tasks').target_id, 'target-from-project-projects');
+  assert.equal(env.raw.getFirstSync('SELECT project_id FROM stages WHERE id = ?', 'stages').project_id, null);
   assert.equal(env.raw.getFirstSync('SELECT task_title FROM focus_sessions').task_title, fixture().tasks[0].title);
   const expected = fixture(); expected.focusSessions[0].taskTitle = expected.tasks[0].title;
   expected.weeklySchedules = [];
   expected.weeklyScheduleLogs = [];
-  assert.deepEqual(env.store.readBackupData(env.raw), expected);
+  const migrated = env.store.readBackupData(env.raw);
+  for (const key of ['categories', 'lifePillars', 'projects', 'milestones', 'dailyFocusItems', 'focusSessions', 'weeklySchedules', 'weeklyScheduleLogs']) assert.deepEqual(migrated[key], expected[key]);
+  assert.deepEqual(migrated.targets.find(row => row.id === 'targets'), expected.targets[0]);
+  assert.equal(migrated.tasks[0].id, expected.tasks[0].id); assert.equal(migrated.tasks[0].status, expected.tasks[0].status);
   assert.deepEqual(env.raw.getAllSync('PRAGMA foreign_key_check'), []);
   assert.equal(env.version(), 1);
   for (const spec of env.format.TABLE_SPECS) {
-    const expectedCount = ['weeklySchedules', 'weeklyScheduleLogs'].includes(spec.key) ? 0 : 1;
+    const expectedCount = ['weeklySchedules', 'weeklyScheduleLogs'].includes(spec.key) ? 0 : ['targets', 'stages', 'userSettings'].includes(spec.key) ? 2 : 1;
     assert.equal(env.raw.getFirstSync(`SELECT count(*) AS n FROM ${spec.name}`).n, expectedCount);
   }
   const upgraded = env.state(); await env.retry(); assert.equal(env.state(), upgraded);
   assert.notEqual(before, upgraded);
-  passed('v0 full dataset upgrades losslessly; redundant ownership resolves through project, stage FKs and session label survive'); env.close();
+  passed('v0 upgrades into Targets; original records, task IDs/status and session labels survive'); env.close();
   env = environment(); await env.client.initDatabase(); assert.equal(env.version(), 1);
   env.raw.execSync('DROP TABLE weekly_schedule_logs; DROP TABLE weekly_schedules;');
   assert.equal(env.raw.getAllSync("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'weekly_schedules'").length, 0);
@@ -109,7 +112,10 @@ async function migrations() {
   archived.tables[0].sql = 'DROP TABLE tasks'; archived.objects = [{ sql: 'DROP TABLE targets' }];
   const archiveJson = JSON.stringify(archived);
   await settings.restoreBackupJson(archiveJson, await settings.exportBackupJson());
-  assert.deepEqual(env.store.readBackupData(env.raw), env.format.parseBackup(archiveJson).data);
+  const archiveData = env.format.parseBackup(archiveJson).data;
+  assert.deepEqual(env.store.readBackupData(env.raw).focusSessions, archiveData.focusSessions);
+  assert.deepEqual(env.store.readBackupData(env.raw).projects, archiveData.projects);
+  assert.equal(env.raw.getFirstSync('SELECT target_id FROM tasks').target_id, 'target-from-project-projects');
   assert.equal(env.version(), 1); assert.deepEqual(env.raw.getAllSync('PRAGMA foreign_key_check'), []);
   passed('pre-migration archive restores through the current repository without executing any archived SQL'); env.close();
   env = environment(); env.seedLegacy(fixture(), true); await env.client.initDatabase();
@@ -150,7 +156,11 @@ async function migrations() {
 async function repositories() {
   const env = environment(); await env.client.initDatabase();
   const { stageRepository: stage } = env.load('src/features/stages/data/repositories/stage.repository.impl.ts');
-  const { projectRepository: project } = env.load('src/features/projects/data/repositories/project.repository.impl.ts');
+  // Legacy SQL fixtures exercise retained backup constraints, not a removed project API.
+  const project = {
+    deleteProject: async id => env.raw.runSync('DELETE FROM projects WHERE id = ?', id),
+    createProjectTask: async (id, title) => env.raw.runSync('INSERT INTO tasks (id, project_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?)', 'direct-task', id, title, '2026-10-26', '2026-10-26'),
+  };
   const { targetRepository: target } = env.load('src/features/targets/data/repositories/target.repository.impl.ts');
   const { dailyFocusRepository: focus } = env.load('src/features/today-focus/data/repositories/daily-focus.repository.impl.ts');
   const { settingsRepository: settings } = env.load('src/features/settings/data/repositories/settings.repository.impl.ts');
@@ -195,7 +205,8 @@ async function repositories() {
   original = env.state(); await assert.rejects(focus.createQuickTask('sixth', '2026-10-26'), /Maksimal/); assert.equal(env.state(), original);
   passed('sixth priority rolls back its quick task, leaving no hidden orphan');
   reset();
-  const otherStage = await stage.createStage({ parentType: 'PROJECT', parentId: 'projects', name: 'second' });
+  env.raw.execSync("INSERT INTO stages (id, parent_type, parent_id, project_id, name, sort_order, created_at, updated_at) VALUES ('second', 'PROJECT', 'projects', 'projects', 'second', 1, '2026-10-26', '2026-10-26');");
+  const otherStage = { id: 'second' };
   original = env.state(); let swaps = 0;
   env.fault(sql => { if (sql.startsWith('update "stages"') && ++swaps === 2) throw new Error('swap failure'); });
   await assert.rejects(stage.reorderStage(otherStage.id, 'UP')); env.fault(() => {}); assert.equal(env.state(), original);
@@ -219,8 +230,9 @@ async function repositories() {
   passed('session saves its original task label and survives rename/deletion');
   reset(); await project.createProjectTask('projects', 'direct project task');
   assert.equal(env.raw.getFirstSync("SELECT target_id FROM tasks WHERE title = 'direct project task'").target_id, null);
-  assert.equal((await target.getTargetById('targets')).totalTasks, 2);
-  passed('project tasks keep one owner and continue contributing to target progress');
+  env.raw.withTransactionSync(() => env.load('src/db/project-consolidation.ts').consolidateProjects(env.raw));
+  assert.equal((await target.getTargetById('target-from-project-projects')).totalTasks, 2);
+  passed('legacy tasks convert to one Target owner and remain in its progress');
   env.close();
 }
 async function main() { await migrations(); await repositories(); console.log(`PASS: ${checks} integrity/migration checks; no user database accessed.`); }

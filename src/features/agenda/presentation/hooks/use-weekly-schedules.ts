@@ -1,6 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { weeklyScheduleRepository } from '../../data/repositories/weekly-schedule.repository.impl';
+import { syncCalendarReminders, subscribeCalendarReminderStatus } from '../../data/services/calendar-reminder.service';
+import { AgendaNotificationService } from '../../data/services/agenda-notification.service';
 import type {
   WeeklyScheduleEntity,
   CreateWeeklyScheduleInput,
@@ -12,6 +14,8 @@ export function useWeeklySchedules() {
   const [selectedDay, setSelectedDay] = useState<number>(1); // 1 = Senin
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reminderWarning, setReminderWarning] = useState<string | null>(null);
+  useEffect(() => subscribeCalendarReminderStatus(setReminderWarning), []);
 
   const fetchSchedules = useCallback(async () => {
     setIsLoading(true);
@@ -54,6 +58,7 @@ export function useWeeklySchedules() {
     async (input: CreateWeeklyScheduleInput): Promise<boolean> => {
       try {
         await weeklyScheduleRepository.createWeeklySchedule(input);
+        await syncCalendarReminders(true);
         await fetchSchedules();
         return true;
       } catch (err) {
@@ -68,6 +73,7 @@ export function useWeeklySchedules() {
     async (days: number[], input: Omit<CreateWeeklyScheduleInput, 'dayOfWeek'>): Promise<boolean> => {
       try {
         await weeklyScheduleRepository.createWeeklySchedulesForDays(days, input);
+        await syncCalendarReminders(true);
         await fetchSchedules();
         return true;
       } catch (err) {
@@ -82,6 +88,7 @@ export function useWeeklySchedules() {
     async (id: string, input: UpdateWeeklyScheduleInput): Promise<boolean> => {
       try {
         await weeklyScheduleRepository.updateWeeklySchedule(id, input);
+        await syncCalendarReminders(true);
         await fetchSchedules();
         return true;
       } catch (err) {
@@ -96,6 +103,7 @@ export function useWeeklySchedules() {
     async (id: string): Promise<boolean> => {
       try {
         await weeklyScheduleRepository.deleteWeeklySchedule(id);
+        await syncCalendarReminders();
         await fetchSchedules();
         return true;
       } catch (err) {
@@ -113,6 +121,11 @@ export function useWeeklySchedules() {
     setSelectedDay,
     isLoading,
     error,
+    reminderWarning,
+    retryReminders: async () => {
+      await AgendaNotificationService.requestExactAlarmPermission();
+      await syncCalendarReminders(true);
+    },
     refresh: fetchSchedules,
     addSchedule,
     addSchedulesForDays,

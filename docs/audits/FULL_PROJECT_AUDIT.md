@@ -8,13 +8,21 @@ Metode: discovery, penelusuran source, lint/typecheck, suite regresi, reproduksi
 
 **Selama audit baseline, source aplikasi, konfigurasi, lockfile, dan database pengguna tidak diubah.** File baru audit berada di docs/audits. Repositori web yang ditemukan ketika mencari lokasi awal bukan objek penilaian laporan ini.
 
+**Paket lanjutan 22 November 2026 — sepuluh area tersisa ditangani.** AUD-10/11/14/15/18/19/21 diperbaiki pada kode/dokumen dan diverifikasi sesuai bukti bagian 11.9. AUD-13/17/22 memiliki perbaikan kode dan pengujian otomatis, tetapi tetap terbuka untuk gerbang perangkat. Posisi terbaru: **3 temuan terbuka: 1 HIGH (alarm native), 2 MEDIUM (aksesibilitas dan layout native)**. Ini bukan klaim siap rilis APK. Bukti paket: [remaining-findings-remediation.json](./remaining-findings-remediation.json).
+
+**Tindak lanjut 22 November 2026 — AUD-09/12 DIPERBAIKI.** Kategori dan durasi tugas cepat diteruskan hingga penyimpanan, daftar, timer dan backup. Pengingat jadwal rutin kini masuk antrean bersama agenda, mengikuti perubahan/selesai/pembatalan per tanggal dan restore, dengan jendela 28 hari dan batas 50 terdekat. **14 suite resmi PASS**, termasuk 24 pemeriksaan tugas cepat dan 17 pengingat mingguan; lint/typecheck dan ekspor Android PASS. Pada akhir paket tersebut tersisa **10 temuan terbuka: 2 HIGH, 8 MEDIUM, 0 LOW**. Bukti: [quick-task-weekly-remediation.json](./quick-task-weekly-remediation.json), rincian bagian 11.8. Pengiriman notifikasi OS belum diamati pada perangkat.
+
+**Keputusan produk terbaru — fitur Proyek dihapus atas instruksi pengguna.** Perencanaan aktif memakai **Target → Tahapan → Tugas → Hari Ini**. Tiga screen proyek, hooks, komponen, kontrak dan repository fitur dihapus; menu/tambah tidak lagi menawarkan Proyek. Satu proyek lama menjadi satu Target, tahapan dan milestone dikonversi tanpa mengganti ID tugas/sesi/prioritas, dan agenda beralih ke Target tersebut. Startup membuat salinan pengaman sebelum transaksi; restore memakai konversi yang sama. Tabel proyek/milestone hanya dipertahankan untuk kompatibilitas data/cadangan lama dan jurnal idempoten. Route proyek lama menjadi redirect. Instruksi ini menggantikan paket navigasi AUD-07; paragraf dan inventaris lama di bawah tetap snapshot historis. **AUD-08 dan AUD-20 ditutup sebagai RETIRED setelah fitur terkait dihapus**, tanpa klaim perbaikan selector atau peningkatan kecepatan. Pada akhir paket konsolidasi tersisa **12 temuan terbuka: 2 HIGH, 10 MEDIUM, 0 LOW**. Bukti: [project-consolidation-remediation.json](./project-consolidation-remediation.json), rincian bagian 11.7.
+
 **Tindak lanjut 21 November 2026 — AUD-01 DIPERBAIKI atas instruksi pengguna.** Parser backup kini menerima ROUTINE. Suite backup lulus 52 pemeriksaan (45 sebelumnya + 7 regresi baru), termasuk kelima tipe jadwal pada schemaVersion 1/2 dan ekspor–pemulihan rutinitas beserta log hariannya melalui repository. Lint dan typecheck lulus. Bukti penutup ada di [aud-01-remediation.json](./aud-01-remediation.json). Pengguna kemudian melaporkan seluruh uji manual backup/pemulihan rutinitas berhasil mengikuti panduan Expo Go (**USER REPORTED PASS**, tidak diamati langsung; model perangkat/OS tidak dicatat).
 
 **Paket managed task — AUD-02/03/04/16 DIPERBAIKI.** Status core menjadi acuan; transaksi SQLite sinkron melindungi metadata/core/prioritas dari penulisan sebagian dan kehilangan metadata saat operasi bersamaan. Kegagalan database diteruskan ke UI; pekerjaan notifikasi dipisahkan setelah commit. Harness resmi kini memock adapter notifikasi secara eksplisit. Delapan suite, lint dan typecheck lulus; suite baru `npm run test:managed` memuat 24 pemeriksaan. Dari 24 temuan baseline, **19 masih terbuka: 3 HIGH, 15 MEDIUM, 1 LOW**. Bukti: [managed-task-remediation.json](./managed-task-remediation.json). Pengguna kemudian melaporkan keenam uji manual alur data managed task berhasil mengikuti panduan Expo Go (**USER REPORTED PASS**, tidak diamati langsung; model perangkat/OS tidak dicatat). UI kegagalan simpan dan perilaku alarm native tetap perlu verifikasi terpisah.
 
 **Paket kontrak data/prioritas — AUD-05/06 DIPERBAIKI.** Validasi managed task dan jadwal mingguan disatukan pada form/repository/backup; JSON nested dan tipe enum diperiksa ketat. Pemeriksaan nama kategori dan penulisannya menjadi atomik, sementara categoryId target legacy tetap null. Pelepasan prioritas managed mencatat pengecualian per tanggal; refresh tidak memasukkannya kembali, penambahan manual menghapus pengecualian, dan tugas tetap tersimpan. Pengecualian bertahan melalui backup–restore; backup lama tanpa field tersebut tetap diterima. Seluruh sembilan suite, lint dan typecheck lulus, termasuk **39 pemeriksaan kontrak baru**. Pada akhir paket ini tersisa **17 temuan terbuka: 3 HIGH, 13 MEDIUM, 1 LOW**. Bukti: [data-contracts-remediation.json](./data-contracts-remediation.json). Pengguna kemudian menyatakan "ya udah aman.lanjutkan": **USER REPORTED PASS**, tidak diamati agen, tanpa rincian perangkat atau hasil tiap kasus negatif. Laporan alarm berikutnya dicatat terpisah di AUD-13.
 
-**Paket penghentian alarm dan penyimpanan — AUD-23/24 DIPERBAIKI; AUD-13 SEBAGIAN.** Pengguna melaporkan semua tombol tidak menghentikan Tes Alarm. Dua modal alarm membuat pemutar/getaran berjalan ganda; operasi audio yang masih menunggu juga dapat memulai suara setelah stop. Kini satu modal di root aplikasi mengelola alarm, stop membatalkan startup tertunda dan membersihkan pemutar/timer, serta semua aksi menghentikan suara sebelum akses penyimpanan. Tes alarm terpisah dari aksi tugas dan berhenti otomatis setelah 10 detik. Snooze tidak jatuh kembali ke menit jadwal awal; task CANCELLED tidak dipilih sebagai alarm. Batch jadwal mingguan disimpan atomik; pengaturan menampilkan error dan mempertahankan formulir/nilai persisten ketika gagal. Sebelas suite, lint dan typecheck lulus; terdapat **12 pemeriksaan alarm dan 21 pemeriksaan weekly/settings baru**. Tersisa **15 temuan terbuka: 3 HIGH, 11 MEDIUM, 1 LOW**. Bukti: [alarm-weekly-settings-remediation.json](./alarm-weekly-settings-remediation.json). AUD-13 tetap terbuka untuk lifecycle/background/cold-start/restore/media dan QA perangkat; pengujian alarm perbaikan ini belum diamati di HP.
+**Paket penghentian alarm dan penyimpanan — AUD-23/24 DIPERBAIKI; AUD-13 SEBAGIAN.** Pengguna melaporkan semua tombol tidak menghentikan Tes Alarm. Dua modal alarm membuat pemutar/getaran berjalan ganda; operasi audio yang masih menunggu juga dapat memulai suara setelah stop. Kini satu modal di root aplikasi mengelola alarm, stop membatalkan startup tertunda dan membersihkan pemutar/timer, serta semua aksi menghentikan suara sebelum akses penyimpanan. Tes alarm terpisah dari aksi tugas dan berhenti otomatis setelah 10 detik. Snooze tidak jatuh kembali ke menit jadwal awal; task CANCELLED tidak dipilih sebagai alarm. Batch jadwal mingguan disimpan atomik; pengaturan menampilkan error dan mempertahankan formulir/nilai persisten ketika gagal. Sebelas suite, lint dan typecheck lulus; terdapat **12 pemeriksaan alarm dan 21 pemeriksaan weekly/settings baru**. Pada akhir paket ini tersisa **15 temuan terbuka: 3 HIGH, 11 MEDIUM, 1 LOW**. Bukti: [alarm-weekly-settings-remediation.json](./alarm-weekly-settings-remediation.json). Pengguna kemudian menyatakan "oke alarm sudah diiuji dan sempurna,lanjut": **USER REPORTED PASS** untuk uji alarm sesudah perbaikan, tanpa observasi agen atau rincian perangkat/kasus. AUD-13 tetap terbuka untuk lifecycle/background/cold-start/restore/media; konfirmasi ini tidak menyatakan seluruh matriks native sudah lulus.
+
+**Paket navigasi Proyek — AUD-07 DIPERBAIKI.** Menu samping memiliki entry Proyek ke daftar yang sudah tersedia; Tambah Baru memiliki pilihan Proyek ke formulir pembuatan. Daftar pilihan tambah dapat digulir ketika ruang terbatas. Tugas proyek di Hari Ini membuka detail sesuai projectId dengan label Proyek; tugas target, managed dan tugas mandiri tetap mengikuti jalurnya. Suite UI lulus dengan **12 pemeriksaan navigasi baru**, termasuk ketujuh kasus entry/asal proyek yang gagal sebelum fix. Lint dan TypeScript lulus. Tersisa **14 temuan terbuka: 2 HIGH, 11 MEDIUM, 1 LOW**. Bukti: [project-navigation-remediation.json](./project-navigation-remediation.json). Navigasi/back dan layout menu tambah belum diuji langsung oleh agen di perangkat.
 
 JSON dan hash audit sebelumnya tetap merupakan snapshot sebelum remediation. Harness reproduce-findings.cjs/continuation-checks.cjs mengharapkan bug baseline (termasuk F01–F09 dan race kategori C03), dan check-source-preservation.cjs membandingkan hash baseline; alat tersebut akan menandai perubahan yang memang disengaja setelah fix. Gunakan suite resmi untuk regresi terkini. Paket kontrak menambah satu validator domain dan check-data-contracts.cjs; field metadata excludedFocusDates bersifat opsional. Tidak ada dependency, lockfile, skema SQLite, versi backup atau database pengguna yang diubah oleh alat remediation.
 
@@ -31,7 +39,7 @@ Risiko terpenting:
 1. Cadangan yang mengandung rutinitas sah tidak dapat diimpor pada baseline; **AUD-01 telah diperbaiki pada tindak lanjut di atas**.
 2. Pada baseline sinkronisasi menghapus status IN_PROGRESS/CANCELLED dan penulisan konkuren kehilangan metadata; **AUD-02/03 telah diperbaiki**.
 3. Pada baseline kegagalan core task dilaporkan berhasil; **AUD-04 telah diperbaiki** dengan rollback dan propagasi error.
-4. Jalur navigasi normal ke modul Proyek terputus.
+4. Jalur navigasi normal ke modul Proyek terputus pada baseline; **AUD-07 telah diperbaiki** dengan entry menu/tambah dan routing tugas proyek.
 5. Alarm lagu/full-screen dijanjikan UI, tetapi alur saat aplikasi ditutup atau saat notifikasi diketuk belum memiliki implementasi yang memadai.
 
 **Hasil lanjutan:** 91 assertion dari empat suite yang semula gagal bootstrap berhasil dijalankan dengan stub batas native khusus audit. Seluruh 14 screen dirender pada 320/360/412/768 px dan simulasi font 100/200% (112 kasus); 26 kasus memiliki elemen yang melampaui batas horizontal menurut pemeriksaan fixture. Ekspor JavaScript Android dan iOS berhasil. Browser aplikasi asli gagal membuka database karena SharedArrayBuffer tidak tersedia.
@@ -486,6 +494,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-07 — Modul Proyek tidak memiliki jalur masuk normal
 
+**DIPERBAIKI, otomatis terverifikasi:** entry Proyek pada menu samping dan Tambah Baru memakai route daftar/form yang sudah tersedia. Row Hari Ini memakai projectId untuk detail proyek dan menampilkan asal Proyek; target/managed/timer mandiri tetap teruji. Dua belas pemeriksaan interaksi komponen dengan router mock lulus; QA navigasi/back/layout native menunggu. Bukti baseline berikut dipertahankan sebagai riwayat; lihat bagian 11.6.
+
 - **Kategori / severity / confidence:** navigasi lintas fitur / **HIGH** / HIGH.
 - **Lokasi:** src/app/(tabs)/_layout.tsx:98–110; src/shared/ui/app-sidebar-drawer.tsx:145–179; src/features/quick-add/presentation/screens/quick-add-screen.tsx:29–62; src/features/today-focus/presentation/screens/today-focus-screen.tsx:319–327.
 - **Actual:** tab route projects dilabeli Menu lalu tabPress dicegah. Drawer tidak mempunyai item Proyek; quick add juga tidak. Klik task proyek di Hari Ini justru menuju daftar Target.
@@ -498,6 +508,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-08 — Form proyek menghilangkan target keempat dan seterusnya
 
+**RETIRED berdasarkan keputusan pengguna:** modul dan form proyek dihapus. Selector ini tidak lagi menjadi jalur aplikasi; catatan baseline berikut bukan bug aktif pada alur Target yang sekarang.
+
 - **Kategori / severity / confidence:** pilihan relasi/form / **MEDIUM** / HIGH.
 - **Lokasi:** src/features/projects/presentation/screens/create-project-screen.tsx:49–64, 150–173, khususnya slice(0, 3):163.
 - **Actual / expected:** hanya tiga target aktif terbaru dirender tanpa pencarian/“lihat semua”; seluruh target aktif seharusnya dapat dipilih.
@@ -509,6 +521,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-09 — Kategori dan durasi tugas cepat tidak disimpan
 
+**DIPERBAIKI pada 22 November 2026.** Bukti otomatis dan batas perangkat dicatat di bagian 11.8; rincian masalah berikut adalah baseline sebelum perbaikan.
+
 - **Kategori / severity / confidence:** input diabaikan / **MEDIUM** / HIGH.
 - **Lokasi:** src/features/today-focus/presentation/screens/create-priority-screen.tsx:53–61, 85, 155–183; src/features/today-focus/presentation/hooks/use-today-focus.ts:34–36; src/features/today-focus/data/repositories/daily-focus.repository.impl.ts:169–186.
 - **Actual / expected:** pengguna memilih kategori dan 15/30/45/60 menit, tetapi payload hanya title; repository selalu menyimpan estimatedMinutes 25 dan tidak menerima kategori tersebut. Pilihan yang ditawarkan harus memengaruhi hasil tersimpan.
@@ -519,6 +533,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 - **Verifikasi:** CODE REVIEWED.
 
 ### AUD-10 — UI menampilkan fungsi audio dan klaim tren yang tidak didukung
+
+**DIPERBAIKI pada paket lanjutan 22 November 2026.** Perilaku dan bukti terbaru berada di bagian 11.9; temuan berikut dipertahankan sebagai baseline historis.
 
 - **Kategori / severity / confidence:** kebenaran feedback/UX / **MEDIUM** / HIGH.
 - **Lokasi:** src/features/today-focus/presentation/components/focus-timer-widget.tsx:55–60, 88, 405–454; src/features/targets/presentation/screens/target-list-screen.tsx:39–45, 123–165.
@@ -532,6 +548,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-11 — Kalender bulanan hanya membangun lima minggu
 
+**DIPERBAIKI pada paket lanjutan 22 November 2026.** Perilaku dan bukti terbaru berada di bagian 11.9; temuan berikut dipertahankan sebagai baseline historis.
+
 - **Kategori / severity / confidence:** kalender/coverage tanggal / **MEDIUM** / HIGH.
 - **Lokasi:** src/features/agenda/presentation/components/date-strip-header.tsx:45–64, 119–156.
 - **Actual:** monthWeeks selalu 5 × 7. Tambahan missingWeekDays hanya mengakomodasi pekan tanggal terpilih.
@@ -544,6 +562,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-12 — Pilihan pengingat jadwal mingguan tidak dijadwalkan
 
+**DIPERBAIKI pada 22 November 2026.** Bukti otomatis dan batas perangkat dicatat di bagian 11.8; rincian masalah berikut adalah baseline sebelum perbaikan.
+
 - **Kategori / severity / confidence:** integrasi notifikasi / **MEDIUM** / HIGH.
 - **Lokasi:** src/features/agenda/presentation/components/add-edit-weekly-schedule-modal.tsx:41–47, 140–149; src/features/agenda/presentation/hooks/use-weekly-schedules.ts:53–95; src/features/agenda/presentation/hooks/use-agenda.ts:49–52; src/features/agenda/data/services/agenda-notification.service.ts:66–89.
 - **Actual / expected:** reminderMinutes weekly disimpan, tetapi scheduler hanya membaca agenda_events. Mengaktifkan pengingat weekly seharusnya menjadwalkan occurrence atau jelas dinyatakan belum didukung.
@@ -554,6 +574,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 - **Verifikasi:** CODE REVIEWED; tidak mengklaim notifikasi perangkat telah diamati.
 
 ### AUD-13 — Janji alarm lagu/full-screen melampaui jalur lifecycle yang tersedia
+
+**MASIH TERBUKA untuk QA perangkat.** Perbaikan kode terbaru dijelaskan di bagian 11.9; hasil mock/browser tidak menggantikan uji native.
 
 **Perbaikan parsial:** bug suara Tes Alarm yang tidak berhenti ditangani dengan satu pemilik modal/audio, pembatalan startup tertunda, cleanup audio/getaran independen, stop sebelum penyimpanan, dan pemisahan simulasi dari mutasi tugas. Pengujian baru membuktikan kegagalan sebelumnya pada 12 kasus service/repository; seluruh kasus kini lulus, disertai uji interaksi komponen untuk semua tombol/back/timeout/gagal simpan. Ini belum menutup temuan lifecycle di bawah; notifikasi OS dan audio perangkat tetap belum diamati. Lihat bagian 11.5.
 
@@ -569,6 +591,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 
 ### AUD-14 — Salat berikutnya salah pada interval setelah Subuh sebelum terbit
 
+**DIPERBAIKI pada paket lanjutan 22 November 2026.** Perilaku dan bukti terbaru berada di bagian 11.9; temuan berikut dipertahankan sebagai baseline historis.
+
 - **Kategori / severity / confidence:** waktu salat / **MEDIUM** / HIGH.
 - **Lokasi:** src/features/prayer-times/data/services/prayer-times.service.ts:24–42, 62–76.
 - **Actual:** adhan.nextPrayer mengembalikan sunrise; daftar UI tidak punya sunrise. Fallback langsung mengambil Subuh besok.
@@ -580,6 +604,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 - **Verifikasi:** VERIFIED F11 pada perhitungan/library; bukan validasi kesesuaian seluruh jadwal dengan otoritas lokal.
 
 ### AUD-15 — Managed task dihapus permanen dengan satu tap
+
+**DIPERBAIKI pada paket lanjutan 22 November 2026.** Perilaku dan bukti terbaru berada di bagian 11.9; temuan berikut dipertahankan sebagai baseline historis.
 
 - **Kategori / severity / confidence:** tindakan destruktif/UX / **MEDIUM** / HIGH.
 - **Lokasi:** src/features/task-manager/presentation/screens/task-manager-screen.tsx:201–208; src/features/task-manager/data/repositories/managed-task.repository.ts:321–334.
@@ -604,6 +630,8 @@ Register temuan lengkap di bawah merupakan rujukan tunggal untuk severity, expec
 - **Verifikasi:** VERIFIED hasil run asli. Lanjutan memakai preload audit yang hanya menutup react-native Platform dan requireOptionalNativeModule; integrity 30, calendar 33, progress 15, timer 13 assertion kemudian PASS. Ini memperluas bukti logika domain tanpa memperbaiki harness resmi atau membuktikan perilaku native.
 
 ### AUD-21 — Aplikasi web gagal membuka database pada Metro standar
+
+**DIPERBAIKI pada paket lanjutan 22 November 2026.** Perilaku dan bukti terbaru berada di bagian 11.9; temuan berikut dipertahankan sebagai baseline historis.
 
 - **Kategori / severity / confidence:** konfigurasi runtime web / **HIGH** untuk web / HIGH; tidak diterapkan sebagai kegagalan Android.
 - **Fitur / lokasi:** startup seluruh route web; metro.config.js:1–8; src/app/_layout.tsx (database initialization/recovery); expo-sqlite web worker.
@@ -650,6 +678,8 @@ AUD-07/08/09/10/11/12/13/15 juga merupakan temuan UX. Tidak ada rekomendasi rede
 
 ### AUD-17 — Kontras, label programatik, dan ukuran kontrol belum konsisten
 
+**MASIH TERBUKA untuk QA perangkat.** Perbaikan kode terbaru dijelaskan di bagian 11.9; hasil mock/browser tidak menggantikan uji native.
+
 - **Kategori / severity / confidence:** aksesibilitas / **MEDIUM** / HIGH untuk source/perhitungan.
 - **Lokasi:** src/theme/colors.ts:98; src/features/targets/presentation/screens/target-detail-screen.tsx:810–815; src/features/targets/presentation/screens/create-target-screen.tsx:138–160; src/features/projects/presentation/screens/create-project-screen.tsx:124–145; src/features/agenda/presentation/screens/create-agenda-screen.tsx:220–248; sprout/primitives.tsx:260–283 dan pillTab style; src/features/targets/presentation/screens/target-detail-screen.tsx:721–740.
 - **Actual:** teks kecil inkSubtle #7A867F di card #FFFDF8 memiliki rasio **3,73:1**, di cream **3,51:1**. Input baru tidak memiliki accessibilityLabel/labelledBy; FieldLabel hanya Text terpisah. Beberapa tombol detail 40×40 tanpa hitSlop dan pill tab minimum 40 bertentangan baseline produk 44/48.
@@ -662,6 +692,8 @@ AUD-07/08/09/10/11/12/13/15 juga merupakan temuan UX. Tidak ada rekomendasi rede
 
 ### AUD-18 — Spesifikasi desain aktif dan implementasi membentuk beberapa aturan berbeda
 
+**DIPERBAIKI pada paket lanjutan 22 November 2026.** Perilaku dan bukti terbaru berada di bagian 11.9; temuan berikut dipertahankan sebagai baseline historis.
+
 - **Kategori / severity / confidence:** konsistensi desain/maintainability / **MEDIUM** / HIGH.
 - **Lokasi:** docs/design/DESIGN_V3.md:11–20; theme/tokens.ts:59–65; shared/ui/form-control-styles.ts:4–30; sprout/primitives.tsx styles; src/features/today-focus/presentation/components/focus-timer-widget.tsx:460–489; matriks bagian 9.
 - **Actual:** dokumen Clean menetapkan kartu radius16/padding12, field48/textarea88; source memakai Sprout radius24–34/padding16–20, family Fredoka/Quicksand, field44/40/80, sedangkan timer memakai border gelap/shadow keras dan literal palet lain. Form agenda/managed padding20, form target/proyek/prioritas16 tanpa aturan pengecualian yang didokumentasikan.
@@ -673,6 +705,8 @@ AUD-07/08/09/10/11/12/13/15 juga merupakan temuan UX. Tidak ada rekomendasi rede
 - **Verifikasi:** CODE REVIEWED; tidak mengklaim overflow/clipping sudah diamati.
 
 ### AUD-22 — Kontrol dan teks melampaui layar kecil pada fixture browser
+
+**MASIH TERBUKA untuk QA perangkat.** Perbaikan kode terbaru dijelaskan di bagian 11.9; hasil mock/browser tidak menggantikan uji native.
 
 - **Kategori / severity / confidence:** responsivitas/aksesibilitas teks besar / **MEDIUM** / HIGH pada fixture, MEDIUM untuk transfer ke native.
 - **Fitur / lokasi:** src/features/today-focus/presentation/screens/create-priority-screen.tsx:157 dan 278 (categoryTilesRow); src/features/agenda/presentation/screens/create-agenda-screen.tsx (row kategori); src/features/task-manager/presentation/screens/create-managed-task-screen.tsx:343–363 dan 957–997 (durationCard/row/chip); src/features/targets/presentation/screens/target-list-screen.tsx:220 dan style trailHeaderTitle; src/features/targets/presentation/screens/target-detail-screen.tsx:788–812 (statusBadge).
@@ -732,6 +766,8 @@ Warna kontras yang diperiksa: ink/cream **11,23:1**; inkSubtle/card **3,73:1**; 
 
 ### AUD-19 — Lockfile memuat paket terdampak advisori
 
+**DIPERBAIKI pada paket lanjutan 22 November 2026.** Perilaku dan bukti terbaru berada di bagian 11.9; temuan berikut dipertahankan sebagai baseline historis.
+
 - **Kategori / severity / confidence:** supply chain/tooling / **MEDIUM** / HIGH untuk inventory; LOW untuk eksploit APK.
 - **Lokasi:** package-lock.json, package.json dependencies; npm-audit.json berisi path node/version/range/advisory.
 - **Actual:** npm audit --omit=dev --ignore-scripts --json exit1: **14 paket terdampak, 3 high, 11 moderate, 0 critical**. Paket high: @expo/cli, node-forge, zod. Lock memiliki node-forge1.4.0, zod3.25.76, glob13.0.6, minimatch10.2.6.
@@ -743,6 +779,8 @@ Warna kontras yang diperiksa: ink/cream **11,23:1**; inkSubtle/card **3,73:1**; 
 - **Verifikasi:** VERIFIED inventory npm; penetrasi/eksploit NOT REVIEWED. Referensi contoh [node-forge advisory](https://github.com/advisories/GHSA-86w9-cpqp-85rv) dan [Zod advisory](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
 
 ### AUD-20 — Membuka satu proyek membaca semua proyek dan melakukan query per item
+
+**RETIRED berdasarkan keputusan pengguna:** repository/detail proyek dihapus dari aplikasi. Tidak ada klaim benchmark/percepatan baru; jumlah query berikut adalah bukti historis implementasi yang sudah dihapus.
 
 - **Kategori / severity / confidence:** efisiensi data / **LOW** / HIGH.
 - **Lokasi:** src/features/projects/data/repositories/project.repository.impl.ts:87–162, khususnya loop116–137; src/db/connection.ts:12–16,26–42.
@@ -899,9 +937,75 @@ Panduan uji manual perbaikan alarm:
 4. Buat tugas uji terjadwal 1–2 menit mendatang dengan aplikasi tetap terbuka. Uji Matikan Alarm, Tandai Selesai dan Tunda 5 menit pada tugas uji terpisah. Suara berhenti setelah aksi; snooze tidak berbunyi lagi sebelum waktunya. Setelah itu hapus tugas uji sesuai kebutuhan.
 5. Untuk paket penyimpanan: buat jadwal pada dua hari dan pastikan masing-masing hanya sekali; ubah durasi/lokasi, pindah layar dan buka ulang. UI kegagalan simpan tetap hanya diuji secara otomatis, tanpa merusak storage perangkat.
 
-Konfirmasi manual AUD-05/06 terdahulu dicatat sebagai USER REPORTED PASS. Perbaikan alarm dan AUD-23/24 pada bagian ini masih **NATIVE RETEST PENDING**. Background, notifikasi yang diketuk setelah menit jadwal, terminated/reboot/Doze/DND, pemulihan jadwal OS dan portability file custom tetap bagian AUD-13; tidak dinyatakan selesai oleh suite foreground ini.
+Konfirmasi manual AUD-05/06 terdahulu dicatat sebagai USER REPORTED PASS. Pengguna kemudian melaporkan hasil uji alarm sesudah perbaikan "sempurna": **USER REPORTED PASS**, tidak diamati agen, tanpa rincian perangkat atau hasil tiap tombol/skenario. Uji manual AUD-23/24 tetap belum dikonfirmasi secara spesifik. Background, notifikasi yang diketuk setelah menit jadwal, terminated/reboot/Doze/DND, pemulihan jadwal OS dan portability file custom tetap bagian AUD-13; tidak dinyatakan selesai oleh konfirmasi foreground ini.
+
+### 11.6 Pemulihan akses Proyek
+
+Basis paket ini commit c45ce5dfc6c4b558b0f296318d0b5c77b23cb7a9 dengan working tree bersih saat mulai. Perubahan hanya pada tiga komponen UI, suite UI dan catatan audit. Tidak ada perubahan model penyimpanan, dependency atau route baru.
+
+- Menu → Proyek menutup drawer lalu membuka `/(tabs)/projects`; tombol tambah baru → Proyek mengganti quick-add dengan `/projects/new` memakai pola yang sudah tersedia. Menu tambah dibatasi tinggi dan daftar aksinya dapat digulir.
+- Tugas Hari Ini dengan projectId membuka `/projects/[id]` dengan ID pemilik tersebut, termasuk task selesai/dibatalkan dan fixture konteks target. Label/icon asal membedakan Proyek dan Target. Jalur target langsung, managed task, timer tugas mandiri, serta FAB/card daftar proyek tetap lulus.
+- `node scripts/check-ui.cjs`: **PASS**, termasuk **12 pemeriksaan navigasi** dengan production components, fixture hooks dan router mock. Sebelum fix, 7 dari 12 pemeriksaan entry/asal proyek gagal. Suite yang sudah ada, termasuk interaksi alarm dan penyimpanan, juga lulus. Ini tidak menjalankan navigator native atau mengukur layout menu pada layar HP.
+- TypeScript `--noEmit`: **PASS**; ESLint `src scripts --no-cache`: **PASS**. Suite database tidak diulang karena tidak ada source data/domain yang diubah; hasil sebelumnya tetap snapshot paket 11.5.
+
+Uji manual Expo Go yang diperlukan: dari Menu buka Proyek, buat proyek uji dan buka detailnya; gunakan Tambah Baru → Proyek; tambahkan task proyek ke Hari Ini lalu ketuk baris tugas dan pastikan detail proyek yang benar terbuka; periksa tombol kembali serta daftar pilihan tambah pada layar/font besar. Temuan AUD-08 tentang pilihan target keempat dalam form proyek tetap terpisah dan belum diperbaiki.
+
+### 11.7 Konsolidasi Proyek ke Target sesuai keputusan pengguna
+
+Pengguna mengklarifikasi bahwa yang berulang adalah Target dan Proyek, lalu meminta fitur Proyek dihapus. Ini perubahan arah produk yang menggantikan penambahan navigasi pada 11.6, bukan pembatalan hasil pengujian historis.
+
+- Tiga screen proyek dan seluruh fitur `src/features/projects` dihapus. Tombol Menu menggunakan route placeholder tersendiri; Hari Ini tetap layar awal. Menu/tambah/web tab tidak menawarkan Proyek, dan kategori tugas berlabel Target. Tautan lama daftar/form/detail proyek dialihkan ke Target.
+- Satu proyek menjadi satu Target tersendiri. Nama, prioritas, tanggal dan waktu pembuatan dipertahankan; kategori/pilar diwarisi dari target induk bila ada, selain itu null/Umum. Induk lama dicatat pada deskripsi, bukan relasi hierarki aktif. PLANNING menjadi ACTIVE dengan catatan Rencana; ON_HOLD menjadi PAUSED; COMPLETED tetap COMPLETED.
+- Stage lama mempertahankan ID/urutan. Milestone menjadi stage tambahan dengan catatan status/tenggat. Task dengan kedua hubungan tetap pada stage aslinya dan menyimpan keterangan milestone; task tanpa stage masuk stage milestone/Tugas. ID task, sesi, prioritas harian, status dan menit kerja tetap. Catatan proyek/milestone asli disimpan sebagai kompatibilitas backup, tanpa CRUD proyek.
+- Konversi startup menyimpan dan memverifikasi snapshot pengaman sebelum transaksi, membandingkan data setelah penulisan berkas, lalu memvalidasi hasil/limit backup dan FK. Gagal write/COMMIT atau perubahan data saat membuat snapshot membatalkan konversi. Restore lama memakai tahap staging dan transaksi aktif yang sama. Jurnal konversi mencegah duplikasi saat restart/restore dan mencegah Target terhapus muncul lagi.
+- **12 suite resmi PASS:** backup 52, integrity 30, managed 24, contracts 39, calendar 33, progress 13, timer 13, alarms 12, weekly/settings 21, consolidation 23, serta UI dan graph import. Total sepuluh suite domain/database **260 pemeriksaan bernomor**, UI/graph terpisah. Dua hook dan screen/form proyek yang dihapus tidak lagi dihitung sebagai coverage aktif. UI mencakup 11 kasus navigasi terpadu, 30 render screen, 6 timer, 6 cancellation/empty plan, 2 warning agenda, dan 10 render form. Graph database memuat 17 modul tanpa static runtime cycle.
+- TypeScript dan ESLint PASS. Ekspor Android Metro/Hermes PASS; ini bundle, bukan APK atau observasi migrasi di HP. Semua pengujian database memakai SQLite memory. Struktur database tetap versi 1; backup schemaVersion 1/2 dan arsip versi database 0/1 tetap dibaca sebagai data, tanpa menjalankan SQL dari berkas.
+
+Dokumen produk/arsitektur/desain aktif mengikuti satu modul Target. `scripts/audit-system.cjs` serta harness baseline dalam docs/audits adalah alat historis dengan ekspektasi source lama; gunakan suite resmi untuk regresi saat ini. Model perangkat dan migrasi data nyata pengguna tidak diamati oleh agen. Uji Expo Go: buka ulang proyek, periksa proyek lama tersedia di Target beserta tahapan/tugasnya, cek prioritas/sesi/agenda, buka ulang lagi untuk memastikan tidak ganda, lalu uji backup/restore pada data uji. Tabel kompatibilitas tidak dipangkas otomatis.
+
+### 11.8 Tugas cepat dan pengingat jadwal rutin
+
+Paket ini menutup AUD-09/12 pada jalur aplikasi dan pengujian otomatis, tanpa menutup AUD-13 atau menyatakan seluruh QA native lulus.
+
+- **Tugas cepat:** form meneruskan kategori Belajar/Kesehatan/Kerja/Hobi dan durasi pilihan. Estimasi memakai kolom task yang ada; metadata per tugas memakai `quick_task_details_v1:<taskId>` dalam user_settings. Penyimpanan task, metadata dan prioritas satu transaksi sinkron. Menghapus task/stage/Target membersihkan metadata dalam transaksi yang sama; kegagalan cleanup membatalkan penghapusan, termasuk API Target lama. Metadata divalidasi bersama referensi task saat backup/restore; format/database tetap versi semula.
+- **Timer:** durasi eksplisit tugas menjadi durasi countdown ketika tugas dipilih; memilih mode secara eksplisit memakai preset pengaturan mode itu. Stopwatch tetap menghitung naik. Tugas tanpa durasi eksplisit mengikuti pengaturan fokus; estimasi default tetap 25 menit. Sesi berjalan/dipulihkan memakai targetMs tersimpan sehingga perubahan task/pengaturan tidak mengubah sesi aktif.
+- **Form:** kegagalan false/throw mempertahankan judul, kategori dan durasi. Satu guard mencegah simpan ganda maupun pemilihan task lain saat simpan; tombol kembali form menunggu proses selesai. Kategori tugas cepat adalah label kegiatan tugas, berbeda dari kategori pemilik Target.
+- **Pengingat:** occurrence weekly diproyeksikan berdasarkan waktu pengiriman selama 28 hari kalender lokal. Lead lintas tengah malam dan lebih dari seminggu tetap dihitung. Namespace `weekly-<scheduleId>|<date>` terpisah dari `agenda-<id>`; rekonsiliasi keduanya menjaga notifikasi managed-task. Maksimal 50 pengingat kalender terdekat dijadwalkan; jika melebihi batas, UI menampilkan peringatan cakupan sebagian.
+- **Lifecycle data:** root memulai sinkronisasi setelah database siap, lalu pada resume/pergantian hari/zona; pemulihan data melakukan remount dan membaca ulang kedua repository. CRUD weekly, selesai/batal per tanggal, dan mutasi agenda melakukan rekonsiliasi setelah commit. Reader dipanggil saat giliran antrean berjalan agar operasi lama tidak menghidupkan kembali pengingat yang dihapus.
+- **Izin/error:** sinkronisasi pasif tidak membuka dialog izin. Simpan eksplisit/retry dapat meminta izin; native tidak tersedia/ditolak/gagal/izin exact alarm belum diberikan menjadi warning bersama pada kalender harian dan jadwal rutin. Kegagalan native tidak mengubah hasil simpan yang telah commit. Layar rutin menjelaskan jendela 28 hari/batas 50 dan perlunya membuka aplikasi berkala.
+- **Verifikasi:** 14 suite PASS: backup 52, integrity 30, managed 24, contracts 39, calendar 33, progress 13, timer 14, alarms 12, weekly/settings 21, consolidation 23, quick-task 24, weekly-reminder 17, serta UI dan graph. Total 12 suite domain/database 302 pemeriksaan bernomor. UI menambah kasus draft/argumen/double tap tugas cepat, warning/limit/retry weekly, serta guard startup sinkronisasi. Graph 18 modul tanpa static runtime cycle. Lint, typecheck dan ekspor bundle Android PASS; bukan APK.
+
+Sebelum fix, suite tugas cepat mencatat 5 PASS/18 FAIL, termasuk payload/validasi/backup yang hilang; tiga PASS cleanup awal hanya menguji ketiadaan metadata dan kemudian diperkuat untuk memastikan metadata ada serta rollback saat gagal. Suite weekly awal 0 PASS/13 FAIL: delapan kasus domain gagal karena projection baru belum ada, satu metode repository belum ada, dan empat kasus scheduler menunjukkan namespace/batas/pembatalan weekly belum didukung. Ini cakupan baru dan reproduksi boundary; bukan klaim 31 bug pengguna independen.
+
+**Batas:** semua DB uji SQLite memory, native dimock, tidak menyentuh DB pengguna. Pengiriman OS, Expo Go/build tertentu, Doze/reboot/proses mati dan suara/background belum diuji di perangkat. Jendela perlu diperbarui dengan membuka aplikasi; batas 50 ini khusus kalender, tidak mengukur kuota gabungan managed alarm pada OS. Jam yang tidak tersedia saat transisi DST ditolak dan dapat membuat rekonsiliasi melaporkan warning; zona Indonesia yang diuji tidak memakai DST. Tidak ada dependency/lockfile/schema baru. Sepuluh temuan lain tetap terbuka: AUD-10/11/13/14/15/17/18/19/21/22.
+
+Uji manual pada data uji: buat tugas Kerja 45 menit, buka ulang dan pilih untuk timer; durasi/kategori harus tetap. Lepas/tambahkan kembali prioritas lalu ekspor/restore untuk memeriksa metadata. Buat jadwal rutin hari ini beberapa menit ke depan dengan pengingat saat mulai; uji edit, selesai/batal hari ini, aktifkan kembali, matikan pengingat dan hapus sebelum waktunya. Pastikan izin ditolak menampilkan warning tanpa duplikasi data, lalu coba tombol izin dan buka ulang aplikasi. Pengiriman notifikasi harus diperiksa terpisah pada build/perangkat yang mendukung.
+
+### 11.9 Penanganan seluruh area tersisa
+
+Instruksi pengguna “LNGSUNG PERBAIKII” mengizinkan perbaikan sepuluh temuan aktif. Paket ini mempertahankan perubahan sebelumnya dan tidak menjalankan pengujian terhadap database pengguna.
+
+- **AUD-10:** pemilih ambience tanpa pemutar dan style yang tidak dipakai dihapus. Target menampilkan persentase tugas selesai yang faktual; klaim peningkatan, tanda plus dan kurva tren ilustratif dihapus. Ini tidak menambahkan pustaka/audio latar baru.
+- **AUD-11:** jumlah pekan kalender dihitung dari offset Senin dan jumlah hari bulan. Semua tanggal tersedia pada empat/lima/enam baris; baris bantuan duplikat dihapus. Suite UI memeriksa 36 bulan, termasuk tahun kabisat dan batas tahun.
+- **AUD-14:** waktu salat berikutnya dipilih dari lima salat yang ditampilkan dengan waktu acuan yang diberikan pemanggil. Sesudah Subuh menjadi Dzuhur hari yang sama; Subuh besok hanya setelah Isya berlalu. Current/next tidak lagi membaca jam global tersembunyi dari adhan. Pengujian meliputi WIB/WITA/WIT dan batas tepat waktu salat; akurasi astronomi/metode tidak dikalibrasi ulang.
+- **AUD-15:** hapus managed task meminta konfirmasi subtask/prioritas/pengingat dan menjelaskan histori sesi tetap disimpan. Native memakai dialog Alert; web memakai dialog konfirmasi browser. Batal tidak menulis data. Uji komponen dan aplikasi web nyata mencakup batal, konfirmasi, lalu reload tanpa tugas terhapus muncul kembali.
+- **AUD-18:** DESIGN_V3 menjadi acuan Sprout sesuai UI yang telah digunakan. Kontrak peran SoftCard/hero/timer/pill dijelaskan sebagai pengecualian yang disengaja, bukan mencampur spesifikasi Clean/Botanical Pop. Komentar sumber warna diperbarui. Identitas visual dipertahankan, dengan wrapping/header agar label tetap terbaca pada teks besar.
+- **AUD-19:** npm audit awal paket ini mencatat 19 paket terdampak (3 high/16 moderate). Perbaikan semver tanpa force dan `expo install --fix` menyelaraskan SDK 58 patch; Expo tetap major 58. Drizzle Kit tidak memiliki pemakai/config/script pada repo dan dihapus, sedangkan Drizzle ORM tetap digunakan. Override minimatch **11.0.1 hanya untuk @expo/fingerprint** menutup advisory tersisa; constructor/match/negate/pattern dan helper ignore/directory fingerprint diuji pada Node 22. Jangan menyebarkan override major ke konsumen lain; tinjau/hapus ketika fingerprint menerima versi aman secara langsung. npm audit penuh terakhir: **0 kerentanan yang diketahui registry saat pemeriksaan**. Ini bukan jaminan tidak ada kerentanan yang belum dilaporkan.
+- **AUD-21:** Metro dan konfigurasi Expo Hosting mengirim COOP same-origin/COEP credentialless. Bootstrap web menunggu openDatabaseAsync sebelum migrasi Drizzle sinkron; permintaan bersamaan berbagi promise, kegagalan bisa dicoba ulang. Route form yang dibuka langsung memiliki fallback pulang saat tidak ada history. Row Hari Ini memisahkan aksi buka dari checkbox/play/hapus agar tidak membuat button bersarang dan hydration error. Profil Chromium baru memakai aplikasi/database web nyata, bukan fixture/proxy header. Startup, create/read/update, reload, batal hapus dan hapus permanen diuji. Hosting selain konfigurasi yang disediakan masih harus memasang header tersebut di servernya.
+- **AUD-13, sebagian:** coordinator root setelah DB siap menjadwalkan ulang managed alarm pada launch/resume/pergantian kalender dan remount restore. Tap/cold-start notification ditangani, dideduplikasi dan diverifikasi terhadap ID/occurrence/status aktif agar notifikasi lama tidak menghidupkan alarm yang berubah/selesai. Alarm terlewat dapat ditampilkan ketika kembali dalam **24 jam**, tidak mengejar backlog tanpa batas. Snooze tetap memakai occurrence tersendiri. Lagu dihentikan saat background dan dipulihkan saat kembali aktif untuk alarm yang sedang tampil; pemeriksaan foreground tidak berjalan saat background. Scheduler memberi warning izin/kegagalan/cakupan, menjaga namespace lain, serta membatasi managed ke 50 terdekat. Kalender mengurangi slotnya berdasarkan notifikasi lain yang sudah ada. Patch expo-notifications 58.1.9 membuat topic push opsional; guard kini memeriksa scheduler lokal, sehingga ketiadaan modul push tidak memblokir local notification secara sengaja.
+- **Media/restore alarm:** data managed dibaca ulang setelah restore. File kustom yang hilang memakai nada bawaan; copy file gagal dan playback gagal diteruskan sebagai error, bukan sukses palsu. Penyimpanan track kustom atomik dan tidak menelan kegagalan database. Backup tetap JSON data, bukan arsip berkas media; UI pemulihan menjelaskan bahwa lagu kustom perlu dipilih ulang bila tidak tersedia. Tidak menjanjikan pemutaran lagu/full-screen ketika proses aplikasi tertutup: jalur yang didukung memakai notifikasi OS dan membuka aplikasi lewat tap.
+- **AUD-17, sebagian:** 42 input yang belum bernama diberi label stabil (50 input aktif seluruhnya tercakup pemeriksaan AST), 21 pilihan mendapat state selected eksplisit; token subtle/faint diperbaiki, shared input minimum 48/textarea88, kontrol utama/back diperbesar atau tetap mempunyai hitSlop. Judul/label penting dapat membungkus. Nama kota preset juga eksplisit. TalkBack, fokus, pengumuman error dan area tekan native masih perlu diamati.
+- **AUD-22, sebagian:** baris kategori, estimasi, header, status/progres, lagu dan snooze dapat membungkus; text/container yang perlu menyusut diberi batas flex yang sesuai. Fixture aktual 11 screen aktif × 4 lebar × 2 skala = **88 kasus**; semua tanpa overflow horizontal terukur. Screenshot 320/font200 diperiksa pada form managed, Target dan detail Target. Fixture tidak merender semua hasil effect, keyboard atau native safe area; ilustrasi dari expo-image/SSR bukan bukti aset native telah diamati.
+
+**Verifikasi akhir:** 19 suite resmi PASS. Empat belas suite bernomor memuat **389 pemeriksaan**; UI, graph import (18 modul), bootstrap web, 88 fixture layout dan aplikasi web nyata terpisah. Lint dan TypeScript PASS; ekspor Android Metro/Hermes PASS (bukan APK). Expo Doctor **20/20 PASS**, expo install --check menyatakan dependensi sesuai. Browser aplikasi akhir tidak memiliki page error maupun console error/hydration.
+
+Suite resmi, log lint/typecheck, metadata ekspor Android, npm audit, hasil browser dan hash perubahan dicatat pada `remaining-findings-remediation.json`. Angka dan hash paket lama tetap snapshot historis. Script browser memerlukan Playwright yang tersedia pada runtime/variabel MYLIFE_PLAYWRIGHT_MODULE; tidak menambah dependency produksi untuk alat pengujian.
+
+**Gerbang yang tetap terbuka:** AUD-13 memerlukan observasi di perangkat untuk foreground/background/proses mati/tap/cold start/Doze/reboot/izin/restore/media. AUD-17 memerlukan TalkBack/keyboard/teks besar; AUD-22 memerlukan lebar kecil, safe area dan keyboard native. Ekspor Hermes bukan APK dan mock bukan pengiriman notifikasi OS. Tidak ada proses yang menjamin wake/full-screen audio kustom ketika aplikasi ditutup.
 
 ## 12. Prioritized Remediation Backlog
+
+**Status terbaru:** tersisa AUD-13/17/22 untuk QA perangkat setelah perbaikan kode pada 11.9. Tabel berikut mempertahankan urutan backlog audit awal.
 
 Effort relatif: S = satu area kecil; M = beberapa boundary/tes; L = lifecycle/native lintas fitur. Bukan estimasi hari kerja.
 
@@ -922,7 +1026,7 @@ Effort relatif: S = satu area kecil; M = beberapa boundary/tes; L = lifecycle/na
 | Sesudah integritas; awal bila web memang didukung | AUD-21 | HIGH (web) / M | Startup SQLite web, worker, CRUD dan persistensi reload; proxy audit belum membuktikan fix |
 | Bersama aksesibilitas/form | AUD-22 | MEDIUM / M | Tutup overflow fixture kecil/teks besar, lalu cek Android/keyboard/native font |
 
-**AUD-01/02/03/04/05/06/16/23/24 telah diterapkan dan diverifikasi otomatis.** AUD-01, alur managed dan paket AUD-05/06 mendapat konfirmasi manual pengguna, dengan batas yang dicatat pada tiap bukti. AUD-13 telah mendapat perbaikan penghentian foreground/test tetapi tetap terbuka. Berikutnya: uji ulang alarm/perbaikan penyimpanan di perangkat, akses Proyek (AUD-07), dan lifecycle alarm. Dependensi serta temuan lain tetap terbuka.
+**AUD-01/02/03/04/05/06/07/09/12/16/23/24 memiliki bukti perbaikan otomatis historis.** AUD-07 digantikan penghapusan fitur Proyek; AUD-08/20 RETIRED berdasarkan keputusan produk tersebut. AUD-01, alur managed, paket AUD-05/06 dan penghentian alarm mendapat konfirmasi manual pengguna dengan batas yang dicatat. AUD-13 tetap terbuka di luar perbaikan foreground/test. AUD-09/12 kini memiliki bukti otomatis; berikutnya QA konversi Target/tugas cepat/pengingat rutin di perangkat dan lifecycle alarm. Dependensi serta temuan lain tetap terbuka.
 
 ## 13. Regression Risk
 
@@ -946,7 +1050,7 @@ Proyek memiliki fungsi lokal dan mekanisme proteksi data yang nyata. Keberhasila
 
 Coverage source mencakup seluruh 10 modul, 24 kemampuan, 14 screen, 16 file form/54 TextInput dan 51 file komponen, termasuk pemeriksaan source template lanjutan. Seluruh screen mendapat fixture browser (112 kasus, 28 screenshot), tetapi hydration, state data hasil effect, ilustrasi expo-image, dan interaksi native tidak tercakup. Nilai target legacy terbukti terjaga di backup; authoring/editor legacy belum didukung penuh. **Audit runtime native belum selesai** karena tidak ada perangkat dan emulator gagal boot; laporan ini tidak menyatakan seluruh fitur VERIFIED.
 
-Pada audit baseline tidak ada perbaikan source, penambahan dependency atau perubahan data pengguna; hash 162 source saat itu dicatat di continuation-verification.json. AUD-01 dan paket AUD-02/03/04/16 sudah diperbaiki dengan konfirmasi manual alur pengguna. Paket kontrak menutup AUD-05/06 melalui validasi bersama, kategori atomik, null legacy yang jujur, dan opt-out prioritas per tanggal. Paket terbaru menutup AUD-23/24 serta memperbaiki sebagian AUD-13 untuk penghentian alarm foreground/test. Hasil tiap paket tersimpan pada aud-01-remediation.json, managed-task-remediation.json, data-contracts-remediation.json dan alarm-weekly-settings-remediation.json; angka/hash lama tetap snapshot saat pengujian masing-masing. Tidak ada dependency, lockfile, skema SQLite, versi backup atau database pengguna yang diubah oleh alat remediation. Tersisa 15 temuan terbuka (3 HIGH, 11 MEDIUM, 1 LOW); uji native dibedakan pada bagian 11.2–11.5.
+Pada audit baseline tidak ada perbaikan source, penambahan dependency atau perubahan data pengguna; hash 162 source saat itu dicatat di continuation-verification.json. AUD-01 dan paket AUD-02/03/04/16 sudah diperbaiki dengan konfirmasi manual alur pengguna. Paket kontrak menutup AUD-05/06 melalui validasi bersama, kategori atomik, null legacy yang jujur, dan opt-out prioritas per tanggal. Paket penyimpanan menutup AUD-23/24 serta memperbaiki sebagian AUD-13 untuk penghentian alarm foreground/test; pengguna melaporkan uji alarm tersebut berhasil. AUD-07 sempat memperbaiki jalur Proyek, kemudian digantikan keputusan pengguna untuk menghapus modul tersebut dan memindahkan data lama ke Target. AUD-08/20 RETIRED sesuai penghapusan fitur. Bukti tiap paket tersimpan pada aud-01-remediation.json, managed-task-remediation.json, data-contracts-remediation.json, alarm-weekly-settings-remediation.json, project-navigation-remediation.json dan project-consolidation-remediation.json; angka/hash lama tetap snapshot saat pengujian masing-masing. Tidak ada dependency, lockfile atau database pengguna yang disentuh oleh alat pengujian; konversi data akan dijalankan oleh aplikasi pada startup/restore dengan salinan pengaman dan transaksi. AUD-09/12 kemudian diperbaiki; bukti terbaru pada quick-task-weekly-remediation.json. Paket berikutnya menangani sepuluh area tersebut; tujuh temuan ditutup dan tiga tetap terbuka pada gerbang perangkat: AUD-13/17/22 (1 HIGH, 2 MEDIUM). Bukti terbaru remaining-findings-remediation.json dan bagian 11.9. Tidak ada klaim seluruh QA native lulus.
 
 ### Lampiran: baseline dan referensi verifikasi
 

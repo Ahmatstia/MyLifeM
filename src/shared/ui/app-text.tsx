@@ -37,6 +37,8 @@ export const AppText: React.FC<AppTextProps> = ({
   const finalColor = flattenedStyle.color || resolvedColor || colors.onSurface;
 
   const combinedStyle: TextStyle = {
+    minWidth: 0,
+    flexShrink: 1,
     fontSize: typoStyle.fontSize,
     lineHeight: typoStyle.lineHeight,
     fontFamily: FAMILY_BY_WEIGHT[typoStyle.fontWeight] ?? fontFamily.regular,

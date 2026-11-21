@@ -94,7 +94,7 @@ export const targetsRelations = relations(targets, ({ one, many }) => ({
 }));
 
 // ==========================================
-// 3. PROJECTS
+// 3. Legacy projects: retained only for old backups and the Target conversion journal.
 // ==========================================
 export const projects = sqliteTable(
   'projects',

@@ -1,4 +1,5 @@
 import type { TaskStatus } from '@/shared/domain/task-status';
+import type { QuickTaskCategory } from '../quick-task';
 /**
  * Today & Focus Domain Entities
  * Pure domain models and timer state representations.
@@ -18,12 +19,12 @@ export const TIMER_PRESETS: Record<FocusTimerMode, number[]> = {
 };
 
 export interface TaskEntity {
+  quickCategory?: QuickTaskCategory | null;
+  focusMinutes?: number | null;
   id: string;
-  projectId: string | null;
   targetId: string | null;
   milestoneId: string | null;
   targetTitle?: string | null;
-  projectTitle?: string | null;
   title: string;
   description: string | null;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';

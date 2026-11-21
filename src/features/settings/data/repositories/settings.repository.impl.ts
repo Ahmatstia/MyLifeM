@@ -3,7 +3,6 @@ import { db, getSqliteDb, TABLES_DDL, INDEXES_DDL } from '@/db/client';
 import {
   userSettings,
   targets,
-  projects,
   tasks,
   focusSessions,
   agendaEvents,
@@ -18,6 +17,7 @@ import { parseBackup, serializeBackup } from '../backup-format';
 import { readBackupData, replaceBackupData, replaceIfUnchanged } from '../backup-store';
 import { INTEGRITY_DDL } from '@/db/integrity';
 import { setPrayerLocation } from '@/features/prayer-times/data/prayer-location-store';
+import { consolidateProjects } from '@/db/project-consolidation';
 
 export class SettingsRepositoryImpl implements SettingsRepository {
   private readSettings(connection: Pick<typeof db, 'select'>): UserSettingsEntity {
@@ -215,14 +215,12 @@ export class SettingsRepositoryImpl implements SettingsRepository {
   async getDatabaseStats(): Promise<DatabaseStats> {
     try {
       const allTargets = await db.select().from(targets);
-      const allProjects = await db.select().from(projects);
       const allTasks = await db.select().from(tasks);
       const allFocus = await db.select().from(focusSessions);
       const allAgenda = await db.select().from(agendaEvents);
 
       return {
         targetsCount: allTargets.length,
-        projectsCount: allProjects.length,
         tasksCount: allTasks.length,
         focusSessionsCount: allFocus.length,
         agendaEventsCount: allAgenda.length,
@@ -231,7 +229,6 @@ export class SettingsRepositoryImpl implements SettingsRepository {
       console.error('[SettingsRepositoryImpl] getDatabaseStats error:', error);
       return {
         targetsCount: 0,
-        projectsCount: 0,
         tasksCount: 0,
         focusSessionsCount: 0,
         agendaEventsCount: 0,
@@ -252,8 +249,11 @@ export class SettingsRepositoryImpl implements SettingsRepository {
     try {
       staging.execSync('PRAGMA foreign_keys = ON;');
       staging.execSync(TABLES_DDL + INDEXES_DDL);
-      staging.withTransactionSync(() => replaceBackupData(staging, backup.data));
       staging.execSync(INTEGRITY_DDL);
+      staging.withTransactionSync(() => {
+        replaceBackupData(staging, backup.data); consolidateProjects(staging);
+        parseBackup(serializeBackup(readBackupData(staging)));
+      });
     } finally {
       staging.closeSync();
     }

@@ -154,6 +154,7 @@ async function main() {
         syncWithCoreTasksAndToday: async () => {}, getAllTasks: () => new Promise(resolve => { releaseRead = resolve; }), getAllAlarmTracks: async () => [],
         createTask: fail, toggleTaskCompletion: fail, toggleSubtask: fail, deleteTask: fail,
       }, subscribeManagedTasksChange: () => () => {} },
+      '../../data/services/task-alarm-notification.service': { TaskAlarmNotificationService: {}, subscribeTaskAlarmStatus: () => () => {} },
       '../../data/services/task-alarm-audio.service': { TaskAlarmAudioService: { stopPreview: () => {} } },
     });
     const hook = h.load('src/features/task-manager/presentation/hooks/use-managed-tasks.ts').useManagedTasks;

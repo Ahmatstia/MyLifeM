@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import Svg, { Path, Circle } from 'react-native-svg';
 import { Plus, Sparkles, CheckCircle2, Clock, Star, Compass } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { space, fontFamily } from '@/theme/tokens';
@@ -121,13 +120,13 @@ export const TargetListScreen: React.FC = () => {
 
                 <View style={styles.growthRightCol}>
                   <View style={styles.growthPillBadge}>
-                    <AppText style={styles.growthPillBadgeText}>LONJAKAN FOKUS</AppText>
+                    <AppText style={styles.growthPillBadgeText}>PROGRES TARGET</AppText>
                   </View>
                   <AppText style={styles.growthHeadline}>
-                    Produktivitasmu{'\n'}meningkat!
+                    Tugas yang{'\n'}terselesaikan
                   </AppText>
                   <AppText style={styles.growthPercentText} tabularNums>
-                    {`+${progress}%`}
+                    {`${progress}%`}
                   </AppText>
                   <AppText style={styles.growthCaptionText}>
                     {totalTasks > 0
@@ -135,34 +134,6 @@ export const TargetListScreen: React.FC = () => {
                       : 'Belum ada rencana'}
                   </AppText>
                 </View>
-              </View>
-
-              {/* Multi-layered Organic Meadow Trend Line */}
-              <View style={styles.waveChartWrap}>
-                <Svg width="100%" height={64} viewBox="0 0 320 64" preserveAspectRatio="none">
-                  {/* Soft background hill */}
-                  <Path
-                    d="M0 54 C48 38 92 48 144 30 C196 12 242 28 320 14 L320 64 L0 64 Z"
-                    fill="#E5F0D2"
-                    opacity={0.7}
-                  />
-                  {/* Foreground vibrant meadow wave */}
-                  <Path
-                    d="M0 52 C36 26 68 46 108 30 C148 14 184 38 228 18 C264 4 292 22 320 10 L320 64 L0 64 Z"
-                    fill={s.leafSoft}
-                  />
-                  {/* Hand-drawn forest green trend line */}
-                  <Path
-                    d="M0 52 C36 26 68 46 108 30 C148 14 184 38 228 18 C264 4 292 22 320 10"
-                    stroke={s.forest}
-                    strokeWidth={3.2}
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-                  {/* Milestone nodes along the wave */}
-                  <Circle cx={108} cy={30} r={4.5} fill="#FFFDF8" stroke={s.forest} strokeWidth={2.5} />
-                  <Circle cx={228} cy={18} r={5} fill={s.sun} stroke={s.forest} strokeWidth={2.5} />
-                </Svg>
               </View>
 
               {/* Integrated 3-Column Summary Dock ("Ringkasan Target") */}
@@ -216,7 +187,7 @@ export const TargetListScreen: React.FC = () => {
                 <View style={styles.trailHeaderIcon}>
                   <Compass size={16} color={s.forest} strokeWidth={2.5} />
                 </View>
-                <View>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <AppText style={styles.trailHeaderTitle}>Peta Perjalanan Target</AppText>
                   <AppText style={styles.trailHeaderSub}>
                     Ketuk salah satu misi untuk mengatur tahapan & langkah
@@ -280,6 +251,8 @@ const styles = StyleSheet.create({
     paddingBottom: space[1],
   },
   headerTextCol: {
+    minWidth: 0,
+    flex: 1,
     gap: 2,
   },
   headerTitle: {
@@ -331,6 +304,7 @@ const styles = StyleSheet.create({
   },
   growthTopRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: space[3],
@@ -340,7 +314,9 @@ const styles = StyleSheet.create({
     marginBottom: -8,
   },
   growthRightCol: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 140,
+    minWidth: 0,
     alignItems: 'flex-end',
     gap: 3,
     paddingRight: space[1],
@@ -378,9 +354,6 @@ const styles = StyleSheet.create({
     color: s.inkMuted,
     textAlign: 'right',
   },
-  waveChartWrap: {
-    marginTop: -4,
-  },
   ringkasanDock: {
     backgroundColor: '#FAF5E8',
     paddingHorizontal: space[4],
@@ -391,6 +364,7 @@ const styles = StyleSheet.create({
     gap: space[3],
   },
   ringkasanHeaderRow: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -446,6 +420,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   trailHeaderLeft: {
+    minWidth: 0,
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',

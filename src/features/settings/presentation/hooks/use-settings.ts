@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { notifyDataRestored } from '@/db/data-revision';
-import { AgendaNotificationService } from '@/features/agenda/data/services/agenda-notification.service';
+import { syncCalendarReminders } from '@/features/agenda/data/services/calendar-reminder.service';
+import { managedTaskRepository } from '@/features/task-manager/data/repositories/managed-task.repository';
 import { parseBackup, summarizeBackup } from '../../data/backup-format';
 import { pickBackupFile, saveBackupFile, saveRecoveryBackup, readRecoveryBackup } from '../../data/services/backup-file.service';
 import type {
@@ -16,7 +17,6 @@ export function useSettings() {
   const [settings, setSettings] = useState<UserSettingsEntity>(DEFAULT_SETTINGS);
   const [stats, setStats] = useState<DatabaseStats>({
     targetsCount: 0,
-    projectsCount: 0,
     tasksCount: 0,
     focusSessionsCount: 0,
     agendaEventsCount: 0,
@@ -121,7 +121,7 @@ export function useSettings() {
   });
   const restoreBackup = () => runBackupAction('restore', async () => {
     if (!pendingBackup) return;
-    const document = parseBackup(pendingBackup.json);
+    parseBackup(pendingBackup.json);
     const safety = await settingsRepository.exportBackupJson();
     await saveRecoveryBackup(safety);
     setRecoveryAvailable(true);
@@ -130,8 +130,8 @@ export function useSettings() {
     notifyDataRestored();
     // Everything after commit is feedback/side effects; failure here must never claim a rolled-back restore.
     let remindersReady = false;
-    try { remindersReady = await AgendaNotificationService.reconcileAfterRestore(document.data.agendaEvents); } catch { /* reported below */ }
-    const message = 'Data berhasil dipulihkan. Cadangan data sebelumnya tersedia di Pengaturan.'
+    try { await managedTaskRepository.syncAlarms(); remindersReady = await syncCalendarReminders(); } catch { /* reported below */ }
+    const message = 'Data berhasil dipulihkan. Cadangan data sebelumnya tersedia di Pengaturan. Berkas lagu kustom tidak ikut dicadangkan; pilih ulang jika tidak tersedia di perangkat ini.'
       + (remindersReady ? '' : ' Pengingat belum dapat diselaraskan; periksa izin dan jadwal agenda di perangkat.');
     if (Platform.OS === 'web') window.alert(message);
     else Alert.alert('Pemulihan selesai', message);

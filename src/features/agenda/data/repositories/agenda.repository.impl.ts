@@ -71,7 +71,7 @@ export class AgendaRepositoryImpl implements AgendaRepository {
     const newRow = {
       id,
       targetId: input.targetId || null,
-      projectId: input.projectId || null,
+      projectId: null,
       taskId: null,
       title: input.title.trim(),
       description: input.description?.trim() || null,

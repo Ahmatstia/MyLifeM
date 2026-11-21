@@ -30,7 +30,7 @@ export const FormScreenHeader: React.FC<FormScreenHeaderProps> = ({
         <ArrowLeft size={20} color={s.ink} strokeWidth={2.5} />
       </Pressable>
 
-      <AppText variant="titleMedium" style={styles.headerTitle} numberOfLines={1}>
+      <AppText variant="titleMedium" style={styles.headerTitle}>
         {title}
       </AppText>
 

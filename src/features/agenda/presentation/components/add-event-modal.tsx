@@ -281,7 +281,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       </AppText>
       <View style={styles.iconInputContainer}>
         <MapPin size={16} color={colors.onSurfaceVariant} />
-        <TextInput
+        <TextInput accessibilityLabel="Lokasi atau tautan"
           editable={!isSubmitting}
           value={location}
           onChangeText={setLocation}
@@ -331,7 +331,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       <AppText variant="labelLarge" style={styles.inputLabel}>
         Catatan Agenda (Opsional)
       </AppText>
-      <TextInput
+      <TextInput accessibilityLabel="Catatan kegiatan (opsional)"
         editable={!isSubmitting}
         value={description}
         onChangeText={setDescription}

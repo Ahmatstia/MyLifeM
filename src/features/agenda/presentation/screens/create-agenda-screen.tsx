@@ -8,7 +8,8 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { backOrHome } from '@/shared/utils/back-or-home';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Sparkles,
@@ -115,7 +116,7 @@ export const CreateAgendaScreen: React.FC = () => {
       });
 
       if (success) {
-        router.back();
+        backOrHome();
       } else {
         setErrorMessage('Gagal menyimpan agenda. Silakan coba lagi.');
       }
@@ -142,7 +143,7 @@ export const CreateAgendaScreen: React.FC = () => {
         style={styles.keyboardContainer}
       >
         <View style={{ marginHorizontal: -space[4] }}>
-          <FormScreenHeader title="Tambah Agenda" onBack={() => router.back()} />
+          <FormScreenHeader title="Tambah Agenda" onBack={() => backOrHome()} />
         </View>
 
         {errorMessage && (
@@ -157,7 +158,7 @@ export const CreateAgendaScreen: React.FC = () => {
           <View style={styles.cloudHeroWrap}>
             <View style={styles.cloudOuterCard}>
               <View style={styles.cloudInnerPill}>
-                <TextInput
+                <TextInput accessibilityLabel="Nama kegiatan"
                   value={title}
                   onChangeText={(text) => {
                     setTitle(text);
@@ -172,7 +173,7 @@ export const CreateAgendaScreen: React.FC = () => {
               </View>
 
               <FieldLabel>Catatan (opsional)</FieldLabel>
-              <TextInput
+              <TextInput accessibilityLabel="Catatan (opsional)"
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Masukkan catatan (opsional)"
@@ -217,7 +218,7 @@ export const CreateAgendaScreen: React.FC = () => {
                 <View style={styles.timeInputsRow}>
                   <View style={styles.timeFieldBox}>
                     <AppText style={styles.miniLabel}>Mulai</AppText>
-                    <TextInput
+                    <TextInput accessibilityLabel="Jam mulai"
                       value={startTimeStr}
                       onChangeText={setStartTimeStr}
                       placeholder="JJ:MM"
@@ -229,7 +230,7 @@ export const CreateAgendaScreen: React.FC = () => {
 
                   <View style={styles.timeFieldBox}>
                     <AppText style={styles.miniLabel}>Selesai</AppText>
-                    <TextInput
+                    <TextInput accessibilityLabel="Jam selesai"
                       value={endTimeStr}
                       onChangeText={setEndTimeStr}
                       placeholder="JJ:MM"
@@ -253,7 +254,7 @@ export const CreateAgendaScreen: React.FC = () => {
                   {REMINDER_OPTIONS.map((opt) => {
                     const selected = reminderMinutes === opt.minutes;
                     return (
-                      <Pressable
+                      <Pressable accessibilityState={{ selected: selected }}
                         key={String(opt.minutes)}
                         onPress={() => setReminderMinutes(opt.minutes)}
                         style={[styles.reminderChip, selected && styles.reminderChipSelected]}
@@ -277,7 +278,7 @@ export const CreateAgendaScreen: React.FC = () => {
           {/* Lokasi */}
           <View style={styles.locationPillRow}>
             <MapPin size={18} color={s.ink} strokeWidth={2.2} />
-            <TextInput
+            <TextInput accessibilityLabel="Lokasi atau tautan"
               value={location}
               onChangeText={setLocation}
               placeholder="Masukkan lokasi atau tautan (opsional)"
@@ -351,6 +352,7 @@ const styles = StyleSheet.create({
   },
   categoryTilesRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: space[2],
   },

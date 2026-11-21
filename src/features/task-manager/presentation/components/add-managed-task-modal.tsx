@@ -75,7 +75,7 @@ const CATEGORIES: {
 }[] = [
   { id: 'COLLEGE', label: 'Kuliah', icon: GraduationCap },
   { id: 'WORK', label: 'Kerja', icon: Briefcase },
-  { id: 'PROJECT', label: 'Proyek', icon: Rocket },
+  { id: 'PROJECT', label: 'Target', icon: Rocket },
   { id: 'PERSONAL', label: 'Pribadi', icon: User },
 ];
 
@@ -252,7 +252,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
         )}
 
         <AppText style={styles.sectionLabel}>Nama tugas</AppText>
-        <TextInput
+        <TextInput accessibilityLabel="Nama tugas"
           value={title}
           onChangeText={(v) => {
             setTitle(v);
@@ -269,7 +269,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             const Icon = cat.icon;
             const selected = categoryType === cat.id;
             return (
-              <Pressable
+              <Pressable accessibilityState={{ selected: selected }}
                 key={cat.id}
                 onPress={() => setCategoryType(cat.id)}
                 accessibilityRole="button"
@@ -298,7 +298,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
 
         <AppText style={styles.fieldLabel}>Konteks (opsional)</AppText>
         <View style={styles.twoColRow}>
-          <TextInput
+          <TextInput accessibilityLabel="Konteks tugas"
             value={courseOrContext}
             onChangeText={setCourseOrContext}
             placeholder={
@@ -317,7 +317,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
           {[30, 60, 90, 120].map((mins) => {
             const active = estimatedMinutes === mins;
             return (
-              <Pressable
+              <Pressable accessibilityState={{ selected: active }}
                 key={mins}
                 onPress={() => setEstimatedMinutes(mins)}
                 accessibilityRole="button"
@@ -371,7 +371,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             ].map((preset) => {
               const active = deadlineDate === preset.date;
               return (
-                <Pressable
+                <Pressable accessibilityState={{ selected: active }}
                   key={preset.label}
                   onPress={() => handleSelectDeadlinePreset(preset.date)}
                   accessibilityRole="button"
@@ -398,7 +398,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
               <AppText style={styles.fieldTinyLabel}>
                 Tanggal Deadline ({formatDayAndDateIndo(deadlineDate)})
               </AppText>
-              <TextInput
+              <TextInput accessibilityLabel="Tanggal tenggat"
                 value={deadlineDate}
                 onChangeText={setDeadlineDate}
                 placeholder="YYYY-MM-DD"
@@ -408,7 +408,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             </View>
             <View style={{ flex: 0.9 }}>
               <AppText style={styles.fieldTinyLabel}>Jam Batas Akhir</AppText>
-              <TextInput
+              <TextInput accessibilityLabel="Jam tenggat"
                 value={deadlineTime}
                 onChangeText={setDeadlineTime}
                 placeholder="23:59"
@@ -455,7 +455,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             ].map((preset) => {
               const active = executionDate === preset.date;
               return (
-                <Pressable
+                <Pressable accessibilityState={{ selected: active }}
                   key={preset.label}
                   onPress={() => setExecutionDate(preset.date)}
                   accessibilityRole="button"
@@ -482,7 +482,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
               <AppText style={styles.fieldTinyLabel}>
                 Tanggal Kerjakan ({formatDayAndDateIndo(executionDate)})
               </AppText>
-              <TextInput
+              <TextInput accessibilityLabel="Tanggal pengerjaan"
                 value={executionDate}
                 onChangeText={setExecutionDate}
                 placeholder="YYYY-MM-DD"
@@ -492,7 +492,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             </View>
             <View style={{ flex: 0.9 }}>
               <AppText style={styles.fieldTinyLabel}>Jam Alarm Mulai</AppText>
-              <TextInput
+              <TextInput accessibilityLabel="Jam pengerjaan"
                 value={executionTime}
                 onChangeText={setExecutionTime}
                 placeholder="19:00"
@@ -508,7 +508,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             {QUICK_EXEC_TIMES.map((tm) => {
               const selected = executionTime === tm;
               return (
-                <Pressable
+                <Pressable accessibilityState={{ selected: selected }}
                   key={tm}
                   onPress={() => setExecutionTime(tm)}
                   accessibilityRole="button"
@@ -543,7 +543,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
             const Icon = mode.icon;
             const selected = alertMode === mode.id;
             return (
-              <Pressable
+              <Pressable accessibilityState={{ selected: selected }}
                 key={mode.id}
                 onPress={() => setAlertMode(mode.id)}
                 accessibilityRole="button"
@@ -704,7 +704,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
               {[5, 10, 15].map((mins) => {
                 const active = snoozeMinutes === mins;
                 return (
-                  <Pressable
+                  <Pressable accessibilityState={{ selected: active }}
                     key={mins}
                     onPress={() => setSnoozeMinutes(mins)}
                     accessibilityRole="button"
@@ -731,7 +731,7 @@ export const AddManagedTaskModal: React.FC<AddManagedTaskModalProps> = ({
         <AppText style={styles.sectionLabel}>Langkah tugas</AppText>
 
         <View style={styles.subtaskInputRow}>
-          <TextInput
+          <TextInput accessibilityLabel="Nama langkah tugas"
             value={subtaskDraft}
             onChangeText={setSubtaskDraft}
             onSubmitEditing={handleAddSubtask}

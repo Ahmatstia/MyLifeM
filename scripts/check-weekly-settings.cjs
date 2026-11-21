@@ -18,7 +18,8 @@ function settingsHook(repo, publications = []) {
   const h = harness({
     'react-native': { Alert: {}, Platform: { OS: 'android' } },
     '@/db/data-revision': { notifyDataRestored() {} },
-    '@/features/agenda/data/services/agenda-notification.service': {},
+    '@/features/task-manager/data/repositories/managed-task.repository': { managedTaskRepository: {} },
+    '@/features/agenda/data/services/calendar-reminder.service': {},
     '../../data/repositories/settings.repository.impl': { settingsRepository: repo },
     '../../data/services/backup-file.service': { readRecoveryBackup: async () => null },
     '@/features/prayer-times/data/prayer-location-store': { setPrayerLocation: value => publications.push(value) },
@@ -29,7 +30,11 @@ function settingsHook(repo, publications = []) {
 }
 async function main() {
   await check('a failed second day rolls back the entire weekly selection; retry creates exactly two rows', () => weeklyCase(async (e, repo) => {
-    const h = harness({ '../../data/repositories/weekly-schedule.repository.impl': { weeklyScheduleRepository: repo } });
+    const h = harness({
+      '../../data/services/agenda-notification.service': { AgendaNotificationService: {} },
+      '../../data/services/calendar-reminder.service': { syncCalendarReminders: async () => true, subscribeCalendarReminderStatus: () => () => {} },
+      '../../data/repositories/weekly-schedule.repository.impl': { weeklyScheduleRepository: repo },
+    });
     try {
       const hook = h.load('src/features/agenda/presentation/hooks/use-weekly-schedules.ts').useWeeklySchedules;
       h.render(hook); await tick();
@@ -70,7 +75,10 @@ async function main() {
   }));
   await check('single-day create remains compatible and a committed batch is successful even if reload fails', () => weeklyCase(async (e, repo) => {
     const row = await repo.createWeeklySchedule({ ...weeklyInput, dayOfWeek: 3 }); assert.equal(row.dayOfWeek, 3);
-    const h = harness({ '../../data/repositories/weekly-schedule.repository.impl': { weeklyScheduleRepository: {
+    const h = harness({
+      '../../data/services/agenda-notification.service': { AgendaNotificationService: {} },
+      '../../data/services/calendar-reminder.service': { syncCalendarReminders: async () => true, subscribeCalendarReminderStatus: () => () => {} },
+      '../../data/repositories/weekly-schedule.repository.impl': { weeklyScheduleRepository: {
       createWeeklySchedulesForDays: (...args) => repo.createWeeklySchedulesForDays(...args),
       getAllWeeklySchedules: async () => { throw new Error('Injected refresh failure'); },
     } } });

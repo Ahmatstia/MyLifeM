@@ -441,6 +441,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   metaTopRow: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -460,6 +461,8 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
   priorityTag: {
+    maxWidth: '100%',
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,

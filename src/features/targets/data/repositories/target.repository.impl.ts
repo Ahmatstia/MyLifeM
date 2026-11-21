@@ -1,7 +1,8 @@
 import { summarizeTasks } from '@/shared/domain/task-status';
+import { removeOrphanQuickTaskDetails } from '@/shared/data/quick-task-details';
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '@/db/client';
-import { categories, lifePillars, targets, projects, stages, tasks, type LifePillar } from '@/db/schema';
+import { categories, lifePillars, targets, stages, tasks, type LifePillar } from '@/db/schema';
 import {
   type TargetEntity,
   type LifePillarEntity,
@@ -73,7 +74,6 @@ export class TargetRepositoryImpl implements TargetRepository {
     // Load stages and tasks to calculate task-based progress
     const allStages = await db.select().from(stages).where(eq(stages.parentType, 'TARGET'));
     const allTasks = await db.select().from(tasks);
-    const projectTargets = new Map((await db.select({ id: projects.id, targetId: projects.targetId }).from(projects)).map(project => [project.id, project.targetId]));
 
     // Map stages to targets
     const targetStagesMap = new Map<string, string[]>();
@@ -88,7 +88,6 @@ export class TargetRepositoryImpl implements TargetRepository {
       const targetTasks = allTasks.filter((task) => {
         if (task.stageId && stageIds.includes(task.stageId)) return true;
         if (task.targetId === t.id) return true;
-        if (task.projectId && projectTargets.get(task.projectId) === t.id) return true;
         return false;
       });
 
@@ -179,7 +178,7 @@ export class TargetRepositoryImpl implements TargetRepository {
   }
 
   async deleteTarget(id: string): Promise<void> {
-    await db.delete(targets).where(eq(targets.id, id));
+    db.transaction(tx => { tx.delete(targets).where(eq(targets.id, id)).run(); removeOrphanQuickTaskDetails(tx); });
   }
 }
 

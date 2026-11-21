@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import {
   View,
+  Alert,
+  Platform,
   Pressable,
   ScrollView,
   ActivityIndicator,
@@ -73,7 +75,7 @@ function getCategoryDefaultName(type: TaskCategoryType): string {
     case 'WORK':
       return 'Pekerjaan';
     case 'PROJECT':
-      return 'Proyek';
+      return 'Target';
     default:
       return 'Pribadi';
   }
@@ -86,6 +88,8 @@ export const TaskManagerScreen: React.FC = () => {
     alarmTracks,
     isLoading,
     error,
+    alarmWarning,
+    retryAlarms,
     todayDate,
     previewingTrackId,
     refresh,
@@ -144,6 +148,18 @@ export const TaskManagerScreen: React.FC = () => {
     return true;
   });
 
+  const confirmDelete = (task: ManagedTaskEntity) => {
+    const message = `“${task.title}” beserta subtask, prioritas harian dan pengingatnya akan dihapus. Catatan sesi fokus tetap disimpan.`;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.confirm(message)) void deleteTask(task.id);
+      return;
+    }
+    Alert.alert('Hapus tugas?', message, [
+      { text: 'Batal', style: 'cancel' },
+      { text: 'Hapus tugas', style: 'destructive', onPress: () => { void deleteTask(task.id); } },
+    ]);
+  };
+
   const renderTaskCard = (item: ManagedTaskEntity) => {
     const buffer = computeDeadlineBufferInfo(item, todayDate);
     const isAlarmLoud =
@@ -198,7 +214,7 @@ export const TaskManagerScreen: React.FC = () => {
             </View>
 
             <Pressable
-              onPress={() => deleteTask(item.id)}
+              onPress={() => confirmDelete(item)}
               accessibilityRole="button"
               accessibilityLabel={`Hapus tugas ${item.title}`}
               hitSlop={8}
@@ -455,6 +471,8 @@ export const TaskManagerScreen: React.FC = () => {
         </View>
       </View>
 
+      <Banner variant="info" message="Lagu alarm diputar saat aplikasi aktif. Saat tertutup, pengingat memakai notifikasi perangkat. Ketuk notifikasi untuk membuka tugas; pengiriman mengikuti izin dan pembatasan sistem." />
+      {alarmWarning && <Banner variant="warning" message={alarmWarning} actionText="Periksa izin pengingat" onActionPress={retryAlarms} />}
       {error && (
         <Banner
           variant="error"
@@ -550,7 +568,7 @@ export const TaskManagerScreen: React.FC = () => {
         ).map(([key, label]) => {
           const active = filter === key;
           return (
-            <Pressable
+            <Pressable accessibilityState={{ selected: active }}
               key={key}
               onPress={() => setFilter(key)}
               accessibilityRole="button"
@@ -763,6 +781,7 @@ const styles = StyleSheet.create({
     opacity: 0.72,
   },
   cardTopRow: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -784,11 +803,16 @@ const styles = StyleSheet.create({
     color: s.forest,
   },
   cardTopRightActions: {
+    maxWidth: '100%',
+    minWidth: 0,
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
   bufferBadge: {
+    maxWidth: '100%',
+    flexShrink: 1,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 999,

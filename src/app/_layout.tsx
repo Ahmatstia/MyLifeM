@@ -5,6 +5,8 @@ import { View, ScrollView, ActivityIndicator } from 'react-native';
 import { initDatabase } from '@/db/client';
 import { useDataRevision } from '@/db/data-revision';
 import { AlarmRingingModal } from '@/features/task-manager/presentation/components/alarm-ringing-modal';
+import { CalendarReminderSync } from '@/features/agenda/presentation/components/calendar-reminder-sync';
+import { ManagedAlarmSync } from '@/features/task-manager/presentation/components/managed-alarm-sync';
 import { colors } from '@/theme/colors';
 import { AppText, Button } from '@/shared/ui';
 import { readMigrationBackup, saveBackupFile } from '@/features/settings/data/services/backup-file.service';
@@ -139,6 +141,8 @@ export default function RootLayout() {
         />
       </Stack>
       <AlarmRingingModal key={'alarm-' + dataRevision} />
+      <CalendarReminderSync key={'reminders-' + dataRevision} />
+      <ManagedAlarmSync key={'managed-reminders-' + dataRevision} />
     </ThemeProvider>
   );
 }

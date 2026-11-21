@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Pressable,
   StyleSheet,
   useWindowDimensions,
   type ViewStyle,
-  ScrollView,
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import {
@@ -17,11 +16,6 @@ import {
   Check,
   Target,
   Flame,
-  Volume2,
-  CloudRain,
-  Coffee,
-  Wind,
-  Trees,
 } from 'lucide-react-native';
 import { space, fontFamily } from '@/theme/tokens';
 import type { UserSettingsEntity } from '@/features/settings/domain/entities/settings.entity';
@@ -52,13 +46,6 @@ export interface FocusTimerWidgetProps {
   style?: ViewStyle;
 }
 
-const AMBIENT_SOUNDS = [
-  { id: 'rain', label: 'Lo-Fi Rain', icon: CloudRain },
-  { id: 'cafe', label: 'Suasana Kafe', icon: Coffee },
-  { id: 'white', label: 'White Noise', icon: Wind },
-  { id: 'forest', label: 'Hutan Tenang', icon: Trees },
-];
-
 export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   ready = true,
   hasSession = false,
@@ -85,7 +72,6 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
       (Math.max(5, formattedTime.length) * 0.66 * Math.max(1, fontScale))
   );
 
-  const [activeSound, setActiveSound] = useState<string>('rain');
 
   // Circular gauge dimension
   const circleSize = 180;
@@ -236,7 +222,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
                 mode === 'POMODORO' && styles.modeCardSubActive,
               ]}
             >
-              {`Pomodoro ${hasSession && mode === 'POMODORO' ? selectedMinutes : preferences.pomodoroMinutes}m`}
+              {`Pomodoro ${mode === 'POMODORO' && selectedMinutes !== undefined ? selectedMinutes : preferences.pomodoroMinutes}m`}
             </AppText>
           </Pressable>
 
@@ -270,7 +256,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
                 mode === 'DEEP_FLOW' && styles.modeCardSubActive,
               ]}
             >
-              {`Deep Flow ${hasSession && mode === 'DEEP_FLOW' ? selectedMinutes : preferences.deepFlowMinutes}m`}
+              {`Deep Flow ${mode === 'DEEP_FLOW' && selectedMinutes !== undefined ? selectedMinutes : preferences.deepFlowMinutes}m`}
             </AppText>
           </Pressable>
 
@@ -402,57 +388,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         </View>
       </View>
 
-      {/* 5. Ambient Focus Audio Selector */}
-      <View style={styles.soundSection}>
-        <View style={styles.soundHeaderRow}>
-          <View style={styles.soundTitleWithIcon}>
-            <Volume2 size={16} color="#1E1E2E" />
-            <AppText variant="labelMedium" style={styles.soundSectionTitle}>
-              Suara Latar Fokus
-            </AppText>
-          </View>
-          <AppText variant="bodySmall" style={styles.soundSectionSub}>
-            Ambience Tenang
-          </AppText>
-        </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.soundScrollContent}
-        >
-          {AMBIENT_SOUNDS.map((sound) => {
-            const Icon = sound.icon;
-            const isSelected = activeSound === sound.id;
-            return (
-              <Pressable
-                key={sound.id}
-                onPress={() => setActiveSound(sound.id)}
-                accessibilityRole="button"
-                accessibilityLabel={sound.label}
-                style={[
-                  styles.soundPill,
-                  isSelected && styles.soundPillActive,
-                ]}
-              >
-                <Icon
-                  size={15}
-                  color={isSelected ? '#1E1E2E' : '#504535'}
-                />
-                <AppText
-                  variant="labelSmall"
-                  style={[
-                    styles.soundPillText,
-                    isSelected && styles.soundPillTextActive,
-                  ]}
-                >
-                  {sound.label}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
     </View>
   );
 };
@@ -743,62 +679,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#1E1E2E',
   },
-  soundSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    padding: space[3],
-    shadowColor: '#1E1E2E',
-    shadowOpacity: 1,
-    shadowOffset: { width: 2, height: 2 },
-    shadowRadius: 0,
-    elevation: 2,
-  },
-  soundHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: space[2],
-  },
-  soundTitleWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  soundSectionTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#1E1E2E',
-  },
-  soundSectionSub: {
-    fontSize: 11,
-    color: '#504535',
-  },
-  soundScrollContent: {
-    flexDirection: 'row',
-    gap: space[2],
-  },
-  soundPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FAF5EB',
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 9999,
-  },
-  soundPillActive: {
-    backgroundColor: '#FFDAD3',
-  },
-  soundPillText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#504535',
-  },
-  soundPillTextActive: {
-    color: '#1E1E2E',
-  },
+
 });

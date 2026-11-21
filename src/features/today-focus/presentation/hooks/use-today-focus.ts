@@ -1,6 +1,7 @@
 import { useFocusedResource } from '@/shared/hooks/use-focused-resource';
 import { useDeviceCalendar } from '@/shared/hooks/use-device-calendar';
 import { useCallback } from 'react';
+import type { QuickTaskOptions } from '../../domain/quick-task';
 import type {
   SaveSessionInput,
 } from '../../domain/entities/daily-focus.entity';
@@ -31,9 +32,9 @@ export function useTodayFocus() {
     }
   };
 
-  const addQuickTask = async (title: string, targetId?: string): Promise<boolean> => {
+  const addQuickTask = async (title: string, targetId?: string, options?: QuickTaskOptions): Promise<boolean> => {
     try {
-      await dailyFocusRepository.createQuickTask(title, todayDate, targetId);
+      await dailyFocusRepository.createQuickTask(title, todayDate, targetId, options);
       await loadData();
       return true;
     } catch (err: any) {

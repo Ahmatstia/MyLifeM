@@ -1,5 +1,9 @@
 # MyLife — backlog implementasi dan gerbang rilis
 
+**Paket lanjutan 22 November 2026:** AUD-10/11/14/15/18/19/21 ditangani dan diverifikasi. AUD-13/17/22 memiliki implementasi baru dan tetap memerlukan QA perangkat. Urutan kerja berikutnya adalah verifikasi alarm/background/restore serta TalkBack/keyboard/layout native, bukan menambah modul. Bukti: [paket temuan tersisa](./audits/remaining-findings-remediation.json).
+
+Pembaruan 22 November 2026: AUD-09/12 diperbaiki dengan 14 suite resmi, lint/typecheck dan ekspor bundle Android lulus. Cakupan: kategori/durasi tugas cepat hingga timer/backup serta pengingat weekly, perubahan occurrence, izin/error dan restore. Bukti [paket tugas cepat/weekly](./audits/quick-task-weekly-remediation.json). Gerbang perangkat untuk notifikasi, Doze/proses mati dan native layout tetap terbuka; daftar historis di bawah tidak menyatakan semua tahap selesai.
+
 Tanggal: 26 Oktober 2026. R0 dan R2/R3 belum selesai. Pemilik meminta implementasi dimulai dari redesign: UI inti R1 telah diterapkan, dengan [cakupan/verifikasi](./UI_IMPLEMENTATION_2026-10-26.md) dan gerbang native yang masih terbuka. Urutan di bawah tetap peta dependensi, bukan janji tanggal; R1 tidak berarti perbaikan data R0 sudah selesai.
 
 ## R0 — fondasi data yang dapat dipercaya
@@ -58,9 +62,9 @@ Hero tindakan berikutnya, bubble terbatas, prioritas baris tenang, timer yang da
 
 Selesai bila pengguna baru bisa memilih/membuat satu prioritas dan mulai sesi; pengguna lama bisa melihat tugas panjang, menyelesaikan/melepasnya dengan jelas; semua kontrol terbaca pada 320 dp dan teks besar.
 
-### R1.3 Target/Proyek/detail/roadmap
+### R1.3 Target/detail/roadmap
 
-Bedakan kartu target, proyek, dan roadmap. Pindahkan kumpulan ikon edit/reorder/hapus ke pola menu yang jelas. Hilangkan nested vertical scroll; tampilkan hubungan yang memang sudah didukung data. Copy menjelaskan “progres rencana”, bukan kompetensi.
+Gunakan Target → Tahapan → Tugas sesuai keputusan pengguna untuk menghapus modul Proyek. Pindahkan kumpulan ikon edit/reorder/hapus ke pola menu yang jelas. Hilangkan nested vertical scroll; tampilkan hubungan yang memang sudah didukung data. Copy menjelaskan “progres rencana”, bukan kompetensi.
 
 Selesai bila daftar→detail→edit/selesai→kembali konsisten, judul panjang tidak memotong aksi, dan keadaan kosong/error tidak tertukar. Fitur kriteria hasil/bukti yang memerlukan data baru menunggu R2.
 
@@ -72,9 +76,9 @@ Selesai bila kategori dapat dibuat/diubah dan larangan hapus yang dipakai dijela
 
 ## R2 — monitoring tujuan dan review
 
-### R2.1 Tujuan, next action dan proyek terkait
+### R2.1 Tujuan dan next action
 
-Tambah alasan/kriteria hasil/next action yang diperlukan pada target beserta migrasi dan form. Detail target memperlihatkan proyek tertaut dan kontribusinya. Penyelesaian target merupakan keputusan terhadap hasil, berbeda dari checklist 100%.
+Tambah alasan/kriteria hasil/next action yang diperlukan pada Target beserta migrasi dan form. Detail Target memperlihatkan tahapan/tugasnya. Penyelesaian Target merupakan keputusan terhadap hasil, berbeda dari checklist 100%.
 
 Selesai bila contoh AI Engineer dapat dicatat tanpa memaksa semua roadmap menjadi proyek, dan pengguna dapat menemukan tugas berikutnya serta melihat dari mana progres berasal.
 

@@ -6,6 +6,7 @@ import { validateWeeklySchedule } from '@/features/agenda/domain/entities/weekly
 import { normalizeCategoryName } from '@/features/categories/domain/entities/category.entity';
 import { allDayDates } from '@/features/agenda/domain/agenda-time';
 import { TIMER_KEY, parseTimer } from '@/features/today-focus/domain/focus-timer';
+import { QUICK_TASK_DETAILS_PREFIX, parseQuickTaskDetails } from '@/features/today-focus/domain/quick-task';
 
 export const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
 export const MAX_BACKUP_ROWS = 50_000;
@@ -184,6 +185,10 @@ export function parseBackup(json: string): BackupDocument {
     names.add(name);
   }
   for (const row of typed.userSettings) {
+    if (row.key.startsWith(QUICK_TASK_DETAILS_PREFIX)) {
+      if (!ids.get('tasks')!.has(row.key.slice(QUICK_TASK_DETAILS_PREFIX.length))) return invalid('kategori tugas mengacu pada tugas yang tidak ada.');
+      try { parseQuickTaskDetails(row.value); } catch { return invalid('kategori/durasi tugas cepat tidak valid.'); }
+    }
     if (row.key === MANAGED_TASKS_KEY) {
       try { parseManagedTasks(row.value); }
       catch (error) { return invalid(error instanceof Error ? error.message : 'data tugas terjadwal tidak benar.'); }
@@ -238,21 +243,22 @@ export function upgradeLegacyBackup(data: Record<string, unknown>): void {
 
 /** Import only row values from a pre-upgrade archive; archived SQL is never executed. */
 function parseMigrationArchive(input: Record<string, unknown>): BackupDocument {
-  if (input.version !== 0 || !Array.isArray(input.tables) || typeof input.capturedAt !== 'string' || !dateText(input.capturedAt)) return invalid('versi/metadata arsip pra-migrasi tidak didukung.');
+  if ((input.version !== 0 && input.version !== 1) || !Array.isArray(input.tables) || typeof input.capturedAt !== 'string' || !dateText(input.capturedAt)) return invalid('versi/metadata arsip pra-migrasi tidak didukung.');
   const tables = new Map<string, Record<string, unknown>[]>();
   for (const table of input.tables) {
     if (!record(table) || typeof table.name !== 'string' || tables.has(table.name) || !TABLE_SPECS.some(spec => spec.name === table.name) || !Array.isArray(table.rows) || table.rows.some(row => !record(row))) return invalid('tabel arsip pra-migrasi tidak sesuai.');
     tables.set(table.name, table.rows);
   }
+  if (input.version === 1 && tables.size !== TABLE_SPECS.length) return invalid('tabel arsip versi 1 tidak lengkap.');
   const data = Object.fromEntries(TABLE_SPECS.map(spec => {
-    const columns = spec.columns.filter(column => !(spec.key === 'stages' && ['targetId', 'projectId'].includes(column.key)) && !(spec.key === 'focusSessions' && column.key === 'taskTitle'));
+    const columns = input.version === 1 ? spec.columns : spec.columns.filter(column => !(spec.key === 'stages' && ['targetId', 'projectId'].includes(column.key)) && !(spec.key === 'focusSessions' && column.key === 'taskTitle'));
     const defaults: Record<string, unknown> = { categoryId: null, stageId: null, name: null, estimatedHours: 1, sortOrder: 0 };
     return [spec.key, (tables.get(spec.name) ?? []).map(row => {
       if (Object.keys(row).some(name => !columns.some(column => column.name === name))) return invalid('kolom legacy belum dikenal pada ' + spec.name + '.');
       return Object.fromEntries(columns.map(column => [column.key, Object.hasOwn(row, column.name) ? row[column.name] : defaults[column.key]]));
     })];
   }));
-  return parseBackup(JSON.stringify({ format: 'mylife-backup', formatVersion: 1, schemaVersion: 1, exportedAt: input.capturedAt, data }));
+  return parseBackup(JSON.stringify({ format: 'mylife-backup', formatVersion: 1, schemaVersion: input.version === 1 ? 2 : 1, exportedAt: input.capturedAt, data }));
 }
 
 export function summarizeBackup(backup: BackupDocument) {

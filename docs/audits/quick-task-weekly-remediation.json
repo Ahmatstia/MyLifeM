@@ -1,0 +1,410 @@
+{
+  "date": "2026-11-22",
+  "timeZone": "Asia/Jakarta",
+  "repository": "D:\\IT\\Software Engineer\\mobile\\MyLife",
+  "baseCommit": "c45ce5dfc6c4b558b0f296318d0b5c77b23cb7a9",
+  "scope": [
+    "AUD-09",
+    "AUD-12"
+  ],
+  "status": "Application integration and automated checks passed; native delivery unverified",
+  "priorUncommittedChanges": "Project removal/consolidation and previous user edits remain in the working tree. The before hashes are the state at the start of this package, not Git HEAD.",
+  "implementation": {
+    "quickTasks": {
+      "categories": [
+        "Belajar",
+        "Kesehatan",
+        "Kerja",
+        "Hobi"
+      ],
+      "durationInputRangeMinutes": [
+        1,
+        1440
+      ],
+      "uiDurationChoices": [
+        15,
+        30,
+        45,
+        60
+      ],
+      "estimateColumn": "tasks.estimated_minutes",
+      "detailsKey": "quick_task_details_v1:<taskId>",
+      "detailsShape": {
+        "category": "enum or null",
+        "focusMinutes": "integer 1..1440 or null"
+      },
+      "defaultEstimate": 25,
+      "defaultFocus": "Global mode preferences when no explicit task duration; choosing a mode explicitly chooses that mode's preset. Stopwatch stays zero; persisted sessions remain locked.",
+      "atomic": "Task, details and daily priority are one synchronous transaction; cascade deletion and metadata cleanup share a transaction, including legacy Target API.",
+      "backup": "Existing optional user_settings entry; strict JSON shape and task reference validation; DB schema stays 1, backup versions 1/2 remain accepted."
+    },
+    "weeklyReminders": {
+      "windowDays": 28,
+      "windowBasis": "Local calendar delivery date, not only occurrence start date; long lead and midnight crossing included.",
+      "namespaces": [
+        "agenda-<eventId>",
+        "weekly-<scheduleId>|<date>"
+      ],
+      "combinedCalendarLimit": 50,
+      "priority": "Nearest delivery times across Agenda and Weekly, warning if partial.",
+      "dateOverrides": "Completed or cancelled dates excluded individually; following weeks remain enabled.",
+      "resync": [
+        "after database ready on launch",
+        "resume/calendar/time zone changes",
+        "CRUD after successful commit",
+        "occurrence completion/cancellation after successful commit",
+        "restore remount and fresh combined repository read"
+      ],
+      "permissions": "Passive sync does not prompt; explicit save/retry may ask. Native failure does not fail a committed save.",
+      "status": "Shared warning subscription and weekly coverage banner.",
+      "unrelatedNotifications": "Managed-task and unrelated identifiers retained."
+    }
+  },
+  "baseline": {
+    "quickTasks": {
+      "exitCode": 1,
+      "passed": 5,
+      "failed": 18,
+      "output": "(node:33380) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nFAIL: selected duration/category survive refresh and priority removal: Belajar Expected values to be strictly equal:\n\n25 !== 45\n\nFAIL: selected duration/category survive refresh and priority removal: Kesehatan Expected values to be strictly equal:\n\n25 !== 45\n\nFAIL: selected duration/category survive refresh and priority removal: Kerja Expected values to be strictly equal:\n\n25 !== 45\n\nFAIL: selected duration/category survive refresh and priority removal: Hobi Expected values to be strictly equal:\n\n25 !== 45\n\nFAIL: legacy quick task calls retain default estimate and do not override focus preferences Expected values to be strictly equal:\n+ actual - expected\n\n+ undefined\n- null\n\nFAIL: a category without explicit duration keeps the default focus preference Expected values to be strictly equal:\n+ actual - expected\n\n+ undefined\n- 'Kerja'\n\nFAIL: invalid duration rejects without writes: 0 Missing expected rejection.\nFAIL: invalid duration rejects without writes: -1 Missing expected rejection.\nFAIL: invalid duration rejects without writes: 1.5 Missing expected rejection.\nFAIL: invalid duration rejects without writes: NaN Missing expected rejection.\nFAIL: invalid duration rejects without writes: Infinity Missing expected rejection.\nFAIL: invalid duration rejects without writes: 45 Missing expected rejection.\nFAIL: invalid duration rejects without writes: 1441 Missing expected rejection.\nFAIL: invalid category rejects without writes: \"Unknown\" Missing expected rejection.\nFAIL: invalid category rejects without writes: [\"Belajar\"] Missing expected rejection.\nFAIL: invalid category rejects without writes: 1 Missing expected rejection.\nFAIL: task/details/priority roll back together on /^insert into \"user_settings\"/i Missing expected rejection.\nPASS: task/details/priority roll back together on /^insert into \"daily_focus_items\"/i\nPASS: the sixth priority leaves no task or details behind\nFAIL: backup and restore retain quick task details; invalid/orphan metadata is rejected Expected values to be strictly equal:\n+ actual - expected\n\n+ undefined\n- 'Kesehatan'\n\nPASS: deleting task removes its quick task details atomically\nPASS: deleting stage removes its quick task details atomically\nPASS: deleting target removes its quick task details atomically\nFAIL: 5 quick-task checks, 18 failures; SQLite memory only.\n",
+      "interpretation": "Before implementation; category/duration ignored, new validation/metadata absent. Three early deletion passes only checked absence; strengthened final cleanup tests require metadata to exist before deletion, inject cleanup failure and assert rollback. One legacy API cleanup case added later."
+    },
+    "weeklyReminders": {
+      "exitCode": 1,
+      "passed": 0,
+      "failed": 13,
+      "output": "(node:29248) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nFAIL: weekly projection covers four weeks with unique, stable occurrence IDs ENOENT: no such file or directory, open 'D:\\IT\\Software Engineer\\mobile\\MyLife\\src\\features\\agenda\\domain\\weekly-reminders.ts'\nFAIL: weekly wall clock is local in Asia/Jakarta ENOENT: no such file or directory, open 'D:\\IT\\Software Engineer\\mobile\\MyLife\\src\\features\\agenda\\domain\\weekly-reminders.ts'\nFAIL: weekly wall clock is local in Asia/Makassar ENOENT: no such file or directory, open 'D:\\IT\\Software Engineer\\mobile\\MyLife\\src\\features\\agenda\\domain\\weekly-reminders.ts'\nFAIL: weekly wall clock is local in Asia/Jayapura ENOENT: no such file or directory, open 'D:\\IT\\Software Engineer\\mobile\\MyLife\\src\\features\\agenda\\domain\\weekly-reminders.ts'\nFAIL: a reminder before midnight uses the next day occurrence and the previous day delivery ENOENT: no such file or directory, open 'D:\\IT\\Software Engineer\\mobile\\MyLife\\src\\features\\agenda\\domain\\weekly-reminders.ts'\nFAIL: completed/cancelled occurrences are excluded without disabling later weeks ENOENT: no such file or directory, open 'D:\\IT\\Software Engineer\\mobile\\MyLife\\src\\features\\agenda\\domain\\weekly-reminders.ts'\nFAIL: disabled schedules and disabled reminders produce no events; zero-minute reminders work ENOENT: no such file or directory, open 'D:\\IT\\Software Engineer\\mobile\\MyLife\\src\\features\\agenda\\domain\\weekly-reminders.ts'\nFAIL: long reminder lead times are projected by delivery window, without silently dropping them ENOENT: no such file or directory, open 'D:\\IT\\Software Engineer\\mobile\\MyLife\\src\\features\\agenda\\domain\\weekly-reminders.ts'\nFAIL: repository uses persisted dates and completion/cancellation logs for reminder projection repo.getReminderEvents is not a function\nFAIL: calendar reconciliation schedules both namespaces and preserves managed-task alarms The expression evaluated to a falsy value:\n\n  assert.ok(n.scheduled.has('weekly-class|2099-01-02'))\n\nFAIL: permission denial is a reminder warning; passive sync never prompts, explicit retry can recover The expression evaluated to a falsy value:\n\n  assert.ok(n.scheduled.has('weekly-w'))\n\nFAIL: agenda and weekly reminders share one nearest-50 budget Expected values to be strictly equal:\n\n51 !== 50\n\nFAIL: a queued deletion wins over an older pending weekly reminder read Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'weekly-old',\n    'managed-task-keep'\n  ]\n\nFAIL: 0 weekly reminder checks, 13 failures; native notifications mocked.\n",
+      "interpretation": "Eight new projection tests fail on missing new module, one repository projection method absent, four native scheduler boundary tests expose weekly namespace/cancellation/limit gaps. These are coverage cases, not 13 independent observed device bugs."
+    }
+  },
+  "verification": {
+    "suiteCount": 14,
+    "numberedDomainDatabaseChecks": 302,
+    "nativeMocked": true,
+    "userDatabaseAccess": false,
+    "checks": [
+      {
+        "command": "node scripts/check-backup.cjs",
+        "exitCode": 0,
+        "numberedChecks": 52,
+        "output": "(node:32664) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: previous complete v1 backups upgrade to one owner, stage FKs and session labels\nPASS: all 13 tables round trip, including custom labels, nulls, legacy status and quoted SQL text\nPASS: COLLEGE schedules and daily logs survive current and legacy backup parsing\nPASS: WORK schedules and daily logs survive current and legacy backup parsing\nPASS: STUDY schedules and daily logs survive current and legacy backup parsing\nPASS: PERSONAL schedules and daily logs survive current and legacy backup parsing\nPASS: ROUTINE schedules and daily logs survive current and legacy backup parsing\nPASS: repository export/restore recovers ROUTINE schedules and their daily logs\nPASS: reject unknown version\nPASS: reject old incomplete snapshot\nPASS: reject extra tables\nPASS: reject extra columns\nPASS: reject missing columns\nPASS: reject duplicate IDs\nPASS: reject empty ID\nPASS: reject orphan references\nPASS: reject wrong stage owner\nPASS: reject two task owners\nPASS: reject invalid type\nPASS: reject invalid boolean\nPASS: reject invalid date\nPASS: reject invalid date-only\nPASS: reject duplicate daily priority\nPASS: reject negative duration\nPASS: reject unknown status\nPASS: reject unknown weekly schedule type\nPASS: reject rating outside range\nPASS: reject reversed session\nPASS: reject session without a clock\nPASS: reject timed agenda without a clock\nPASS: reject reversed agenda\nPASS: reject empty label\nPASS: reject invalid preferences\nPASS: reject duplicate category names\nPASS: invalid JSON and BOM, byte and row limits\nPASS: repository restores every table and converts legacy project ownership atomically\nPASS: invalid input never opens staging or changes active data\nPASS: concurrent edits survive without replacement\nPASS: failure after deletes and partial inserts rolls everything back\nPASS: integrity failure rolls back replacement\nPASS: restart does not resurrect defaults or overwrite restored nulls/colors\nPASS: an intentionally empty restored database stays empty\nPASS: failed startup rolls back newly created tables\nPASS: startup can retry after a migration failure\nPASS: canceled picker and verified recovery file\nPASS: partial safety writes rejected and oversized files never read\nPASS: web recovery verifies persistence and quota failure preserves the earlier safety copy\nPASS: old agenda reminders canceled, unrelated reminders retained, zero-minute restored reminder scheduled\nPASS: safety-file failure stops before any active restore and keeps the confirmation\nPASS: failed restore never remounts or reschedules reminders\nPASS: successful commit resets stale screens before reminders, reminder failure is reported as a warning\nPASS: rapid duplicate backup actions are locked\nPASS: 52 backup checks. No user database accessed. Native dialogs are not covered.\n"
+      },
+      {
+        "command": "node scripts/check-integrity.cjs",
+        "exitCode": 0,
+        "numberedChecks": 30,
+        "output": "(node:35440) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: fresh schema has actual FKs, one initialization, version 1 and repeatable startup\nPASS: v0 upgrades into Targets; original records, task IDs/status and session labels survive\nPASS: existing v1 database without weekly tables auto-provisions them cleanly on startup\nPASS: pre-migration archive restores through the current repository without executing any archived SQL\nPASS: older columns upgrade with explicit defaults without inventing a career category\nPASS: orphan prevents partial migration and schema-version advancement; FK restored\nPASS: conflict prevents partial migration and schema-version advancement; FK restored\nPASS: unknown prevents partial migration and schema-version advancement; FK restored\nPASS: object prevents partial migration and schema-version advancement; FK restored\nPASS: storage prevents partial migration and schema-version advancement; FK restored\nPASS: copy prevents partial migration and schema-version advancement; FK restored\nPASS: index prevents partial migration and schema-version advancement; FK restored\nPASS: version prevents partial migration and schema-version advancement; FK restored\nPASS: commit prevents partial migration and schema-version advancement; FK restored\nPASS: changed prevents partial migration and schema-version advancement; FK restored\nPASS: future prevents partial migration and schema-version advancement; FK restored\nPASS: post-commit FK activation failure blocks startup and retry re-enables protection\nPASS: actual SQL and repository writes reject orphan references and ownership conflicts\nPASS: task deletion applies cascade/set-null policy and preserves focus/agenda history\nPASS: stage deletion applies cascade/set-null policy and preserves focus/agenda history\nPASS: project deletion applies cascade/set-null policy and preserves focus/agenda history\nPASS: target deletion applies cascade/set-null policy and preserves focus/agenda history\nPASS: failed cascading delete leaves aggregate and every dependent unchanged\nPASS: sixth priority rolls back its quick task, leaving no hidden orphan\nPASS: second reorder write fails without leaving half a swap\n[SettingsRepositoryImpl] saveSettings error: Error: settings failure\n    at D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-integrity.cjs:215:105\n    at Object.executeSync (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-integrity.cjs:26:11)\n    at ExpoSQLitePreparedQuery.run (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:95:52)\n    at QueryPromise.run (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\sqlite-core\\query-builders\\insert.cjs:186:28)\n    at eval (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:129:24)\n    at ExpoSQLiteSession.transaction (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:57:22)\n    at ExpoSQLiteDatabase.transaction (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\sqlite-core\\db.cjs:319:25)\n    at SettingsRepositoryImpl.saveSettings (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:98:41)\n    at repositories (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-integrity.cjs:216:33)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\nPASS: second preference write fails without saving half the settings\nPASS: checkbox failure rolls back both task and daily-priority update\nPASS: failed task-minutes write rolls back the new focus session\nPASS: session saves its original task label and survives rename/deletion\nPASS: legacy tasks convert to one Target owner and remain in its progress\nPASS: 30 integrity/migration checks; no user database accessed.\n"
+      },
+      {
+        "command": "node scripts/check-data-contracts.cjs",
+        "exitCode": 0,
+        "numberedChecks": 39,
+        "output": "(node:3768) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: managed create rejects {\"executionDate\":\"2026-02-30\"} before any write\nPASS: managed create rejects {\"deadlineDate\":\"2025-02-29\"} before any write\nPASS: managed create rejects {\"executionTime\":\"24:00\"} before any write\nPASS: managed create rejects {\"deadlineTime\":\"99:99\"} before any write\nPASS: managed create rejects {\"title\":\" \"} before any write\nPASS: managed create rejects {\"estimatedMinutes\":-1} before any write\nPASS: managed create rejects {\"snoozeMinutes\":0} before any write\nPASS: managed create rejects {\"alertMode\":\"MAGIC\"} before any write\nPASS: managed create rejects {\"priority\":\"MAGIC\"} before any write\nPASS: managed create rejects {\"categoryType\":\"MAGIC\"} before any write\nPASS: valid leap dates, midnight and late execution retain compatibility and backup round-trip\nPASS: backup rejects managed null entry before replacing data\nPASS: backup rejects managed object instead of list before replacing data\nPASS: backup rejects managed duplicate task ID before replacing data\nPASS: backup rejects managed invalid date before replacing data\nPASS: backup rejects managed invalid clock before replacing data\nPASS: backup rejects managed invalid subtask flag before replacing data\nPASS: backup rejects managed invalid exclusion date before replacing data\nPASS: backup rejects managed categoryType array instead of string before replacing data\nPASS: backup rejects managed priority array instead of string before replacing data\nPASS: backup rejects managed alertMode array instead of string before replacing data\nPASS: weekly create/update reject {\"startTime\":\"24:00\",\"endTime\":\"25:00\"} without writes\nPASS: weekly create/update reject {\"startTime\":\"08:60\"} without writes\nPASS: weekly create/update reject {\"startTime\":\"8:00\"} without writes\nPASS: weekly create/update reject {\"dayOfWeek\":1.5} without writes\nPASS: weekly create/update reject {\"scheduleType\":\"MAGIC\"} without writes\nPASS: weekly create/update reject {\"reminderMinutes\":-1} without writes\nPASS: weekly backup and valid midnight projection use the same clock contract\nPASS: case-insensitive concurrent category create/update preserves backup compatibility\nPASS: legacy target keeps a null category and is not assigned to the career filter\nPASS: removed managed priority stays removed across refresh and a fresh repository instance\nPASS: explicit add clears the opt-out and a later removal restores it\nPASS: opt-out survives backup/restore and respects the five-priority limit\nPASS: priority removal rolls back both exclusion and relation when /^insert into \"user_settings\"/i fails\nPASS: priority removal rolls back both exclusion and relation when /^delete from \"daily_focus_items\"/i fails\nPASS: concurrent removal/refresh cannot re-add the excluded priority\nPASS: failed explicit re-add preserves the opt-out and rolls back the new priority\nPASS: removing a regular quick-task priority does not exclude a managed task\nPASS: excluding today leaves the overdue task eligible on the following day\nPASS: 39 data-contract checks, 0 failures; no user database accessed.\n"
+      },
+      {
+        "command": "node scripts/check-managed.cjs",
+        "exitCode": 0,
+        "numberedChecks": 24,
+        "output": "(node:7360) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: refresh preserves authoritative TODO status and completion flags\nPASS: refresh preserves authoritative IN_PROGRESS status and completion flags\nPASS: refresh preserves authoritative CANCELLED status and completion flags\nPASS: refresh preserves authoritative COMPLETED status and completion flags\nPASS: refresh preserves authoritative DONE status and completion flags\nPASS: explicit managed completion/reopen updates core, metadata and priorities on every date\nPASS: completion from Today is read before a metadata mutation and survives refresh\nPASS: two concurrent creates retain both metadata entries, core tasks and priorities\nPASS: concurrent subtask, snooze and create mutations retain every change\nPASS: concurrent delete/create leaves no orphan or resurrected metadata\nPASS: core insert failure rejects and rolls back the entire managed mutation\nPASS: metadata write failure rejects and rolls back the entire managed mutation\nPASS: priority insert failure rejects and rolls back the entire managed mutation\nPASS: core status update failure rejects and rolls back the entire managed mutation\nPASS: priority status update failure rejects and rolls back the entire managed mutation\nPASS: core delete failure rejects and rolls back the entire managed mutation\nPASS: commit failure rejects and rolls back the entire managed mutation\nPASS: metadata read failure rejects and rolls back the entire managed mutation\nPASS: unreadable managed metadata { is preserved instead of overwritten\nPASS: unreadable managed metadata {} is preserved instead of overwritten\nPASS: unreadable managed metadata [null] is preserved instead of overwritten\n[ManagedTaskRepository] Pengingat belum dapat diselaraskan: Error: Injected notification failure\n    at Object.reconcileTaskAlarms (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-managed.cjs:128:66)\n    at eval (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:123:121)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async ManagedTaskRepository.createTask (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:226:9)\n    at async notificationStub.reconcileTaskAlarms (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-managed.cjs:125:18)\n    at async check (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-managed.cjs:18:5)\n    at async main (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-managed.cjs:124:3)\nPASS: notification failure after commit does not report a failed save\nPASS: notification reconciliations are serialized and finish with the latest committed tasks\nPASS: managed hook exposes save/toggle/subtask/delete errors without rejecting UI event promises\nPASS: 24 managed-task checks, 0 failures; no user database or native notifications accessed.\n"
+      },
+      {
+        "command": "node scripts/check-progress.cjs",
+        "exitCode": 0,
+        "numberedChecks": 13,
+        "output": "(node:16020) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: stage completion reaches its Target, every daily priority and available tasks\nPASS: stage and Today writers reopen/complete the same task with matching flags\nPASS: editing a completed task preserves completion time and updates its shared title\nPASS: cancelled tasks leave progress/estimates/picker and can reopen\nPASS: status wins over contradictory legacy flags without rewriting raw backup\nPASS: progress deduplicates IDs, excludes cancellation and keeps fractional estimates\nPASS: all status writers roll back task/metadata/flags; invalid and missing writes fail\nPASS: direct and stage tasks roll up once; unrelated targets, filters and deletion stay scoped\nPASS: an older successful read cannot clear a newer mutation failure\nPASS: targets: refocus refresh, obsolete key/failure/mutation callback, blur and retry\nPASS: target-detail: refocus refresh, obsolete key/failure/mutation callback, blur and retry\nPASS: today-focus: refocus refresh, obsolete key/failure/mutation callback, blur and retry\n[useTargetDetail] Toggle task status error: Error: disk full\n    at Object.setTaskStatus (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-progress.cjs:146:76)\n    at Object.toggleTaskStatus (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:112:59)\n    at hooks (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-progress.cjs:150:54)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async main (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-progress.cjs:156:47)\nPASS: mutation failure is visible; committed save remains successful if subsequent reload fails\nPASS: 13 status/progress/refresh checks. No user database accessed.\n"
+      },
+      {
+        "command": "node scripts/check-alarms.cjs",
+        "exitCode": 0,
+        "numberedChecks": 12,
+        "output": "(node:3600) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: two simultaneous alarm starts leave no orphan player or vibration loop after stop\nPASS: stop while audio configuration is pending prevents a later alarm start\nPASS: stop preview while loading prevents it from starting after the stop\nPASS: player removal still runs when pause throws\nPASS: a player that fails during play is released\nPASS: a queued haptic callback cannot vibrate after stop\nPASS: alarm takes ownership from an in-flight preview\nPASS: a pending alarm cannot be mixed with a new preview\nPASS: future snooze does not fall back to the original scheduled minute\nPASS: silencing is immediate and survives a database failure for the current occurrence\nPASS: test mode is distinguishable and clearing it does not mute the real scheduled alarm\nPASS: cancelled tasks do not ring\nPASS: 12 alarm checks, 0 failures; native audio and device alarms are mocked.\n"
+      },
+      {
+        "command": "node scripts/check-timer.cjs",
+        "exitCode": 0,
+        "numberedChecks": 14,
+        "output": "(node:7688) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: one persistent session, pause/resume excludes breaks, early finish records actual minutes and repeated finish is idempotent\nPASS: skipping reflection leaves the committed session and task minutes intact\nPASS: restart after countdown deadline caps duration/end at the deadline; reflection updates instead of inserting\nPASS: finalization/state-write failure rolls back everything; sub-minute sessions never invent a minute\nPASS: reflection failure retains pending state; retry/duplicate submission do not duplicate activity\nPASS: task-minutes failure rolls back; a deleted task preserves the original session label with detached FK\nPASS: invalid modes/durations/completed tasks fail; backward clock changes cannot create negative or reversed sessions\nPASS: active and pending-reflection states round trip in existing backup format; malformed/inconsistent timer data is rejected\nPASS: corrupt persisted timer is reported without deletion or overwriting its raw data\nPASS: hook restores a paused timer, respects custom duration/disabled effects, locks changes and records once before reflection\nPASS: preferences refresh on route return; foreground wake lock releases and background deadline completes on resume\nPASS: pending reflection survives a remount; saving it never inserts another session\nPASS: failed auto-save retains the timer without a retry loop; explicit retry commits once despite native effect failures\nPASS: explicit quick duration drives the persisted timer; mode selection uses preferences, stopwatch stays zero and active/restored sessions stay locked\nPASS: 14 timer/session checks. No user database or native effects accessed.\n"
+      },
+      {
+        "command": "node scripts/check-calendar.cjs",
+        "exitCode": 0,
+        "numberedChecks": 33,
+        "output": "(node:14460) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: Asia/Jakarta: local 00:30, overnight overlap and exclusive midnight boundaries\nPASS: Asia/Jakarta: date-only and legacy UTC all-day records stay on their intended calendar date without rewriting\nPASS: Asia/Jakarta: offset-less legacy wall times remain readable across midnight\nPASS: Asia/Jakarta: focus minutes follow local session start day, including cross-midnight sessions\nPASS: Asia/Jakarta: null, zero and default reminders survive storage/read without conflation\nPASS: Asia/Makassar: local 00:30, overnight overlap and exclusive midnight boundaries\nPASS: Asia/Makassar: date-only and legacy UTC all-day records stay on their intended calendar date without rewriting\nPASS: Asia/Makassar: offset-less legacy wall times remain readable across midnight\nPASS: Asia/Makassar: focus minutes follow local session start day, including cross-midnight sessions\nPASS: Asia/Makassar: null, zero and default reminders survive storage/read without conflation\nPASS: Asia/Jayapura: local 00:30, overnight overlap and exclusive midnight boundaries\nPASS: Asia/Jayapura: date-only and legacy UTC all-day records stay on their intended calendar date without rewriting\nPASS: Asia/Jayapura: offset-less legacy wall times remain readable across midnight\nPASS: Asia/Jayapura: focus minutes follow local session start day, including cross-midnight sessions\nPASS: Asia/Jayapura: null, zero and default reminders survive storage/read without conflation\nPASS: invalid title, calendar, clock, ranges, event type, reminder values and query dates fail before writes\nPASS: daily priorities and focus timestamps reject impossible dates/missing clocks/reversed sessions before committing\nPASS: travelling zones moves timed instants while all-day calendar dates stay fixed\nPASS: 23/25-hour DST days, nonexistent clocks, repeated clocks, leap day and year rollover\nPASS: overlap flags nesting/chains, excludes completed/all-day events and allows adjacent boundaries\nPASS: zero-minute scheduling, Android channel, foreground presentation and selective reconciliation\nPASS: denial is not mistaken for iOS provisional permission; passive refresh never prompts, permanently denied permission is respected\nPASS: iOS provisional permission is accepted; Android approximate delivery reports a warning and opens exact-alarm settings only on explicit request\nPASS: disabled, invalid and past reminders are skipped, completion cancels pending reminders\nPASS: web, unavailable native modules and reconciliation errors report failure without throwing into a save\nPASS: missing Android topic module is detected before loading the incompatible barrel; no reminders still succeeds\nPASS: serialized reconciliation lets the later deletion win over a stale in-flight schedule\nPASS: large imports schedule only 50 nearest reminders and report partial coverage instead of overloading native limits\nPASS: Today reloads after rollover and ignores late requests/mutations from the previous date\nPASS: Agenda follows midnight only when viewing today and preserves a deliberately browsed date\nPASS: late Agenda responses are ignored; a committed save succeeds despite notification failure, a failed write stays failed\nPASS: delete/reopen commit before reconciling reminders\nPASS: device calendar updates at midnight, on resume/time-zone change, and cleans timers/listeners\nPASS: 33 calendar/agenda checks. No user database or native notifications accessed.\n"
+      },
+      {
+        "command": "node scripts/check-weekly-reminders.cjs",
+        "exitCode": 0,
+        "numberedChecks": 17,
+        "output": "(node:35204) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: weekly projection covers four weeks with unique, stable occurrence IDs\nPASS: weekly wall clock is local in Asia/Jakarta\nPASS: weekly wall clock is local in Asia/Makassar\nPASS: weekly wall clock is local in Asia/Jayapura\nPASS: a reminder before midnight uses the next day occurrence and the previous day delivery\nPASS: completed/cancelled occurrences are excluded without disabling later weeks\nPASS: disabled schedules and disabled reminders produce no events; zero-minute reminders work\nPASS: long reminder lead times are projected by delivery window, without silently dropping them\nPASS: repository uses persisted dates and completion/cancellation logs for reminder projection\nPASS: calendar reconciliation schedules both namespaces and preserves managed-task alarms\nPASS: permission denial is a reminder warning; passive sync never prompts, explicit retry can recover\nPASS: agenda and weekly reminders share one nearest-50 budget\nPASS: a queued deletion wins over an older pending weekly reminder read\nPASS: shared coordinator reads both repositories afresh and publishes native failure/recovery to all screens\nPASS: weekly writes reconcile only after commit; failed native delivery remains a successful save with shared warning\nPASS: occurrence completion/cancellation commits before resync and a failed write never changes notification state\nPASS: the root controller renews reminders on launch and calendar/resume changes without prompting permission\nPASS: 17 weekly reminder checks, 0 failures; native notifications mocked.\n"
+      },
+      {
+        "command": "node scripts/check-weekly-settings.cjs",
+        "exitCode": 0,
+        "numberedChecks": 21,
+        "output": "(node:34868) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: a failed second day rolls back the entire weekly selection; retry creates exactly two rows\nPASS: invalid weekly selection rejects without writes: []\nPASS: invalid weekly selection rejects without writes: [1,1]\nPASS: invalid weekly selection rejects without writes: [0,2]\nPASS: invalid weekly selection rejects without writes: [8]\nPASS: invalid weekly selection rejects without writes: [1.5]\nPASS: invalid weekly selection rejects without writes: [1,\"2\"]\nPASS: all seven days retain explicit reminder null\nPASS: all seven days retain explicit reminder 0\nPASS: failure on any of seven selected days leaves no partial weekly rows\nPASS: weekly batch also rolls back if commit fails\nPASS: single-day create remains compatible and a committed batch is successful even if reload fails\n[SettingsRepositoryImpl] saveSettings error: Error: Injected second write\n    at D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-weekly-settings.cjs:98:124\n    at Object.executeSync (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-integrity.cjs:26:11)\n    at ExpoSQLitePreparedQuery.run (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:95:52)\n    at QueryPromise.run (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\sqlite-core\\query-builders\\insert.cjs:186:28)\n    at eval (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:193:24)\n    at ExpoSQLiteSession.transaction (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:57:22)\n    at ExpoSQLiteDatabase.transaction (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\sqlite-core\\db.cjs:319:25)\n    at SettingsRepositoryImpl.saveSettings (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:98:41)\n    at D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-weekly-settings.cjs:102:35\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\nPASS: settings rollback and prayer location remain unchanged on second write\n[SettingsRepositoryImpl] saveSettings error: Error: Injected read after write\n    at D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-weekly-settings.cjs:99:111\n    at Object.executeForRawResultSync (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-integrity.cjs:33:11)\n    at ExpoSQLitePreparedQuery.values (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:134:22)\n    at ExpoSQLitePreparedQuery.all (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:108:23)\n    at SQLiteSelectBase.all (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\sqlite-core\\query-builders\\select.cjs:664:28)\n    at SettingsRepositoryImpl.readSettings (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:50:70)\n    at eval (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:211:29)\n    at ExpoSQLiteSession.transaction (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:57:22)\n    at ExpoSQLiteDatabase.transaction (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\sqlite-core\\db.cjs:319:25)\n    at SettingsRepositoryImpl.saveSettings (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:98:41)\nPASS: settings rollback and prayer location remain unchanged on read after write\n[SettingsRepositoryImpl] saveSettings error: DrizzleError: Failed to run the query 'commit'\n    at ExpoSQLiteSession.run (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\sqlite-core\\session.cjs:182:13)\n    at ExpoSQLiteSession.transaction (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:58:12)\n    ... 4 lines matching cause stack trace ...\n    at async check (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-weekly-settings.cjs:7:9)\n    at async main (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-weekly-settings.cjs:91:5) {\n  cause: Error: Injected commit\n      at D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-weekly-settings.cjs:100:67\n      at Object.executeSync (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-integrity.cjs:26:11)\n      at ExpoSQLitePreparedQuery.run (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:95:52)\n      at ExpoSQLiteSession.run (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\sqlite-core\\session.cjs:180:74)\n      at ExpoSQLiteSession.transaction (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\expo-sqlite\\session.cjs:58:12)\n      at ExpoSQLiteDatabase.transaction (D:\\IT\\Software Engineer\\mobile\\MyLife\\node_modules\\drizzle-orm\\sqlite-core\\db.cjs:319:25)\n      at SettingsRepositoryImpl.saveSettings (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-backup.cjs:43:5), <anonymous>:98:41)\n      at D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-weekly-settings.cjs:102:35\n      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n      at async check (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-weekly-settings.cjs:7:9)\n}\nPASS: settings rollback and prayer location remain unchanged on commit\nPASS: settings read errors propagate instead of returning defaults as success\nPASS: a pending or failed settings save preserves committed values and reports failure\nPASS: rapid partial settings saves run in order and retain both committed changes\nPASS: a delayed initial settings read cannot overwrite a newer save success\nPASS: a delayed initial settings read cannot overwrite a newer save failure\nPASS: initial settings load failure is visible\nPASS: 21 weekly/settings checks, 0 failures; no user database accessed.\n"
+      },
+      {
+        "command": "node scripts/check-project-consolidation.cjs",
+        "exitCode": 0,
+        "numberedChecks": 23,
+        "output": "(node:28160) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: fresh install has no converted target or legacy marker\nPASS: startup preserves IDs/history and converts stages, overlapping milestones, loose and milestone-only tasks\nPASS: project status and dates preserved: ACTIVE\nPASS: project status and dates preserved: ON_HOLD\nPASS: project status and dates preserved: COMPLETED\nPASS: project status and dates preserved: PLANNING\nPASS: standalone projects keep no invented category and ID collisions preserve existing targets\nPASS: startup/reimport is idempotent; deleting a converted target does not resurrect it\nPASS: conversion rolls back on /^INSERT INTO targets/\nPASS: conversion rolls back on /^UPDATE tasks SET stage_id/\nPASS: conversion rolls back on /^UPDATE stages SET parent_type/\nPASS: conversion rolls back on /^INSERT INTO stages/\nPASS: conversion rolls back on /^UPDATE tasks SET project_id/\nPASS: conversion rolls back on /^UPDATE agenda_events/\nPASS: conversion rolls back on /^INSERT INTO user_settings/\nPASS: conversion rolls back on /^COMMIT$/\nPASS: safety archive failure blocks conversion without modifying the original data\nPASS: a concurrent edit while saving the safety archive is retained and prevents conversion\nPASS: legacy backup restore converts atomically; exported converted data parses and restores again\nPASS: active restore conversion failure rolls back both imported rows and new targets\nPASS: an inconsistent conversion marker cannot hide remaining project-owned tasks\nPASS: failure on the second project rolls back both conversions\nPASS: schemaVersion 1 backups convert and their safety archives remain importable\nPASS: 23 project consolidation checks; SQLite memory only.\n"
+      },
+      {
+        "command": "node scripts/check-quick-tasks.cjs",
+        "exitCode": 0,
+        "numberedChecks": 24,
+        "output": "(node:22332) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: selected duration/category survive refresh and priority removal: Belajar\nPASS: selected duration/category survive refresh and priority removal: Kesehatan\nPASS: selected duration/category survive refresh and priority removal: Kerja\nPASS: selected duration/category survive refresh and priority removal: Hobi\nPASS: legacy quick task calls retain default estimate and do not override focus preferences\nPASS: a category without explicit duration keeps the default focus preference\nPASS: invalid duration rejects without writes: 0\nPASS: invalid duration rejects without writes: -1\nPASS: invalid duration rejects without writes: 1.5\nPASS: invalid duration rejects without writes: NaN\nPASS: invalid duration rejects without writes: Infinity\nPASS: invalid duration rejects without writes: 45\nPASS: invalid duration rejects without writes: 1441\nPASS: invalid category rejects without writes: \"Unknown\"\nPASS: invalid category rejects without writes: [\"Belajar\"]\nPASS: invalid category rejects without writes: 1\nPASS: task/details/priority roll back together on /^insert into \"user_settings\"/i\nPASS: task/details/priority roll back together on /^insert into \"daily_focus_items\"/i\nPASS: the sixth priority leaves no task or details behind\nPASS: backup and restore retain quick task details; invalid/orphan metadata is rejected\nPASS: deleting task removes its quick task details atomically\nPASS: deleting stage removes its quick task details atomically\nPASS: deleting target removes its quick task details atomically\nPASS: deleting legacy-target-api removes its quick task details atomically\nPASS: 24 quick-task checks, 0 failures; SQLite memory only.\n"
+      },
+      {
+        "command": "node scripts/check-db-imports.cjs",
+        "exitCode": 0,
+        "output": "PASS: 18 database dependency modules have no static runtime import cycles.\n"
+      },
+      {
+        "command": "node scripts/check-ui.cjs",
+        "exitCode": 0,
+        "output": "[RootLayout] Database initialization failed: Error: Relasi legacy bermasalah\n    at initDatabase (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-ui.cjs:347:67)\n    at eval (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-ui.cjs:93:5), <anonymous>:63:45)\n    at eval (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-ui.cjs:93:5), <anonymous>:72:9)\n    at checkStartup (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-ui.cjs:354:51)\nPASS: weekly reminder window/limit and unavailable-permission warning/retry are visible in the active weekly screen.\nPASS: quick task form forwards category/duration, preserves failed drafts, guards duplicate/cross-action saves and back during pending.\nPASS: 11 unified target navigation checks; native router and hooks are mocked.\nPASS: contrast, local dates WIB/WITA/WIT, target draft/navigation, error state, async reflection retry, agenda validation/overnight/off reminder/save retry/double tap, restore confirmation, startup migration failure/retry, alarm test/auto-stop/all actions/storage failure/double tap/back/unmount, weekly draft/failure/retry/double tap, settings location draft/preset/failure/pending/success, 30 screen renders + 6 timer states + 6 cancellation/empty-plan scenarios + 2 agenda warning scenarios (simulated text 100/200%) and 10 form renders. Native layout is not covered.\n"
+      }
+    ],
+    "staticChecks": [
+      {
+        "command": "npm run lint",
+        "exitCode": 0
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "npx expo export --platform android --output-dir .expo/quick-weekly-remediation-export --max-workers 2",
+        "exitCode": 0,
+        "modules": 3775,
+        "bundle": "_expo/static/js/android/entry-b9f057e27a980036b276d8097dd0b64e.hbc",
+        "nativeApk": false
+      }
+    ],
+    "ui": "Production form forwards category/duration, retains false/throw drafts, guards duplicate/cross-action save and back. Weekly screen shows 28-day/50 cap and permission warning/retry. Root waits for DB readiness. Existing render/navigation/alarm/reflection scenarios still pass.",
+    "databaseGraphModules": 18
+  },
+  "boundaries": [
+    "No physical device, APK or native notification delivery verified in this package.",
+    "Doze/reboot/killed-process/native audio and managed-alarm lifecycle remain AUD-13.",
+    "Reopen app periodically to refill the rolling window; calendar's 50 cap does not measure the OS combined quota with managed alarms.",
+    "Nonexistent local DST clocks are rejected and can make the reconciliation report a warning; no normalization implemented. Indonesian tested zones do not use DST.",
+    "No new dependencies, lockfile changes, SQL schema changes or test access to the user's database."
+  ],
+  "manualQA": [
+    "Quick task Kerja 45 minutes: save/reopen/select; verify label and timer 45:00 before starting.",
+    "Remove/re-add daily priority, export/restore test backup; category/duration preserved.",
+    "Weekly routine today a few minutes ahead, reminder at start: check delivery on supporting device/build.",
+    "Edit, complete/cancel/reopen one occurrence, turn reminder off, delete; old notification should not fire, other weeks stay active.",
+    "Deny notification permission: saved data remains, warning appears; retry permissions and reopen. Test background separately."
+  ],
+  "audit": {
+    "closed": [
+      "AUD-09",
+      "AUD-12"
+    ],
+    "openCount": 10,
+    "openSeverity": {
+      "high": 2,
+      "medium": 8,
+      "low": 0
+    },
+    "openIds": [
+      "AUD-10",
+      "AUD-11",
+      "AUD-13",
+      "AUD-14",
+      "AUD-15",
+      "AUD-17",
+      "AUD-18",
+      "AUD-19",
+      "AUD-21",
+      "AUD-22"
+    ]
+  },
+  "sourceIntegrity": {
+    "algorithm": "SHA256",
+    "beforeCount": 173,
+    "afterCount": 180,
+    "changes": [
+      {
+        "path": "src/features/today-focus/presentation/screens/create-priority-screen.tsx",
+        "before": "62a3fc4476cb9f662bb88958afa245869d49835ca590ee56db88cecd6aa75bed",
+        "after": "5cd8ebd513a78f2d4d2bb8e1a896c9f154ea67f5507dfabe467504a4a44dc8be"
+      },
+      {
+        "path": "src/features/agenda/data/repositories/weekly-schedule.repository.impl.ts",
+        "before": "b3c90af0804ec12d2af8fd7ec92c1345800743321125be2964a4848935a94853",
+        "after": "8d1ecdef84141e48653cf798b4a6907990ff00fc525445d6b74dd44342c64b2a"
+      },
+      {
+        "path": "src/features/agenda/data/services/agenda-notification.service.ts",
+        "before": "f784480b744b695f26e95992ffac62c8f17ed3f777506524093378aa97d44568",
+        "after": "8fb8e7f1b2af3bc7d55eaafe30de579e02e4c5bba8a518ccf2f51243ef130fc8"
+      },
+      {
+        "path": "src/features/today-focus/domain/repositories/daily-focus.repository.ts",
+        "before": "b4a96f1878d602b1cfc765d72c6acda90c8e9a951083341ac6f97e56fff49027",
+        "after": "09082a2c1456e8be002fa5c12ec128fb66956a05fb051ce0b2da93f4f2d3ce17"
+      },
+      {
+        "path": "scripts/check-ui.cjs",
+        "before": "4dd5a20f949b3668b7d00c5bc03677879275c6d162ab8069894421b52229d7ac",
+        "after": "e273a42a513d8cec39fe35f6c439f2c58a0e32cbc2d1e524b82679bafe998a68"
+      },
+      {
+        "path": "src/features/stages/data/repositories/stage.repository.impl.ts",
+        "before": "08152f811a08ceed4589ae61cd583ef73e567523dc4998d7040ff4fdbf4e16ba",
+        "after": "d54c90ceee05abd90ed03c7aac2b31f9dba0b998cbfd9fa633d233d1a12d6f5f"
+      },
+      {
+        "path": "src/features/today-focus/domain/entities/daily-focus.entity.ts",
+        "before": "f7dea21f8f1dfc0d012893a647e0f6475555905143ca83d18b84efa81b1bd69e",
+        "after": "077d102c5a605824040ddd355df78625ad2dbe5ed1d3620c07c50c63b82dacbf"
+      },
+      {
+        "path": "src/features/settings/presentation/hooks/use-settings.ts",
+        "before": "08596901052bf0f914c5d1be9712228350d9b23c5da0e37a742fb362d77fa7c4",
+        "after": "277e1e3f9d9c0078411316daf84dd838bc849825a0719a39d25ed1b1abb6c679"
+      },
+      {
+        "path": "scripts/check-weekly-settings.cjs",
+        "before": "67ef09b8b0f127b905c2abccf11de9c1a50c4970d1ffa1070105cde82ba55b28",
+        "after": "88a2e62e2fd32445ec9b227a5357e91f8608eca91edfc29497e169373b4982aa"
+      },
+      {
+        "path": "src/features/today-focus/presentation/components/focus-timer-widget.tsx",
+        "before": "48c82a0fc0ba3b4d1de8d9f66ce1ee03cbe5dd27b44db01b57129772c5cff427",
+        "after": "351b4c6119fc08980e9de204400bcb308ef2d08ba5b7a47c73f9c1cb9b5d25ef"
+      },
+      {
+        "path": "src/features/agenda/presentation/hooks/use-agenda.ts",
+        "before": "a5f4bc8ed6df98914e631d37d468ebb6f267b5e5ed903302187e4c5f63dee67b",
+        "after": "d384957d6acaabfaf960951e9d855e48ed20e9e887445494976c5e9e81b51e9e"
+      },
+      {
+        "path": "src/features/targets/data/repositories/target.repository.impl.ts",
+        "before": "6db991d9c3f447f11d9fac976d24cfa0766c674990a31f5000cbf49e0a31704c",
+        "after": "7a02b3828c2b6e96c48232875a038fe6dd7536ba0a738f909c99f47fd5c70e78"
+      },
+      {
+        "path": "scripts/check-timer.cjs",
+        "before": "c19a206be0dd7139678b8634e52ab270bdfc88338266093d0aa3f270443b6107",
+        "after": "709eca6ad29535d3f495849d8f3d13cc0144d28ed1c6af9c1a7a260ed055bb00"
+      },
+      {
+        "path": "scripts/check-calendar.cjs",
+        "before": "7403bc990604732b5a5716835265c5722c8dcbf5e661297cc218a6a97bdca4e1",
+        "after": "386107f4c93e9285ff684e564640717c528edec08fa24d8ac7ccf4c3a92de107"
+      },
+      {
+        "path": "src/features/today-focus/data/repositories/daily-focus.repository.impl.ts",
+        "before": "92f155aa9a69d2c6fe819cb11f41271a84ec5ef6635ad80b46d71c9d51973b9c",
+        "after": "4ec629d35e82d020ed5a13e850c7ff226717391c84650d7d0f04d75ce71f542d"
+      },
+      {
+        "path": "src/features/agenda/domain/repositories/weekly-schedule.repository.ts",
+        "before": "c5006167905a23267370bd4f63e20c5a6a76a9e219ec6cd212f11e81cd71eea0",
+        "after": "f61d475f475039b7a187ffb0992effba872d73a19615047fdd00cbbab43c2377"
+      },
+      {
+        "path": "src/features/agenda/presentation/hooks/use-weekly-schedules.ts",
+        "before": "6a6f8be45d31ba72d1450b42d91067594a4e6e61338485bd70fd045723cb618d",
+        "after": "2fb94b4cabf75833a9d42aa96519e88568ed3b18590bc3cf7c9f9950f383a4af"
+      },
+      {
+        "path": "src/features/today-focus/presentation/hooks/use-today-focus.ts",
+        "before": "9ff755c9508cf2752d761cef5099e26208e4e6e059e353b6edc5fd0799eb3248",
+        "after": "f347f49f364e1bd9477ec9245a5324189eed0667ceb74f20a53dedef4f6413b7"
+      },
+      {
+        "path": "src/db/repositories/target.repo.ts",
+        "before": "1d0ad6bf5b0b882e7d3c06ae949e5abe1cae859d7310bd883576a3b1b169a4ee",
+        "after": "8d39bda726bde8b9622baa594aca72348ce703278284723d9609f72083237146"
+      },
+      {
+        "path": "src/features/task-manager/data/repositories/managed-task.repository.ts",
+        "before": "51ead551530a7d1293c5dc362074409aa273c95085f2c28b89c9dd4023b15825",
+        "after": "c47f5626cec2c36b437a1423d713d7703edf041246ceeed0dbe78a123b9b9f1a"
+      },
+      {
+        "path": "src/app/_layout.tsx",
+        "before": "322b762e14379df195821c39e88c3a1fd92815498a051abd9dceaeec7b621732",
+        "after": "0a31213bb28f5f3560ec7d4bd246007e69b65990aff804d04b87b569fd7cb119"
+      },
+      {
+        "path": "package.json",
+        "before": "289bc8c0e3d4f7ba032fdd29c4964495cc842feba6c190bbec914ef7ff0311d8",
+        "after": "cb1cdf67d802c0b5216f88d735687c9f362d5996e8e069f3d36c5807dbcb58b6"
+      },
+      {
+        "path": "src/features/today-focus/presentation/screens/today-focus-screen.tsx",
+        "before": "89b7053f3e87809f00ec079a62189eb9f9b612b821a85df5231b9660a958a338",
+        "after": "121391d1c4d9245f90180b3b51ac4dda86e8beac3a8154bba85857a136643cd0"
+      },
+      {
+        "path": "scripts/check-backup.cjs",
+        "before": "9fc9003f710d5e114d0343d71ba7204460362761918587400982f09a0ab815bb",
+        "after": "687ab5756b541ab3bc50b243385964bceb066689d7b7a519e29f7dea3c79a7ab"
+      },
+      {
+        "path": "src/features/today-focus/presentation/hooks/use-focus-timer.ts",
+        "before": "7c284736b40dcdf290d51a0c3202dc7d581ca86c312fd8bf717244e396f613ee",
+        "after": "9d260f2c100b256d10f31a4e2e107d1aefaa35b422d584536fcc149329ae5091"
+      },
+      {
+        "path": "src/features/agenda/presentation/screens/agenda-screen.tsx",
+        "before": "01a8d0b18806928f6722da8b52c5ebed77af6ef452aa020a4cbed1b21fb0dde5",
+        "after": "3976fd28317f0deccab1096f88fbe5203e24aae32763fb976d9a62d02e054a69"
+      },
+      {
+        "path": "src/features/settings/data/backup-format.ts",
+        "before": "48418283966017f63750717d678a1751f212052e406063cd5168cc5491796811",
+        "after": "ea5f130f80733f9e54ecd9741d814d731e9cfc1ba3c2710e3e53d400f2bb8709"
+      },
+      {
+        "path": "src/features/agenda/data/services/calendar-reminder.service.ts",
+        "before": null,
+        "after": "da89fbfe62f81201ddd5232901f55fbe77ec19e95a7d737e761d215ca1a3d7d6"
+      },
+      {
+        "path": "src/features/agenda/domain/weekly-reminders.ts",
+        "before": null,
+        "after": "d51bbef64d3917ee3caad6d3989a126e5b10e4bb34db54cb26c6951339d9be12"
+      },
+      {
+        "path": "src/features/agenda/presentation/components/calendar-reminder-sync.tsx",
+        "before": null,
+        "after": "5f21267faedfc687923fc5be28553eef8ca75900df9c18918355f551b3a197c5"
+      },
+      {
+        "path": "src/features/today-focus/domain/quick-task.ts",
+        "before": null,
+        "after": "03e447e297f1a3b5032c3ccd65e5dae34d0e70a3531a8d0b1893b1eeeb2b0401"
+      },
+      {
+        "path": "src/shared/data/quick-task-details.ts",
+        "before": null,
+        "after": "6619e2a54dba11e243391f5fc972dd7cf7473b26f7b0f248f339e0652a9a83cb"
+      },
+      {
+        "path": "scripts/check-quick-tasks.cjs",
+        "before": null,
+        "after": "cdcd2a296f95be8dda9e8126654bdacc077be43c2dcb2cdff7714bcb0b590ff6"
+      },
+      {
+        "path": "scripts/check-weekly-reminders.cjs",
+        "before": null,
+        "after": "6ec08c274887087ff908f7ca25b26c4a88ab738de71d792a10676d697a55d9ab"
+      }
+    ],
+    "lockfile": {
+      "before": "837627e158169fd555c1958f55e8792836104a614c85f7c856eabd5dd6dab7c8",
+      "after": "837627e158169fd555c1958f55e8792836104a614c85f7c856eabd5dd6dab7c8"
+    }
+  },
+  "references": [
+    "https://docs.expo.dev/versions/v58.0.0/sdk/notifications/"
+  ]
+}

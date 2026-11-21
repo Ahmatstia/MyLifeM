@@ -7,9 +7,9 @@ import {
   dailyFocusItems,
   tasks,
   targets,
-  projects,
   stages,
   focusSessions,
+  userSettings,
   type Task,
   type FocusSession,
 } from '@/db/schema';
@@ -21,6 +21,8 @@ import type {
 } from '../../domain/entities/daily-focus.entity';
 import type { DailyFocusRepository } from '../../domain/repositories/daily-focus.repository';
 import { managedTaskRepository } from '@/features/task-manager/data/repositories/managed-task.repository';
+import { QUICK_TASK_DETAILS_PREFIX, validateQuickTaskOptions, type QuickTaskOptions, type QuickTaskDetails } from '../../domain/quick-task';
+import { readQuickTaskDetails } from '@/shared/data/quick-task-details';
 
 function generateId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -33,10 +35,11 @@ function generateId(): string {
   });
 }
 
-function mapToTaskEntity(row: Task): TaskEntity {
+function mapToTaskEntity(row: Task, details?: QuickTaskDetails): TaskEntity {
   return {
+    quickCategory: details?.category ?? null,
+    focusMinutes: details?.focusMinutes ?? null,
     id: row.id,
-    projectId: row.projectId,
     targetId: row.targetId,
     milestoneId: row.milestoneId,
     title: row.title,
@@ -126,29 +129,25 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
         item: dailyFocusItems,
         task: tasks,
         stageTargetId: stages.targetId,
-        stageProjectId: stages.projectId,
         targetTitle: targets.title,
-        projectTitle: projects.title,
       })
       .from(dailyFocusItems)
       .innerJoin(tasks, eq(tasks.id, dailyFocusItems.taskId))
       .leftJoin(stages, eq(stages.id, tasks.stageId))
       .leftJoin(targets, sql`${targets.id} = COALESCE(${tasks.targetId}, ${stages.targetId})`)
-      .leftJoin(projects, sql`${projects.id} = COALESCE(${tasks.projectId}, ${stages.projectId})`)
       .where(eq(dailyFocusItems.date, date))
       .orderBy(dailyFocusItems.sortOrder);
 
-    return rows.map(({ item, task, stageTargetId, stageProjectId, targetTitle, projectTitle }) => {
-      const mappedTask = mapToTaskEntity(task);
+    const details = readQuickTaskDetails(db);
+    return rows.map(({ item, task, stageTargetId, targetTitle }) => {
+      const mappedTask = mapToTaskEntity(task, details.get(task.id));
       return {
         ...item,
         isCompleted: normalizeTaskStatus(task.status) === 'COMPLETED',
         task: {
           ...mappedTask,
           targetId: mappedTask.targetId || stageTargetId || null,
-          projectId: mappedTask.projectId || stageProjectId || null,
           targetTitle: targetTitle || null,
-          projectTitle: projectTitle || null,
         },
       };
     });
@@ -177,8 +176,10 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
   async createQuickTask(
     title: string,
     date: string,
-    targetId?: string
+    targetId?: string,
+    options: QuickTaskOptions = {}
   ): Promise<TaskEntity> {
+    validateQuickTaskOptions(options);
     const now = new Date().toISOString();
     const taskId = generateId();
 
@@ -191,7 +192,7 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
       description: null,
       priority: 'MEDIUM' as const,
       status: 'TODO' as const,
-      estimatedMinutes: 25,
+      estimatedMinutes: options.estimatedMinutes ?? 25,
       actualMinutes: 0,
       dueDate: date,
       isCompleted: 0,
@@ -203,8 +204,12 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
     if (!newTaskRow.title) throw new Error('Nama tugas wajib diisi.');
     return db.transaction(tx => {
       tx.insert(tasks).values(newTaskRow).run();
+      const details = { category: options.category ?? null, focusMinutes: options.estimatedMinutes ?? null };
+      if (details.category !== null || details.focusMinutes !== null) tx.insert(userSettings).values({
+        key: QUICK_TASK_DETAILS_PREFIX + taskId, value: JSON.stringify(details), updatedAt: now,
+      }).run();
       addPriority(tx, date, taskId);
-      return mapToTaskEntity(tx.select().from(tasks).where(eq(tasks.id, taskId)).get()!);
+      return mapToTaskEntity(tx.select().from(tasks).where(eq(tasks.id, taskId)).get()!, details);
     });
   }
 
@@ -215,7 +220,8 @@ export class DailyFocusRepositoryImpl implements DailyFocusRepository {
       .where(inArray(tasks.status, ['TODO', 'IN_PROGRESS']))
       .orderBy(desc(tasks.updatedAt));
 
-    return rows.map(mapToTaskEntity);
+    const details = readQuickTaskDetails(db);
+    return rows.map(row => mapToTaskEntity(row, details.get(row.id)));
   }
 
   async saveFocusSession(input: SaveSessionInput): Promise<FocusSessionEntity> {

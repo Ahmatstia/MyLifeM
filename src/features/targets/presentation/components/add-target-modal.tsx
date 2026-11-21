@@ -119,7 +119,7 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
       <AppText variant="labelLarge" style={styles.inputLabel}>
         Nama Target *
       </AppText>
-      <TextInput
+      <TextInput accessibilityLabel="Nama target"
         value={title}
         onChangeText={(text) => {
           setTitle(text);
@@ -171,7 +171,7 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
       <AppText variant="labelLarge" style={styles.inputLabel}>
         Deskripsi (Opsional)
       </AppText>
-      <TextInput
+      <TextInput accessibilityLabel="Deskripsi target (opsional)"
         value={description}
         onChangeText={setDescription}
         placeholder="Masukkan deskripsi target (opsional)"
@@ -195,7 +195,7 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
         ).map((p) => {
           const isSelected = priority === p.key;
           return (
-            <Pressable
+            <Pressable accessibilityState={{ selected: isSelected }}
               key={p.key}
               onPress={() => setPriority(p.key)}
               style={[styles.priorityChip, isSelected && styles.priorityChipSelected]}

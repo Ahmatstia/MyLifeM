@@ -113,7 +113,8 @@ async function main() {
   active.runSync('DELETE FROM weekly_schedules WHERE id = ?', ['weeklySchedules']);
   await repository.restoreBackupJson(routineJson, await repository.exportBackupJson());
   check('repository export/restore recovers ROUTINE schedules and their daily logs', () => {
-    assert.deepEqual(store.readBackupData(active), routineSource);
+    assert.deepEqual(store.readBackupData(active).weeklySchedules, routineSource.weeklySchedules);
+    assert.deepEqual(store.readBackupData(active).weeklyScheduleLogs, routineSource.weeklyScheduleLogs);
   });
   await repository.restoreBackupJson(json, await repository.exportBackupJson());
   const invalid = (name, mutate) => check('reject ' + name, () => {
@@ -157,7 +158,16 @@ async function main() {
   active.runSync('UPDATE tasks SET title = ? WHERE id = ?', ['Original data', 'tasks']);
   safety = await repository.exportBackupJson();
   await repository.restoreBackupJson(json, safety);
-  check('repository restores every table through staging and active transaction', () => assert.deepEqual(store.readBackupData(active), source));
+  check('repository restores every table and converts legacy project ownership atomically', () => {
+    const restored = store.readBackupData(active);
+    for (const key of ['categories', 'lifePillars', 'projects', 'milestones', 'dailyFocusItems', 'focusSessions', 'weeklySchedules', 'weeklyScheduleLogs']) assert.deepEqual(restored[key], source[key]);
+    assert.deepEqual(restored.targets.find(row => row.id === 'targets'), source.targets[0]);
+    assert.equal(restored.targets.find(row => row.id === 'target-from-project-projects').title, source.projects[0].title);
+    assert.equal(restored.tasks[0].id, source.tasks[0].id); assert.equal(restored.tasks[0].status, source.tasks[0].status);
+    assert.equal(restored.tasks[0].targetId, 'target-from-project-projects'); assert.equal(restored.tasks[0].projectId, null);
+    assert.equal(restored.stages.find(row => row.id === 'stages').targetId, 'target-from-project-projects');
+    assert.equal(restored.agendaEvents[0].taskId, source.agendaEvents[0].taskId);
+  });
   let before = store.readBackupData(active);
   const stageCount = isolated.length;
   await assert.rejects(repository.restoreBackupJson('{}', safety));
@@ -279,7 +289,8 @@ async function hookChecks(json) {
     'react-native': { Platform: { OS: 'android' }, Alert: { alert: (...args) => calls.push(args.join(': ')) } },
     'expo-router': { router: { replace: () => calls.push('navigate') } },
     '@/db/data-revision': { notifyDataRestored: () => calls.push('remount') },
-    '@/features/agenda/data/services/agenda-notification.service': { AgendaNotificationService: { reconcileAfterRestore: async () => { calls.push('reminders'); throw new Error('Permission unavailable'); } } },
+    '@/features/task-manager/data/repositories/managed-task.repository': { managedTaskRepository: { syncAlarms: async () => {} } },
+    '@/features/agenda/data/services/calendar-reminder.service': { syncCalendarReminders: async () => { calls.push('reminders'); return false; } },
     '../../data/services/backup-file.service': files,
     '../../data/repositories/settings.repository.impl': { settingsRepository: {
       exportBackupJson: async () => { calls.push('snapshot'); return json; },

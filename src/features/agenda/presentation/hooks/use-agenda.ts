@@ -7,6 +7,7 @@ import { reminderTrigger } from '../../domain/agenda-time';
 import { agendaRepository } from '../../data/repositories/agenda.repository.impl';
 import { weeklyScheduleRepository } from '../../data/repositories/weekly-schedule.repository.impl';
 import { AgendaNotificationService } from '../../data/services/agenda-notification.service';
+import { syncCalendarReminders, subscribeCalendarReminderStatus } from '../../data/services/calendar-reminder.service';
 
 export function useAgenda() {
   const calendar = useDeviceCalendar();
@@ -22,6 +23,7 @@ export function useAgenda() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reminderWarning, setReminderWarning] = useState<string | null>(null);
+  useEffect(() => subscribeCalendarReminderStatus(setReminderWarning), []);
   const request = useRef(0);
   const viewKey = selectedDate + '|' + calendar.key;
   const currentView = useRef(viewKey);
@@ -46,19 +48,12 @@ export function useAgenda() {
     }
   }, [selectedDate, viewKey]);
 
-  const syncReminders = useCallback(async (askPermission = false) => {
-    let ready = false;
-    try { ready = await AgendaNotificationService.reconcileReminders(() => agendaRepository.getReminderEvents(), askPermission); } catch { /* The database operation has already committed. */ }
-    setReminderWarning(ready ? null : 'Agenda tetap tersimpan. Sebagian pengingat mungkin belum aktif atau dapat terlambat. Periksa izin notifikasi/alarm tepat waktu dan dukungan perangkat. Maksimal 50 pengingat terdekat dijadwalkan; web belum mendukung pengingat.');
-  }, []);
+  const syncReminders = useCallback((askPermission = false) => syncCalendarReminders(askPermission), []);
   const refresh = useCallback(async () => { setIsLoading(true); await loadEvents(); }, [loadEvents]);
   useFocusEffect(useCallback(() => {
     setIsLoading(true); void loadEvents();
     return () => { request.current++; };
   }, [loadEvents]));
-  useFocusEffect(useCallback(() => { void syncReminders(); },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Clock/zone/resume changes must also reconcile legacy wall-time reminders.
-    [syncReminders, calendar.key]));
 
   const addEvent = async (input: CreateAgendaInput): Promise<boolean> => {
     let created: AgendaEventEntity;
@@ -89,6 +84,7 @@ export function useAgenda() {
       setError('Status jadwal rutin belum tersimpan. Coba lagi.');
       return;
     }
+    await syncReminders();
     await loadEvents();
   };
 
@@ -99,6 +95,7 @@ export function useAgenda() {
       setError('Status pembatalan jadwal belum tersimpan. Coba lagi.');
       return;
     }
+    await syncReminders();
     await loadEvents();
   };
 

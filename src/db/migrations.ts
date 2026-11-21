@@ -1,11 +1,12 @@
-import { getSqliteDb } from './connection';
+import { getSqliteDb, prepareSqliteDb } from './connection';
 import { TABLES_DDL, INDEXES_DDL, SEED_CATEGORIES_SQL, SEED_PILLARS_SQL, WEEKLY_SCHEDULES_DDL } from './schema-sql';
 import { INTEGRITY_DDL } from './integrity';
-import { TABLE_SPECS, parseBackup, checkBackupSize } from '@/features/settings/data/backup-format';
+import { TABLE_SPECS, parseBackup, checkBackupSize, serializeBackup } from '@/features/settings/data/backup-format';
 import { readBackupData, replaceBackupData } from '@/features/settings/data/backup-store';
 import { saveMigrationBackup } from '@/features/settings/data/services/backup-file.service';
 import { setPrayerLocation } from '@/features/prayer-times/data/prayer-location-store';
 import type { SQLiteDatabase } from 'expo-sqlite';
+import { consolidateProjects, hasPendingProjects } from './project-consolidation';
 
 export const DATABASE_VERSION = 1;
 let initialized = false;
@@ -88,7 +89,25 @@ function syncPrayerLocationFromDb(connection: SQLiteDatabase): void {
 }
 
 export async function initDatabase(): Promise<void> {
+  await prepareSqliteDb();
   if (initialized) return;
-  if (!initialization) initialization = initialize().then(() => { syncPrayerLocationFromDb(getSqliteDb()); initialized = true; }).finally(() => { initialization = null; });
+  if (!initialization) initialization = initialize().then(async () => {
+    const connection = getSqliteDb();
+    if (hasPendingProjects(connection)) {
+      let before = '';
+      connection.withTransactionSync(() => { before = snapshot(connection); });
+      const archive = JSON.stringify({ ...JSON.parse(before), capturedAt: new Date().toISOString() });
+      checkBackupSize(new Blob([archive]).size);
+      parseBackup(archive);
+      await saveMigrationBackup(archive);
+      connection.withTransactionSync(() => {
+        if (snapshot(connection) !== before) throw new Error('Data berubah selama penyimpanan salinan pengaman. Silakan coba lagi.');
+        consolidateProjects(connection);
+        parseBackup(serializeBackup(readBackupData(connection)));
+        if (connection.getAllSync('PRAGMA foreign_key_check').length) throw new Error('Relasi hasil pemindahan proyek tidak utuh. Semua perubahan dibatalkan.');
+      });
+    }
+    syncPrayerLocationFromDb(connection); initialized = true;
+  }).finally(() => { initialization = null; });
   return initialization;
 }

@@ -90,7 +90,7 @@ export const AddEditStageModal: React.FC<AddEditStageModalProps> = ({
       <AppText variant="labelLarge" style={styles.inputLabel}>
         Nama Tahapan
       </AppText>
-      <TextInput
+      <TextInput accessibilityLabel="Nama tahap"
         value={name}
         onChangeText={(text) => {
           setName(text);
@@ -104,7 +104,7 @@ export const AddEditStageModal: React.FC<AddEditStageModalProps> = ({
       <AppText variant="labelLarge" style={styles.inputLabel}>
         Deskripsi (Opsional)
       </AppText>
-      <TextInput
+      <TextInput accessibilityLabel="Deskripsi tahap (opsional)"
         value={description}
         onChangeText={setDescription}
         placeholder="Masukkan deskripsi tahap (opsional)"

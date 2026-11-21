@@ -32,15 +32,14 @@ Fitur baru `reviews`/bukti hasil baru dibuat ketika irisan R2 dikerjakan. Jangan
 
 ## 3. Model hubungan yang dituju
 
+Keputusan pengguna terbaru menyatukan perencanaan pada Target. Proyek bukan aggregate aktif; tabel/kolom legacy tetap dipertahankan untuk kompatibilitas cadangan dan jurnal konversi.
+
 ```mermaid
 erDiagram
   CATEGORY ||--o{ TARGET : groups
-  TARGET o|--o{ PROJECT : supports
   TARGET o|--o{ STAGE : direct_roadmap
-  PROJECT o|--o{ STAGE : project_roadmap
   STAGE o|--o{ TASK : orders
   TARGET o|--o{ TASK : direct_owner
-  PROJECT o|--o{ TASK : project_owner
   TASK ||--o{ DAILY_FOCUS_ITEM : selected
   TASK o|--o{ AGENDA_EVENT : scheduled
   TASK o|--o{ FOCUS_SESSION : worked_on
@@ -50,9 +49,9 @@ erDiagram
 Catatan: diagram tidak menyatakan semua relasi opsional boleh terisi sekaligus. Constraint berikut wajib:
 
 - Kategori adalah pengelompokan utama target; pilar legacy dipertahankan selama migrasi dan tidak menjadi input wajib kedua.
-- Stage mempunyai tepat satu parent: target_id atau project_id, keduanya foreign key nyata. Ini menggantikan parent_type/parent_id yang tidak dapat dijaga FK SQLite langsung.
-- Task mandiri mempunyai kedua owner null; task milik target atau proyek mempunyai tepat satu owner. Task boleh tidak punya stage; jika punya stage, owner harus sama dengan stage, divalidasi dalam transaksi. Jangan mengisi targetId dari projectId sebagai salinan hubungan.
-- Project.target_id opsional. Progres target memuat tugas langsung serta tugas proyek yang target_id-nya terkait; DISTINCT task.id mencegah hitung ganda.
+- Stage aktif hanya mempunyai parent Target. Constraint PROJECT pada schema tetap membaca data backup lama sebelum konversi; API pembuatan stage/tugas baru menolak induk proyek.
+- Task mandiri tidak memiliki owner; task Target memiliki target_id. Jika punya stage, owner harus sama dengan stage, divalidasi dalam transaksi. project_id/milestone_id aktif dikosongkan setelah konversi.
+- Progres Target menghitung task langsung dan task tahapannya sekali per ID. Tabel projects/milestones menyimpan catatan kompatibilitas lama dan tidak menjadi sumber progres baru.
 - DailyFocusItem unik pada date + task_id; hanya pemilihan dan urutan. Status terkini dibaca dari task, bukan is_completed salinan.
 - FocusSession dapat bertahan setelah tugas dihapus dengan task_id null dan label historis yang sesuai kebijakan penyimpanan; menit dihitung dari sesi valid, bukan angka UI sementara.
 - Agenda dapat berdiri sendiri atau merujuk tugas. Link target/proyek legacy tidak dihapus sebelum maknanya dimigrasikan; hindari tiga link yang saling bertentangan.
@@ -63,7 +62,11 @@ Catatan: diagram tidak menyatakan semua relasi opsional boleh terisi sekaligus. 
 
 Pilih `title`, `estimated_minutes`, dan satu enum status persist sebagai bentuk utama tugas. Kolom name/estimated_hours/is_completed serta status DONE hanya jalur kompatibilitas selama migrasi. Definisikan prioritas URGENT secara konsisten atau petakan eksplisit ke HIGH; jangan tampilkan URGENT sebagai “Santai”.
 
-Milestone lama harus dipetakan ke Stage berdasarkan project_id dan sort_order. Tugas milestone dipindah ke stage yang sesuai. Jika data mempunyai stage_id sekaligus milestone_id, pilih aturan resolusi, simpan catatan konflik, dan jangan menghancurkan salah satu hubungan diam-diam. Life pillars lama dipetakan ke kategori berdasarkan data aktual; target null tidak semuanya dianggap karier tanpa persetujuan pemaknaan data.
+Konversi di `src/db/project-consolidation.ts` berjalan dalam transaksi setelah snapshot pengaman diverifikasi. Satu proyek menjadi satu Target; kategori/pilar mengikuti target induk bila ada, sisanya null/Umum. Hubungan induk lama dicatat pada deskripsi. ACTIVE/PLANNING menjadi ACTIVE (Rencana dicatat), ON_HOLD menjadi PAUSED, dan COMPLETED tetap COMPLETED; tanggal/prioritas tetap.
+
+Stage lama mempertahankan ID dan urutannya. Milestone menjadi Stage setelah stage yang sudah ada, dengan tenggat/status lamanya dalam catatan. Task yang sekaligus memiliki stage dan milestone tetap pada stage asli dan mendapat catatan milestone; task milestone saja masuk stage hasil konversi, task lepas masuk stage Tugas. ID task, prioritas harian, sesi, status, estimasi dan menit aktual tidak diganti. Tautan agenda beralih ke Target baru.
+
+Jurnal `project_target_v1:<projectId>` dalam user_settings membuat startup/restore idempoten dan mencegah kemunculan ulang Target yang sengaja dihapus. Import memakai konversi yang sama dalam transaksi penggantian; hasilnya harus tetap lolos validasi/limit backup. Tabel lama dan format backup schemaVersion 1/2 dipertahankan; arsip pengaman versi database 0/1 dibaca sebagai data saja. Route proyek lama hanya redirect ke Target, tanpa CRUD proyek. Database version tetap 1 karena struktur tabel tidak berubah.
 
 Ini pekerjaan migrasi data, bukan mengganti nama file/tipe saja. Tunda drop kolom/tabel sampai fixture lama, pemulihan cadangan, dan query versi baru sudah lolos.
 
@@ -106,6 +109,14 @@ Sesi disimpan sebelum dialog refleksi. Menutup dialog hanya melewati refleksi. P
 
 Notifikasi adalah efek setelah transaksi DB. Kegagalan izin/scheduler dilaporkan sebagai reminder belum aktif, bukan kegagalan menyimpan agenda. Lakukan rekonsiliasi reminder ketika jadwal diubah/dibuka kembali; verifikasi kemampuan SDK/build nyata. Jangan mengklaim alarm tepat di semua kondisi OS sebelum diuji.
 
+### Tugas cepat dan pengingat rutin — implementasi 22 November 2026
+
+Kategori kegiatan dan durasi fokus eksplisit disimpan per task pada `user_settings.quick_task_details_v1:<taskId>`; estimasi tetap di tasks. Tidak ada tabel/versi baru. Repository membuat task/metadata/prioritas dan membersihkan metadata saat cascade deletion dalam transaksi sinkron yang sama. Backup memvalidasi bentuk metadata dan ID task. Tugas lama tanpa metadata memakai preset fokus; pemilihan mode eksplisit memakai preset mode. Sesi aktif selalu membaca durasi persisten.
+
+`calendar-reminder.service` menyatukan pembacaan agenda dan proyeksi weekly ke antrean `AgendaNotificationService`, dengan subscription warning bersama. Weekly menjadi notifikasi satu kali per tanggal selama 28 hari, mengecualikan log selesai/batal, terpisah namespace weekly-/agenda-/managed-task-. Antrean membatasi kalender ke 50 terdekat, membaca ulang DB saat operasi dijalankan dan memberi warning pada cakupan sebagian. Root setelah DB siap menyinkronkan launch/resume/kalender dan remount sesudah restore; CRUD dan occurrence menyinkronkan setelah commit. Restore membaca kedua repository sesudah penggantian DB, bukan snapshot agenda saja. Sinkronisasi pasif tidak meminta izin. UI menjelaskan horizon/batas dan menyediakan retry; kegagalan native tidak mengubah commit menjadi gagal.
+
+Jam DST yang tidak tersedia tetap ditolak, sehingga sinkronisasi dapat melaporkan warning; belum ada normalisasi otomatis. Penjadwalan OS dan dukungan Expo Go/native harus dibuktikan di perangkat; paket ini tidak memperbaiki lifecycle alarm managed/cold-start AUD-13.
+
 ## 9. Query dan state UI
 
 SQLite menjadi sumber kebenaran. State hook memuat snapshot untuk rendering; lakukan refresh saat layar kembali fokus dan setelah mutasi. Request lama harus diabaikan bila filter/ID berubah. Jangan menambahkan salinan seluruh database di Zustand hanya untuk invalidasi.
@@ -122,6 +133,14 @@ Penyimpanan lokal bukan sinonim enkripsi. Kebijakan backup OS, file JSON, dan pe
 
 ## 11. Strategi uji
 
-Unit/domain: status, DISTINCT rollup, penghitungan progres, hari lokal, validasi jam/nilai. Integrasi SQLite: FK, cascade/set null, transaksi gagal/rollback, restore round-trip, migrasi fixture lama. Timer: clock terkontrol untuk pause/resume/ganti mode/restart dan idempotensi. UI: satu alur target→tugas proyek→Hari Ini→Agenda→selesai→ringkasan di Android.
+Unit/domain: status, DISTINCT rollup, penghitungan progres, hari lokal, validasi jam/nilai. Integrasi SQLite: FK, cascade/set null, transaksi gagal/rollback, restore round-trip, migrasi fixture lama. Timer: clock terkontrol untuk pause/resume/ganti mode/restart dan idempotensi. UI: satu alur Target→Tahapan→Tugas→Hari Ini→Agenda→selesai→ringkasan di Android.
 
 Native QA: keyboard, tombol kembali, safe area/gesture nav, font 200%, TalkBack, izin notifikasi ditolak, app background/Doze/proses dimatikan. Lint/tsc adalah gerbang dasar, bukan pengganti uji perilaku.
+
+## Perbaikan lanjutan — 22 November 2026
+
+Web menunggu worker lewat prepareSqliteDb/openDatabaseAsync sebelum menjalankan migrasi sinkron yang sama; tidak mengganti transaksi dengan callback async. Metro/Expo Hosting memasang COOP/COEP, sedangkan host lain memerlukan konfigurasi header server. Form yang dibuka lewat deep link tanpa history kembali ke home. Timeline memisahkan kontrol checkbox/aksi dari tombol navigasi sehingga HTML tidak bersarang.
+
+ManagedAlarmSync dipasang sesudah DB siap dan diremount setelah restore. Reconciliation memakai antrean repository yang membaca task committed terbaru; status scheduler tersedia melalui subscription warning. Root memperbarui kalender setelah managed terjadwal agar kuota kalender mempertimbangkan notifikasi yang sudah ada. Response/cold-start diperiksa ID dan occurrence-nya; payload lama/selesai/dibatalkan tidak membunyikan task. Catch-up foreground dibatasi 24 jam. Lagu diputar di aplikasi aktif, sedangkan proses tertutup memakai notifikasi OS. Tidak ada janji full-screen wake lewat polling JS.
+
+Lagu kustom disalin sebelum metadata disimpan atomik. Berkas hilang menggunakan nada bawaan; kegagalan copy/play/simpan diberi feedback. Backup tidak menyertakan berkas audio dan pemulihan menjelaskannya. Dependensi tetap Expo major58, Drizzle ORM tetap; Drizzle Kit yang tidak terpakai dihapus. Override minimatch11.0.1 hanya untuk fingerprint disertai uji kompatibilitas helper, dan perlu ditinjau ketika upstream berubah.

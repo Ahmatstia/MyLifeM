@@ -1,6 +1,7 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../client';
-import { lifePillars, targets, projects, tasks, type Target, type NewTarget, type LifePillar } from '../schema';
+import { lifePillars, targets, tasks, type Target, type NewTarget, type LifePillar } from '../schema';
+import { removeOrphanQuickTaskDetails } from '@/shared/data/quick-task-details';
 
 export const targetRepo = {
   async getPillars(): Promise<LifePillar[]> {
@@ -54,17 +55,12 @@ export const targetRepo = {
   },
 
   async deleteTarget(id: string): Promise<void> {
-    await db.delete(targets).where(eq(targets.id, id));
+    db.transaction(tx => { tx.delete(targets).where(eq(targets.id, id)).run(); removeOrphanQuickTaskDetails(tx); });
   },
 
   async getTargetDetails(id: string) {
     const target = await this.getTargetById(id);
     if (!target) return null;
-
-    const targetProjects = await db
-      .select()
-      .from(projects)
-      .where(eq(projects.targetId, id));
 
     const targetTasks = await db
       .select()
@@ -73,7 +69,6 @@ export const targetRepo = {
 
     return {
       target,
-      projects: targetProjects,
       tasks: targetTasks,
     };
   },

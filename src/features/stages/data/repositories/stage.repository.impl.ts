@@ -1,5 +1,6 @@
 import { normalizeTaskStatus, summarizeTasks, taskStatusFields } from '@/shared/domain/task-status';
 import { writeTaskStatus } from '@/shared/data/task-status';
+import { removeOrphanQuickTaskDetails } from '@/shared/data/quick-task-details';
 import { eq, and, asc, desc, inArray } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { stages, tasks } from '@/db/schema';
@@ -83,6 +84,7 @@ export class StageRepositoryImpl implements StageRepository {
   }
 
   async createStage(input: CreateStageInput): Promise<StageEntity> {
+    if (input.parentType !== 'TARGET') throw new Error('Tahapan hanya dapat dibuat di dalam Target.');
     const cleanName = input.name.trim();
     if (!cleanName) {
       throw new Error('Nama tahapan wajib diisi.');
@@ -103,8 +105,8 @@ export class StageRepositoryImpl implements StageRepository {
       id,
       parentType: input.parentType,
       parentId: input.parentId,
-      targetId: input.parentType === 'TARGET' ? input.parentId : null,
-      projectId: input.parentType === 'PROJECT' ? input.parentId : null,
+      targetId: input.parentId,
+      projectId: null,
       name: cleanName,
       description: input.description?.trim() || null,
       sortOrder: nextSort,
@@ -157,7 +159,7 @@ export class StageRepositoryImpl implements StageRepository {
   }
 
   async deleteStage(id: string): Promise<void> {
-    await db.delete(stages).where(eq(stages.id, id));
+    db.transaction(tx => { tx.delete(stages).where(eq(stages.id, id)).run(); removeOrphanQuickTaskDetails(tx); });
   }
 
   async reorderStage(id: string, direction: 'UP' | 'DOWN'): Promise<void> {
@@ -200,15 +202,15 @@ export class StageRepositoryImpl implements StageRepository {
       throw new Error('Estimasi waktu harus berupa angka lebih besar dari 0.');
     }
 
-    // Determine parent target/project from stage
+    // New tasks belong to the stage's Target; project rows are import compatibility only.
     const stageRow = await db.select().from(stages).where(eq(stages.id, input.stageId));
     if (stageRow.length === 0) {
       throw new Error('Tahapan tidak ditemukan.');
     }
 
     const stage = stageRow[0];
-    const parentTargetId = stage.parentType === 'TARGET' ? stage.parentId : null;
-    const parentProjectId = stage.parentType === 'PROJECT' ? stage.parentId : null;
+    if (stage.parentType !== 'TARGET') throw new Error('Tahapan lama harus dipindahkan ke Target sebelum menambah tugas.');
+    const parentTargetId = stage.parentId;
 
     const now = new Date().toISOString();
     const id = `tsk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -219,7 +221,7 @@ export class StageRepositoryImpl implements StageRepository {
       id,
       stageId: input.stageId,
       targetId: parentTargetId,
-      projectId: parentProjectId,
+      projectId: null,
       title: cleanName,
       name: cleanName,
       description: input.description?.trim() || null,
@@ -302,7 +304,7 @@ export class StageRepositoryImpl implements StageRepository {
   }
 
   async deleteTask(id: string): Promise<void> {
-    await db.delete(tasks).where(eq(tasks.id, id));
+    db.transaction(tx => { tx.delete(tasks).where(eq(tasks.id, id)).run(); removeOrphanQuickTaskDetails(tx); });
   }
 
   async setTaskStatus(id: string, status: TaskStatus): Promise<TaskItemEntity> {

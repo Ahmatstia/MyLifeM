@@ -1,0 +1,132 @@
+{
+  "date": "2026-11-21",
+  "baseCommit": "c45ce5dfc6c4b558b0f296318d0b5c77b23cb7a9",
+  "initialWorkingTree": "clean",
+  "findingsFixed": [
+    "AUD-07"
+  ],
+  "supersededBy": "project-consolidation-remediation.json",
+  "supersededReason": "User subsequently removed the separate Project feature. Original navigation results below remain a historical snapshot.",
+  "status": "FIXED; component/router-mock regression verified; manual Expo Go navigation QA pending",
+  "changes": [
+    "Added Proyek to the existing sidebar, closing it before pushing /(tabs)/projects.",
+    "Added Proyek to Quick Add using the existing replace-to-form pattern for /projects/new; bounded sheet height and scrollable actions accommodate the extra choice.",
+    "Today project tasks open /projects/[id] with their projectId and show project origin labels/icons. Project ownership takes precedence when target context is present.",
+    "Kept the existing target, managed-task and independent-timer destinations and project list create/detail actions."
+  ],
+  "tests": {
+    "baseline": {
+      "command": "node scripts/check-ui.cjs",
+      "exitCode": 1,
+      "navigationCases": 12,
+      "passed": 5,
+      "failed": 7,
+      "failureLines": [
+        "FAIL navigation: Proyek drawer entry closes the menu before opening the existing project list route A visible Proyek menu entry must exist.",
+        "FAIL navigation: Quick Add opens project creation and retains every existing action Proyek",
+        "FAIL navigation: Today opens the correct owner: project task Expected values to be strictly equal:",
+        "FAIL navigation: Today opens the correct owner: project without title Expected values to be strictly equal:",
+        "FAIL navigation: Today opens the correct owner: project with target context Expected values to be strictly equal:",
+        "FAIL navigation: Today opens the correct owner: cancelled project task Expected values to be strictly equal:",
+        "FAIL navigation: Today opens the correct owner: completed project task Expected values to be strictly equal:"
+      ],
+      "note": "Baseline uses the corrected row selector; initial harness lookup by React element key was corrected before this recorded baseline. At baseline, the project cases fail on their origin labels before routing assertions; wrong route is also established by source inspection."
+    },
+    "ui": {
+      "command": "node scripts/check-ui.cjs",
+      "exitCode": 0,
+      "navigationCases": 12,
+      "output": "[RootLayout] Database initialization failed: Error: Relasi legacy bermasalah\n    at initDatabase (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-ui.cjs:359:67)\n    at eval (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-ui.cjs:97:5), <anonymous>:62:45)\n    at eval (eval at load (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-ui.cjs:97:5), <anonymous>:71:9)\n    at checkStartup (D:\\IT\\Software Engineer\\mobile\\MyLife\\scripts\\check-ui.cjs:365:51)\nPASS: 12 project navigation checks; native router and hooks are mocked.\nPASS: contrast, local dates WIB/WITA/WIT, target draft, project lifecycle/navigation, error state, async reflection retry, agenda validation/overnight/off reminder/save retry/double tap, restore confirmation, startup migration failure/retry, alarm test/auto-stop/all actions/storage failure/double tap/back/unmount, weekly draft/failure/retry/double tap, settings location draft/preset/failure/pending/success, 42 screen renders + 6 timer states + 10 cancellation/empty-plan scenarios + 2 agenda warning scenarios (simulated text 100/200%) and 12 form renders. Native layout is not covered.\n"
+    },
+    "typecheck": {
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "exitCode": 0,
+      "output": ""
+    },
+    "lint": {
+      "command": "node node_modules/eslint/bin/eslint.js src scripts --no-cache",
+      "exitCode": 0,
+      "output": ""
+    },
+    "method": "Actual TabLayout/sidebar/quick-add/Today/project-list components, fixture hooks and a controlled router; no native navigator history or device rendering.",
+    "cases": [
+      "Menu tab opens its sidebar",
+      "Sidebar project entry closes before list navigation",
+      "Quick Add project route and all four existing choices",
+      "Project task owner and caption",
+      "Project task without title fallback",
+      "Project with target context",
+      "Cancelled project task",
+      "Completed project task",
+      "Direct target task",
+      "Managed task",
+      "Independent quick task timer",
+      "Project list create/detail"
+    ]
+  },
+  "sourcePreservation": {
+    "coveredFiles": 180,
+    "unchangedFiles": 176,
+    "changes": [
+      {
+        "path": "src\\shared\\ui\\app-sidebar-drawer.tsx",
+        "before": "adb9771b989a8887a97a8e4866625b29c4d97b4bad2bece245fc822231785fc9",
+        "after": "468169ca5e136fc03fc3797fe30acfcc334998de7f243b173a32ee5fb74ba687"
+      },
+      {
+        "path": "scripts\\check-ui.cjs",
+        "before": "b6c695a9d5be0830a3272c99d20b3cd8fb431d201f286af2fe142937827411c7",
+        "after": "670ae65e5d689be844ba3476bbaa998fc58adc0d3108313e3bb520b17addbd73"
+      },
+      {
+        "path": "src\\features\\today-focus\\presentation\\screens\\today-focus-screen.tsx",
+        "before": "9b7c381e9c740145762402c38cf6598c608b7825356008d0500b8960282811dd",
+        "after": "bd3430c13db7f93e62a3e392005422fd31f8e2698c3ade47be29b078aa3924bc"
+      },
+      {
+        "path": "src\\features\\quick-add\\presentation\\screens\\quick-add-screen.tsx",
+        "before": "39d8ea803eb6c79ec4b91696f71d5f40408bd1effc43d618e982dc0b37534a5a",
+        "after": "be720bde2d123f52689bea7c496e090f69e9384baae217c31aeea1a2ea5418f3"
+      }
+    ],
+    "newSourceFiles": [],
+    "deletedFiles": []
+  },
+  "remainingFindings": {
+    "total": 14,
+    "HIGH": 2,
+    "MEDIUM": 11,
+    "LOW": 1
+  },
+  "previousPackageManualValidation": {
+    "finding": "AUD-13 foreground/test-stop only",
+    "status": "USER_REPORTED_PASS",
+    "statement": "oke alarm sudah diiuji dan sempurna,lanjut",
+    "observedByAgent": false,
+    "details": "Recorded separately in alarm-weekly-settings-remediation.json. Does not establish background/cold-start, exact button matrix or AUD-23/24 manual QA."
+  },
+  "manualQA": [
+    "Open Menu -> Proyek from Hari Ini. Create a test project, open its detail and return.",
+    "Use Tambah Baru (+) -> Proyek and verify the create form and back behavior.",
+    "Create a project task, add it to Hari Ini and tap the row; it must open that project's detail.",
+    "Check Quick Add choices on a short display and with large system text; scroll to every choice."
+  ],
+  "scope": {
+    "dependenciesInstalled": false,
+    "lockfileChanged": false,
+    "databaseSchemaChanged": false,
+    "newRoutes": false,
+    "userDatabaseAccessed": false,
+    "nativeBinaryBuilt": false,
+    "developmentServerChanged": false
+  },
+  "limitations": [
+    "Navigation and back behavior on a physical Expo Go device were not observed by the agent.",
+    "Quick Add scrolling/layout on a small native screen and large system fonts still needs manual QA.",
+    "Database/domain suites and platform exports were not repeated for these presentation-only changes; previous results remain separate snapshots.",
+    "AUD-08 (fourth and subsequent target choices in project creation) and the remainder of AUD-13 remain open."
+  ],
+  "references": [
+    "https://docs.expo.dev/versions/v58.0.0/sdk/router/"
+  ]
+}

@@ -30,8 +30,8 @@ export function getTodayPrayerTimes(
   ];
 
   // Determine current and next prayer
-  const adhanCurrent = pt.currentPrayer();
-  const adhanNext = pt.nextPrayer();
+  const next = PRAYER_LIST.find(prayer => prayer.time.getTime() > nowMs);
+  const current = [...PRAYER_LIST].reverse().find(prayer => prayer.time.getTime() <= nowMs);
 
   let nextPrayerItem: PrayerTimeItem | null = null;
   let currentPrayerItem: PrayerTimeItem | null = null;
@@ -39,8 +39,8 @@ export function getTodayPrayerTimes(
 
   const prayers: PrayerTimeItem[] = PRAYER_LIST.map((p) => {
     const isPassed = nowMs > p.time.getTime();
-    const isNext = adhanNext === p.key;
-    const isCurrent = adhanCurrent === p.key;
+    const isNext = next?.key === p.key;
+    const isCurrent = current?.key === p.key;
 
     const item: PrayerTimeItem = {
       key: p.key,

@@ -1,7 +1,4 @@
 import React from 'react';
-import { CreateProjectScreen } from '@/features/projects/presentation/screens/create-project-screen';
-
-export default function CreateProjectRoute() {
-  return <CreateProjectScreen />;
-}
+import { Redirect } from 'expo-router';
+export default function LegacyNewProjectRoute() { return <Redirect href="/targets/new" />; }
 

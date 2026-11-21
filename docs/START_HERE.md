@@ -1,8 +1,14 @@
 # MyLife — arah produk dan hasil audit
 
+**Pembaruan lanjutan 22 November 2026:** kalender lengkap, pilihan salat berikutnya, konfirmasi hapus, statistik faktual, bootstrap/persistensi web, pemulihan alarm dan aksesibilitas/layout diperbaiki. Dependensi diselaraskan ke patch SDK58 dengan npm audit 0 temuan yang diketahui saat pemeriksaan. Tersisa QA perangkat untuk alarm, aksesibilitas dan layout; lihat [audit bagian 11.9](./audits/FULL_PROJECT_AUDIT.md#119-penanganan-seluruh-area-tersisa).
+
+**Pembaruan 22 November 2026:** kategori/durasi Tugas Hari Ini tersimpan hingga timer dan backup; pengingat jadwal rutin diselaraskan bersama agenda setelah perubahan data, resume dan restore. Jendela weekly 28 hari, maksimal 50 pengingat kalender terdekat; warning izin/cakupan tampil pada kedua layar. Bukti dan langkah QA ada di [audit bagian 11.8](./audits/FULL_PROJECT_AUDIT.md#118-tugas-cepat-dan-pengingat-jadwal-rutin). QA notifikasi perangkat tetap terbuka.
+
 Tanggal: 26 Oktober 2026. Bahasa produk: Indonesia. Platform utama: Android; arsitektur tetap memperhatikan iOS.
 
 **Keputusan produk:** MyLife menghubungkan tujuan hidup dengan tindakan harian dan evaluasi berbasis bukti. Pengguna perlu tahu: saya menuju ke mana, langkah berikutnya apa, kapan dikerjakan, dan hasilnya sejauh mana.
+
+**Keputusan pengguna terbaru:** fitur Proyek dihapus karena bertumpang tindih dengan Target. Alur aktif menjadi **Target → Tahapan → Tugas → Hari Ini**. Proyek lama dipindahkan otomatis menjadi Target tersendiri; relasi target induk sebelumnya dicatat dalam deskripsi. Cadangan lama tetap diterima. Rincian penyimpanan dan batas pengujian tercatat pada bagian konsolidasi di ARCHITECTURE_V2 dan audit terbaru.
 
 Audit awal menyelesaikan perencanaan sebelum perubahan kode aplikasi. Redesign aktif berikutnya menyederhanakan UI menjadi palet hijau-netral, kartu lebih ringkas, navigasi konsisten, dan tanpa profil/statistik contoh. Aturan implementasi ada di [desain v3](./design/DESIGN_V3.md); catatan UI sebelumnya adalah riwayat iterasi, bukan arah visual yang aktif.
 
@@ -41,7 +47,7 @@ Tahap sebelumnya, R0.3, memperbaiki tanggal lokal, agenda lintas malam, validasi
 - Stabilkan data dan hubungan progres sebelum memperbesar cakupan.
 - Kategori dikelola dari Pengaturan dengan bottom sheet yang sudah ada. Tidak perlu tab atau layar utama kategori.
 - Mulai dari mahasiswa, orang belajar mandiri, dan pekerja yang sedang meningkatkan keterampilan; perluas berdasarkan kebutuhan yang teruji.
-- Empat tujuan navigasi tetap: Hari Ini, Target, Proyek, Agenda. Evaluasi mingguan masuk melalui ringkasan Hari Ini, bukan tab baru.
+- Tiga layar utama: Hari Ini, Target, Agenda, disertai tombol Tambah dan Menu. Evaluasi mingguan masuk melalui ringkasan Hari Ini, bukan tab baru.
 - Arah visual aktif: **MyLife Clean** — hijau sebagai aksen tindakan, permukaan netral, kepadatan informasi terkontrol, dan hierarki tipografi ringkas.
 - Tidak menambah AI, cloud, keuangan rinci, atau pemantauan kesehatan otomatis pada rilis fondasi.
 

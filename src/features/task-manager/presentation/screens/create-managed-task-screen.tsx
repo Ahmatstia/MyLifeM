@@ -8,7 +8,7 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native';
-import { router } from 'expo-router';
+import { backOrHome } from '@/shared/utils/back-or-home';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BellRing,
@@ -34,6 +34,7 @@ import { fontFamily, radius, space } from '@/theme/tokens';
 import {
   Screen,
   AppText,
+  Banner,
   FormScreenHeader,
   WaveBackdrop,
   SunButton,
@@ -75,7 +76,7 @@ const CATEGORIES: {
 }[] = [
   { id: 'COLLEGE', label: 'Kuliah', icon: GraduationCap },
   { id: 'WORK', label: 'Kerja', icon: Briefcase },
-  { id: 'PROJECT', label: 'Proyek', icon: Rocket },
+  { id: 'PROJECT', label: 'Target', icon: Rocket },
   { id: 'PERSONAL', label: 'Pribadi', icon: User },
 ];
 
@@ -88,13 +89,13 @@ const ALERT_MODES: {
   {
     id: 'ALARM',
     title: 'Alarm Berisik',
-    subtitle: 'Dering layar penuh + putar lagu',
+    subtitle: 'Lagu saat aplikasi aktif; notifikasi saat tertutup',
     icon: BellRing,
   },
   {
     id: 'BOTH',
     title: 'Notif + Alarm',
-    subtitle: 'Ingatkan H-15m lalu dering alarm',
+    subtitle: 'Pengingat 15 menit sebelum jadwal dan saat mulai',
     icon: Zap,
   },
   {
@@ -114,6 +115,8 @@ export const CreateManagedTaskScreen: React.FC = () => {
     previewingTrackId,
     addTask,
     error: saveError,
+    alarmWarning,
+    retryAlarms,
     pickAndSaveCustomSong,
     togglePreviewTrack,
     stopPreview,
@@ -221,7 +224,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
     setIsSubmitting(false);
     if (ok) {
       stopPreview();
-      router.back();
+      backOrHome();
     }
   };
 
@@ -245,7 +248,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
             title="Jadwalkan Tugas Baru"
             onBack={() => {
               stopPreview();
-              router.back();
+              backOrHome();
             }}
           />
         </View>
@@ -261,7 +264,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
           <View style={styles.cloudHeroWrap}>
             <View style={styles.cloudOuterCard}>
               <View style={styles.cloudInnerPill}>
-                <TextInput
+                <TextInput accessibilityLabel="Nama tugas"
                   value={title}
                   onChangeText={(text) => {
                     setTitle(text);
@@ -275,7 +278,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                 <Sparkles size={16} color={s.sun} fill={s.sun} />
               </View>
 
-              <TextInput
+              <TextInput accessibilityLabel="Catatan"
                 value={notes}
                 onChangeText={setNotes}
                 placeholder="Masukkan catatan tugas (opsional)"
@@ -293,7 +296,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
               const Icon = cat.icon;
               const selected = categoryType === cat.id;
               return (
-                <Pressable
+                <Pressable accessibilityState={{ selected: selected }}
                   key={cat.id}
                   onPress={() => setCategoryType(cat.id)}
                   accessibilityRole="button"
@@ -320,7 +323,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
             })}
           </View>
 
-          <TextInput
+          <TextInput accessibilityLabel="Konteks tugas"
             value={courseOrContext}
             onChangeText={setCourseOrContext}
             placeholder={
@@ -344,7 +347,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
               {[30, 60, 90, 120].map((mins) => {
                 const active = estimatedMinutes === mins;
                 return (
-                  <Pressable
+                  <Pressable accessibilityState={{ selected: active }}
                     key={mins}
                     onPress={() => setEstimatedMinutes(mins)}
                     accessibilityRole="button"
@@ -402,7 +405,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
               ].map((preset) => {
                 const active = deadlineDate === preset.date;
                 return (
-                  <Pressable
+                  <Pressable accessibilityState={{ selected: active }}
                     key={preset.label}
                     onPress={() => handleSelectDeadlinePreset(preset.date)}
                     accessibilityRole="button"
@@ -429,7 +432,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                 <AppText style={styles.fieldTinyLabel}>
                   Tanggal Deadline ({formatDayAndDateIndo(deadlineDate)})
                 </AppText>
-                <TextInput
+                <TextInput accessibilityLabel="Tanggal tenggat"
                   value={deadlineDate}
                   onChangeText={setDeadlineDate}
                 placeholder="YYYY-MM-DD"
@@ -439,7 +442,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
               </View>
               <View style={{ flex: 0.9 }}>
                 <AppText style={styles.fieldTinyLabel}>Jam Batas Akhir</AppText>
-                <TextInput
+                <TextInput accessibilityLabel="Jam tenggat"
                   value={deadlineTime}
                   onChangeText={setDeadlineTime}
                   placeholder="23:59"
@@ -486,7 +489,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
               ].map((preset) => {
                 const active = executionDate === preset.date;
                 return (
-                  <Pressable
+                  <Pressable accessibilityState={{ selected: active }}
                     key={preset.label}
                     onPress={() => setExecutionDate(preset.date)}
                     accessibilityRole="button"
@@ -513,7 +516,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                 <AppText style={styles.fieldTinyLabel}>
                   Tanggal Kerjakan ({formatDayAndDateIndo(executionDate)})
                 </AppText>
-                <TextInput
+                <TextInput accessibilityLabel="Tanggal pengerjaan"
                   value={executionDate}
                   onChangeText={setExecutionDate}
                   placeholder="YYYY-MM-DD"
@@ -523,7 +526,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
               </View>
               <View style={{ flex: 0.9 }}>
                 <AppText style={styles.fieldTinyLabel}>Jam Alarm Mulai</AppText>
-                <TextInput
+                <TextInput accessibilityLabel="Jam pengerjaan"
                   value={executionTime}
                   onChangeText={setExecutionTime}
                   placeholder="19:00"
@@ -539,7 +542,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
               {QUICK_EXEC_TIMES.map((tm) => {
                 const selected = executionTime === tm;
                 return (
-                  <Pressable
+                  <Pressable accessibilityState={{ selected: selected }}
                     key={tm}
                     onPress={() => setExecutionTime(tm)}
                     accessibilityRole="button"
@@ -572,12 +575,14 @@ export const CreateManagedTaskScreen: React.FC = () => {
             Pengingat dan alarm
           </AppText>
 
+          {alarmWarning && <Banner variant="warning" message={alarmWarning} actionText="Periksa izin pengingat" onActionPress={retryAlarms} />}
           <View style={styles.alertModeStack}>
+            <Banner variant="info" message="Lagu dan layar alarm tersedia saat aplikasi aktif. Saat aplikasi di latar belakang atau ditutup, pengingat memakai suara notifikasi perangkat; ketuk untuk membuka tugas. Waktu pengiriman mengikuti izin dan pembatasan sistem." />
             {ALERT_MODES.map((mode) => {
               const Icon = mode.icon;
               const selected = alertMode === mode.id;
               return (
-                <Pressable
+                <Pressable accessibilityState={{ selected: selected }}
                   key={mode.id}
                   onPress={() => setAlertMode(mode.id)}
                   accessibilityRole="button"
@@ -738,7 +743,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                 {[5, 10, 15].map((mins) => {
                   const active = snoozeMinutes === mins;
                   return (
-                    <Pressable
+                    <Pressable accessibilityState={{ selected: active }}
                       key={mins}
                       onPress={() => setSnoozeMinutes(mins)}
                       accessibilityRole="button"
@@ -768,7 +773,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
           </AppText>
 
           <View style={styles.subtaskInputRow}>
-            <TextInput
+            <TextInput accessibilityLabel="Nama langkah tugas"
               value={subtaskDraft}
               onChangeText={setSubtaskDraft}
               onSubmitEditing={handleAddSubtask}
@@ -908,10 +913,13 @@ const styles = StyleSheet.create({
   },
   categoryTilesRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   categoryPill: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 110,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -948,6 +956,7 @@ const styles = StyleSheet.create({
     ...formInputBase,
   },
   durationCard: {
+    flexWrap: 'wrap',
     backgroundColor: '#F1EBDC',
     borderRadius: radius.lg,
     paddingHorizontal: space[3],
@@ -960,6 +969,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   durationCardLeft: {
+    maxWidth: '100%',
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -971,10 +982,13 @@ const styles = StyleSheet.create({
   },
   durationChipsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: 6,
   },
   smallChip: {
+    minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: 999,
@@ -1033,7 +1047,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   presetChip: {
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: space[2],
     paddingVertical: space[1],
     borderRadius: radius.sm,
@@ -1086,6 +1100,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   timeQuickPill: {
+    minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: 10,
@@ -1181,12 +1197,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   songPickerHeader: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
   },
   songPickerTitleRow: {
+    maxWidth: '100%',
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -1266,6 +1285,7 @@ const styles = StyleSheet.create({
     color: s.forest,
   },
   snoozeConfigRow: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,

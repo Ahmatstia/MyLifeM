@@ -20,7 +20,8 @@ export function useFocusTimer(options?: UseFocusTimerOptions) {
   const [error, setError] = useState<string | null>(null);
   const [preferences, setPreferences] = useState(DEFAULT_SETTINGS);
   const [idleMode, setIdleMode] = useState<FocusTimerMode>('POMODORO');
-  const [selectedTask, setSelectedTask] = useState<Pick<TaskEntity, 'id' | 'title'> | null>(null);
+  const [selectedTask, setSelectedTask] = useState<(Pick<TaskEntity, 'id' | 'title'> & Partial<Pick<TaskEntity, 'focusMinutes'>>) | null>(null);
+  const [useTaskDuration, setUseTaskDuration] = useState(false);
   const [now, setNow] = useState(Date.now);
   const [foreground, setForeground] = useState(AppState.currentState !== 'background');
   const recorded = useRef(options?.onSessionRecorded);
@@ -64,7 +65,8 @@ export function useFocusTimer(options?: UseFocusTimerOptions) {
   }, [state?.status, preferences.keepAwakeEnabled, foreground]);
   const haptic = () => { try { if (preferences.hapticsEnabled) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); } catch { /* Optional native feedback cannot undo a committed action. */ } };
   const mode = state?.mode ?? idleMode;
-  const selectedMinutes = state ? state.targetMs / 60_000 : mode === 'POMODORO' ? preferences.pomodoroMinutes : mode === 'DEEP_FLOW' ? preferences.deepFlowMinutes : 0;
+  const selectedMinutes = state ? state.targetMs / 60_000 : mode === 'STOPWATCH' ? 0
+    : (useTaskDuration ? selectedTask?.focusMinutes : null) ?? (mode === 'POMODORO' ? preferences.pomodoroMinutes : preferences.deepFlowMinutes);
   const transition = (action: 'pause' | 'resume' | 'finish') => {
     try {
       if (!current.current) return;
@@ -80,11 +82,12 @@ export function useFocusTimer(options?: UseFocusTimerOptions) {
   };
   const changeMode = (next: FocusTimerMode) => {
     if (current.current) { setError('Akhiri dan catat sesi sebelum mengganti mode atau tugas.'); return; }
-    setIdleMode(next); setError(null);
+    setIdleMode(next); setUseTaskDuration(false); setError(null);
   };
-  const setActiveTask = (task: Pick<TaskEntity, 'id' | 'title'> | null) => {
+  const setActiveTask = (task: Pick<TaskEntity, 'id' | 'title'> & Partial<Pick<TaskEntity, 'focusMinutes'>> | null) => {
     if (current.current) { setError('Akhiri dan catat sesi sebelum mengganti mode atau tugas.'); return; }
     setSelectedTask(task);
+    setUseTaskDuration(task?.focusMinutes != null);
   };
   const resetTimer = () => {
     if (current.current) { setError('Gunakan Akhiri & catat agar aktivitas tidak hilang.'); return; }

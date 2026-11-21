@@ -100,7 +100,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
   const handleDeleteTarget = () => {
     Alert.alert(
       'Hapus Target',
-      `Hapus target "${target?.title}" beserta tahapan, tugas langsung, dan prioritas hariannya? Proyek terkait tetap disimpan. Sesi fokus dan agenda dipertahankan dengan tautan yang dilepas.`,
+      `Hapus target "${target?.title}" beserta tahapan, tugas, dan prioritas hariannya? Sesi fokus dan agenda dipertahankan dengan tautan yang dilepas.`,
       [
         { text: 'Batal', style: 'cancel' },
         {
@@ -719,8 +719,8 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   circleNavBtn: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 20,
     backgroundColor: s.card,
     alignItems: 'center',
@@ -729,8 +729,8 @@ const styles = StyleSheet.create({
     borderColor: '#EBE3D0',
   },
   circleDeleteBtn: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 20,
     backgroundColor: '#FFF2F0',
     alignItems: 'center',
@@ -767,6 +767,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   metaBadgesLeft: {
+    maxWidth: '100%',
+    minWidth: 0,
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -866,11 +869,15 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   aggregationLabelRow: {
+    gap: 8,
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   aggregationLeft: {
+    minWidth: 0,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -978,17 +985,22 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   expeditionTitleLeft: {
+    maxWidth: '100%',
+    minWidth: 0,
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     flexWrap: 'wrap',
   },
   expeditionTitle: {
+    flexShrink: 1,
     fontFamily: fontFamily.bold,
     fontSize: 16,
     color: s.ink,
   },
   expeditionSubTag: {
+    flexShrink: 1,
     fontFamily: fontFamily.semibold,
     fontSize: 10,
     letterSpacing: 0.6,

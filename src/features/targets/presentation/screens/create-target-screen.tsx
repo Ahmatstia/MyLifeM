@@ -8,7 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { backOrHome } from '@/shared/utils/back-or-home';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Sparkles,
@@ -94,7 +94,7 @@ export const CreateTargetScreen: React.FC = () => {
         priority,
       });
       setIsSubmitting(false);
-      router.back();
+      backOrHome();
     } catch (err: any) {
       setIsSubmitting(false);
       setErrorMessage(err.message || 'Gagal menyimpan target. Silakan coba lagi.');
@@ -120,7 +120,7 @@ export const CreateTargetScreen: React.FC = () => {
         style={styles.keyboardContainer}
       >
         <View style={{ marginHorizontal: -space[4] }}>
-          <FormScreenHeader title="Target Baru" onBack={() => router.back()} />
+          <FormScreenHeader title="Target Baru" onBack={() => backOrHome()} />
         </View>
 
         {errorMessage && (
@@ -135,7 +135,7 @@ export const CreateTargetScreen: React.FC = () => {
           <View style={styles.cloudHeroWrap}>
             <View style={styles.cloudOuterCard}>
               <View style={styles.cloudInnerPill}>
-                <TextInput
+                <TextInput accessibilityLabel="Nama target"
                   value={title}
                   onChangeText={(text) => {
                     setTitle(text);
@@ -150,7 +150,7 @@ export const CreateTargetScreen: React.FC = () => {
               </View>
 
               <FieldLabel>Deskripsi (opsional)</FieldLabel>
-              <TextInput
+              <TextInput accessibilityLabel="Deskripsi target"
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Masukkan deskripsi target"

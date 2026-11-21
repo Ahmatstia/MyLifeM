@@ -105,7 +105,16 @@ function buildSynthesizedWavBytes(
 
 async function resolvePlayableUri(trackUri: string | null): Promise<string | null> {
   if (!trackUri) return null;
-  if (!trackUri.startsWith('builtin://')) return trackUri;
+  if (!trackUri.startsWith('builtin://')) {
+    if (trackUri.startsWith('file://')) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { File } = require('expo-file-system');
+        if (!new File(trackUri).exists) return null;
+      } catch { return null; }
+    }
+    return trackUri;
+  }
 
   if (Platform.OS === 'web') return null;
 
@@ -199,14 +208,7 @@ export class TaskAlarmAudioService {
     try {
       sourceFile.copy(destFile);
     } catch {
-      // Fallback: use source URI directly if copy is restricted by content provider
-      return {
-        id: trackId,
-        name: cleanName || 'Lagu Kustom',
-        uri: sourceFile.uri,
-        isBuiltIn: false,
-        description: 'Lagu pilihan dari perangkat',
-      };
+      throw new Error('Lagu belum dapat disalin ke aplikasi. Pilih berkas lain agar aksesnya tetap tersedia setelah aplikasi dibuka ulang.');
     }
 
     return {
@@ -286,7 +288,7 @@ export class TaskAlarmAudioService {
     };
     triggerVibrationBurst();
     vibrationTimer = setInterval(triggerVibrationBurst, 1400);
-    if (!playableUri) return;
+    if (!playableUri) throw new Error('Nada alarm belum tersedia. Periksa berkas lagu atau pilih nada bawaan.');
 
     let player: AudioPlayerLike | null = null;
     try {
@@ -300,6 +302,7 @@ export class TaskAlarmAudioService {
     } catch {
       releasePlayer(player);
       if (activeAlarmPlayer === player) activeAlarmPlayer = null;
+      throw new Error('Suara alarm belum dapat diputar. Periksa volume dan berkas lagu.');
     }
   }
 

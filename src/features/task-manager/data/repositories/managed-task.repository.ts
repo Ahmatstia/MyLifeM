@@ -2,8 +2,9 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { normalizeTaskStatus } from '@/shared/domain/task-status';
 import { writeTaskStatus } from '@/shared/data/task-status';
+import { removeOrphanQuickTaskDetails } from '@/shared/data/quick-task-details';
 import { userSettings, tasks, dailyFocusItems } from '@/db/schema';
-import { formatLocalDate, isDateOnly } from '@/shared/utils/local-date';
+import { formatLocalDate, isDateOnly, localTimeToIso } from '@/shared/utils/local-date';
 import { MANAGED_TASKS_KEY, parseManagedTasks, validateManagedTask } from '../../domain/managed-task-validation';
 import {
   BUILT_IN_ALARM_TRACKS,
@@ -131,12 +132,24 @@ export class ManagedTaskRepository {
 
   private reconcileAlarms(askPermission = false): Promise<void> {
     // Native work follows commit, in order, and always reads the latest committed tasks.
-    this.alarmUpdates = this.alarmUpdates.then(() =>
-      TaskAlarmNotificationService.reconcileTaskAlarms(this.readAlarmTasks(), askPermission)
-    ).catch(error => {
+    this.alarmUpdates = this.alarmUpdates.then(async () => {
+      await TaskAlarmNotificationService.reconcileTaskAlarms(this.readAlarmTasks(), askPermission);
+    }).catch(error => {
       console.warn('[ManagedTaskRepository] Pengingat belum dapat diselaraskan:', error);
     });
     return this.alarmUpdates;
+  }
+
+  syncAlarms(askPermission = false): Promise<void> { return this.reconcileAlarms(askPermission); }
+
+  async openAlarmFromNotification(id: string, occurrence: string | null): Promise<boolean> {
+    const task = this.readAlarmTasks().find(item => item.id === id);
+    if (!task || task.isCompleted || (task.alertMode !== 'ALARM' && task.alertMode !== 'BOTH') || occurrence !== alarmOccurrenceKey(task)) return false;
+    const due = task.snoozedUntilIso ? Date.parse(task.snoozedUntilIso) : Date.parse(localTimeToIso(task.executionDate, task.executionTime));
+    if (due > Date.now() || Date.now() - due > 86_400_000 || silencedOccurrences.get(id) === occurrence
+      || (!task.snoozedUntilIso && task.lastAlarmFiredKey?.startsWith(task.executionDate + 'T' + task.executionTime))) return false;
+    if (currentRingingTask) return currentRingingTask.id === id;
+    currentRingingTask = task; currentAlarmIsTest = false; notifyAlarmListeners(); return true;
   }
 
   private readAlarmTasks(): ManagedTaskEntity[] {
@@ -278,6 +291,7 @@ export class ManagedTaskRepository {
   async deleteTask(id: string): Promise<void> {
     this.mutateTasks((current, tx) => {
       tx.delete(tasks).where(eq(tasks.id, id)).run();
+      removeOrphanQuickTaskDetails(tx);
       return current.filter(item => item.id !== id);
     });
     if (currentRingingTask?.id === id) clearRingingAlarm();
@@ -317,11 +331,6 @@ export class ManagedTaskRepository {
 
     const all = this.readAlarmTasks();
     const now = new Date();
-    const todayStr = formatLocalDate(now);
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    const currentHm = `${hh}:${mm}`;
-
     for (const item of all) {
       if (silencedOccurrences.get(item.id) === alarmOccurrenceKey(item)) continue;
       if (item.isCompleted) continue;
@@ -330,7 +339,7 @@ export class ManagedTaskRepository {
       // 1. Check if snoozed alarm is due
       if (item.snoozedUntilIso) {
         const snoozeMs = Date.parse(item.snoozedUntilIso);
-        if (Number.isFinite(snoozeMs) && Date.now() >= snoozeMs) {
+        if (Number.isFinite(snoozeMs) && now.getTime() >= snoozeMs && now.getTime() - snoozeMs <= 86_400_000) {
           currentRingingTask = item;
           currentAlarmIsTest = false;
           notifyAlarmListeners();
@@ -339,11 +348,11 @@ export class ManagedTaskRepository {
         continue;
       }
 
-      // 2. Check if scheduled executionDate + executionTime matches current minute
+      // Catch up once for up to 24 hours after execution, including a resume after the scheduled minute.
       const fireKey = `${item.executionDate}T${item.executionTime}`;
+      const executionMs = Date.parse(localTimeToIso(item.executionDate, item.executionTime));
       if (
-        item.executionDate === todayStr &&
-        item.executionTime === currentHm &&
+        executionMs <= now.getTime() && now.getTime() - executionMs <= 86_400_000 &&
         !item.lastAlarmFiredKey?.startsWith(fireKey)
       ) {
         currentRingingTask = item;
@@ -379,39 +388,21 @@ export class ManagedTaskRepository {
   }
 
   async addCustomAlarmTrack(track: CustomAlarmTrack): Promise<CustomAlarmTrack[]> {
-    try {
-      const row = await db
-        .select()
-        .from(userSettings)
-        .where(eq(userSettings.key, CUSTOM_TRACKS_KEY))
-        .get();
-
-      const existing: CustomAlarmTrack[] =
-        row && row.value ? JSON.parse(row.value) : [];
-      const updated = [track, ...existing.filter((t) => t.id !== track.id)];
-      const nowIso = new Date().toISOString();
-
-      await db
-        .insert(userSettings)
-        .values({
-          key: CUSTOM_TRACKS_KEY,
-          value: JSON.stringify(updated),
-          updatedAt: nowIso,
-        })
-        .onConflictDoUpdate({
-          target: userSettings.key,
-          set: {
-            value: JSON.stringify(updated),
-            updatedAt: nowIso,
-          },
-        });
-
-      notifyDataListeners();
-      return [...updated, ...BUILT_IN_ALARM_TRACKS];
-    } catch {
-      return [track, ...BUILT_IN_ALARM_TRACKS];
-    }
+    if (!track.id.trim() || !track.name.trim() || !track.uri.trim() || track.isBuiltIn !== false) throw new Error('Data lagu kustom tidak valid.');
+    const updated = db.transaction(tx => {
+      const row = tx.select().from(userSettings).where(eq(userSettings.key, CUSTOM_TRACKS_KEY)).get();
+      const existing: CustomAlarmTrack[] = row ? JSON.parse(row.value) : [];
+      if (!Array.isArray(existing)) throw new Error('Daftar lagu kustom tidak valid.');
+      const next = [track, ...existing.filter(item => item.id !== track.id)];
+      const value = JSON.stringify(next), updatedAt = new Date().toISOString();
+      tx.insert(userSettings).values({ key: CUSTOM_TRACKS_KEY, value, updatedAt })
+        .onConflictDoUpdate({ target: userSettings.key, set: { value, updatedAt } }).run();
+      return next;
+    });
+    notifyDataListeners();
+    return [...updated, ...BUILT_IN_ALARM_TRACKS];
   }
+
 }
 
 export const managedTaskRepository = new ManagedTaskRepository();

@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { TABLE_SPECS, type BackupData, type BackupRow } from './backup-format';
+import { TABLE_SPECS, parseBackup, serializeBackup, type BackupData, type BackupRow } from './backup-format';
+import { consolidateProjects } from '@/db/project-consolidation';
 
 export type BackupConnection = Pick<SQLiteDatabase, 'getAllSync' | 'getFirstSync' | 'execSync' | 'runSync' | 'withTransactionSync'>;
 
@@ -34,5 +35,8 @@ export function replaceIfUnchanged(connection: BackupConnection, data: BackupDat
       throw new Error('Data berubah saat cadangan pengaman disimpan. Tidak ada data diganti; silakan ulangi pemulihan.');
     }
     replaceBackupData(connection, data);
+    consolidateProjects(connection);
+    parseBackup(serializeBackup(readBackupData(connection)));
+    if (connection.getAllSync('PRAGMA foreign_key_check').length) throw new Error('Relasi hasil pemulihan tidak utuh. Semua perubahan dibatalkan.');
   });
 }

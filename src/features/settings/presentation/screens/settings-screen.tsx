@@ -607,7 +607,7 @@ export const SettingsScreen: React.FC = () => {
       >
         <View style={styles.locationSheetBody}>
           {settingsError && <Banner variant="error" message={settingsError} />}
-          <TextInput
+          <TextInput accessibilityLabel="Cari kota"
             value={citySearch}
             onChangeText={setCitySearch}
             placeholder="Cari nama kota"
@@ -619,7 +619,7 @@ export const SettingsScreen: React.FC = () => {
             {(['ALL', 'WIB', 'WITA', 'WIT'] as const).map((reg) => {
               const selected = regionFilter === reg;
               return (
-                <Pressable
+                <Pressable accessibilityState={{ selected: selected }}
                   key={reg}
                   onPress={() => setRegionFilter(reg)}
                   accessibilityRole="button"
@@ -653,6 +653,7 @@ export const SettingsScreen: React.FC = () => {
                   <Pressable
                     key={preset.id}
                     onPress={() => handleSelectCityPreset(preset)}
+                    accessibilityLabel={`Pilih kota ${preset.cityName}`}
                     disabled={isLoading || isSavingSettings}
                     accessibilityRole="button"
                     accessibilityState={{ selected: isSelected }}
@@ -703,7 +704,7 @@ export const SettingsScreen: React.FC = () => {
               </AppText>
             </View>
 
-            <TextInput
+            <TextInput accessibilityLabel="Nama kota atau kabupaten"
               value={customCityName}
               editable={!isSavingSettings}
               onChangeText={setCustomCityName}
@@ -712,7 +713,7 @@ export const SettingsScreen: React.FC = () => {
               style={styles.customInput}
             />
             <View style={styles.customLatLngRow}>
-              <TextInput
+              <TextInput accessibilityLabel="Lintang lokasi"
                 value={customLat}
                 editable={!isSavingSettings}
                 onChangeText={setCustomLat}
@@ -721,7 +722,7 @@ export const SettingsScreen: React.FC = () => {
                 keyboardType="numbers-and-punctuation"
                 style={[styles.customInput, { flex: 1 }]}
               />
-              <TextInput
+              <TextInput accessibilityLabel="Bujur lokasi"
                 value={customLng}
                 editable={!isSavingSettings}
                 onChangeText={setCustomLng}
@@ -827,9 +828,12 @@ export const SettingsScreen: React.FC = () => {
               {pendingBackup.summary.agenda} agenda. Pilar, prioritas harian, dan
               preferensi ikut dipulihkan.
             </AppText>
+            <AppText variant="bodySmall" color="onSurfaceVariant">
+              Jika cadangan memuat proyek versi lama, datanya dipulihkan sebagai Target. Jumlah Target dan tahapan dapat bertambah.
+            </AppText>
             <Banner
               variant="warning"
-              message="Sesi fokus yang sedang berjalan akan dihentikan. Salinan data saat ini disimpan sebelum penggantian. Jangan tutup aplikasi selama proses berlangsung."
+              message="Sesi fokus yang sedang berjalan akan dihentikan. Salinan data saat ini disimpan sebelum penggantian. Berkas lagu kustom tidak ikut dicadangkan; pilih ulang jika tidak tersedia. Jangan tutup aplikasi selama proses berlangsung."
             />
             <AppText variant="labelLarge">
               Ketik PULIHKAN untuk melanjutkan
@@ -860,7 +864,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  topBarLeft: { flexDirection: 'row', alignItems: 'center', gap: space[3] },
+  topBarLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: space[3] },
   topBarTitle: {
     fontFamily: fontFamily.bold,
     fontSize: 26,
