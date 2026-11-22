@@ -12,7 +12,6 @@ import { useLocalSearchParams } from 'expo-router';
 import { backOrHome } from '@/shared/utils/back-or-home';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Sparkles,
   Briefcase,
   Users,
   GraduationCap,
@@ -22,12 +21,11 @@ import {
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase, formInputCompact } from '@/shared/ui/form-control-styles';
-import { radius, space, fontFamily } from '@/theme/tokens';
+import { radius, space, fontFamily, stroke, typography } from '@/theme/tokens';
 import {
   Screen,
   AppText,
   FormScreenHeader,
-  WaveBackdrop,
   ChoiceTile,
   SunButton,
   FieldLabel,
@@ -137,7 +135,7 @@ export const CreateAgendaScreen: React.FC = () => {
       style={styles.screenBg}
       contentContainerStyle={{ ...styles.scrollContent, paddingBottom: 120 + insets.bottom }}
     >
-      <WaveBackdrop variant="form" withBottomHills />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
@@ -169,7 +167,7 @@ export const CreateAgendaScreen: React.FC = () => {
                   style={styles.cloudInput}
                   autoFocus
                 />
-                <Sparkles size={20} color={s.sun} fill={s.sun} />
+
               </View>
 
               <FieldLabel>Catatan (opsional)</FieldLabel>
@@ -209,7 +207,7 @@ export const CreateAgendaScreen: React.FC = () => {
               <Switch
                 value={isAllDay}
                 onValueChange={setIsAllDay}
-                trackColor={{ false: '#D8D0BE', true: s.forest }}
+                trackColor={{ false: colors.outlineVariant, true: s.forest }}
               />
             </View>
 
@@ -246,7 +244,7 @@ export const CreateAgendaScreen: React.FC = () => {
                   <Switch
                     value={endsTomorrow}
                     onValueChange={setEndsTomorrow}
-                    trackColor={{ false: '#D8D0BE', true: s.forest }}
+                    trackColor={{ false: colors.outlineVariant, true: s.forest }}
                   />
                 </View>
 
@@ -317,10 +315,10 @@ const styles = StyleSheet.create({
     marginTop: space[2],
     marginBottom: space[2],
   },
-  cloudOuterCard: { gap: 8, },
-  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, gap: 8, },
-  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: 14, color: s.ink, paddingVertical: 8, ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
-  cloudDescInput: { fontFamily: fontFamily.regular, fontSize: 13, color: s.ink, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: s.card, ...formInputBase, },
+  cloudOuterCard: { gap: space[2], },
+  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, paddingHorizontal: space[3], gap: space[2], },
+  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: typography.bodyMedium.fontSize, color: s.ink, paddingVertical: space[2], ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
+  cloudDescInput: { fontFamily: fontFamily.regular, fontSize: typography.labelMedium.fontSize, color: s.ink, padding: space[3], borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, backgroundColor: s.card, ...formInputBase, },
   categoryTilesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -328,11 +326,11 @@ const styles = StyleSheet.create({
     gap: space[2],
   },
   timeCard: {
-    backgroundColor: '#EEF0E8',
+    backgroundColor: colors.surfaceContainerLow,
     borderRadius: radius.lg,
     padding: space[3],
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     gap: space[3],
   },
   switchRow: {
@@ -347,12 +345,12 @@ const styles = StyleSheet.create({
   },
   rowHeading: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
   },
   subLabel: {
     fontFamily: fontFamily.medium,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   timeInputsRow: {
@@ -365,33 +363,33 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: space[3],
     paddingVertical: space[2],
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   miniLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 10,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   timeInput: {
     fontFamily: fontFamily.bold,
-    fontSize: 16,
+    fontSize: typography.titleMedium.fontSize,
     color: s.ink,
-    paddingVertical: 2,
+    paddingVertical: space[0.5],
     ...formInputCompact,
   },
   reminderRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: space[1],
   },
   reminderChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
+    borderRadius: radius.pill,
     backgroundColor: s.card,
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   reminderChipSelected: {
     backgroundColor: s.forest,
@@ -399,28 +397,28 @@ const styles = StyleSheet.create({
   },
   reminderChipText: {
     fontFamily: fontFamily.medium,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   reminderChipTextSelected: {
     fontFamily: fontFamily.bold,
-    color: '#FFFFFF',
+    color: colors.surfaceContainerLowest,
   },
   locationPillRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0E8',
+    backgroundColor: colors.surfaceContainerLow,
     borderRadius: radius.md,
     paddingHorizontal: space[3],
     paddingVertical: space[2],
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     gap: space[3],
   },
   locationInput: {
     flex: 1,
     fontFamily: fontFamily.medium,
-    fontSize: 14,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
     ...formInputCompact,
   },

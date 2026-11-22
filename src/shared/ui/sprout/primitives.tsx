@@ -9,7 +9,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { Check, ArrowRight, ArrowLeft, type LucideIcon } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { fontFamily, space } from '@/theme/tokens';
+import { elevation, fontFamily, interaction, radius, space, stroke, touchTarget, typography } from '@/theme/tokens';
 import { AppText } from '../app-text';
 
 const s = colors.sprout;
@@ -103,26 +103,25 @@ export const HeroBlob: React.FC<HeroBlobProps> = ({ children, onPress, style, ac
 /* ------------------------------------------------------------------ */
 export interface SproutCheckProps {
   checked: boolean;
+  disabled?: boolean;
   onPress: () => void;
   accessibilityLabel: string;
   size?: number;
 }
 
-export const SproutCheck: React.FC<SproutCheckProps> = ({ checked, onPress, accessibilityLabel, size = 28 }) => (
+export const SproutCheck: React.FC<SproutCheckProps> = ({ checked, disabled = false, onPress, accessibilityLabel, size = space[6] }) => (
   <Pressable
     onPress={onPress}
     accessibilityRole="checkbox"
     aria-checked={checked}
-    accessibilityState={{ checked }}
+    disabled={disabled}
+    accessibilityState={{ checked, disabled }}
     accessibilityLabel={accessibilityLabel}
-    hitSlop={8}
-    style={[
-      styles.check,
-      { width: size, height: size, borderRadius: size / 2 },
-      checked && styles.checkDone,
-    ]}
+    style={({ pressed }) => [styles.checkTarget, pressed && styles.checkPressed]}
   >
-    {checked && <Check size={size * 0.55} color="#FFFFFF" strokeWidth={3} />}
+    <View style={[styles.check, { width: size, height: size, borderRadius: size / 2 }, checked && styles.checkDone]}>
+      {checked && <Check size={size * 0.55} color={colors.onPrimary} strokeWidth={stroke.strong} />}
+    </View>
   </Pressable>
 );
 
@@ -139,11 +138,11 @@ export interface IconTileProps {
 
 const tileTone = {
   leaf: { bg: s.leafSoft, fg: s.forest },
-  sun: { bg: s.sunSoft, fg: '#9A6A00' },
+  sun: { bg: s.sunSoft, fg: colors.secondary },
   rose: { bg: s.roseSoft, fg: s.rose },
   teal: { bg: s.tealSoft, fg: s.teal },
   grape: { bg: s.grapeSoft, fg: s.grape },
-  forest: { bg: s.forest, fg: '#FFFFFF' },
+  forest: { bg: s.forest, fg: colors.surfaceContainerLowest },
   cream: { bg: s.creamDeep, fg: s.ink },
 } as const;
 
@@ -173,11 +172,10 @@ export interface SunButtonProps {
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
-  withArrow?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
-export const SunButton: React.FC<SunButtonProps> = ({ title, onPress, loading, disabled, withArrow = true, style }) => (
+export const SunButton: React.FC<SunButtonProps> = ({ title, onPress, loading, disabled, style }) => (
   <Pressable
     onPress={onPress}
     disabled={disabled || loading}
@@ -192,7 +190,6 @@ export const SunButton: React.FC<SunButtonProps> = ({ title, onPress, loading, d
     ]}
   >
     <AppText style={styles.sunText}>{loading ? 'Menyimpan…' : title}</AppText>
-    {withArrow && !loading && <ArrowRight size={20} color={s.ink} strokeWidth={2.6} />}
   </Pressable>
 );
 
@@ -217,11 +214,11 @@ export const SproutTopBar: React.FC<SproutTopBarProps> = ({ title, onBack, right
           hitSlop={10}
           style={styles.backBtn}
         >
-          <ArrowLeft size={22} color={light ? '#FFFFFF' : s.ink} strokeWidth={2.4} />
+          <ArrowLeft size={22} color={light ? colors.surfaceContainerLowest : s.ink} strokeWidth={2.4} />
         </Pressable>
       )}
     </View>
-    <AppText style={[styles.topTitle, light && { color: '#FFFFFF' }]}>
+    <AppText style={[styles.topTitle, light && { color: colors.surfaceContainerLowest }]}>
       {title}
     </AppText>
     <View style={[styles.topSide, { alignItems: 'flex-end' }]}>{right}</View>
@@ -330,16 +327,14 @@ export const FieldLabel: React.FC<FieldLabelProps> = ({ children }) => (
   <AppText style={styles.fieldLabel}>{children}</AppText>
 );
 
-const shadow = { shadowColor: '#203E35', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 };
-
-export const sproutShadow = shadow;
+export const sproutShadow = elevation.level1;
 
 const styles = StyleSheet.create({
-  softCard: { borderRadius: 16, padding: 12, borderWidth: 1, borderColor: colors.border, },
+  softCard: { borderRadius: radius.lg, padding: space[3], borderWidth: stroke.hairline, borderColor: colors.border, },
   pressedSoft: { transform: [{ scale: 0.985 }], opacity: 0.96 },
   hero: {
     minHeight: 112,
-    borderRadius: 26,
+    borderRadius: radius.xxl,
     overflow: 'hidden',
   },
   heroContent: {
@@ -348,32 +343,34 @@ const styles = StyleSheet.create({
     paddingTop: space[6],
     paddingBottom: space[4],
   },
+  checkTarget: { minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' },
+  checkPressed: { opacity: interaction.pressedOpacity },
   check: {
-    borderWidth: 2,
-    borderColor: '#B9C49F',
-    backgroundColor: '#FFFFFF',
+    borderWidth: stroke.selected,
+    borderColor: colors.outline,
+    backgroundColor: colors.surfaceContainerLowest,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkDone: { backgroundColor: s.forest, borderColor: s.forest },
   tile: { alignItems: 'center', justifyContent: 'center' },
-  sun: { minHeight: 48, paddingVertical: 12, borderRadius: 12, backgroundColor: s.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 16, },
+  sun: { minHeight: touchTarget.min, paddingVertical: space[3], borderRadius: radius.md, backgroundColor: s.sun, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], paddingHorizontal: space[4], },
   sunPressed: { transform: [{ scale: 0.98 }], backgroundColor: s.sunDeep },
   sunDisabled: { opacity: 0.55 },
-  sunText: { fontFamily: fontFamily.bold, fontSize: 14, color: s.ink, },
+  sunText: { fontFamily: fontFamily.bold, fontSize: typography.bodyMedium.fontSize, color: s.ink, },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 52,
+    minHeight: touchTarget.comfortable,
     paddingHorizontal: space[1],
   },
   topSide: { width: 48, justifyContent: 'center' },
-  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center' },
   topTitle: {
     flex: 1,
     textAlign: 'center',
     fontFamily: fontFamily.bold,
-    fontSize: 18,
+    fontSize: typography.headlineSmall.fontSize,
     color: s.ink,
   },
   section: {
@@ -382,19 +379,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: space[2],
   },
-  sectionLeft: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8, flexShrink: 1, },
-  sectionTitle: { fontFamily: fontFamily.bold, fontSize: 16, color: s.ink, },
-  sectionHint: { fontFamily: fontFamily.medium, fontSize: 12, color: s.inkMuted },
-  sectionAction: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44 },
-  sectionActionText: { fontFamily: fontFamily.medium, fontSize: 13, color: s.ink },
-  pillTabs: { flexDirection: 'row', backgroundColor: s.creamDeep, borderRadius: 12, padding: 3, gap: 3, },
-  pillTab: { flex: 1, minHeight: 44, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8, paddingVertical: 6, },
+  sectionLeft: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: space[2], flexShrink: 1, },
+  sectionTitle: { fontFamily: fontFamily.bold, fontSize: typography.titleMedium.fontSize, color: s.ink, },
+  sectionHint: { fontFamily: fontFamily.medium, ...typography.labelMedium, color: s.inkMuted },
+  sectionAction: { flexDirection: 'row', alignItems: 'center', gap: space[1], minHeight: touchTarget.min },
+  sectionActionText: { fontFamily: fontFamily.medium, ...typography.labelLarge, color: s.ink },
+  pillTabs: { flexDirection: 'row', backgroundColor: s.creamDeep, borderRadius: radius.md, padding: space[0.5], gap: space[0.5], },
+  pillTab: { flex: 1, minHeight: touchTarget.min, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space[2], paddingVertical: space[1], },
   pillTabActive: { backgroundColor: s.forest },
-  pillTabText: { textAlign: 'center', flexShrink: 1, fontFamily: fontFamily.semibold, fontSize: 13, color: s.inkMuted },
-  pillTabTextActive: { color: '#FFFFFF', fontFamily: fontFamily.bold },
-  choice: { flexGrow: 1, flexBasis: 120, minWidth: 0, minHeight: 48, padding: 10, borderRadius: 10, backgroundColor: s.card, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: colors.border, },
+  pillTabText: { textAlign: 'center', flexShrink: 1, fontFamily: fontFamily.semibold, ...typography.labelLarge, color: s.inkMuted },
+  pillTabTextActive: { color: colors.surfaceContainerLowest, fontFamily: fontFamily.bold },
+  choice: { flexGrow: 1, flexBasis: 120, minWidth: 0, minHeight: touchTarget.min, padding: space[2], borderRadius: radius.sm, backgroundColor: s.card, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], borderWidth: stroke.hairline, borderColor: colors.border, },
   choiceSelected: { backgroundColor: s.leafSoft, borderColor: s.forest },
-  choiceLabel: { textAlign: 'center', flexShrink: 1, fontFamily: fontFamily.medium, fontSize: 12, color: s.inkMuted, },
+  choiceLabel: { textAlign: 'center', flexShrink: 1, fontFamily: fontFamily.medium, ...typography.labelMedium, color: s.inkMuted, },
   choiceLabelSelected: { fontFamily: fontFamily.bold, color: s.forest },
-  fieldLabel: { fontFamily: fontFamily.semibold, fontSize: 12, color: s.ink, marginTop: 8, marginBottom: 4, },
+  fieldLabel: { fontFamily: fontFamily.semibold, ...typography.labelMedium, color: s.ink, marginTop: space[2], marginBottom: space[1], },
 });

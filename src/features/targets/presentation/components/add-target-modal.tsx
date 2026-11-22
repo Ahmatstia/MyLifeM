@@ -8,7 +8,7 @@ import {
 import { Target as TargetIcon } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase, formLabelSpacing, formTextArea } from '@/shared/ui/form-control-styles';
-import { radius, space, fontFamily } from '@/theme/tokens';
+import { radius, space, fontFamily, stroke, typography, touchTarget } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
@@ -140,7 +140,7 @@ export const AddTargetModal: React.FC<AddTargetModalProps> = ({
       {categories.length === 0 ? (
         <View style={styles.noCategoriesCard}>
           <AppText variant="bodySmall" color="onSurfaceVariant">
-            Belum ada kategori. Buat kategori melalui Pengaturan → Kategori target, lalu kembali ke sini.
+            Belum ada kategori. Buat kategori melalui bagian Kategori target di Pengaturan, lalu kembali ke sini.
           </AppText>
         </View>
       ) : (
@@ -237,19 +237,19 @@ const styles = StyleSheet.create({
     padding: space[3],
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.xl,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     borderColor: colors.outline,
     gap: space[2],
   },
   textInput: {
     backgroundColor: colors.surfaceContainerLowest,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     borderColor: colors.outline,
     borderRadius: radius.lg,
     color: colors.onSurface,
     paddingHorizontal: space[3],
-    minHeight: 56,
-    fontSize: 14,
+    minHeight: touchTarget.comfortable,
+    fontSize: typography.bodyMedium.fontSize,
     fontFamily: fontFamily.regular,
     ...formInputBase,
   },
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     paddingVertical: space[2],
     paddingHorizontal: space[4],
     borderRadius: radius.pill,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
   },
@@ -284,9 +284,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
+    minHeight: touchTarget.min,
     borderRadius: radius.pill,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     borderColor: colors.outline,
     backgroundColor: colors.surfaceContainerLowest,
   },

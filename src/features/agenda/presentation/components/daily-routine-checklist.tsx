@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { Check, Clock, ChevronDown, ChevronUp, SunMedium, Ban, RotateCcw } from 'lucide-react-native';
+import { Clock, ChevronDown, ChevronUp, SunMedium, Ban, RotateCcw } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, fontFamily } from '@/theme/tokens';
+import { radius, space, fontFamily, touchTarget, typography, stroke } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
+import { SproutCheck } from '@/shared/ui/sprout/primitives';
 import { Card } from '@/shared/ui/card';
 import type { ProjectedWeeklyOccurrence } from '../../domain/entities/weekly-schedule.entity';
 
@@ -37,7 +38,8 @@ export const DailyRoutineChecklist: React.FC<DailyRoutineChecklistProps> = ({
         onPress={() => setIsExpanded(!isExpanded)}
         style={styles.header}
         accessibilityRole="button"
-        accessibilityLabel="Lipat atau buka ritme keseharian"
+        accessibilityLabel="Rutinitas harian"
+        accessibilityState={{ expanded: isExpanded }}
       >
         <View style={styles.headerLeft}>
           <View style={[styles.iconCircle, isAllCompleted && styles.iconCircleCompleted]}>
@@ -45,10 +47,7 @@ export const DailyRoutineChecklist: React.FC<DailyRoutineChecklistProps> = ({
           </View>
           <View style={styles.headerTitles}>
             <AppText variant="labelMedium" color="onSurface" style={styles.headerTitle}>
-              RITME KESEHARIAN
-            </AppText>
-            <AppText variant="bodySmall" color="onSurfaceVariant">
-              Rutinitas personal & pembiasaan
+              Rutinitas harian
             </AppText>
           </View>
         </View>
@@ -86,19 +85,12 @@ export const DailyRoutineChecklist: React.FC<DailyRoutineChecklistProps> = ({
                 ]}
               >
                 {/* Checkbox */}
-                <Pressable
-                  onPress={() => onToggleComplete(schedule.id, isCompleted)}
+                <SproutCheck
+                  checked={isCompleted}
                   disabled={isCancelled}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: isCompleted }}
-                  style={[
-                    styles.checkbox,
-                    isCompleted && styles.checkboxCompleted,
-                    isCancelled && styles.checkboxDisabled,
-                  ]}
-                >
-                  {isCompleted && <Check size={14} color={colors.onPrimary} />}
-                </Pressable>
+                  accessibilityLabel={`${isCompleted ? 'Buka kembali' : 'Selesaikan'} ${schedule.title}`}
+                  onPress={() => onToggleComplete(schedule.id, isCompleted)}
+                />
 
                 {/* Content */}
                 <Pressable
@@ -160,14 +152,15 @@ export const DailyRoutineChecklist: React.FC<DailyRoutineChecklistProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FAF5EB',
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#1E1E2E',
-    boxShadow: '2px 2px 0px #1E1E2E',
-    marginBottom: 12,
+    backgroundColor: colors.background,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.outlineVariant,
+    marginBottom: space[3],
   },
   header: {
+    minHeight: touchTarget.min,
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -204,7 +197,7 @@ const styles = StyleSheet.create({
   },
   badge: {
     paddingHorizontal: space[2],
-    paddingVertical: 2,
+    paddingVertical: space[0.5],
     borderRadius: radius.full,
     backgroundColor: colors.surfaceContainerHighest,
   },
@@ -213,25 +206,25 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
   },
   itemList: {
     marginTop: space[3],
     paddingTop: space[2],
-    borderTopWidth: 1,
+    borderTopWidth: stroke.hairline,
     borderTopColor: colors.outlineVariant,
     gap: space[2],
   },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    backgroundColor: '#FFFDF9',
-    borderWidth: 1,
-    borderColor: 'rgba(30, 30, 46, 0.12)',
-    gap: space[3],
+    paddingVertical: space[2],
+    paddingHorizontal: space[1],
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: stroke.hairline,
+    borderColor: colors.outlineVariant,
+    gap: space[1],
   },
   itemRowCompleted: {
     opacity: 0.75,
@@ -240,40 +233,23 @@ const styles = StyleSheet.create({
     opacity: 0.5,
     backgroundColor: colors.surfaceContainerLow,
   },
-  checkbox: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#1E1E2E',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FAF5EB',
-  },
-  checkboxCompleted: {
-    backgroundColor: '#76A284',
-    borderColor: '#1E1E2E',
-  },
-  checkboxDisabled: {
-    borderColor: 'rgba(30, 30, 46, 0.2)',
-  },
   itemContent: {
     flex: 1,
-    gap: 2,
+    gap: space[0.5],
   },
   timeTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: space[1],
   },
   timeText: {
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     fontFamily: fontFamily.medium,
   },
   itemTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: '#1E1E2E',
+    fontSize: typography.bodyMedium.fontSize,
+    color: colors.onSurface,
   },
   titleCompleted: {
     textDecorationLine: 'line-through',
@@ -282,6 +258,8 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   skipButton: {
+    minWidth: touchTarget.min,
+    minHeight: touchTarget.min,
     padding: space[2],
     alignItems: 'center',
     justifyContent: 'center',

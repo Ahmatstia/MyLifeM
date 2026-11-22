@@ -30,13 +30,12 @@ import {
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase, formInputCompact } from '@/shared/ui/form-control-styles';
-import { fontFamily, radius, space } from '@/theme/tokens';
+import { touchTarget, fontFamily, radius, space, stroke, typography } from '@/theme/tokens';
 import {
   Screen,
   AppText,
   Banner,
   FormScreenHeader,
-  WaveBackdrop,
   SunButton,
 } from '@/shared/ui';
 import { formatLocalDate } from '@/shared/utils/local-date';
@@ -238,7 +237,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
         paddingBottom: 130 + insets.bottom,
       }}
     >
-      <WaveBackdrop variant="form" withBottomHills />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
@@ -307,7 +306,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                 >
                   <Icon
                     size={15}
-                    color={selected ? '#FFFFFF' : s.ink}
+                    color={selected ? colors.surfaceContainerLowest : s.ink}
                     strokeWidth={2.4}
                   />
                   <AppText
@@ -378,7 +377,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
           {/* Box A: Deadline Pengumpulan */}
           <View style={styles.dateCardDeadline}>
             <View style={styles.dateCardHeader}>
-              <CalendarClock size={16} color="#B84A27" strokeWidth={2.4} />
+              <CalendarClock size={16} color={colors.warning} strokeWidth={2.4} />
               <AppText style={styles.dateCardTitleDeadline}>
                 Batas pengumpulan
               </AppText>
@@ -599,7 +598,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                   >
                     <Icon
                       size={18}
-                      color={selected ? '#FFFFFF' : s.forest}
+                      color={selected ? colors.surfaceContainerLowest : s.forest}
                       strokeWidth={2.4}
                     />
                   </View>
@@ -680,7 +679,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                             ]}
                             numberOfLines={1}
                           >
-                            {track.isBuiltIn ? track.name : `🎵 ${track.name}`}
+                            {track.name}
                           </AppText>
                           {track.description ? (
                             <AppText
@@ -709,8 +708,8 @@ export const CreateManagedTaskScreen: React.FC = () => {
                         {isPreviewing ? (
                           <Square
                             size={12}
-                            color="#FFFFFF"
-                            fill="#FFFFFF"
+                            color={colors.surfaceContainerLowest}
+                            fill={colors.surfaceContainerLowest}
                             strokeWidth={2.4}
                           />
                         ) : (
@@ -724,7 +723,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                         <AppText
                           style={[
                             styles.previewPlayBtnText,
-                            isPreviewing && { color: '#FFFFFF' },
+                            isPreviewing && { color: colors.surfaceContainerLowest },
                           ]}
                         >
                           {isPreviewing ? 'Stop' : 'Tes'}
@@ -786,7 +785,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
               accessibilityRole="button"
               style={styles.addSubtaskCircle}
             >
-              <Plus size={18} color="#FFFFFF" strokeWidth={2.6} />
+              <Plus size={18} color={colors.surfaceContainerLowest} strokeWidth={2.6} />
             </Pressable>
           </View>
 
@@ -809,7 +808,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
           )}
 
           <View style={styles.autoSyncRow}>
-            <View style={{ flex: 1, gap: 2 }}>
+            <View style={{ flex: 1, gap: space[0.5] }}>
               <AppText style={styles.autoSyncTitle}>
                 Otomatis Masuk ke &ldquo;Hari Ini&rdquo;
               </AppText>
@@ -820,8 +819,8 @@ export const CreateManagedTaskScreen: React.FC = () => {
             <Switch
               value={autoAddToToday}
               onValueChange={setAutoAddToToday}
-              trackColor={{ false: '#D8D0BE', true: s.forest }}
-              thumbColor="#FFFFFF"
+              trackColor={{ false: colors.outlineVariant, true: s.forest }}
+              thumbColor={colors.surfaceContainerLowest}
             />
           </View>
 
@@ -863,28 +862,28 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: colors.onErrorContainer,
   },
   cloudHeroWrap: {
     marginBottom: space[2],
   },
-  cloudOuterCard: { gap: 8, },
-  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, gap: 8, },
-  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: 14, color: s.ink, paddingVertical: 8, ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
-  cloudDescInput: { fontFamily: fontFamily.regular, fontSize: 13, color: s.ink, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: s.card, ...formInputBase, },
+  cloudOuterCard: { gap: space[2], },
+  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, paddingHorizontal: space[3], gap: space[2], },
+  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: typography.bodyMedium.fontSize, color: s.ink, paddingVertical: space[2], ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
+  cloudDescInput: { fontFamily: fontFamily.regular, fontSize: typography.labelMedium.fontSize, color: s.ink, padding: space[3], borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, backgroundColor: s.card, ...formInputBase, },
   sectionHeading: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.7,
     color: s.forest,
-    marginTop: 6,
-    marginLeft: 2,
+    marginTop: space[1],
+    marginLeft: space[0.5],
   },
   categoryTilesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: space[2],
   },
   categoryPill: {
     flexGrow: 1,
@@ -893,13 +892,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    minHeight: 44,
+    gap: space[1],
+    minHeight: touchTarget.min,
     paddingVertical: space[2],
     borderRadius: radius.md,
-    backgroundColor: '#F3EDE0',
-    borderWidth: 1,
-    borderColor: '#E5DEC9',
+    backgroundColor: colors.surfaceContainerLow,
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   categoryPillActive: {
     backgroundColor: s.forest,
@@ -907,64 +906,64 @@ const styles = StyleSheet.create({
   },
   categoryPillText: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   categoryPillTextActive: {
-    color: '#FFFFFF',
+    color: colors.surfaceContainerLowest,
   },
   inputBox: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5DEC9',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: space[3],
     paddingVertical: space[2],
     fontFamily: fontFamily.medium,
-    fontSize: 14,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
     ...formInputBase,
   },
   durationCard: {
     flexWrap: 'wrap',
-    backgroundColor: '#EEF0E8',
+    backgroundColor: colors.surfaceContainerLow,
     borderRadius: radius.lg,
     paddingHorizontal: space[3],
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#E5DEC9',
+    paddingVertical: space[3],
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: space[2],
   },
   durationCardLeft: {
     maxWidth: '100%',
     minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: space[1],
   },
   durationCardTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   durationChipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 6,
+    gap: space[1],
   },
   smallChip: {
-    minHeight: 44,
+    minHeight: touchTarget.min,
     justifyContent: 'center',
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E3DAC6',
+    paddingHorizontal: space[3],
+    paddingVertical: space[1],
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   smallChipActive: {
     backgroundColor: s.forest,
@@ -972,62 +971,62 @@ const styles = StyleSheet.create({
   },
   smallChipText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   smallChipTextActive: {
-    color: '#FFFFFF',
+    color: colors.surfaceContainerLowest,
   },
   dateCardDeadline: {
-    backgroundColor: '#FFF7F2',
+    backgroundColor: colors.warningContainer,
     borderRadius: radius.lg,
     padding: space[3],
-    borderWidth: 1,
-    borderColor: '#F3D5C5',
+    borderWidth: stroke.hairline,
+    borderColor: colors.warningContainer,
     gap: space[2],
   },
   dateCardExec: {
-    backgroundColor: '#F2F9F5',
+    backgroundColor: colors.successContainer,
     borderRadius: radius.lg,
     padding: space[3],
-    borderWidth: 1,
-    borderColor: '#C9E5D4',
+    borderWidth: stroke.hairline,
+    borderColor: colors.successContainer,
     gap: space[2],
   },
   dateCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: space[2],
   },
   dateCardTitleDeadline: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.5,
-    color: '#B84A27',
+    color: colors.warning,
   },
   dateCardTitleExec: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.5,
     color: s.forest,
   },
   presetChipsWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: space[1],
   },
   presetChip: {
-    minHeight: 44,
+    minHeight: touchTarget.min,
     paddingHorizontal: space[2],
     paddingVertical: space[1],
     borderRadius: radius.sm,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E3DAC6',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   presetChipDeadlineActive: {
-    backgroundColor: '#B84A27',
-    borderColor: '#B84A27',
+    backgroundColor: colors.warning,
+    borderColor: colors.warning,
   },
   presetChipExecActive: {
     backgroundColor: s.forest,
@@ -1035,31 +1034,31 @@ const styles = StyleSheet.create({
   },
   presetChipText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   presetChipTextActive: {
-    color: '#FFFFFF',
+    color: colors.surfaceContainerLowest,
   },
   dateInputRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: space[2],
   },
   fieldTinyLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
-    marginBottom: 4,
+    marginBottom: space[1],
   },
   compactDateInput: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#DFD6C3',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
     fontFamily: fontFamily.bold,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
     ...formInputCompact,
   },
@@ -1067,17 +1066,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: space[1],
   },
   timeQuickPill: {
-    minHeight: 44,
+    minHeight: touchTarget.min,
     justifyContent: 'center',
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D5E5DC',
+    paddingHorizontal: space[3],
+    paddingVertical: space[1],
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   timeQuickPillActive: {
     backgroundColor: s.forest,
@@ -1085,44 +1084,44 @@ const styles = StyleSheet.create({
   },
   timeQuickPillText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   timeQuickPillTextActive: {
-    color: '#FFFFFF',
+    color: colors.surfaceContainerLowest,
   },
   bufferInfoStrip: {
-    backgroundColor: '#E1F3E8',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: colors.successContainer,
+    borderRadius: radius.md,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
   },
   bufferInfoText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   alertModeStack: {
-    gap: 8,
+    gap: space[2],
   },
   alertModeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    gap: space[3],
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: radius.lg,
+    padding: space[3],
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   alertModeCardActive: {
     borderColor: s.forest,
-    backgroundColor: '#F5FBF7',
+    backgroundColor: colors.primaryContainer,
   },
   alertModeIconBox: {
     width: 38,
     height: 38,
-    borderRadius: 13,
+    borderRadius: radius.md,
     backgroundColor: s.leafSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1132,20 +1131,20 @@ const styles = StyleSheet.create({
   },
   alertModeTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
   },
   alertModeSub: {
     fontFamily: fontFamily.regular,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   radioDotOuter: {
     width: 20,
     height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#C5BBA8',
+    borderRadius: radius.sm,
+    borderWidth: stroke.selected,
+    borderColor: colors.outlineVariant,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1155,78 +1154,78 @@ const styles = StyleSheet.create({
   radioDotInner: {
     width: 10,
     height: 10,
-    borderRadius: 5,
+    borderRadius: radius.xs,
     backgroundColor: s.forest,
   },
   songPickerCard: {
-    backgroundColor: '#F7F8F2',
-    borderRadius: 22,
+    backgroundColor: colors.background,
+    borderRadius: radius.xl,
     padding: space[4],
-    borderWidth: 1,
-    borderColor: '#E5DEC9',
-    gap: 12,
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
+    gap: space[3],
   },
   songPickerHeader: {
     flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: space[2],
   },
   songPickerTitleRow: {
     maxWidth: '100%',
     minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: space[1],
   },
   songPickerTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   uploadSongBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: space[1],
     backgroundColor: s.sun,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
+    borderRadius: radius.pill,
   },
   uploadSongBtnText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   trackListStack: {
-    gap: 7,
+    gap: space[2],
   },
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#EAE2CE',
+    gap: space[2],
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: radius.lg,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   trackRowSelected: {
     borderColor: s.forest,
-    backgroundColor: '#F4FBF6',
+    backgroundColor: colors.primaryContainer,
   },
   trackSelectArea: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: space[2],
   },
   trackNameText: {
     fontFamily: fontFamily.bold,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   trackNameTextSelected: {
@@ -1234,85 +1233,85 @@ const styles = StyleSheet.create({
   },
   trackDescText: {
     fontFamily: fontFamily.regular,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   previewPlayBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: space[1],
     backgroundColor: s.leafSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
+    borderRadius: radius.pill,
   },
   previewPlayBtnActive: {
-    backgroundColor: '#D64545',
+    backgroundColor: colors.error,
   },
   previewPlayBtnText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   snoozeConfigRow: {
     flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 2,
+    gap: space[2],
+    marginTop: space[0.5],
   },
   subtaskInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: space[2],
   },
   addSubtaskCircle: {
     width: 46,
     height: 46,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     backgroundColor: s.forest,
     alignItems: 'center',
     justifyContent: 'center',
   },
   subtaskChipsList: {
-    gap: 6,
+    gap: space[1],
   },
   subtaskDraftItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#E5DEC9',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: radius.md,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   subtaskDraftText: {
     flex: 1,
     fontFamily: fontFamily.medium,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   autoSyncRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    gap: space[3],
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: radius.lg,
+    padding: space[3],
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   autoSyncTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   autoSyncSub: {
     fontFamily: fontFamily.regular,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   ctaWrap: {

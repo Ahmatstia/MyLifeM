@@ -29,7 +29,7 @@ import {
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase } from '@/shared/ui/form-control-styles';
-import { space, fontFamily } from '@/theme/tokens';
+import { space, fontFamily, radius, stroke, typography, touchTarget } from '@/theme/tokens';
 import {
   Screen,
   AppText,
@@ -37,7 +37,6 @@ import {
   Button,
   AppBottomSheet,
   Banner,
-  WaveBackdrop,
   sproutShadow,
 } from '@/shared/ui';
 import { CategoryManagerModal } from '@/features/categories/presentation/components/category-manager-modal';
@@ -149,7 +148,7 @@ export const SettingsScreen: React.FC = () => {
       style={styles.screenRoot}
       contentContainerStyle={styles.scrollContent}
     >
-      <WaveBackdrop variant="home" height={285} />
+
 
       {/* 1. Header Bar (Non-sticky, full-bleed wave) */}
       <View style={styles.topBar}>
@@ -183,7 +182,7 @@ export const SettingsScreen: React.FC = () => {
           accessibilityRole="header"
           style={styles.sectionHeaderTag}
         >
-          LOKASI & JADWAL AZAN
+          Lokasi dan jadwal azan
         </AppText>
         <Moon size={15} color={s.forest} strokeWidth={2.3} />
       </View>
@@ -203,7 +202,7 @@ export const SettingsScreen: React.FC = () => {
           </View>
           <View style={styles.settingItemContent}>
             <AppText variant="titleSmall" style={styles.settingItemTitle}>
-              Lokasi Kota Azan
+              Lokasi jadwal azan
             </AppText>
             <AppText variant="bodySmall" color="onSurfaceVariant">
               {activePrayerCity} ({activePrayerLat.toFixed(2)}, {activePrayerLng.toFixed(2)})
@@ -224,10 +223,7 @@ export const SettingsScreen: React.FC = () => {
           accessibilityRole="header"
           style={styles.sectionHeaderTag}
         >
-          ORGANISASI
-        </AppText>
-        <AppText variant="labelSmall" style={styles.sectionHeaderSub}>
-          Kustomisasi
+          Kategori
         </AppText>
       </View>
 
@@ -263,7 +259,7 @@ export const SettingsScreen: React.FC = () => {
           accessibilityRole="header"
           style={styles.sectionHeaderTag}
         >
-          FOKUS & KENYAMANAN
+          Preferensi fokus
         </AppText>
         <Coffee size={15} color={s.forest} />
       </View>
@@ -288,10 +284,10 @@ export const SettingsScreen: React.FC = () => {
             value={settings.keepAwakeEnabled}
             onValueChange={(value) => { void updateSetting({ keepAwakeEnabled: value }); }}
             trackColor={{
-              false: '#D8D0BE',
+              false: colors.outlineVariant,
               true: s.forest,
             }}
-            thumbColor="#FFFFFF"
+            thumbColor={colors.surfaceContainerLowest}
           />
         </View>
 
@@ -334,7 +330,7 @@ export const SettingsScreen: React.FC = () => {
                   >
                     {mins}m
                   </AppText>
-                  {isSelected && <Star size={11} color="#FFFFFF" />}
+                  {isSelected && <Star size={11} color={colors.surfaceContainerLowest} />}
                 </Pressable>
               );
             })}
@@ -380,7 +376,7 @@ export const SettingsScreen: React.FC = () => {
                   >
                     {mins}m
                   </AppText>
-                  {isSelected && <Star size={11} color="#FFFFFF" />}
+                  {isSelected && <Star size={11} color={colors.surfaceContainerLowest} />}
                 </Pressable>
               );
             })}
@@ -406,10 +402,10 @@ export const SettingsScreen: React.FC = () => {
             value={settings.hapticsEnabled}
             onValueChange={(value) => { void updateSetting({ hapticsEnabled: value }); }}
             trackColor={{
-              false: '#D8D0BE',
+              false: colors.outlineVariant,
               true: s.forest,
             }}
-            thumbColor="#FFFFFF"
+            thumbColor={colors.surfaceContainerLowest}
           />
         </View>
       </View>
@@ -421,7 +417,7 @@ export const SettingsScreen: React.FC = () => {
           accessibilityRole="header"
           style={styles.sectionHeaderTag}
         >
-          DATA & PRIVASI
+          Data dan privasi
         </AppText>
         <Lock size={15} color={s.forest} />
       </View>
@@ -447,7 +443,7 @@ export const SettingsScreen: React.FC = () => {
       {!isLoading && (
         <Card variant="highlight" padding={space[4]} style={styles.statsCard}>
           <AppText variant="labelSmall" style={styles.statsCardTitle}>
-            TERSIMPAN DI PERANGKAT INI
+            Catatan di perangkat ini
           </AppText>
           <View style={styles.statsGrid}>
             {[
@@ -665,7 +661,7 @@ export const SettingsScreen: React.FC = () => {
                     <View style={styles.cityRowLeft}>
                       <MapPin
                         size={16}
-                        color={isSelected ? '#FFFFFF' : s.forest}
+                        color={isSelected ? colors.surfaceContainerLowest : s.forest}
                         strokeWidth={2.3}
                       />
                       <View>
@@ -688,7 +684,7 @@ export const SettingsScreen: React.FC = () => {
                       </View>
                     </View>
                     {isSelected && (
-                      <Check size={18} color="#FFFFFF" strokeWidth={2.8} />
+                      <Check size={18} color={colors.surfaceContainerLowest} strokeWidth={2.8} />
                     )}
                   </Pressable>
                 );
@@ -865,14 +861,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   topBarLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: space[3] },
-  topBarTitle: { fontFamily: fontFamily.bold, fontSize: 24, lineHeight: 32, letterSpacing: -0.6, color: s.ink, },
+  topBarTitle: { fontFamily: fontFamily.bold, fontSize: typography.headlineLarge.fontSize, lineHeight: typography.headlineLarge.lineHeight, letterSpacing: -0.6, color: s.ink, },
   circleButton: {
     width: 42,
     height: 42,
-    borderRadius: 14,
+    borderRadius: radius.md,
     backgroundColor: s.card,
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -886,29 +882,29 @@ const styles = StyleSheet.create({
   },
   sectionHeaderTag: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.6,
     color: s.inkMuted,
   },
   sectionHeaderSub: {
     fontFamily: fontFamily.medium,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
-  cardGroup: { backgroundColor: s.card, borderRadius: 12, paddingHorizontal: 6, borderWidth: 1, borderColor: colors.border, },
-  settingItemRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8, borderRadius: 8, },
-  pressedRow: { backgroundColor: '#F6F1E3' },
+  cardGroup: { backgroundColor: s.card, borderRadius: radius.md, paddingHorizontal: space[1], borderWidth: stroke.hairline, borderColor: colors.border, },
+  settingItemRow: { minHeight: touchTarget.comfortable, flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[2], borderRadius: radius.sm, },
+  pressedRow: { backgroundColor: colors.surfaceContainerLow },
   settingItemContent: { flex: 1 },
   settingItemTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
-    marginBottom: 2,
+    marginBottom: space[0.5],
   },
   iconLeaf: {
     width: 38,
     height: 38,
-    borderRadius: 13,
+    borderRadius: radius.md,
     backgroundColor: s.leafSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -916,7 +912,7 @@ const styles = StyleSheet.create({
   iconLavender: {
     width: 38,
     height: 38,
-    borderRadius: 13,
+    borderRadius: radius.md,
     backgroundColor: s.leafSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -924,7 +920,7 @@ const styles = StyleSheet.create({
   iconPeach: {
     width: 38,
     height: 38,
-    borderRadius: 13,
+    borderRadius: radius.md,
     backgroundColor: s.sunSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -932,7 +928,7 @@ const styles = StyleSheet.create({
   iconWarmPeach: {
     width: 38,
     height: 38,
-    borderRadius: 13,
+    borderRadius: radius.md,
     backgroundColor: s.sunSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -940,24 +936,24 @@ const styles = StyleSheet.create({
   iconTertiary: {
     width: 38,
     height: 38,
-    borderRadius: 13,
-    backgroundColor: '#DFF2EC',
+    borderRadius: radius.md,
+    backgroundColor: colors.successContainer,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconNeutral: {
     width: 38,
     height: 38,
-    borderRadius: 13,
-    backgroundColor: '#EEF0E8',
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
   },
   chipSettingBlock: {
     padding: space[2],
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#DDE3D8',
+    borderTopWidth: stroke.hairline,
+    borderBottomWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   chipSettingHeader: {
     flexDirection: 'row',
@@ -968,133 +964,133 @@ const styles = StyleSheet.create({
   chipSettingText: { flex: 1 },
   chipsRow: { flexDirection: 'row', gap: space[2], marginTop: space[1] },
   durationChip: {
-    minHeight: 40,
+    minHeight: touchTarget.min,
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    borderRadius: 14,
-    backgroundColor: '#EEF0E8',
+    gap: space[1],
+    paddingVertical: space[1],
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerLow,
   },
   durationChipActivePrimary: { backgroundColor: s.forest },
   durationChipActiveSecondary: { backgroundColor: s.forest },
   durationChipText: {
     fontFamily: fontFamily.semibold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
-  durationChipTextActive: { color: '#FFFFFF', fontFamily: fontFamily.bold },
+  durationChipTextActive: { color: colors.surfaceContainerLowest, fontFamily: fontFamily.bold },
   onDeviceBanner: {
     flexDirection: 'row',
     gap: space[3],
     backgroundColor: s.leafSoft,
-    borderRadius: 22,
+    borderRadius: radius.xl,
     padding: space[3],
     marginBottom: space[2],
     alignItems: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#CFE4B6',
+    borderWidth: stroke.hairline,
+    borderColor: colors.successContainer,
   },
   onDeviceBannerContent: { flex: 1 },
   onDeviceBannerTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
-    marginBottom: 2,
+    marginBottom: space[0.5],
   },
   onDeviceBannerDesc: {
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: typography.labelMedium.fontSize,
+    lineHeight: typography.labelMedium.lineHeight,
     color: s.inkMuted,
   },
-  statsCard: { marginBottom: space[2], borderRadius: 22 },
+  statsCard: { marginBottom: space[2], borderRadius: radius.xl },
   statsCardTitle: { fontFamily: fontFamily.bold, marginBottom: space[2] },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3] },
   statBox: { minWidth: 64, flexGrow: 1 },
-  statValue: { fontFamily: fontFamily.bold, fontSize: 20, lineHeight: 24 },
+  statValue: { fontFamily: fontFamily.bold, fontSize: typography.titleLarge.fontSize, lineHeight: typography.titleMedium.lineHeight },
   actionPillPrimary: {
     backgroundColor: s.sun,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
+    paddingHorizontal: space[3],
+    paddingVertical: space[1],
+    borderRadius: radius.pill,
   },
   actionPillPrimaryText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   actionPillNeutral: {
-    backgroundColor: '#EEF0E8',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
+    backgroundColor: colors.surfaceContainerLow,
+    paddingHorizontal: space[3],
+    paddingVertical: space[1],
+    borderRadius: radius.pill,
   },
   actionPillNeutralText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   footerPhilosophyCard: {
     backgroundColor: s.card,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     padding: space[4],
     alignItems: 'center',
     marginTop: space[2],
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     ...sproutShadow,
   },
   footerIconCircle: {
     width: 38,
     height: 38,
-    borderRadius: 14,
+    borderRadius: radius.md,
     backgroundColor: s.leafSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: space[2],
   },
   footerBadge: {
-    backgroundColor: '#EEF0E8',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 999,
+    backgroundColor: colors.surfaceContainerLow,
+    paddingHorizontal: space[3],
+    paddingVertical: space[1],
+    borderRadius: radius.pill,
     marginBottom: space[2],
   },
   footerBadgeText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   quoteBox: {
     backgroundColor: s.cream,
     padding: space[3],
-    borderRadius: 16,
+    borderRadius: radius.lg,
     width: '100%',
   },
   quoteText: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: typography.labelMedium.fontSize,
+    lineHeight: typography.labelMedium.lineHeight,
     textAlign: 'center',
     color: s.inkMuted,
   },
   durationOptions: { gap: space[2] },
   durationSheetRow: {
-    minHeight: 48,
+    minHeight: touchTarget.min,
     padding: space[3],
-    borderRadius: 14,
-    backgroundColor: '#EEF0E8',
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerLow,
     justifyContent: 'center',
   },
   selectedDurationSheetRow: { backgroundColor: s.forest },
   confirmationInput: {
-    minHeight: 52,
+    minHeight: touchTarget.comfortable,
     color: s.ink,
-    backgroundColor: '#EEF0E8',
+    backgroundColor: colors.surfaceContainerLow,
     paddingHorizontal: space[3],
-    borderRadius: 14,
-    fontSize: 16,
+    borderRadius: radius.md,
+    fontSize: typography.titleMedium.fontSize,
     fontFamily: fontFamily.bold,
     ...formInputBase,
   },
@@ -1102,58 +1098,58 @@ const styles = StyleSheet.create({
     gap: space[3],
   },
   searchCityInput: {
-    minHeight: 46,
-    backgroundColor: '#EEF0E8',
-    borderRadius: 16,
+    minHeight: touchTarget.min,
+    backgroundColor: colors.surfaceContainerLow,
+    borderRadius: radius.lg,
     paddingHorizontal: space[3],
     fontFamily: fontFamily.medium,
-    fontSize: 14,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
-    borderWidth: 1,
-    borderColor: '#E5DEC9',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     ...formInputBase,
   },
   regionFilterRow: {
     flexDirection: 'row',
-    gap: 6,
+    gap: space[1],
   },
   regionPill: {
     flex: 1,
-    minHeight: 36,
-    borderRadius: 999,
-    backgroundColor: '#EEF0E8',
+    minHeight: touchTarget.min,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: space[2],
   },
   regionPillActive: {
     backgroundColor: s.forest,
   },
   regionPillText: {
     fontFamily: fontFamily.semibold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   regionPillTextActive: {
     fontFamily: fontFamily.bold,
-    color: '#FFFFFF',
+    color: colors.surfaceContainerLowest,
   },
   cityListScroll: {
     maxHeight: 220,
   },
   cityListStack: {
-    gap: 6,
+    gap: space[1],
   },
   cityRowItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: space[3],
-    paddingVertical: 10,
-    borderRadius: 16,
+    paddingVertical: space[2],
+    borderRadius: radius.lg,
     backgroundColor: s.cream,
-    borderWidth: 1,
-    borderColor: '#EDE5D2',
+    borderWidth: stroke.hairline,
+    borderColor: colors.outlineVariant,
   },
   cityRowItemSelected: {
     backgroundColor: s.forest,
@@ -1166,15 +1162,15 @@ const styles = StyleSheet.create({
   },
   cityRowTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
   },
   cityRowTitleSelected: {
-    color: '#FFFFFF',
+    color: colors.surfaceContainerLowest,
   },
   cityRowCoords: {
     fontFamily: fontFamily.regular,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   cityRowCoordsSelected: {
@@ -1182,32 +1178,32 @@ const styles = StyleSheet.create({
   },
   customCoordBox: {
     backgroundColor: s.cream,
-    borderRadius: 18,
+    borderRadius: radius.lg,
     padding: space[3],
     gap: space[2],
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   customCoordHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: space[1],
   },
   customCoordTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   customInput: {
-    minHeight: 42,
+    minHeight: touchTarget.min,
     backgroundColor: s.card,
-    borderRadius: 12,
+    borderRadius: radius.md,
     paddingHorizontal: space[3],
     fontFamily: fontFamily.medium,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
-    borderWidth: 1,
-    borderColor: '#E5DEC9',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     ...formInputBase,
   },
   customLatLngRow: {
@@ -1216,7 +1212,7 @@ const styles = StyleSheet.create({
   },
   customErrorText: {
     fontFamily: fontFamily.medium,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: colors.error,
   },
 });

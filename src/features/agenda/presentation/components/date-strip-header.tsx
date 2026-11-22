@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Pressable, StyleSheet, type ViewStyle } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { fontFamily } from '@/theme/tokens';
+import { fontFamily, radius, space, touchTarget } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { formatLocalDate } from '@/shared/utils/local-date';
 
-const s = colors.sprout;
+const gridMinWidth = 7 * touchTarget.min;
 
 export interface DateStripHeaderProps {
   selectedDate: string;
@@ -23,6 +23,8 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
   onSelectDate,
   style,
 }) => {
+  const { width } = useWindowDimensions();
+  const narrow = width < gridMinWidth + space[4];
   const [year, month, day] = selectedDate.split('-').map(Number);
   const selected = new Date(year, month - 1, day);
   const today = todayDate || formatLocalDate();
@@ -56,44 +58,12 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
     year: 'numeric',
   });
 
-  return (
-    <View style={[styles.wrap, style]}>
-      {/* Rounded Cream Month Pill Bar ("<   November 2026   >") */}
-      <View style={styles.monthPillBar}>
-        <Pressable
-          onPress={() => moveWeek(-7)}
-          accessibilityRole="button"
-          accessibilityLabel="Minggu sebelumnya"
-          hitSlop={8}
-          style={styles.navArrow}
-        >
-          <ChevronLeft size={20} color={s.ink} strokeWidth={2.5} />
-        </Pressable>
-
-        <Pressable
-          onPress={() => onSelectDate(today)}
-          accessibilityRole="button"
-          style={styles.monthCenter}
-        >
-          <AppText style={styles.monthTitleText}>{monthTitle}</AppText>
-        </Pressable>
-
-        <Pressable
-          onPress={() => moveWeek(7)}
-          accessibilityRole="button"
-          accessibilityLabel="Minggu berikutnya"
-          hitSlop={8}
-          style={styles.navArrow}
-        >
-          <ChevronRight size={20} color={s.ink} strokeWidth={2.5} />
-        </Pressable>
-      </View>
-
-      {/* 7-Column Weekday Header Row */}
+  const monthGrid = (
+    <View style={styles.fullGrid}>
       <View style={styles.weekdayRow}>
         {WEEKDAY_LABELS.map((lbl) => (
           <View key={lbl} style={styles.weekdayCell}>
-            <AppText style={styles.weekdayText}>{lbl}</AppText>
+            <AppText variant="labelMedium" style={styles.weekdayText}>{lbl}</AppText>
           </View>
         ))}
       </View>
@@ -112,13 +82,15 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
                   accessibilityRole="button"
                   accessibilityLabel={item.key + (isToday ? ', hari ini' : '')}
                   accessibilityState={{ selected: isSelected }}
-                  style={[
+                  style={({ pressed }) => [
                     styles.dayCell,
                     isSelected && styles.dayCellSelected,
-                    ! isSelected && isToday && styles.dayCellToday,
+                    !isSelected && isToday && styles.dayCellToday,
+                    pressed && styles.pressed,
                   ]}
                 >
                   <AppText
+                    variant="bodyMedium"
                     tabularNums
                     style={[
                       styles.dayNumber,
@@ -133,51 +105,75 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
             })}
           </View>
         ))}
-
-
       </View>
+    </View>
+  );
+
+  return (
+    <View style={[styles.wrap, style]}>
+      <View style={styles.monthPillBar}>
+        <Pressable
+          onPress={() => moveWeek(-7)}
+          accessibilityRole="button"
+          accessibilityLabel="Minggu sebelumnya"
+          style={({ pressed }) => [styles.navArrow, pressed && styles.pressed]}
+        >
+          <ChevronLeft size={space[5]} color={colors.onSurface} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => onSelectDate(today)}
+          accessibilityRole="button"
+          accessibilityLabel={monthTitle + ', kembali ke hari ini'}
+          style={({ pressed }) => [styles.monthCenter, pressed && styles.pressed]}
+        >
+          <AppText variant="titleMedium">{monthTitle}</AppText>
+        </Pressable>
+
+        <Pressable
+          onPress={() => moveWeek(7)}
+          accessibilityRole="button"
+          accessibilityLabel="Minggu berikutnya"
+          style={({ pressed }) => [styles.navArrow, pressed && styles.pressed]}
+        >
+          <ChevronRight size={space[5]} color={colors.onSurface} />
+        </Pressable>
+      </View>
+
+      {narrow ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator style={styles.gridEdge}>
+          {monthGrid}
+        </ScrollView>
+      ) : <View style={styles.gridEdge}>{monthGrid}</View>}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  wrap: { gap: 6, },
-  monthPillBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 2, borderBottomWidth: 1, borderBottomColor: colors.border, },
-  navArrow: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  monthCenter: {
+  wrap: { gap: space[1] },
+  monthPillBar: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.outlineVariant },
+  navArrow: { width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm },
+  monthCenter: { flex: 1, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' },
+  gridEdge: { marginHorizontal: -space[3] },
+  fullGrid: { minWidth: gridMinWidth },
+  weekdayRow: { flexDirection: 'row', paddingVertical: space[2] },
+  weekdayCell: { flex: 1, alignItems: 'center' },
+  weekdayText: { color: colors.onSurfaceVariant },
+  gridContainer: { gap: 0 },
+  weekRow: { flexDirection: 'row' },
+  dayCell: {
     flex: 1,
+    minWidth: touchTarget.min,
+    minHeight: touchTarget.min,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: radius.sm,
+    paddingVertical: space[1],
   },
-  monthTitleText: { fontFamily: fontFamily.bold, fontSize: 15, color: s.ink, },
-  weekdayRow: { flexDirection: 'row', gap: 2, paddingVertical: 4, },
-  weekdayCell: { flex: 1, minWidth: 0, alignItems: 'center', },
-  weekdayText: {
-    fontFamily: fontFamily.semibold,
-    fontSize: 12,
-    color: s.inkMuted,
-  },
-  gridContainer: { gap: 2, },
-  weekRow: { flexDirection: 'row', gap: 2, },
-  dayCell: { flex: 1, minWidth: 0, minHeight: 44, paddingVertical: 5, borderRadius: 10, alignItems: 'center', justifyContent: 'center', },
-  dayCellSelected: { backgroundColor: s.forest, },
-  dayCellToday: {
-    backgroundColor: s.leafSoft,
-  },
-  dayNumber: {
-    fontFamily: fontFamily.bold,
-    fontSize: 15,
-    color: s.ink,
-  },
-  dayNumberOutside: { fontFamily: fontFamily.medium, color: s.inkMuted, },
-  dayNumberSelected: {
-    color: '#FFFFFF',
-    fontFamily: fontFamily.bold,
-  },
+  dayCellSelected: { backgroundColor: colors.primary },
+  dayCellToday: { borderWidth: StyleSheet.hairlineWidth, borderColor: colors.primary },
+  dayNumber: { color: colors.onSurface, fontFamily: fontFamily.semibold },
+  dayNumberOutside: { color: colors.onSurfaceVariant },
+  dayNumberSelected: { color: colors.onPrimary, fontFamily: fontFamily.bold },
+  pressed: { borderWidth: space[1], borderColor: colors.outline },
 });

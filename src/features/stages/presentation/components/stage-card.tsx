@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import { Check, ChevronDown, ChevronUp, MoreHorizontal, Plus } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { fontFamily, space } from '@/theme/tokens';
+import { fontFamily, space, radius, stroke, typography, touchTarget } from '@/theme/tokens';
 import { AppText, Button, AppBottomSheet, SoftCard, SproutCheck } from '@/shared/ui';
 import {
   type StageWithTasks,
@@ -59,7 +59,7 @@ export const StageCard: React.FC<StageCardProps> = ({
         >
           <View style={[styles.step, complete && styles.completedStep]}>
             {complete ? (
-              <Check size={17} color="#FFFFFF" strokeWidth={3} />
+              <Check size={17} color={colors.surfaceContainerLowest} strokeWidth={3} />
             ) : (
               <AppText style={styles.stepNumText} tabularNums>
                 {stepNumber || '•'}
@@ -69,7 +69,7 @@ export const StageCard: React.FC<StageCardProps> = ({
           <View style={styles.headingText}>
             <AppText style={styles.stageTitle}>{stage.name}</AppText>
             <AppText style={styles.stageSubtitle}>
-              {getStageStatusLabel(stage.status)} · {stage.completedTasks}/{stage.totalTasks} tugas
+              {getStageStatusLabel(stage.status)}, {stage.completedTasks}/{stage.totalTasks} tugas
             </AppText>
           </View>
           {expanded ? (
@@ -261,7 +261,7 @@ export const StageCard: React.FC<StageCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     marginBottom: space[3],
-    borderRadius: 16,
+    borderRadius: radius.lg,
   },
   header: {
     flexDirection: 'row',
@@ -270,19 +270,19 @@ const styles = StyleSheet.create({
   },
   heading: {
     flex: 1,
-    minHeight: 48,
+    minHeight: touchTarget.min,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[3],
   },
   headingText: {
     flex: 1,
-    gap: 2,
+    gap: space[0.5],
   },
   step: {
     width: 34,
     height: 34,
-    borderRadius: 12,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: s.leafSoft,
@@ -292,35 +292,35 @@ const styles = StyleSheet.create({
   },
   stepNumText: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.forest,
   },
   stageTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 16,
+    fontSize: typography.titleMedium.fontSize,
     color: s.ink,
   },
   stageSubtitle: {
     fontFamily: fontFamily.medium,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   menuButton: {
     width: 44,
-    minHeight: 40,
+    minHeight: touchTarget.min,
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
     marginTop: space[3],
-    borderTopWidth: 1,
-    borderTopColor: '#EDE5D2',
+    borderTopWidth: stroke.hairline,
+    borderTopColor: colors.outlineVariant,
     paddingTop: space[3],
     gap: space[2],
   },
   description: {
     fontFamily: fontFamily.regular,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
     marginBottom: space[1],
   },
@@ -329,29 +329,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space[3],
     backgroundColor: s.cream,
-    borderRadius: 20,
+    borderRadius: radius.xl,
     paddingHorizontal: space[3],
     paddingVertical: space[3],
-    borderWidth: 1,
-    borderColor: '#EDE5D2',
+    borderWidth: stroke.hairline,
+    borderColor: colors.outlineVariant,
   },
   taskText: {
     flex: 1,
-    gap: 2,
+    gap: space[0.5],
   },
   taskName: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
   },
   taskDesc: {
     fontFamily: fontFamily.regular,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   taskMeta: {
     fontFamily: fontFamily.medium,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   strike: {
@@ -362,16 +362,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    gap: 6,
+    gap: space[1],
     backgroundColor: s.leafSoft,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    marginTop: 4,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
+    borderRadius: radius.pill,
+    marginTop: space[1],
   },
   addTaskText: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   actions: {

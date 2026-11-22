@@ -1,34 +1,26 @@
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
   useWindowDimensions,
   Pressable,
   StyleSheet,
   View,
 } from 'react-native';
 import { router } from 'expo-router';
-import Svg, { Line } from 'react-native-svg';
 import {
-  ArrowUpRight,
-  BellRing,
   CalendarDays,
   Pause,
   Play,
   Plus,
   Repeat,
-  Sparkles,
-  Target,
   X,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { fontFamily, space } from '@/theme/tokens';
+import { fontFamily, radius, space, touchTarget } from '@/theme/tokens';
 import {
   AppText,
   Banner,
-  EmptyState,
   Screen,
   SproutCheck,
-  WaveBackdrop,
 } from '@/shared/ui';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 import { useAgenda } from '@/features/agenda/presentation/hooks/use-agenda';
@@ -47,6 +39,7 @@ export const TodayFocusScreen: React.FC = () => {
   const largeText = fontScale >= 1.5;
   const {
     focusItems,
+    todayDate,
     completedMinutes,
     availableTasks,
     isLoading,
@@ -73,7 +66,6 @@ export const TodayFocusScreen: React.FC = () => {
 
   const completedCount = focusItems.filter((item) => item.isCompleted).length;
   const activeItems = focusItems.filter((item) => item.task.status !== 'CANCELLED');
-  const remainingCount = Math.max(0, activeItems.length - completedCount);
   const nextTask = activeItems.find((item) => !item.isCompleted)?.task;
 
   const activeOccurrences = weeklyOccurrences.filter((occ) => !occ.isCancelled);
@@ -88,6 +80,19 @@ export const TodayFocusScreen: React.FC = () => {
     totalCombinedCount > 0
       ? Math.round((completedCombinedCount / totalCombinedCount) * 100)
       : 0;
+
+  const ribbonTask = timer.activeTask ?? (timer.hasSession ? null : nextTask);
+  const emptyTitle = activeItems.length ? 'Semua tugas selesai' : 'Pilih tugas pertama';
+  const ribbonTitle = ribbonTask?.title ?? (timer.hasSession ? 'Fokus mandiri' : emptyTitle);
+  const estimate = timer.activeTask
+    ? focusItems.find(item => item.taskId === timer.activeTask?.id)?.task.estimatedMinutes
+    : nextTask?.estimatedMinutes;
+  const hasEstimate = estimate !== undefined && Number.isFinite(estimate) && estimate > 0;
+  const ribbonState = timer.reflection ? 'Sesi tercatat' : timer.isRunning ? 'Sesi berjalan' : timer.hasSession ? 'Sesi dijeda' : 'Fokus berikutnya';
+  const ribbonAction = timer.hasSession ? 'Lihat sesi fokus' : ribbonTask ? 'Buka fokus' : 'Pilih tugas';
+  const dateLabel = todayDate ? new Date(`${todayDate}T12:00:00`).toLocaleDateString('id-ID', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  }) : '';
 
   const handleHeroPress = () => {
     if (!nextTask && !timer.activeTask && !timer.hasSession) {
@@ -112,20 +117,6 @@ export const TodayFocusScreen: React.FC = () => {
       contentContainerStyle={styles.scrollContent}
       overlay={
         <>
-          <View style={styles.floatingFabContainer} pointerEvents="box-none">
-            <Pressable
-              onPress={() => router.push('/today/new')}
-              accessibilityRole="button"
-              accessibilityLabel="Tambah Tugas Prioritas"
-              style={({ pressed }) => [
-                styles.fabSquare,
-                pressed && styles.fabSquarePressed,
-              ]}
-            >
-              <Plus size={24} color={s.ink} strokeWidth={2.8} />
-            </Pressable>
-          </View>
-
           <AddPriorityModal
             visible={isAddModalVisible}
             availableTasks={availableTasks}
@@ -148,15 +139,9 @@ export const TodayFocusScreen: React.FC = () => {
         </>
       }
     >
-      <WaveBackdrop variant="home" height={285} />
-
       <View style={styles.header}>
-        <View style={styles.headerTextCol}>
-          <AppText style={styles.eyebrow}>MYLIFE / RUANG HARIAN</AppText>
-          <AppText style={styles.greetingTitle}>Satu per satu.</AppText>
-          <AppText style={styles.greetingSubtext}>Beri ruang untuk yang berarti.</AppText>
-        </View>
-        <View style={styles.headerMark} accessible={false}><ArrowUpRight size={24} color={s.forest} /></View>
+        <AppText variant="displayMedium" accessibilityRole="header" style={styles.greetingTitle}>Hari ini</AppText>
+        {dateLabel ? <AppText variant="bodyMedium" style={styles.greetingSubtext}>{dateLabel}</AppText> : null}
       </View>
 
       {timer.error && (
@@ -179,46 +164,51 @@ export const TodayFocusScreen: React.FC = () => {
       )}
 
       {isLoading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator size="small" color={s.forest} />
-          <AppText color="onSurfaceVariant">Menyiapkan harimu…</AppText>
+        <View style={styles.loading} accessibilityLiveRegion="polite">
+          <AppText variant="titleMedium">Memuat tugas hari ini…</AppText>
+          <View accessible={false} style={styles.skeletonLong} />
+          <View accessible={false} style={styles.skeletonShort} />
         </View>
       ) : (
         !error && (
           <>
-            <View style={styles.focusGrid}>
-              <Pressable onPress={handleHeroPress}
+            {!isTimerExpanded && (
+              <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={timer.hasSession ? 'Lihat sesi fokus' : 'Mulai sesi fokus'}
-                style={({ pressed }) => [styles.focusPanel, largeText && styles.fullPanel, pressed && { opacity: 0.9 }]}>
-                <View style={styles.focusTopRow}>
-                  <AppText style={styles.focusEyebrow}>RUANG FOKUS</AppText>
-                  <ArrowUpRight size={18} color={s.sun} />
+                accessibilityLabel={ribbonAction}
+                accessibilityHint={ribbonTitle}
+                onPress={handleHeroPress}
+                style={({ pressed }) => [styles.ribbon, pressed && styles.ribbonPressed]}
+              >
+                <View style={styles.ribbonBody}>
+                  <AppText variant="labelLarge" style={styles.ribbonState}>{ribbonState}</AppText>
+                  <AppText variant="headlineLarge" style={styles.ribbonTitle}>{ribbonTitle}</AppText>
                 </View>
-                <AppText style={styles.focusTitle}>
-                  {timer.hasSession ? timer.formattedTime : 'Mulai dari sini'}
-                </AppText>
-                <AppText style={styles.focusTask}>
-                  {timer.activeTask?.title || nextTask?.title || 'Pilih satu tugas untuk hari ini.'}
-                </AppText>
-                <View style={styles.focusFooter}>
-                  <View style={styles.liveDot} />
-                  <AppText style={styles.focusStatus}>
-                    {timer.reflection ? 'Sesi tercatat' : timer.isRunning ? 'Sesi berjalan' : timer.hasSession ? 'Sesi dijeda' : `${remainingCount} tugas menanti`}
-                  </AppText>
+                <View style={styles.ribbonSeam} accessible={false} pointerEvents="none">
+                  <View style={styles.ribbonNotch} />
+                  <View style={styles.ribbonPerforation} />
+                  <View style={styles.ribbonNotch} />
+                </View>
+                <View style={[styles.ribbonStub, largeText && styles.stack]}>
+                  <View style={styles.ribbonAction}>
+                    {ribbonTask || timer.hasSession
+                      ? <Play size={space[4]} color={s.ink} fill={s.ink} />
+                      : <Plus size={space[4]} color={s.ink} />}
+                    <AppText variant="titleSmall" style={styles.actionText}>{ribbonAction}</AppText>
+                  </View>
+                  {timer.hasSession || hasEstimate ? (
+                    <View style={styles.timeColumn}>
+                      <AppText variant="titleLarge" tabularNums style={styles.ribbonTime}>
+                        {timer.hasSession ? timer.formattedTime : `${estimate} mnt`}
+                      </AppText>
+                      <AppText variant="labelSmall" style={styles.timeLabel}>
+                        {timer.hasSession ? timer.mode === 'STOPWATCH' ? 'waktu berjalan' : 'waktu tersisa' : 'perkiraan tugas'}
+                      </AppText>
+                    </View>
+                  ) : null}
                 </View>
               </Pressable>
-              <View style={[styles.dayLedger, largeText && styles.fullPanel]}>
-                <AppText style={styles.eyebrow}>HARI INI</AppText>
-                <AppText style={styles.ledgerNumber} tabularNums>{completedCount}<AppText style={styles.ledgerDenominator}>/{activeItems.length}</AppText></AppText>
-                <AppText style={styles.ledgerLabel}>tugas tuntas</AppText>
-                <View style={styles.ledgerRule} />
-                <AppText style={styles.ledgerMinutes} tabularNums>{completedMinutes} mnt</AppText>
-                <AppText style={styles.ledgerLabel}>waktu fokus</AppText>
-              </View>
-            </View>
-
-            {/* Expanded Focus Timer Widget when opened */}
+            )}
             {isTimerExpanded && (
               <FocusTimerWidget
                 mode={timer.mode}
@@ -240,23 +230,26 @@ export const TodayFocusScreen: React.FC = () => {
               />
             )}
 
-            {/* 3. Jadwal Shalat & Azan Widget (Right below Target Aktif) */}
-            <PrayerTimesWidget schedule={prayerSchedule} />
-
-            {/* 4. Unified Section: Hari Ini — Editorial Timeline Flow (No Cards, No Pill Badges) */}
             <View style={styles.sectionHeaderBlock}>
               <View style={styles.sectionHeaderTop}>
                 <View style={styles.sectionTitleGroup}>
-                  <AppText style={styles.sectionHeading}>Hari Ini</AppText>
-                  {totalCombinedCount > 0 && (
-                    <AppText style={styles.sectionProgressLabel} tabularNums>
+                  <AppText variant="titleLarge" accessibilityRole="header" style={styles.sectionHeading}>Rencana hari ini</AppText>
+                  {(totalCombinedCount > 0 || completedMinutes > 0) && (
+                    <AppText variant="bodySmall" style={styles.sectionProgressLabel} tabularNums>
                       {`${completedCombinedCount} dari ${totalCombinedCount} tuntas`}
+                      {completedMinutes > 0 ? `, ${completedMinutes} menit fokus` : ''}
                     </AppText>
                   )}
                 </View>
+                <Pressable
+                  onPress={() => router.push('/today/new')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Tambah Tugas Prioritas"
+                  style={({ pressed }) => [styles.addButton, pressed && styles.timelineItemPressed]}
+                >
+                  <Plus size={space[5]} color={s.forest} />
+                </Pressable>
               </View>
-
-              {/* Thin Organic Progress Thread under Section Header */}
               {totalCombinedCount > 0 && (
                 <View style={styles.headerProgressTrack}>
                   <View
@@ -270,36 +263,37 @@ export const TodayFocusScreen: React.FC = () => {
             </View>
 
             {totalCombinedCount === 0 ? (
-              <EmptyState
-                title="Mulai dari satu langkah"
-                description="Pilih tugas penting dari target hidupmu, buat tugas kilat, atau jadwalkan agenda hari ini."
-                actionTitle="Pilih prioritas"
-                customIcon={<Sparkles size={28} color={s.forest} strokeWidth={2.2} />}
-                onActionPress={() => router.push('/today/new')}
-              />
+              <AppText variant="bodyMedium" color="onSurfaceVariant">
+                Belum ada tugas atau agenda untuk hari ini.
+              </AppText>
             ) : (
               <View style={styles.timelineContainer}>
-                {/* A. Fokus Tugas (dari Target atau Hari Ini) */}
                 {focusItems.map((item, idx) => {
                   const isLastNode = idx + 1 === totalTimelineNodes;
                   const isCompleted = item.isCompleted;
                   const isCancelled = item.task.status === 'CANCELLED';
                   const isActive = timer.activeTask?.id === item.taskId;
 
-                  const durationLabel =
-                    item.task.estimatedMinutes >= 60 && item.task.estimatedMinutes % 60 === 0
+                  const durationLabel = !item.task.estimatedMinutes ? ''
+                    : item.task.estimatedMinutes >= 60 && item.task.estimatedMinutes % 60 === 0
                       ? `${item.task.estimatedMinutes / 60} jam`
                       : `${item.task.estimatedMinutes} menit`;
 
-                  const isLinkedTask = Boolean(item.task.targetId);
+                  let detail = item.task.description
+                    ? [durationLabel, item.task.description].filter(Boolean).join(', ')
+                    : durationLabel ? `Estimasi fokus ${durationLabel}` : '';
+                  if (isCancelled) detail = 'Dibatalkan';
+                  else if (isCompleted) detail = 'Selesai dikerjakan';
+                  else if (isActive && timer.isRunning) detail = 'Sesi fokus berjalan';
+
                   const isFromManagedTask =
-                    !isLinkedTask && item.task.id.startsWith('mtask-');
+                    !item.task.targetId && item.task.id.startsWith('mtask-');
                   const accentColor = s.forest;
 
                   const originKicker = item.task.targetId
-                    ? item.task.targetTitle ? `Target · ${item.task.targetTitle}` : 'Dari Target'
-                    : isFromManagedTask ? 'Manajemen Tugas · Jadwal Eksekusi'
-                      : item.task.quickCategory ? `Fokus Hari Ini · ${item.task.quickCategory}` : 'Fokus Hari Ini';
+                    ? item.task.targetTitle ? `Target, ${item.task.targetTitle}` : 'Dari Target'
+                    : isFromManagedTask ? 'Manajemen Tugas, Jadwal Eksekusi'
+                      : item.task.quickCategory || 'Tugas hari ini';
 
                   const handleRowPress = () => {
                     if (item.task.targetId) {
@@ -317,7 +311,6 @@ export const TodayFocusScreen: React.FC = () => {
 
                   return (
                     <View key={item.id} style={styles.timelineItem}>
-                      {/* Left Column: Timeline Node + Continuous Vertical Spine */}
                       <View style={styles.timelineRail}>
                         <View style={styles.checkNodeWrap}>
                           <SproutCheck
@@ -327,7 +320,7 @@ export const TodayFocusScreen: React.FC = () => {
                               (isCompleted || isCancelled ? 'Buka kembali ' : 'Selesaikan ') +
                               item.task.title
                             }
-                            size={26}
+                            size={space[6]}
                           />
                         </View>
                         {!isLastNode && (
@@ -339,70 +332,45 @@ export const TodayFocusScreen: React.FC = () => {
                           />
                         )}
                       </View>
-
-                      {/* Right Column: Editorial Content + Dashed Notebook Divider */}
                       <View style={styles.timelineBody}>
                         <View style={styles.timelineMainRow}>
                           <Pressable onPress={handleRowPress}
                             accessibilityRole="button"
                             accessibilityLabel={`Buka ${originKicker}: ${item.task.title}`} style={({ pressed }) => [styles.timelineTextCol, pressed && styles.timelineItemPressed]}>
-                            {/* Plain Editorial Kicker Line (No Badge Box!) */}
                             <View style={styles.kickerInlineRow}>
-                              {item.task.targetId ? (
-                                <Target size={11} color={accentColor} strokeWidth={2.4} />
-                              ) : isFromManagedTask ? (
-                                <BellRing size={11} color={accentColor} strokeWidth={2.4} />
-                              ) : (
-                                <Sparkles size={11} color={accentColor} strokeWidth={2.4} />
-                              )}
                               <AppText
-                                style={[styles.kickerText, { color: accentColor }]}
-                                numberOfLines={1}
+                                variant="labelMedium" style={[styles.kickerText, { color: accentColor }]}
+                                numberOfLines={largeText ? undefined : 1}
                               >
                                 {originKicker}
                               </AppText>
-                              {(isLinkedTask || isFromManagedTask) && (
-                                <ArrowUpRight size={11} color={accentColor} strokeWidth={2.4} />
-                              )}
                             </View>
-
-                            {/* Main Title */}
                             <AppText
                               style={[
                                 styles.timelineTitle,
                                 isCompleted && styles.timelineTitleDone,
                                 isCancelled && styles.timelineTitleCancelled,
                               ]}
-                              numberOfLines={2}
+                              numberOfLines={largeText ? undefined : 2}
                             >
                               {item.task.title}
                             </AppText>
-
-                            {/* Subtitle / Duration & Status */}
-                            <AppText style={styles.timelineSubtext} numberOfLines={1}>
-                              {isCancelled
-                                ? 'Dibatalkan'
-                                : isCompleted
-                                  ? `${durationLabel} · Selesai dikerjakan`
-                                  : isActive
-                                    ? `${durationLabel} · Sesi fokus sedang berjalan`
-                                    : item.task.description
-                                      ? `${durationLabel} · ${item.task.description}`
-                                      : `Estimasi fokus ${durationLabel}`}
-                            </AppText>
+                            {detail ? (
+                              <AppText style={styles.timelineSubtext} numberOfLines={largeText ? undefined : 2}>
+                                {detail}
+                              </AppText>
+                            ) : null}
                           </Pressable>
-
-                          {/* Right Actions: Tactile Play/Pause Circle & Subtle Remove */}
                           <View style={styles.timelineActions}>
-                            {isCompleted || isCancelled ? null : isActive ? (
+                            {isCompleted || isCancelled ? null : isActive && timer.isRunning ? (
                               <Pressable
                                 onPress={timer.pauseTimer}
                                 accessibilityRole="button"
                                 accessibilityLabel={'Jeda fokus ' + item.task.title}
-                                hitSlop={6}
+                                hitSlop={0}
                                 style={[styles.focusOrbBtn, styles.focusOrbBtnActive]}
                               >
-                                <Pause size={14} color={s.ink} strokeWidth={2.6} />
+                                <Pause size={space[4]} color={s.ink} strokeWidth={2.6} />
                               </Pressable>
                             ) : (
                               <Pressable
@@ -412,11 +380,11 @@ export const TodayFocusScreen: React.FC = () => {
                                 }}
                                 accessibilityRole="button"
                                 accessibilityLabel={'Mulai fokus ' + item.task.title}
-                                hitSlop={6}
+                                hitSlop={0}
                                 style={styles.focusOrbBtn}
                               >
                                 <Play
-                                  size={13}
+                                  size={space[4]}
                                   color={s.forest}
                                   fill={s.forest}
                                   strokeWidth={2.2}
@@ -428,36 +396,20 @@ export const TodayFocusScreen: React.FC = () => {
                               onPress={() => removeFromToday(item.id)}
                               accessibilityRole="button"
                               accessibilityLabel={'Hapus ' + item.task.title}
-                              hitSlop={8}
+                              hitSlop={0}
                               style={styles.dismissBtn}
                             >
-                              <X size={13.5} color={s.inkSubtle} />
+                              <X size={space[4]} color={s.inkSubtle} />
                             </Pressable>
                           </View>
                         </View>
-
-                        {/* Hand-drawn Dashed Divider Line */}
                         {!isLastNode && (
-                          <View style={styles.dashedDividerWrap} pointerEvents="none">
-                            <Svg width="100%" height={2}>
-                              <Line
-                                x1="0"
-                                y1="1"
-                                x2="100%"
-                                y2="1"
-                                stroke="#E3DAC3"
-                                strokeWidth={1.2}
-                                strokeDasharray="5 5"
-                              />
-                            </Svg>
-                          </View>
+                          <View style={styles.divider} />
                         )}
                       </View>
                     </View>
                   );
                 })}
-
-                {/* B. Kegiatan Agenda Harian */}
                 {events.map((ev, idx) => {
                   const isLastNode =
                     focusItems.length + idx + 1 === totalTimelineNodes;
@@ -478,7 +430,7 @@ export const TodayFocusScreen: React.FC = () => {
                             checked={isDone}
                             onPress={() => toggleEvent(ev.id, isDone)}
                             accessibilityLabel={(isDone ? 'Buka kembali ' : 'Selesaikan ') + ev.title}
-                            size={26}
+                            size={space[6]}
                           />
                         </View>
                         {!isLastNode && (
@@ -497,11 +449,10 @@ export const TodayFocusScreen: React.FC = () => {
                             accessibilityRole="button"
                             accessibilityLabel={`Buka Agenda: ${ev.title}`} style={({ pressed }) => [styles.timelineTextCol, pressed && styles.timelineItemPressed]}>
                             <View style={styles.kickerInlineRow}>
-                              <CalendarDays size={11} color={agendaColor} strokeWidth={2.4} />
-                              <AppText style={[styles.kickerText, { color: agendaColor }]}>
-                                {`Agenda · ${startTime}`}
+                              <CalendarDays size={space[3]} color={agendaColor} strokeWidth={2.4} />
+                              <AppText variant="labelMedium" style={[styles.kickerText, { color: agendaColor }]}>
+                                {`Agenda, ${startTime}`}
                               </AppText>
-                              <ArrowUpRight size={11} color={agendaColor} strokeWidth={2.4} />
                             </View>
 
                             <AppText
@@ -520,26 +471,12 @@ export const TodayFocusScreen: React.FC = () => {
                         </View>
 
                         {!isLastNode && (
-                          <View style={styles.dashedDividerWrap} pointerEvents="none">
-                            <Svg width="100%" height={2}>
-                              <Line
-                                x1="0"
-                                y1="1"
-                                x2="100%"
-                                y2="1"
-                                stroke="#E3DAC3"
-                                strokeWidth={1.2}
-                                strokeDasharray="5 5"
-                              />
-                            </Svg>
-                          </View>
+                          <View style={styles.divider} />
                         )}
                       </View>
                     </View>
                   );
                 })}
-
-                {/* C. Jadwal Rutin Mingguan */}
                 {activeOccurrences.map((occ, idx) => {
                   const isLastNode =
                     focusItems.length + events.length + idx + 1 ===
@@ -557,7 +494,7 @@ export const TodayFocusScreen: React.FC = () => {
                             accessibilityLabel={
                               (isDone ? 'Buka kembali ' : 'Selesaikan ') + occ.schedule.title
                             }
-                            size={26}
+                            size={space[6]}
                           />
                         </View>
                         {!isLastNode && (
@@ -576,11 +513,10 @@ export const TodayFocusScreen: React.FC = () => {
                             accessibilityRole="button"
                             accessibilityLabel={`Buka Jadwal Rutin: ${occ.schedule.title}`} style={({ pressed }) => [styles.timelineTextCol, pressed && styles.timelineItemPressed]}>
                             <View style={styles.kickerInlineRow}>
-                              <Repeat size={11} color={routineColor} strokeWidth={2.4} />
-                              <AppText style={[styles.kickerText, { color: routineColor }]}>
-                                {`Jadwal Rutin · ${occ.schedule.startTime}–${occ.schedule.endTime}`}
+                              <Repeat size={space[3]} color={routineColor} strokeWidth={2.4} />
+                              <AppText variant="labelMedium" style={[styles.kickerText, { color: routineColor }]}>
+                                {`Jadwal Rutin, ${occ.schedule.startTime}–${occ.schedule.endTime}`}
                               </AppText>
-                              <ArrowUpRight size={11} color={routineColor} strokeWidth={2.4} />
                             </View>
 
                             <AppText
@@ -591,25 +527,13 @@ export const TodayFocusScreen: React.FC = () => {
                             </AppText>
 
                             <AppText style={styles.timelineSubtext} numberOfLines={1}>
-                              Rutinitas mingguan · Ketuk untuk buka kalender
+                              Rutinitas mingguan, Ketuk untuk buka kalender
                             </AppText>
                           </Pressable>
                         </View>
 
                         {!isLastNode && (
-                          <View style={styles.dashedDividerWrap} pointerEvents="none">
-                            <Svg width="100%" height={2}>
-                              <Line
-                                x1="0"
-                                y1="1"
-                                x2="100%"
-                                y2="1"
-                                stroke="#E3DAC3"
-                                strokeWidth={1.2}
-                                strokeDasharray="5 5"
-                              />
-                            </Svg>
-                          </View>
+                          <View style={styles.divider} />
                         )}
                       </View>
                     </View>
@@ -618,7 +542,7 @@ export const TodayFocusScreen: React.FC = () => {
               </View>
             )}
 
-            <View style={{ height: space[16] }} />
+            <PrayerTimesWidget schedule={prayerSchedule} />
           </>
         )
       )}
@@ -627,184 +551,64 @@ export const TodayFocusScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  screenBg: {
-    backgroundColor: s.cream,
-  },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 20, paddingBottom: 8, gap: 12, },
-  headerTextCol: {
-    gap: 4,
-    flex: 1,
-  },
-  greetingTitle: { fontFamily: fontFamily.bold, fontSize: 28, lineHeight: 36, letterSpacing: -1, color: s.ink, },
-  greetingSubtext: { fontFamily: fontFamily.regular, color: s.inkMuted, fontSize: 12, lineHeight: 18, },
-  notice: {
-    marginBottom: space[2],
-  },
-  loading: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space[2],
-    paddingVertical: space[10],
-  },
-  scrollContent: {
-    paddingBottom: 100,
-    gap: space[3],
-  },
-  eyebrow: { fontFamily: fontFamily.bold, fontSize: 10, lineHeight: 16, letterSpacing: 1.5, color: s.inkMuted },
-  headerMark: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
-  fullPanel: { flexBasis: '100%' },
-  focusGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  focusPanel: { flexGrow: 2, flexBasis: 170, minWidth: 0, padding: 16, borderRadius: 18, borderTopRightRadius: 4, backgroundColor: s.forest, gap: 8 },
-  focusTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  focusEyebrow: { fontFamily: fontFamily.bold, fontSize: 10, letterSpacing: 1.3, color: s.sun },
-  focusTitle: { fontFamily: fontFamily.bold, fontSize: 22, lineHeight: 30, letterSpacing: -0.6, color: '#FFFFFF' },
-  focusTask: { fontSize: 12, lineHeight: 19, color: '#E7EDDC' },
-  focusFooter: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
-  liveDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: s.sun },
-  focusStatus: { fontSize: 11, color: '#E7EDDC' },
-  dayLedger: { flexGrow: 1, flexBasis: 90, minWidth: 0, padding: 12, backgroundColor: s.sunSoft, borderRadius: 14, justifyContent: 'center' },
-  ledgerNumber: { fontFamily: fontFamily.bold, fontSize: 32, lineHeight: 42, letterSpacing: -1, color: s.ink },
-  ledgerDenominator: { fontSize: 16, color: s.inkMuted },
-  ledgerLabel: { fontSize: 11, color: s.inkMuted },
-  ledgerRule: { height: 1, backgroundColor: '#D6DFBB', marginVertical: 10 },
-  ledgerMinutes: { fontFamily: fontFamily.bold, fontSize: 16, color: s.forest },
-  sectionHeaderBlock: {
-    paddingTop: space[2],
-    gap: 8,
-  },
-  sectionHeaderTop: {
+  screenBg: { backgroundColor: colors.background },
+  scrollContent: { paddingBottom: space[10], gap: space[4] },
+  header: {
+    paddingTop: space[5],
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: space[2],
   },
-  sectionTitleGroup: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8, },
-  sectionHeading: {
-    fontFamily: fontFamily.bold,
-    fontSize: 19,
-    lineHeight: 24,
-    color: s.ink,
-  },
-  sectionProgressLabel: {
-    fontFamily: fontFamily.semibold,
-    fontSize: 12,
-    color: s.forest,
-  },
-
-  headerProgressTrack: {
-    height: 3,
-    borderRadius: 999,
-    backgroundColor: '#E7DEC8',
-    overflow: 'hidden',
-  },
-  headerProgressFill: {
-    height: '100%',
-    borderRadius: 999,
-    backgroundColor: s.forest,
-  },
-  timelineContainer: {
-    paddingTop: 4,
-  },
-  timelineItem: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: 12,
-  },
-  timelineItemPressed: {
-    opacity: 0.72,
-  },
-  timelineRail: {
-    width: 28,
-    alignItems: 'center',
-  },
-  checkNodeWrap: {
-    paddingTop: 2,
-    zIndex: 2,
-  },
-  timelineSpineLine: {
-    flex: 1,
-    width: 2,
-    backgroundColor: '#DFD6C0',
-    marginVertical: 4,
-    borderRadius: 1,
-  },
-  timelineSpineLineDone: {
-    backgroundColor: '#9CC964',
-  },
-  timelineBody: {
-    flex: 1,
-    paddingBottom: 14,
-  },
-  timelineMainRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  timelineTextCol: {
-    flex: 1,
-    gap: 2,
-  },
-  kickerInlineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  kickerText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 0.2,
-    flexShrink: 1,
-  },
-  timelineTitle: { fontFamily: fontFamily.semibold, fontSize: 14, lineHeight: 21, color: s.ink, },
-  timelineTitleDone: {
-    textDecorationLine: 'line-through',
-    color: s.inkMuted,
-  },
-  timelineTitleCancelled: {
-    textDecorationLine: 'line-through',
-    color: s.inkSubtle,
-  },
-  timelineSubtext: {
-    fontFamily: fontFamily.medium,
-    fontSize: 12,
-    lineHeight: 16,
-    color: s.inkMuted,
-  },
-  timelineActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  focusOrbBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: s.leafSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  focusOrbBtnActive: {
-    backgroundColor: s.sun,
-  },
-  dismissBtn: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dashedDividerWrap: {
-    marginTop: 14,
-  },
-  floatingFabContainer: {
-    position: 'absolute',
-    right: space[4],
-    bottom: space[4],
-    zIndex: 20,
-  },
-  fabSquare: { width: 48, height: 48, borderRadius: 14, backgroundColor: s.sun, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: s.forest, },
-  fabSquarePressed: {
-    transform: [{ scale: 0.94 }],
-    backgroundColor: s.sunDeep,
-  },
+  greetingTitle: { color: colors.onSurface },
+  greetingSubtext: { color: colors.onSurfaceVariant },
+  notice: { marginBottom: space[2] },
+  loading: { gap: space[3], paddingVertical: space[4] },
+  skeletonLong: { width: '75%', height: space[3], borderRadius: radius.sm, backgroundColor: colors.surfaceContainer },
+  skeletonShort: { width: '50%', height: space[3], borderRadius: radius.sm, backgroundColor: colors.surfaceContainer },
+  ribbon: { borderRadius: radius.lg, backgroundColor: colors.hero, overflow: 'hidden' },
+  ribbonPressed: { backgroundColor: colors.primaryHover },
+  ribbonBody: { padding: space[5], gap: space[2] },
+  ribbonState: { color: colors.onHeroMuted },
+  ribbonTitle: { fontFamily: fontFamily.bold, color: colors.onHero },
+  ribbonSeam: { flexDirection: 'row', height: space[3], alignItems: 'center', marginHorizontal: -space[1] },
+  ribbonNotch: { width: space[3], height: space[3], borderRadius: radius.full, backgroundColor: colors.background },
+  ribbonPerforation: { flex: 1, borderBottomWidth: StyleSheet.hairlineWidth, borderStyle: 'dashed', borderColor: colors.heroTrack },
+  ribbonStub: { paddingHorizontal: space[5], paddingTop: space[2], paddingBottom: space[4], flexDirection: 'row', gap: space[3], alignItems: 'center', justifyContent: 'space-between' },
+  stack: { flexDirection: 'column-reverse', alignItems: 'stretch' },
+  ribbonAction: { minHeight: touchTarget.min, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: space[2], paddingHorizontal: space[4], paddingVertical: space[2], borderRadius: radius.sm, backgroundColor: s.sun, flexShrink: 1 },
+  actionText: { color: s.ink, fontFamily: fontFamily.bold },
+  timeColumn: { minWidth: 0, flexShrink: 1, alignItems: 'flex-end' },
+  ribbonTime: { color: colors.onHero, fontFamily: fontFamily.bold },
+  timeLabel: { color: colors.onHeroMuted },
+  sectionHeaderBlock: { gap: space[2] },
+  sectionHeaderTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[2] },
+  sectionTitleGroup: { flex: 1, gap: space[1] },
+  sectionHeading: { color: s.ink },
+  sectionProgressLabel: { color: s.inkMuted },
+  addButton: { width: touchTarget.min, minHeight: touchTarget.min, justifyContent: 'center', alignItems: 'center', borderRadius: radius.md, backgroundColor: colors.surfaceContainerLow },
+  headerProgressTrack: { height: space[1], borderRadius: radius.pill, backgroundColor: colors.surfaceContainer, overflow: 'hidden' },
+  headerProgressFill: { height: '100%', backgroundColor: s.forest },
+  timelineContainer: { gap: space[1] },
+  timelineItem: { flexDirection: 'row', alignItems: 'stretch', gap: space[2] },
+  timelineItemPressed: { backgroundColor: colors.surfaceContainerLow },
+  timelineRail: { width: touchTarget.min, alignItems: 'center' },
+  checkNodeWrap: { minHeight: touchTarget.min, width: touchTarget.min, alignItems: 'center', justifyContent: 'center' },
+  timelineSpineLine: { flex: 1, width: StyleSheet.hairlineWidth, backgroundColor: colors.border },
+  timelineSpineLineDone: { backgroundColor: colors.success },
+  timelineBody: { flex: 1, minWidth: 0, paddingVertical: space[1] },
+  timelineMainRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: space[1] },
+  timelineTextCol: { flexGrow: 1, flexBasis: touchTarget.min * 3, minWidth: 0, minHeight: touchTarget.min, justifyContent: 'center', gap: space[1] },
+  kickerInlineRow: { flexDirection: 'row', alignItems: 'center', gap: space[1] },
+  kickerText: { fontFamily: fontFamily.medium, flexShrink: 1 },
+  timelineTitle: { fontFamily: fontFamily.bold, color: s.ink },
+  timelineTitleDone: { textDecorationLine: 'line-through', color: s.inkMuted },
+  timelineTitleCancelled: { textDecorationLine: 'line-through', color: s.inkMuted },
+  timelineSubtext: { color: s.inkMuted },
+  timelineActions: { flexDirection: 'row', marginLeft: 'auto' },
+  focusOrbBtn: { width: touchTarget.min, height: touchTarget.min, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  focusOrbBtnActive: { backgroundColor: s.leafSoft },
+  dismissBtn: { width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center' },
+  divider: { marginTop: space[2], height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
 });

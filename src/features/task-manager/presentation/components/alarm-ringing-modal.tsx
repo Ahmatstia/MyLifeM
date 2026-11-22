@@ -17,8 +17,9 @@ import {
   CheckCircle2,
   X,
 } from 'lucide-react-native';
+import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { colors } from '@/theme/colors';
-import { fontFamily, space } from '@/theme/tokens';
+import { fontFamily, space, radius, stroke, typography } from '@/theme/tokens';
 import { AppText } from '@/shared/ui';
 import {
   formatDayAndDateIndo,
@@ -34,6 +35,7 @@ import { TaskAlarmAudioService } from '../../data/services/task-alarm-audio.serv
 const s = colors.sprout;
 
 export const AlarmRingingModal: React.FC = () => {
+  const reducedMotion = useReducedMotion();
   const [ringingTask, setRingingTask] = useState<ManagedTaskEntity | null>(
     null
   );
@@ -139,7 +141,7 @@ export const AlarmRingingModal: React.FC = () => {
     <Modal
       visible
       transparent={false}
-      animationType="fade"
+      animationType={reducedMotion ? 'none' : 'fade'}
       statusBarTranslucent
       onRequestClose={handleDismiss}
     >
@@ -149,7 +151,7 @@ export const AlarmRingingModal: React.FC = () => {
         <View style={styles.topAlertPill}>
           <BellRing size={16} color={s.ink} strokeWidth={2.6} />
           <AppText style={styles.topAlertPillText}>
-            {isTest ? 'TES ALARM · MAKSIMAL 10 DETIK' : 'ALARM EKSEKUSI TUGAS AKTIF'}
+            {isTest ? 'Tes alarm, maksimal 10 detik' : 'Pengingat mulai tugas'}
           </AppText>
         </View>
 
@@ -159,7 +161,7 @@ export const AlarmRingingModal: React.FC = () => {
             {nowClock}
           </AppText>
           <AppText style={styles.wakeHeadline}>
-            {isTest ? 'Uji suara alarm' : 'Waktunya Kerjakan Tugasmu! 🔥'}
+            {isTest ? 'Uji suara alarm' : 'Waktu mulai tugas'}
           </AppText>
         </View>
 
@@ -168,7 +170,7 @@ export const AlarmRingingModal: React.FC = () => {
           <View style={styles.contextBadgeRow}>
             <View style={styles.contextChip}>
               <AppText style={styles.contextChipText}>
-                {ringingTask.courseOrContext || 'TUGAS UTAMA'}
+                {ringingTask.courseOrContext || 'Tugas'}
               </AppText>
             </View>
             <View style={styles.durationChip}>
@@ -189,13 +191,13 @@ export const AlarmRingingModal: React.FC = () => {
 
           {/* Deadline Reminder Box */}
           <View style={styles.deadlineBanner}>
-            <CalendarClock size={16} color="#B84A27" strokeWidth={2.4} />
+            <CalendarClock size={16} color={colors.warning} strokeWidth={2.4} />
             <View style={{ flex: 1 }}>
               <AppText style={styles.deadlineBannerLabel}>
-                BATAS PENGUMPULAN (DEADLINE)
+                Tenggat
               </AppText>
               <AppText style={styles.deadlineBannerValue}>
-                {formatDayAndDateIndo(ringingTask.deadlineDate)} · Pukul{' '}
+                {formatDayAndDateIndo(ringingTask.deadlineDate)}, Pukul{' '}
                 {ringingTask.deadlineTime}
               </AppText>
             </View>
@@ -238,7 +240,7 @@ export const AlarmRingingModal: React.FC = () => {
           {/* 2. Snooze Options */}
           <View style={styles.snoozeBlock}>
             <AppText style={styles.snoozeHeaderLabel}>
-              TUNDA ALARM (SNOOZE)
+              Tunda selama
             </AppText>
             <View style={styles.snoozeButtonsRow}>
               {[5, 10, 15].map((mins) => (
@@ -252,7 +254,7 @@ export const AlarmRingingModal: React.FC = () => {
                     pressed && { opacity: 0.8 },
                   ]}
                 >
-                  <Clock size={13} color="#FFFFFF" strokeWidth={2.3} />
+                  <Clock size={13} color={colors.surfaceContainerLowest} strokeWidth={2.3} />
                   <AppText style={styles.snoozeBtnText}>+{mins} Menit</AppText>
                 </Pressable>
               ))}
@@ -267,7 +269,7 @@ export const AlarmRingingModal: React.FC = () => {
               accessibilityLabel="Tandai tugas sudah selesai"
               style={styles.secondaryActionBtn}
             >
-              <CheckCircle2 size={16} color="#B8F1D0" strokeWidth={2.4} />
+              <CheckCircle2 size={16} color={colors.onHeroMuted} strokeWidth={2.4} />
               <AppText style={styles.secondaryActionText}>
                 Tandai Sudah Selesai
               </AppText>
@@ -279,7 +281,7 @@ export const AlarmRingingModal: React.FC = () => {
               accessibilityLabel="Matikan alarm"
               style={styles.secondaryActionBtn}
             >
-              <X size={16} color="#E2E8F0" strokeWidth={2.4} />
+              <X size={16} color={colors.onHeroMuted} strokeWidth={2.4} />
               <AppText style={styles.secondaryActionText}>
                 Matikan Alarm
               </AppText>
@@ -295,131 +297,131 @@ export const AlarmRingingModal: React.FC = () => {
 const styles = StyleSheet.create({
   fullScreenRoot: {
     flex: 1,
-    backgroundColor: '#102A22',
+    backgroundColor: colors.inverseSurface,
     paddingHorizontal: space[5],
-    paddingTop: 58,
-    paddingBottom: 38,
+    paddingTop: space[14],
+    paddingBottom: space[10],
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   topAlertPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: space[2],
     backgroundColor: s.sun,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingHorizontal: space[4],
+    paddingVertical: space[2],
+    borderRadius: radius.pill,
   },
   topAlertPillText: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.7,
     color: s.ink,
   },
   clockBlock: {
     alignItems: 'center',
-    gap: 4,
+    gap: space[1],
   },
   bigClockText: {
     fontFamily: fontFamily.bold,
-    fontSize: 64,
-    lineHeight: 72,
-    color: '#FFFFFF',
+    fontSize: typography.timer.fontSize,
+    lineHeight: typography.timer.lineHeight,
+    color: colors.surfaceContainerLowest,
   },
   wakeHeadline: {
     fontFamily: fontFamily.bold,
-    fontSize: 16,
-    color: '#B8F1D0',
+    fontSize: typography.titleMedium.fontSize,
+    color: colors.onHeroMuted,
   },
   taskCommandCard: {
     width: '100%',
     backgroundColor: s.cream,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     padding: space[5],
     gap: space[3],
-    borderWidth: 2,
+    borderWidth: stroke.selected,
     borderColor: s.sun,
   },
   contextBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: space[2],
   },
   contextChip: {
     backgroundColor: s.leafSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 10,
+    paddingHorizontal: space[3],
+    paddingVertical: space[1],
+    borderRadius: radius.sm,
   },
   contextChipText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
     letterSpacing: 0.4,
   },
   durationChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#EFE8D5',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
+    gap: space[1],
+    backgroundColor: colors.surfaceContainerLow,
+    paddingHorizontal: space[2],
+    paddingVertical: space[1],
+    borderRadius: radius.sm,
   },
   durationChipText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   taskTitleText: {
     fontFamily: fontFamily.bold,
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: typography.headlineMedium.fontSize,
+    lineHeight: typography.headlineMedium.lineHeight,
     color: s.ink,
   },
   taskNotesText: {
     fontFamily: fontFamily.medium,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: typography.labelMedium.fontSize,
+    lineHeight: typography.labelMedium.lineHeight,
     color: s.inkMuted,
   },
   deadlineBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#FFF3EC',
-    borderWidth: 1,
-    borderColor: '#F5D0BD',
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    gap: space[2],
+    backgroundColor: colors.warningContainer,
+    borderWidth: stroke.hairline,
+    borderColor: colors.warningContainer,
+    borderRadius: radius.lg,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
   },
   deadlineBannerLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 10,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.5,
-    color: '#B84A27',
+    color: colors.warning,
   },
   deadlineBannerValue: {
     fontFamily: fontFamily.bold,
-    fontSize: 13,
-    color: '#7A2810',
+    fontSize: typography.labelMedium.fontSize,
+    color: colors.warning,
   },
   audioPlayingStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: space[2],
     backgroundColor: s.leafSoft,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    borderRadius: radius.md,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
   },
   audioPlayingText: {
     flex: 1,
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   actionsStack: {
@@ -430,31 +432,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: space[2],
     backgroundColor: s.sun,
-    borderRadius: 16,
-    paddingVertical: 18,
-    borderWidth: 2,
+    borderRadius: radius.lg,
+    paddingVertical: space[4],
+    borderWidth: stroke.selected,
     borderColor: '#FFF3C4',
   },
   startNowButtonText: {
     fontFamily: fontFamily.bold,
-    fontSize: 17,
+    fontSize: typography.titleMedium.fontSize,
     color: s.ink,
   },
   snoozeBlock: {
     alignItems: 'center',
-    gap: 8,
+    gap: space[2],
   },
   snoozeHeaderLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 10,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.8,
-    color: '#9EC5B5',
+    color: colors.onHeroMuted,
   },
   snoozeButtonsRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: space[2],
     width: '100%',
   },
   snoozeBtn: {
@@ -462,38 +464,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: space[1],
     backgroundColor: 'rgba(255, 255, 255, 0.14)',
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     borderColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 16,
-    paddingVertical: 11,
+    borderRadius: radius.lg,
+    paddingVertical: space[3],
   },
   snoozeBtnText: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#FFFFFF',
+    fontSize: typography.labelMedium.fontSize,
+    color: colors.surfaceContainerLowest,
   },
   bottomSecondaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 10,
-    marginTop: 2,
+    gap: space[2],
+    marginTop: space[0.5],
   },
   secondaryActionBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 14,
+    gap: space[1],
+    paddingVertical: space[2],
+    borderRadius: radius.md,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   secondaryActionText: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: '#E2E8F0',
+    fontSize: typography.labelMedium.fontSize,
+    color: colors.onHeroMuted,
   },
 });
 

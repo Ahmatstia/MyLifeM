@@ -45,7 +45,7 @@ export const Button: React.FC<ButtonProps> = ({
     size === 'cta'
       ? touchTarget.comfortable // 56
       : size === 'compact'
-      ? touchTarget.compact // 40
+      ? touchTarget.compact // 48
       : touchTarget.min; // 48
 
   // Base styling per variant
@@ -108,6 +108,7 @@ export const Button: React.FC<ButtonProps> = ({
       onPress={isInteractive ? onPress : undefined}
       disabled={!isInteractive}
       accessibilityRole="button"
+      accessibilityLabel={title}
       accessibilityState={{ disabled: !isInteractive, busy: loading }}
       style={({ pressed }) => [
         containerStyle,
@@ -154,6 +155,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.8,
-    transform: [{ scale: 0.985 }],
   },
 });

@@ -32,14 +32,13 @@ import {
   Zap,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { fontFamily, space } from '@/theme/tokens';
+import { touchTarget, fontFamily, space, radius, stroke, typography } from '@/theme/tokens';
 import {
   AppText,
   Banner,
   EmptyState,
   Screen,
   SproutCheck,
-  WaveBackdrop,
   sproutShadow,
 } from '@/shared/ui';
 import {
@@ -168,12 +167,12 @@ export const TaskManagerScreen: React.FC = () => {
 
     const bufferColors =
       buffer.tone === 'safe'
-        ? { bg: '#E3F5EA', border: '#B9E4CA', text: '#166534' }
+        ? { bg: colors.successContainer, border: colors.successContainer, text: colors.success }
         : buffer.tone === 'tight'
-          ? { bg: '#FEF3C7', border: '#FDE68A', text: '#92400E' }
+          ? { bg: colors.warningContainer, border: colors.warningContainer, text: colors.warning }
           : buffer.tone === 'done'
-            ? { bg: '#E8EFEA', border: '#D1DFD5', text: s.forest }
-            : { bg: '#FEE2E2', border: '#FECACA', text: '#991B1B' };
+            ? { bg: colors.surfaceContainerLow, border: colors.outlineVariant, text: s.forest }
+            : { bg: colors.errorContainer, border: colors.errorContainer, text: colors.error };
 
     const completedSubs = item.subtasks.filter((st) => st.isCompleted).length;
 
@@ -191,7 +190,7 @@ export const TaskManagerScreen: React.FC = () => {
             {renderCategoryBadgeIcon(item.categoryType)}
             <AppText style={styles.contextPillText} numberOfLines={1}>
               {item.courseOrContext
-                ? `${getCategoryDefaultName(item.categoryType)} · ${item.courseOrContext}`
+                ? `${getCategoryDefaultName(item.categoryType)}, ${item.courseOrContext}`
                 : getCategoryDefaultName(item.categoryType)}
             </AppText>
           </View>
@@ -235,7 +234,7 @@ export const TaskManagerScreen: React.FC = () => {
             }
             size={28}
           />
-          <View style={{ flex: 1, gap: 3 }}>
+          <View style={{ flex: 1, gap: space[0.5] }}>
             <AppText
               style={[
                 styles.taskTitle,
@@ -267,7 +266,7 @@ export const TaskManagerScreen: React.FC = () => {
           <View style={styles.execDateBox}>
             <View style={styles.dateBoxHeader}>
               <Sparkles size={12} color={s.forest} strokeWidth={2.5} />
-              <AppText style={styles.execBoxLabel}>JADWAL KERJAKAN</AppText>
+              <AppText style={styles.execBoxLabel}>Waktu mulai</AppText>
             </View>
             <AppText style={styles.execBoxDateText}>
               {formatDayAndDateIndo(item.executionDate)}
@@ -284,9 +283,9 @@ export const TaskManagerScreen: React.FC = () => {
           {/* Right: Batas Pengumpulan (Deadline) */}
           <View style={styles.deadlineDateBox}>
             <View style={styles.dateBoxHeader}>
-              <CalendarClock size={12} color="#B84A27" strokeWidth={2.5} />
+              <CalendarClock size={12} color={colors.warning} strokeWidth={2.5} />
               <AppText style={styles.deadlineBoxLabel}>
-                DEADLINE KUMPUL
+                Tenggat
               </AppText>
             </View>
             <AppText style={styles.deadlineBoxDateText}>
@@ -303,7 +302,7 @@ export const TaskManagerScreen: React.FC = () => {
           <View style={styles.subtasksBlock}>
             <View style={styles.subtasksHeaderRow}>
               <AppText style={styles.subtasksHeaderTitle}>
-                LANGKAH PENGERJAAN
+                Langkah pengerjaan
               </AppText>
               <AppText style={styles.subtasksHeaderCount}>
                 {completedSubs}/{item.subtasks.length} selesai
@@ -364,7 +363,7 @@ export const TaskManagerScreen: React.FC = () => {
               </AppText>
               {isAlarmLoud && (
                 <AppText style={styles.alarmSongSubtitle} numberOfLines={1}>
-                  🎵 Lagu: {item.alarmTrackName}
+                  Lagu: {item.alarmTrackName}
                 </AppText>
               )}
             </View>
@@ -400,8 +399,8 @@ export const TaskManagerScreen: React.FC = () => {
               >
                 <Play
                   size={12}
-                  color="#FFFFFF"
-                  fill="#FFFFFF"
+                  color={colors.surfaceContainerLowest}
+                  fill={colors.surfaceContainerLowest}
                   strokeWidth={2.4}
                 />
                 <AppText style={styles.focusGoButtonText}>Fokus</AppText>
@@ -450,7 +449,7 @@ export const TaskManagerScreen: React.FC = () => {
         </>
       }
     >
-      <WaveBackdrop variant="home" height={285} />
+
 
       {/* 1. Header Bar */}
       <View style={styles.headerRow}>
@@ -466,7 +465,7 @@ export const TaskManagerScreen: React.FC = () => {
         <View style={{ flex: 1 }}>
           <AppText style={styles.headerTitle}>Manajemen Tugas</AppText>
           <AppText style={styles.headerSubtitle}>
-            Atur jadwal pengerjaan sebelum deadline & alarm lagu kustom
+            Waktu mulai, tenggat, dan pengingat tugas.
           </AppText>
         </View>
       </View>
@@ -486,14 +485,14 @@ export const TaskManagerScreen: React.FC = () => {
       <View style={styles.overviewCard}>
         <View style={styles.metricsGrid}>
           <View style={styles.metricTile}>
-            <AppText style={styles.metricTinyLabel}>TUGAS AKTIF</AppText>
+            <AppText style={styles.metricTinyLabel}>Aktif</AppText>
             <AppText style={styles.metricBigVal} tabularNums>
               {activeTasks.length}
             </AppText>
           </View>
 
           <View style={styles.metricTile}>
-            <AppText style={styles.metricTinyLabel}>KERJAKAN HARI INI</AppText>
+            <AppText style={styles.metricTinyLabel}>Hari ini</AppText>
             <AppText
               style={[styles.metricBigVal, { color: s.forest }]}
               tabularNums
@@ -503,9 +502,9 @@ export const TaskManagerScreen: React.FC = () => {
           </View>
 
           <View style={styles.metricTile}>
-            <AppText style={styles.metricTinyLabel}>ALARM AKTIF</AppText>
+            <AppText style={styles.metricTinyLabel}>Alarm aktif</AppText>
             <AppText
-              style={[styles.metricBigVal, { color: '#B84A27' }]}
+              style={[styles.metricBigVal, { color: colors.warning }]}
               tabularNums
             >
               {alarmEnabledTasks.length}
@@ -513,7 +512,7 @@ export const TaskManagerScreen: React.FC = () => {
           </View>
 
           <View style={styles.metricTile}>
-            <AppText style={styles.metricTinyLabel}>TUNTAS</AppText>
+            <AppText style={styles.metricTinyLabel}>Tuntas</AppText>
             <AppText style={styles.metricBigVal} tabularNums>
               {completedTasks.length}
             </AppText>
@@ -528,10 +527,10 @@ export const TaskManagerScreen: React.FC = () => {
             </View>
             <View style={{ flex: 1 }}>
               <AppText style={styles.customSongBarTitle}>
-                Koleksi Lagu Alarm Kustom ({customUploadedSongsCount} lagu HP)
+                Suara pengingat ({customUploadedSongsCount} lagu HP)
               </AppText>
               <AppText style={styles.customSongBarSub} numberOfLines={1}>
-                Gunakan lagu favoritmu agar langsung bangun saat jadwal tugas tiba
+                Pilih berkas audio dari perangkat.
               </AppText>
             </View>
           </View>
@@ -561,7 +560,7 @@ export const TaskManagerScreen: React.FC = () => {
           [
             ['ALL', `Semua (${tasks.length})`],
             ['TODAY_EXEC', `Jadwal Hari Ini (${todayExecTasks.length})`],
-            ['ALARM_ONLY', `Mode Alarm 🔊 (${alarmEnabledTasks.length})`],
+            ['ALARM_ONLY', `Dengan alarm (${alarmEnabledTasks.length})`],
             ['TIGHT', 'Mepet Deadline'],
             ['DONE', `Selesai (${completedTasks.length})`],
           ] as const
@@ -631,114 +630,114 @@ const styles = StyleSheet.create({
   backButton: {
     width: 42,
     height: 42,
-    borderRadius: 15,
+    borderRadius: radius.lg,
     backgroundColor: s.card,
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     ...sproutShadow,
   },
-  headerTitle: { fontFamily: fontFamily.bold, fontSize: 22, lineHeight: 29, letterSpacing: -0.6, color: s.ink, },
+  headerTitle: { fontFamily: fontFamily.bold, fontSize: typography.headlineMedium.fontSize, lineHeight: typography.headlineLarge.lineHeight, letterSpacing: -0.6, color: s.ink, },
   headerSubtitle: {
     fontFamily: fontFamily.medium,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
-  overviewCard: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 12, },
+  overviewCard: { paddingVertical: space[3], borderBottomWidth: stroke.hairline, borderBottomColor: colors.border, gap: space[3], },
   metricsGrid: {
     flexDirection: 'row',
-    gap: 8,
+    gap: space[2],
   },
-  metricTile: { flex: 1, padding: 8, alignItems: 'center', gap: 3, borderRightWidth: 1, borderRightColor: colors.border, },
+  metricTile: { flex: 1, padding: space[2], alignItems: 'center', gap: space[0.5], borderRightWidth: stroke.hairline, borderRightColor: colors.border, },
   metricTinyLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 9,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.4,
     color: s.inkMuted,
     textAlign: 'center',
   },
   metricBigVal: {
     fontFamily: fontFamily.bold,
-    fontSize: 20,
+    fontSize: typography.titleLarge.fontSize,
     color: s.ink,
   },
   customSongQuickBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 10,
-    backgroundColor: '#F3FAF5',
-    borderRadius: 20,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#CFE8D8',
+    gap: space[2],
+    backgroundColor: colors.primaryContainer,
+    borderRadius: radius.xl,
+    padding: space[3],
+    borderWidth: stroke.hairline,
+    borderColor: colors.successContainer,
   },
   customSongLeft: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: space[2],
   },
   musicSquircle: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: radius.md,
     backgroundColor: s.leafSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   customSongBarTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   customSongBarSub: {
     fontFamily: fontFamily.regular,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   pickSongQuickBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: space[1],
     backgroundColor: s.sun,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingHorizontal: space[3],
+    paddingVertical: space[2],
+    borderRadius: radius.pill,
   },
   pickSongQuickBtnText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   filterPillsRow: {
     flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 2,
+    gap: space[2],
+    paddingVertical: space[0.5],
   },
-  filterPill: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: s.card, borderWidth: 1, borderColor: colors.border, },
+  filterPill: { minHeight: touchTarget.min, justifyContent: 'center', paddingHorizontal: space[3], paddingVertical: space[2], borderRadius: radius.sm, backgroundColor: s.card, borderWidth: stroke.hairline, borderColor: colors.border, },
   filterPillActive: {
     backgroundColor: s.forest,
     borderColor: s.forest,
   },
   filterPillText: {
     fontFamily: fontFamily.bold,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   filterPillTextActive: {
-    color: '#FFFFFF',
+    color: colors.surfaceContainerLowest,
   },
   loadingWrap: {
-    paddingVertical: 40,
+    paddingVertical: space[10],
     alignItems: 'center',
-    gap: 8,
+    gap: space[2],
   },
   cardsStack: {
     gap: space[3],
   },
-  taskCard: { backgroundColor: s.card, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.border, borderLeftWidth: 3, borderLeftColor: s.grape, gap: 10, },
+  taskCard: { backgroundColor: s.card, borderRadius: radius.md, padding: space[3], borderWidth: stroke.hairline, borderColor: colors.border, borderLeftWidth: 3, borderLeftColor: s.grape, gap: space[2], },
   taskCardCompleted: {
     opacity: 0.72,
   },
@@ -747,21 +746,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: space[2],
   },
   contextPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: space[1],
     backgroundColor: s.leafSoft,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
+    paddingHorizontal: space[2],
+    paddingVertical: space[1],
+    borderRadius: radius.sm,
     maxWidth: '52%',
   },
   contextPillText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   cardTopRightActions: {
@@ -770,36 +769,36 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: space[1],
   },
   bufferBadge: {
     maxWidth: '100%',
     flexShrink: 1,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
+    paddingHorizontal: space[2],
+    paddingVertical: space[1],
+    borderRadius: radius.pill,
+    borderWidth: stroke.hairline,
   },
   bufferBadgeText: {
     fontFamily: fontFamily.bold,
-    fontSize: 10,
+    fontSize: typography.labelMedium.fontSize,
   },
   deleteIconBtn: {
     width: 28,
     height: 28,
-    borderRadius: 9,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   titleCheckRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: space[3],
   },
   taskTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 17,
-    lineHeight: 23,
+    fontSize: typography.titleMedium.fontSize,
+    lineHeight: typography.titleMedium.lineHeight,
     color: s.ink,
   },
   taskTitleDone: {
@@ -810,132 +809,132 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: space[1],
   },
   metaInlineText: {
     fontFamily: fontFamily.medium,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   todaySyncBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: space[1],
     backgroundColor: s.leafSoft,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
+    paddingHorizontal: space[2],
+    paddingVertical: space[0.5],
+    borderRadius: radius.pill,
   },
   todaySyncBadgeText: {
     fontFamily: fontFamily.bold,
-    fontSize: 10,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   dualDateBridge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: space[1],
   },
   execDateBox: {
     flex: 1,
-    backgroundColor: '#F1FAF4',
-    borderRadius: 18,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#C8E6D2',
-    gap: 2,
+    backgroundColor: colors.successContainer,
+    borderRadius: radius.lg,
+    padding: space[2],
+    borderWidth: stroke.hairline,
+    borderColor: colors.successContainer,
+    gap: space[0.5],
   },
   deadlineDateBox: {
     flex: 1,
-    backgroundColor: '#FFF6F1',
-    borderRadius: 18,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#F3D2C1',
-    gap: 2,
+    backgroundColor: colors.warningContainer,
+    borderRadius: radius.lg,
+    padding: space[2],
+    borderWidth: stroke.hairline,
+    borderColor: colors.warningContainer,
+    gap: space[0.5],
   },
   dateBoxHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: space[1],
   },
   execBoxLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 9,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.5,
     color: s.forest,
   },
   execBoxDateText: {
     fontFamily: fontFamily.bold,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   execBoxTimeText: {
     fontFamily: fontFamily.medium,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   deadlineBoxLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: 9,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.5,
-    color: '#B84A27',
+    color: colors.warning,
   },
   deadlineBoxDateText: {
     fontFamily: fontFamily.bold,
-    fontSize: 13,
-    color: '#7A2810',
+    fontSize: typography.labelMedium.fontSize,
+    color: colors.warning,
   },
   deadlineBoxTimeText: {
     fontFamily: fontFamily.medium,
-    fontSize: 11,
-    color: '#B84A27',
+    fontSize: typography.labelMedium.fontSize,
+    color: colors.warning,
   },
   bridgeArrowCircle: {
     width: 26,
     height: 26,
-    borderRadius: 13,
+    borderRadius: radius.md,
     backgroundColor: s.cream,
-    borderWidth: 1,
-    borderColor: '#E5DEC9',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   subtasksBlock: {
     backgroundColor: s.cream,
-    borderRadius: 18,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#EAE1CE',
-    gap: 6,
+    borderRadius: radius.lg,
+    padding: space[3],
+    borderWidth: stroke.hairline,
+    borderColor: colors.outlineVariant,
+    gap: space[1],
   },
   subtasksHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 2,
+    marginBottom: space[0.5],
   },
   subtasksHeaderTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: 10,
+    fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.5,
     color: s.inkMuted,
   },
   subtasksHeaderCount: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   subtaskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 3,
+    gap: space[2],
+    paddingVertical: space[0.5],
   },
   subtaskText: {
     flex: 1,
     fontFamily: fontFamily.medium,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   subtaskTextDone: {
@@ -946,24 +945,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
-    backgroundColor: '#F7F3E8',
-    borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    borderWidth: 1,
-    borderColor: '#EAE2CE',
+    gap: space[2],
+    backgroundColor: colors.surfaceContainerLow,
+    borderRadius: radius.lg,
+    paddingHorizontal: space[2],
+    paddingVertical: space[2],
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   alarmModeInfo: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: space[2],
   },
   alarmIconCircle: {
     width: 30,
     height: 30,
-    borderRadius: 10,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -975,48 +974,48 @@ const styles = StyleSheet.create({
   },
   alarmModeTitleText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   alarmSongSubtitle: {
     fontFamily: fontFamily.medium,
-    fontSize: 10,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
   footerButtonsGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: space[1],
   },
   testAlarmButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: space[1],
     backgroundColor: s.sunSoft,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     borderColor: s.sun,
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: space[2],
+    paddingVertical: space[1],
+    borderRadius: radius.md,
   },
   testAlarmButtonText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.ink,
   },
   focusGoButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: space[1],
     backgroundColor: s.forest,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: space[2],
+    paddingVertical: space[1],
+    borderRadius: radius.md,
   },
   focusGoButtonText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#FFFFFF',
+    fontSize: typography.labelMedium.fontSize,
+    color: colors.surfaceContainerLowest,
   },
   floatingFabContainer: {
     position: 'absolute',
@@ -1027,13 +1026,13 @@ const styles = StyleSheet.create({
   fabSquare: {
     width: 58,
     height: 58,
-    borderRadius: 20,
+    borderRadius: radius.xl,
     backgroundColor: s.sun,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFF6D6',
-    shadowColor: '#8B6508',
+    borderWidth: stroke.selected,
+    borderColor: colors.warningContainer,
+    shadowColor: colors.warning,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 14,

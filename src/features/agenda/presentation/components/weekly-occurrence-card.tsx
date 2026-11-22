@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { MapPin, Repeat } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, fontFamily } from '@/theme/tokens';
+import { space, fontFamily, radius, typography } from '@/theme/tokens';
 import { AppText, SoftCard, SproutCheck, IconTile } from '@/shared/ui';
 import type {
   ProjectedWeeklyOccurrence,
@@ -64,8 +64,8 @@ export const WeeklyOccurrenceCard: React.FC<WeeklyOccurrenceCardProps> = ({
           </AppText>
 
           <AppText tabularNums style={styles.subtext}>
-            {schedule.startTime} – {schedule.endTime} · {typeConfig.label}
-            {isCancelled ? ' · Diliburkan' : ''}
+            {schedule.startTime} – {schedule.endTime}, {typeConfig.label}
+            {isCancelled ? ', Diliburkan' : ''}
           </AppText>
 
           {(schedule.location || schedule.notes) && (
@@ -101,7 +101,7 @@ export const WeeklyOccurrenceCard: React.FC<WeeklyOccurrenceCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: radius.lg,
     marginBottom: space[3],
   },
   cancelledCard: {
@@ -114,11 +114,11 @@ const styles = StyleSheet.create({
   },
   contentCol: {
     flex: 1,
-    gap: 3,
+    gap: space[0.5],
   },
   title: {
     fontFamily: fontFamily.bold,
-    fontSize: 15,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
   },
   completedText: {
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   subtext: {
     fontFamily: fontFamily.medium,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   metaRow: {
@@ -142,20 +142,20 @@ const styles = StyleSheet.create({
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: space[1],
   },
   metaText: {
     fontFamily: fontFamily.medium,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   cancelLink: {
     alignSelf: 'flex-start',
-    marginTop: 2,
+    marginTop: space[0.5],
   },
   cancelLinkText: {
     fontFamily: fontFamily.medium,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
 });

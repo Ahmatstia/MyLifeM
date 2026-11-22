@@ -7,7 +7,7 @@ import {
   type StyleProp,
 } from 'react-native';
 import { Trash2, AlertTriangle, MapPin, CalendarDays } from 'lucide-react-native';
-import { fontFamily, space } from '@/theme/tokens';
+import { fontFamily, space, radius, typography } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText, SoftCard, SproutCheck, IconTile } from '@/shared/ui';
 import type { AgendaEventEntity, AgendaEventType } from '../../domain/entities/agenda.entity';
@@ -89,7 +89,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
           </AppText>
 
           <AppText tabularNums style={styles.subtext}>
-            {timeSpanLabel} · {config.label}
+            {timeSpanLabel}, {config.label}
           </AppText>
 
           {selectedDate &&
@@ -136,12 +136,12 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: radius.lg,
     marginBottom: space[3],
   },
   cardConflict: {
-    borderColor: '#E6B8B2',
-    backgroundColor: '#FFF7F5',
+    borderColor: colors.errorContainer,
+    backgroundColor: colors.errorContainer,
   },
   mainRow: {
     flexDirection: 'row',
@@ -150,13 +150,13 @@ const styles = StyleSheet.create({
   },
   centerCol: {
     flex: 1,
-    gap: 3,
+    gap: space[0.5],
   },
   title: {
     fontFamily: fontFamily.bold,
-    fontSize: 15,
+    fontSize: typography.bodyMedium.fontSize,
     color: s.ink,
-    lineHeight: 20,
+    lineHeight: typography.bodyMedium.lineHeight,
   },
   titleCompleted: {
     textDecorationLine: 'line-through',
@@ -164,40 +164,40 @@ const styles = StyleSheet.create({
   },
   subtext: {
     fontFamily: fontFamily.medium,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   continuedBadge: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
-    color: '#805600',
+    fontSize: typography.labelMedium.fontSize,
+    color: colors.warning,
   },
   conflictBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
+    gap: space[1],
+    marginTop: space[0.5],
   },
   conflictText: {
     fontFamily: fontFamily.bold,
-    fontSize: 11,
+    fontSize: typography.labelMedium.fontSize,
     color: colors.error,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
+    gap: space[1],
+    marginTop: space[0.5],
   },
   locationText: {
     fontFamily: fontFamily.medium,
-    fontSize: 12,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   rightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: space[1],
   },
   deleteBtn: {
     width: 28,

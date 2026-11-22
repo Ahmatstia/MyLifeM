@@ -11,20 +11,14 @@ import {
   ArrowLeft,
   Trash2,
   Plus,
-  Check,
-  Folder,
-  Clock,
-  Calendar,
-  TrendingUp,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, fontFamily } from '@/theme/tokens';
+import { space, fontFamily, radius, stroke, typography, touchTarget } from '@/theme/tokens';
 import {
   Screen,
   AppText,
   Banner,
   Button,
-  WaveBackdrop,
   SoftCard,
   SectionTitle,
 } from '@/shared/ui';
@@ -151,10 +145,10 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
   const completedStagesCount = stages.filter((st) => st.status === 'COMPLETED').length;
   const statusLabel =
     target.status === 'COMPLETED'
-      ? 'SELESAI'
+      ? 'Selesai'
       : target.status === 'PAUSED'
-        ? 'DIJEDA'
-        : 'SEDANG BERJALAN';
+        ? 'Dijeda'
+        : 'Berjalan';
 
   const formattedStartDate = formatShortDateId(target.startDate || target.createdAt, 'Hari Ini');
   const formattedTargetDate = formatShortDateId(target.targetDate, 'Fleksibel');
@@ -227,7 +221,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
         </>
       }
     >
-      <WaveBackdrop variant="home" height={285} />
+
 
       {/* TOP NAVIGATION BAR */}
       <View style={styles.topBar}>
@@ -254,106 +248,25 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
         </Pressable>
       </View>
 
-      {/* =====================================================================
-          1. TARGET COMMAND & OVERVIEW CARD (Matched to Reference Image 1 Left)
-         ===================================================================== */}
       <View style={styles.overviewCard}>
-        {/* Top Meta Badges + UID */}
         <View style={styles.metaTopRow}>
-          <View style={styles.metaBadgesLeft}>
-            <View style={styles.categoryBadge}>
-              <AppText style={styles.categoryBadgeText}>
-                {(target.categoryName || 'UMUM').toUpperCase()}
-              </AppText>
-            </View>
-
-            <View style={styles.statusBadge}>
-              <View style={styles.statusDot} />
-              <AppText style={styles.statusBadgeText}>{statusLabel}</AppText>
-            </View>
-          </View>
+          <AppText variant="labelMedium" color="onSurfaceVariant">{target.categoryName || 'Umum'}</AppText>
+          <AppText variant="labelMedium" color="primary">{statusLabel}</AppText>
         </View>
-
-        {/* Main Title & Description */}
-        <View style={styles.titleSection}>
-          <AppText style={styles.targetTitleText}>{target.title}</AppText>
-          <AppText style={styles.descriptionParagraph}>
-            {target.description
-              ? target.description
-              : target.totalTasks > 0
-                ? 'Selesaikan tugas satu per satu untuk mendekati tujuan.'
-                : 'Tambahkan tahap pertama untuk mulai menyusun rencana.'}
-          </AppText>
+        <AppText variant="headlineLarge" accessibilityRole="header">{target.title}</AppText>
+        {target.description ? <AppText color="onSurfaceVariant">{target.description}</AppText> : null}
+        <View style={styles.detailMetrics}>
+          <AppText>{target.completedTasks}/{target.totalTasks} tugas selesai</AppText>
+          <AppText>{completedStagesCount}/{stages.length} tahap selesai</AppText>
         </View>
-
-        {/* 4-Tile Bento Metric Grid (2x2 on mobile) */}
-        <View style={styles.bentoGrid}>
-          {/* Tile 1: Kemajuan Tugas */}
-          <View style={styles.bentoTile}>
-            <AppText style={styles.bentoLabel}>KEMAJUAN TUGAS</AppText>
-            <View style={styles.bentoValueRow}>
-              <Check size={15} color="#1E8A52" strokeWidth={3} />
-              <AppText style={[styles.bentoValueText, { color: '#1E8A52' }]} tabularNums>
-                {`${target.completedTasks}/${target.totalTasks} Tugas`}
-              </AppText>
-            </View>
-          </View>
-
-          {/* Tile 2: Tahapan Ekspedisi */}
-          <View style={styles.bentoTile}>
-            <AppText style={styles.bentoLabel}>TAHAPAN</AppText>
-            <View style={styles.bentoValueRow}>
-              <Folder size={14} color="#7A52B8" fill="#E6DDF7" strokeWidth={2.3} />
-              <AppText style={[styles.bentoValueText, { color: '#6A42A8' }]} tabularNums>
-                {`${completedStagesCount}/${stages.length} Tahapan`}
-              </AppText>
-            </View>
-          </View>
-
-          {/* Tile 3: Total Investasi */}
-          <View style={styles.bentoTile}>
-            <AppText style={styles.bentoLabel}>ESTIMASI WAKTU</AppText>
-            <View style={styles.bentoValueRow}>
-              <Clock size={14} color="#1F6B62" strokeWidth={2.5} />
-              <AppText style={[styles.bentoValueText, { color: '#1F6B62' }]} tabularNums>
-                {`± ${target.totalEstimatedHours || 0}j`}
-              </AppText>
-            </View>
-          </View>
-
-          {/* Tile 4: Batas Akhir */}
-          <View style={styles.bentoTile}>
-            <AppText style={styles.bentoLabel}>BATAS AKHIR</AppText>
-            <View style={styles.bentoValueRow}>
-              <Calendar size={14} color="#B87314" strokeWidth={2.5} />
-              <AppText style={[styles.bentoValueText, { color: '#B87314' }]} numberOfLines={1}>
-                {formattedTargetDate}
-              </AppText>
-            </View>
-          </View>
+        <View style={styles.aggregationTrack}>
+          <View style={[styles.aggregationFill, { width: `${progress}%` }]} />
         </View>
-
-        {/* Bottom Aggregation Progress Bar */}
-        <View style={styles.aggregationBlock}>
-          <View style={styles.aggregationLabelRow}>
-            <View style={styles.aggregationLeft}>
-              <TrendingUp size={13} color="#1E8A52" strokeWidth={2.6} />
-              <AppText style={styles.aggregationTitle}>PROGRES TUGAS</AppText>
-            </View>
-            <AppText style={styles.aggregationPercent} tabularNums>
-              {target.totalTasks > 0 ? `${progress}% TUNTAS` : 'Belum ada rencana'}
-            </AppText>
-          </View>
-
-          <View style={styles.aggregationTrack}>
-            <View
-              style={[
-                styles.aggregationFill,
-                { width: `${progress}%` },
-              ]}
-            />
-          </View>
-        </View>
+        <AppText variant="labelMedium" color="onSurfaceVariant">
+          {target.totalTasks ? `${progress}% selesai` : 'Belum ada rencana'}
+        </AppText>
+        <AppText>Estimasi {target.totalEstimatedHours || 0} jam</AppText>
+        <AppText>Tenggat {formattedTargetDate}</AppText>
       </View>
 
       <View style={styles.detailDates}>
@@ -419,8 +332,8 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
 };
 
 const styles = StyleSheet.create({
-  detailDates: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginVertical: 8 },
-  detailDateText: { fontSize: 11, color: s.inkMuted },
+  detailDates: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3], marginVertical: space[2] },
+  detailDateText: { fontSize: typography.labelMedium.fontSize, color: s.inkMuted },
   screenBg: {
     backgroundColor: s.cream,
   },
@@ -431,7 +344,7 @@ const styles = StyleSheet.create({
     gap: space[3],
   },
   topBar: {
-    minHeight: 52,
+    minHeight: touchTarget.comfortable,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -442,27 +355,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fontFamily.bold,
     color: s.ink,
-    fontSize: 17,
+    fontSize: typography.titleMedium.fontSize,
   },
   circleNavBtn: {
     width: 44,
     height: 44,
-    borderRadius: 20,
+    borderRadius: radius.xl,
     backgroundColor: s.card,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   circleDeleteBtn: {
     width: 44,
     height: 44,
-    borderRadius: 20,
-    backgroundColor: '#FFF2F0',
+    borderRadius: radius.xl,
+    backgroundColor: colors.errorContainer,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#F3D0CA',
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   scrollContent: {
     paddingBottom: 100,
@@ -470,127 +383,19 @@ const styles = StyleSheet.create({
   },
 
   // 1. Overview Command Card
-  overviewCard: { paddingVertical: 12, gap: 12, borderBottomWidth: 1, borderBottomColor: colors.border, },
-  metaTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  metaBadgesLeft: {
-    maxWidth: '100%',
-    minWidth: 0,
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  categoryBadge: {
-    backgroundColor: '#EAE4F7',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#D6CBF0',
-  },
-  categoryBadgeText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    letterSpacing: 0.7,
-    color: '#5B3E96',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#E1F4E8',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#BCE5CC',
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#1E8A52',
-  },
-  statusBadgeText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
-    letterSpacing: 0.6,
-    color: '#176B3F',
-  },
-
-  titleSection: {
-    gap: 6,
-  },
-  targetTitleText: { fontFamily: fontFamily.bold, fontSize: 22, lineHeight: 30, letterSpacing: -0.6, color: s.ink, },
-  descriptionParagraph: { fontFamily: fontFamily.regular, fontSize: 12, lineHeight: 19, color: s.inkMuted, },
-  bentoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  bentoTile: { flexGrow: 1, flexBasis: '45%', minWidth: 0, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: s.creamDeep, borderRadius: 10, gap: 6, },
-  bentoLabel: {
-    fontFamily: fontFamily.bold,
-    fontSize: 9.5,
-    letterSpacing: 0.6,
-    color: s.inkMuted,
-  },
-  bentoValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  bentoValueText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  aggregationBlock: {
-    gap: 8,
-    paddingTop: 2,
-  },
-  aggregationLabelRow: {
-    gap: 8,
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  aggregationLeft: {
-    minWidth: 0,
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  aggregationTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10.5,
-    letterSpacing: 0.7,
-    color: s.inkMuted,
-  },
-  aggregationPercent: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    letterSpacing: 0.5,
-    color: '#1E8A52',
-  },
+  overviewCard: { paddingVertical: space[3], gap: space[3], borderBottomWidth: stroke.hairline, borderBottomColor: colors.border, },
+  metaTopRow: { flexDirection: 'row', justifyContent: 'space-between', gap: space[2], flexWrap: 'wrap' },
+  detailMetrics: { flexDirection: 'row', justifyContent: 'space-between', gap: space[2], flexWrap: 'wrap' },
   aggregationTrack: {
     height: 7,
-    borderRadius: 999,
-    backgroundColor: '#E8E0CC',
+    borderRadius: radius.pill,
+    backgroundColor: colors.border,
     overflow: 'hidden',
   },
   aggregationFill: {
     height: '100%',
-    borderRadius: 999,
-    backgroundColor: '#1E8A52',
+    borderRadius: radius.pill,
+    backgroundColor: colors.primary,
   },
 
   // 2. Circular Progress & Momentum Gauge Card
@@ -601,21 +406,21 @@ const styles = StyleSheet.create({
     padding: space[5],
     gap: space[2],
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: radius.lg,
   },
   emptyTitle: {
     color: s.ink,
     fontFamily: fontFamily.bold,
-    fontSize: 16,
+    fontSize: typography.titleMedium.fontSize,
   },
   emptyDesc: {
     marginBottom: space[2],
     maxWidth: 280,
     color: s.inkMuted,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
   },
   emptyBtn: {
-    borderRadius: 999,
+    borderRadius: radius.pill,
   },
   floatingFabContainer: {
     position: 'absolute',
@@ -623,7 +428,7 @@ const styles = StyleSheet.create({
     bottom: space[4],
     zIndex: 20,
   },
-  fabSquare: { width: 48, height: 48, borderRadius: 14, backgroundColor: s.sun, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: s.forest, },
+  fabSquare: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: s.sun, alignItems: 'center', justifyContent: 'center', borderWidth: stroke.hairline, borderColor: s.forest, },
   fabSquarePressed: {
     transform: [{ scale: 0.94 }],
     backgroundColor: s.sunDeep,

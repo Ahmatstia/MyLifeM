@@ -14,7 +14,8 @@ import {
 import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
-import { radius, space } from '@/theme/tokens';
+import { radius, space, touchTarget, stroke } from '@/theme/tokens';
+import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { AppText } from './app-text';
 
 export interface AppBottomSheetProps {
@@ -52,24 +53,17 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
   style,
 }) => {
   const insets = useSafeAreaInsets();
+  const reducedMotion = useReducedMotion();
 
   return (
     <Modal
       visible={visible}
       transparent={false}
-      animationType="slide"
+      animationType={reducedMotion ? 'none' : 'slide'}
       statusBarTranslucent
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        {/* Backdrop pressable dipertahankan untuk kompatibilitas gesture & testing */}
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel="Tutup dialog"
-        />
-
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardAvoid}
@@ -91,12 +85,12 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
                   {icon && <View style={styles.iconCircle}>{icon}</View>}
                   <View style={styles.titleCol}>
                     {title && (
-                      <AppText variant="titleLarge" style={styles.headerTitle}>
+                      <AppText accessibilityRole="header" variant="titleLarge">
                         {title}
                       </AppText>
                     )}
                     {subtitle && (
-                      <AppText variant="bodySmall" color="onSurfaceVariant" numberOfLines={2}>
+                      <AppText variant="bodyMedium" color="onSurfaceVariant">
                         {subtitle}
                       </AppText>
                     )}
@@ -110,8 +104,7 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
                     onPress={onClose}
                     accessibilityRole="button"
                     accessibilityLabel="Tutup modal"
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    style={styles.closeBtn}
+                    style={({ pressed }) => [styles.closeBtn, pressed && styles.closeBtnPressed]}
                   >
                     <X size={20} color={colors.onSurface} strokeWidth={2.4} />
                   </Pressable>
@@ -162,7 +155,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: space[4],
     paddingVertical: space[3],
-    borderBottomWidth: 1,
+    borderBottomWidth: stroke.hairline,
     borderBottomColor: colors.outlineVariant,
     backgroundColor: colors.surfaceContainerLowest,
   },
@@ -184,18 +177,15 @@ const styles = StyleSheet.create({
   titleCol: {
     flex: 1,
   },
-  headerTitle: {
-    fontSize: 18,
-    lineHeight: 24,
-  },
+  closeBtnPressed: { backgroundColor: colors.surfaceContainerHigh },
   closeBtn: {
-    width: 40,
-    height: 40,
+    width: touchTarget.min,
+    height: touchTarget.min,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
+    borderRadius: radius.md,
     backgroundColor: colors.surfaceContainerLow,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     borderColor: colors.outlineVariant,
   },
   scroll: {
@@ -205,7 +195,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[4],
     paddingTop: space[3],
     paddingBottom: space[2],
-    borderTopWidth: 1,
+    borderTopWidth: stroke.hairline,
     borderTopColor: colors.outlineVariant,
     backgroundColor: colors.surfaceContainerLowest,
   },

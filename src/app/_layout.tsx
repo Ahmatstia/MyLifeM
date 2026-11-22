@@ -1,3 +1,4 @@
+import { space } from '@/theme/tokens';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Stack, ThemeProvider, DefaultTheme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -7,30 +8,22 @@ import { useDataRevision } from '@/db/data-revision';
 import { AlarmRingingModal } from '@/features/task-manager/presentation/components/alarm-ringing-modal';
 import { CalendarReminderSync } from '@/features/agenda/presentation/components/calendar-reminder-sync';
 import { ManagedAlarmSync } from '@/features/task-manager/presentation/components/managed-alarm-sync';
+import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { colors } from '@/theme/colors';
 import { AppText, Button } from '@/shared/ui';
 import { readMigrationBackup, saveBackupFile } from '@/features/settings/data/services/backup-file.service';
-import {
-  useFonts,
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-} from '@expo-google-fonts/plus-jakarta-sans';
-import {
-  Fredoka_600SemiBold,
-  Fredoka_700Bold,
-} from '@expo-google-fonts/fredoka';
-import {
-  Quicksand_500Medium,
-  Quicksand_600SemiBold,
-} from '@expo-google-fonts/quicksand';
+import { useFonts } from 'expo-font';
+import { PlusJakartaSans_400Regular } from '@expo-google-fonts/plus-jakarta-sans/400Regular';
+import { PlusJakartaSans_500Medium } from '@expo-google-fonts/plus-jakarta-sans/500Medium';
+import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
+import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
 
 // Keep the splash screen visible while initializing local database
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const dataRevision = useDataRevision();
+  const reducedMotion = useReducedMotion();
   const [isReady, setIsReady] = useState(false);
   const [databaseError, setDatabaseError] = useState<string | null>(null);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
@@ -54,10 +47,6 @@ export default function RootLayout() {
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
-    Quicksand_500Medium,
-    Quicksand_600SemiBold,
-    Fredoka_600SemiBold,
-    Fredoka_700Bold,
   });
 
   useEffect(() => {
@@ -84,7 +73,7 @@ export default function RootLayout() {
   );
 
   if (databaseError && (fontsLoaded || fontError)) {
-    return <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, gap: 16 }}>
+    return <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: space[6], gap: space[4] }}>
       <AppText variant="headlineSmall">Data belum dapat dibuka</AppText>
       <AppText>Inisialisasi database gagal. Data tidak dihapus. Coba buka kembali sebelum melanjutkan.</AppText>
       <AppText>{databaseError}</AppText>
@@ -122,22 +111,22 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.background },
-          animation: 'fade',
+          animation: reducedMotion ? 'none' : 'fade',
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="targets/[id]" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="targets/new" options={{ animation: 'fade' }} />
-        <Stack.Screen name="projects/[id]" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="projects/new" options={{ animation: 'fade' }} />
-        <Stack.Screen name="agenda/new" options={{ animation: 'fade' }} />
-        <Stack.Screen name="today/new" options={{ animation: 'fade' }} />
-        <Stack.Screen name="task-manager" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="task-manager/new" options={{ animation: 'fade' }} />
-        <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="targets/[id]" options={{ animation: reducedMotion ? 'none' : 'slide_from_right' }} />
+        <Stack.Screen name="targets/new" options={{ animation: reducedMotion ? 'none' : 'fade' }} />
+        <Stack.Screen name="projects/[id]" options={{ animation: reducedMotion ? 'none' : 'slide_from_right' }} />
+        <Stack.Screen name="projects/new" options={{ animation: reducedMotion ? 'none' : 'fade' }} />
+        <Stack.Screen name="agenda/new" options={{ animation: reducedMotion ? 'none' : 'fade' }} />
+        <Stack.Screen name="today/new" options={{ animation: reducedMotion ? 'none' : 'fade' }} />
+        <Stack.Screen name="task-manager" options={{ animation: reducedMotion ? 'none' : 'slide_from_right' }} />
+        <Stack.Screen name="task-manager/new" options={{ animation: reducedMotion ? 'none' : 'fade' }} />
+        <Stack.Screen name="settings" options={{ animation: reducedMotion ? 'none' : 'slide_from_right' }} />
         <Stack.Screen
           name="quick-add"
-          options={{ presentation: 'transparentModal', animation: 'fade' }}
+          options={{ presentation: 'transparentModal', animation: reducedMotion ? 'none' : 'fade' }}
         />
       </Stack>
       <AlarmRingingModal key={'alarm-' + dataRevision} />

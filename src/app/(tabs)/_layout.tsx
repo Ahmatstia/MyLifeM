@@ -3,7 +3,7 @@ import { useWindowDimensions } from 'react-native';
 import { Tabs, router } from 'expo-router';
 import { Home, Target, CalendarDays, Menu } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fontFamily } from '@/theme/tokens';
+import { fontFamily, typography, space, radius, stroke } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { TabFabButton } from '@/shared/ui/tab-fab-button';
 import {
@@ -33,14 +33,14 @@ export default function TabLayout() {
           tabBarStyle: {
             height: 60 + bottomInset + Math.max(0, fontScale - 1) * 16,
             backgroundColor: s.card,
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-            borderTopWidth: 1,
+            borderTopLeftRadius: radius.none,
+            borderTopRightRadius: radius.none,
+            borderTopWidth: stroke.hairline,
             borderTopColor: colors.border,
             paddingBottom: bottomInset + 4,
-            paddingTop: 4,
-            paddingHorizontal: 10,
-            shadowColor: '#0E2E26',
+            paddingTop: space[1],
+            paddingHorizontal: space[2],
+            shadowColor: colors.onSurface,
             shadowOffset: { width: 0, height: -6 },
             shadowOpacity: 0.03,
             shadowRadius: 16,
@@ -49,15 +49,15 @@ export default function TabLayout() {
           tabBarActiveTintColor: s.forest,
           tabBarInactiveTintColor: s.inkMuted,
           tabBarItemStyle: {
-            borderRadius: 16,
+            borderRadius: radius.lg,
             marginVertical: 0,
-            marginHorizontal: 2,
+            marginHorizontal: space[0.5],
             paddingVertical: 0,
           },
           tabBarIconStyle: { width: 24, height: 24 },
           tabBarLabelStyle: {
-            fontSize: 10,
-            lineHeight: 14,
+            fontSize: typography.labelSmall.fontSize,
+            lineHeight: typography.labelSmall.lineHeight,
             fontFamily: fontFamily.bold,
             marginTop: 0,
           },

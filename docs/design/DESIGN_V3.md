@@ -1,35 +1,65 @@
-# MyLife Fieldnotes — sistem desain aktif
+# Pita waktu untuk MyLife
 
-Pembaruan: 22 November 2026. Redesign ini menggantikan tampilan Sprout yang didominasi ilustrasi dan kartu besar. Tujuannya: lebih banyak informasi berguna dalam satu layar, bentuk komponen bervariasi, dan hierarki yang jelas.
+## Situasi pemakaian
 
-## Karakter visual
+Seseorang membuka MyLife di sela kegiatan, sering kali dengan satu tangan. Keputusan pertamanya sederhana. Tugas mana yang bisa mulai dikerjakan, dan berapa lama waktu yang diperlukan? Beranda menampilkan jawaban dari rencana hari ini dan sesi yang tersimpan di perangkat.
 
-Kertas putih kehijauan, tinta hijau gelap, limau sebagai aksen tindakan, dan ungu atau terakota pada konteks tertentu. Plus Jakarta Sans yang sudah tersedia digunakan untuk seluruh hierarki. Identitas muncul melalui garis tepi, nomor urut, bidang gelap, dan komposisi; dekorasi tidak mengambil ruang konten.
+## Warna dan huruf
 
-Sumber kebenaran tetap `src/theme/colors.ts` dan `src/theme/tokens.ts`. Nama key `sprout` dan nama komponen lama dipertahankan untuk kompatibilitas pemanggil; bukan tema lain yang dapat dipilih. Ukuran isi 12–14, judul bagian 16–17, judul layar 24–28. Label mikro 10–11 hanya untuk informasi sekunder. Angka timer dan metrik menjadi aksen, bukan ukuran standar semua teks.
+Kabut mengisi latar terluas. Porselen dan Nila membentuk lapisan kedua. Aprikot dipakai paling sedikit, terutama pada tindakan utama. Perbandingan 60/30/10 menjadi panduan komposisi, bukan kuota untuk setiap halaman.
 
-## Susunan menurut fungsi
+- **Kabut** `#F1F4F8`, HSL 214° 33% 96%. Latar halaman.
+- **Porselen** `#FAFBFD`, HSL 220° 43% 99%. Bidang formulir, bilah bawah, dan tulisan di atas Nila.
+- **Tinta** `#172A45`, HSL 215° 50% 18%. Judul dan isi. Kontras di atas Kabut 13,1 ∶ 1.
+- **Nila** `#283E73`, HSL 222° 48% 30%. Pita fokus, hari terpilih, dan garis fokus keyboard. Kontras dengan Porselen 10,0 ∶ 1.
+- **Aprikot** `#FFC28A`, HSL 29° 100% 77%. Bidang aksi fokus dan simpan. Kontras dengan Tinta 9,2 ∶ 1.
+- **Sabak** `#475A70`, HSL 212° 22% 36%. Lokasi, kategori, dan keterangan durasi. Kontras di atas Kabut 6,4 ∶ 1.
 
-- Hari Ini: panel fokus gelap berdampingan dengan ringkasan tugas/waktu. Pada font besar, kedua panel ditumpuk. Jadwal salat berupa tabel ringkas; tugas dan agenda memakai linimasa terbuka.
-- Target: ringkasan progres tunggal, filter berupa indeks bergaris bawah, kartu bernomor dengan aksen tepi. Angka merupakan progres tugas dan estimasi waktu, bukan tren atau statistik buatan.
-- Detail Target: judul, metadata, satu progres, lalu tahapan yang bisa dikerjakan. Maskot, indikator progres kedua, dan peta tahapan duplikat dihapus dari presentasi.
-- Kalender: navigasi minggu dan kisi bulan lengkap dipertahankan; sel bertambah tinggi mengikuti font. Agenda menggunakan baris waktu dan kategori.
-- Formulir: satu permukaan input, kategori dalam pilihan horizontal berukuran ringkas, tombol simpan 48 dp. Tidak ada kartu dekoratif membungkus input berulang kali.
-- Timer: angka pada panel gelap dan indikator progres linear; mode, jeda, lanjutkan, reset, dan pencatatan tetap menggunakan fungsi yang sama. Indikator interval dekoratif yang tidak mengukur jumlah sesi dihapus.
-- Tugas & Alarm: ringkasan angka dalam satu baris, kartu tugas dengan aksen tepi, waktu pengerjaan dan tenggat tetap terpisah jelas. Pesan batas alarm perangkat tetap terlihat.
-- Pengaturan: kelompok baris yang padat, pilihan durasi dan seluruh pemulihan/cadangan tetap tersedia.
-- Tambah Baru: menu teks dan ikon dalam lembar yang dibatasi tinggi dan dapat digulir. Navigasi bawah lebih tipis, tombol tambah tidak menonjol di atasnya.
+Plus Jakarta Sans digunakan dalam empat bobot. Judul halaman 32/40, judul tugas utama 24/30, teks isi 14/20 atau 16/24, label pendek 12/18. Angka waktu memakai lebar tetap per digit. Nama panjang dapat turun baris. Jarak memakai kelipatan empat. Ikon centang lebih kecil daripada area sentuhnya.
 
-## Ukuran dan interaksi
+Status sukses memakai hijau `#246050`, peringatan memakai oker `#795018`, galat memakai merah `#9E3341`. Ikon, label, dan tindakan pemulihan memberi makna yang sama secara tertulis. Latar kontrol berubah saat ditekan. Fokus keyboard memakai garis luar dua lapis yang terbaca di bidang terang dan gelap. Preferensi kurangi gerakan berlaku untuk perpindahan layar, laci, dan dialog.
 
-Permukaan utama radius 12–18 dengan padding 12–16. Komponen ringkas tetap mempertahankan area tekan dan hitSlop; minimum input 48 dp. Teks mengikuti ukuran sistem dan konten boleh bertambah tinggi. Menu tambah dibatasi 92% tinggi layar; daftar bisa digulir. Timer menumpuk pemilih mode dan aksi sekunder pada font minimal 150%.
+## Dua susunan yang dipertimbangkan
 
-Tidak ada dependensi baru, migrasi database, perubahan format backup, maupun perubahan penjadwalan alarm dalam redesign ini. Jalur Target → Tahapan → Tugas → Hari Ini tetap berlaku.
+```text
+A. Ringkasan lebih dahulu        B. Mulai dari tugas
+Hari ini                        Hari ini      tanggal
+[selesai] [menit fokus]         ┌ Fokus berikutnya       ┐
+Tugas berikutnya                │ Baca 10 halaman buku   │
+[Buka fokus]                    ├ - - - - - - - - - - - ┤
+Rencana hari ini                │ [Buka fokus]    15 mnt │
+  tugas dan agenda              └────────────────────────┘
+Jadwal azan                     Rencana hari ini      [+]
+                                ○ Baca 10 halaman buku
+                                Jadwal azan
+```
 
-## Verifikasi
+Susunan B dipilih agar pengguna melihat tugas sebelum mengevaluasi capaian. Judul, isi, dan aksi mulai sejajar kiri. Durasi sejajar kanan agar mudah ditemukan ketika nama tugas membungkus. Pada teks besar, durasi turun ke baris tersendiri. Pita berubah menjadi timer di tempat yang sama.
 
-`test:ui` memeriksa interaksi, draft gagal, status, navigasi, dan guard penyimpanan. `test:layouts` memeriksa 12 layar/komponen × 4 lebar (320/360/412/768) × 2 skala font (100/200%), termasuk timer. Screenshot 360/100% dan 320/200% dipakai untuk inspeksi visual. Pengujian browser menggunakan konteks baru dengan SQLite web; tidak memakai database pengguna.
+## Empat keputusan desain
 
-Screenshot aplikasi nyata di `screenshots/fieldnotes/` berisi data contoh yang dibuat melalui formulir pada konteks browser terisolasi. Ini pratinjau web, bukan bukti Android native. Keyboard, safe area perangkat, TalkBack, dan perilaku alarm ketika aplikasi ditutup masih memerlukan verifikasi di HP. Redesign tidak menutup tiga temuan QA native pada laporan audit sebelumnya.
+1. **Satu pita untuk satu sesi.** Garis perforasi membagi nama tugas dan bagian yang dipakai untuk bertindak. Saat sesi dijeda, pita menunjukkan waktu dan jalan kembali ke sesi itu.
+2. **Kerapatan mengikuti fungsi.** Tugas menjadi baris dengan kotak centang, tanggal memakai tujuh kolom, dan pilihan Tambah menjadi daftar empat tujuan. Bidang pekat terbesar disimpan untuk tugas aktif.
+3. **Angka harus membantu mengambil keputusan.** Progres Target dihitung dari tugas pada daftar yang sedang disaring. Nomor urut hiasan dan ringkasan nol dari nol dihilangkan.
+4. **Ruang sentuh lebih besar daripada ikon.** Tanggal, centang, tombol utama, dan kontrol timer memiliki bidang tekan minimal 48 dp. Formulir dan daftar dapat digulir saat teks membesar.
 
-Hasil 22 November 2026: lint dan TypeScript lolos; suite UI, 68 pemeriksaan fungsi/input, 14 pemeriksaan timer, dan 18 simulasi siklus alarm lolos. Seluruh 96 kasus layout lolos, termasuk kontrol tutup dan akses gulir menu tambah pada teks besar. Enam skenario CRUD/reload web dan penelusuran pratinjau aplikasi nyata selesai tanpa error browser. Export bundle Android juga berhasil; hasilnya bukan APK dan tidak menggantikan uji perangkat.
+## Kritik dan perubahan
+
+Usulan awal menempatkan dua angka ringkasan di atas. Susunan itu mudah tertukar dengan dasbor kebiasaan lain. Bagian tersebut diganti dengan pita yang menyebut tugas, durasi nyata bila tersedia, dan satu aksi. Penanda bergelombang pada judul serta panah otomatis pada tombol Simpan juga dilepas.
+
+Saat diuji pada lebar sempit dan ukuran teks besar, timer sempat melebar mengikuti isi terpanjang. Lebar timer kini dibatasi oleh ruang yang tersedia. Pemeriksaan hitam-putih dan gambar yang diburamkan menilai posisi aksi, pembagian bidang, dan tingkat terang secara terpisah dari pilihan warna.
+
+## Implementasi dan pratinjau
+
+Token berada di `src/theme/colors.ts` dan `src/theme/tokens.ts`. Beranda, timer, Target, Kalender, Tambah, Tugas & Alarm, Pengaturan, dan formulir memakai komponen React Native yang membaca data aplikasi. Pengujian tata letak mencakup 12 layar atau komponen pada lebar 320, 360, 412, dan 768, masing-masing pada skala teks 100% dan 200%.
+
+Pratinjau di `screenshots/pita-waktu/` diambil dari aplikasi web pada lebar 360. Data contoh dibuat lewat formulir di penyimpanan browser terpisah. Pemeriksaan perangkat fisik mencakup TalkBack, papan ketik Android, getaran, serta alarm saat aplikasi berada di latar belakang.
+
+## Hasil pemeriksaan
+
+- Seluruh 96 kombinasi tata letak lolos tanpa teks atau kontrol melampaui tepi layar secara horizontal.
+- Pada aplikasi web hasil ekspor, Tab dan Enter dapat membuka, memulai, menjeda, serta menciutkan timer. Escape menutup menu. Saat gerakan dikurangi, menu langsung berada pada posisi akhirnya. Garis fokus tetap terlihat.
+- Di gambar hitam-putih dan gambar dengan blur 3 px, bidang pita tetap menjadi titik perhatian pertama. Tombol mulai masih terpisah dari durasi dan daftar di bawahnya.
+- Pemeriksaan kode, alur simpan dan muat ulang, 14 skenario timer, serta 18 simulasi siklus alarm lulus. Bundel Android dan web berhasil dibuat.
+
+[Beranda](screenshots/pita-waktu/hari-ini.png) · [Timer](screenshots/pita-waktu/timer.png) · [Target](screenshots/pita-waktu/target.png) · [Kalender](screenshots/pita-waktu/kalender.png) · [Formulir](screenshots/pita-waktu/formulir.png)

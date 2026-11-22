@@ -17,10 +17,10 @@ import {
   CalendarDays,
   Settings,
   ChevronRight,
-  ShieldCheck,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { fontFamily, space } from '@/theme/tokens';
+import { fontFamily, radius, space, touchTarget, typography } from '@/theme/tokens';
+import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { AppText } from './app-text';
 
 const s = colors.sprout;
@@ -47,29 +47,23 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const drawerWidth = Math.min(316, Math.round(width * 0.82));
-  const [slideAnim] = useState(() => new Animated.Value(-drawerWidth));
-  const [fadeAnim] = useState(() => new Animated.Value(0));
+  const reducedMotion = useReducedMotion();
+  const [slideAnim] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    if (visible) {
-      slideAnim.setValue(-drawerWidth);
-      fadeAnim.setValue(0);
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          damping: 22,
-          stiffness: 240,
-          mass: 0.8,
-          useNativeDriver: true,
-        }),
-      ]).start();
+    if (!visible || reducedMotion) {
+      slideAnim.setValue(0);
+      return;
     }
-  }, [visible, drawerWidth, slideAnim, fadeAnim]);
+    slideAnim.setValue(-drawerWidth);
+    const slide = Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 180,
+      useNativeDriver: true,
+    });
+    slide.start();
+    return () => slide.stop();
+  }, [visible, reducedMotion, drawerWidth, slideAnim]);
 
   if (!visible) return null;
 
@@ -90,16 +84,17 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
     >
       <View style={styles.root}>
         {/* Instant Soft Dimmed Backdrop */}
-        <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
+        <View style={styles.backdrop}>
           <Pressable
             style={StyleSheet.absoluteFill}
+            accessible={false}
+            focusable={false}
+            tabIndex={-1}
             onPress={onClose}
             accessibilityRole="button"
             accessibilityLabel="Tutup menu samping"
           />
-        </Animated.View>
-
-        {/* Left-Side Storybook Drawer Panel */}
+        </View>
         <Animated.View
           style={[
             styles.drawerPanel,
@@ -111,17 +106,10 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
             },
           ]}
         >
-          {/* Drawer Header */}
           <View style={styles.drawerHeader}>
-            <View style={styles.headerIdentityRow}>
-              <View style={styles.monogram}><AppText style={styles.monogramText}>m.</AppText></View>
-              <View style={styles.headerTexts}>
-                <AppText style={styles.drawerTitle}>Menu MyLife</AppText>
-                <AppText style={styles.drawerSubtitle}>
-                  Fitur & Pengaturan
-                </AppText>
-              </View>
-            </View>
+            <AppText accessibilityRole="header" variant="headlineSmall" style={styles.drawerTitle}>
+              Menu MyLife
+            </AppText>
 
             <Pressable
               onPress={onClose}
@@ -140,7 +128,6 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollBody}
           >
-            <AppText style={styles.groupHeading}>MENU FITUR</AppText>
             <View style={styles.menuCardGroup}>
               <SidebarMenuItem
                 icon={BellRing}
@@ -180,21 +167,6 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
             </View>
           </ScrollView>
 
-          {/* Footer Sprout Badge pinned neatly at bottom */}
-          <View style={styles.sidebarFooter}>
-            <View style={styles.footerRow}>
-              <ShieldCheck size={22} color={s.forest} />
-              <View style={{ flex: 1 }}>
-                <AppText style={styles.footerTitle}>
-                  100% Tersimpan di Perangkat
-                </AppText>
-                <AppText style={styles.footerSub}>
-                  Privasi penuh tanpa server pihak ketiga
-                </AppText>
-              </View>
-              <ShieldCheck size={18} color={s.forest} />
-            </View>
-          </View>
         </Animated.View>
       </View>
     </Modal>
@@ -232,7 +204,7 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
     </View>
     <View style={styles.menuItemTextCol}>
       <AppText style={styles.menuItemTitle}>{title}</AppText>
-      <AppText style={styles.menuItemSub} numberOfLines={1}>
+      <AppText style={styles.menuItemSub}>
         {subtitle}
       </AppText>
     </View>
@@ -241,117 +213,51 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
 );
 
 const styles = StyleSheet.create({
-  monogram: { width: 38, height: 38, borderRadius: 10, backgroundColor: s.forest, alignItems: 'center', justifyContent: 'center' },
-  monogramText: { fontFamily: fontFamily.bold, fontSize: 22, color: s.sun },
-  root: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(18, 46, 38, 0.45)',
-  },
+  root: { flex: 1, flexDirection: 'row' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.scrim },
   drawerPanel: {
     height: '100%',
-    backgroundColor: s.cream,
-    borderTopRightRadius: 32,
-    borderBottomRightRadius: 32,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderTopRightRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
     paddingHorizontal: space[4],
-    gap: space[3],
-    borderRightWidth: 1,
-    borderColor: '#E8DFCA',
-    shadowColor: '#0E2E26',
-    shadowOffset: { width: 8, height: 0 },
-    shadowOpacity: 0.22,
-    shadowRadius: 24,
-    elevation: 16,
+    gap: space[2],
   },
   drawerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: space[1],
+    gap: space[2],
   },
-  headerIdentityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-    flex: 1,
-  },
-  headerTexts: {
-    gap: 2,
-    flex: 1,
-  },
-  drawerTitle: { fontFamily: fontFamily.bold, fontSize: 17, lineHeight: 24, color: s.ink, },
-  drawerSubtitle: {
-    fontFamily: fontFamily.medium,
-    fontSize: 12,
-    color: s.inkMuted,
-  },
+  drawerTitle: { flex: 1, color: colors.onSurface },
   closeCircleBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 13,
-    backgroundColor: s.card,
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    width: touchTarget.min,
+    height: touchTarget.min,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollBody: {
-    paddingBottom: space[4],
-    gap: space[2],
-  },
-  groupHeading: {
-    fontFamily: fontFamily.bold,
-    fontSize: 11,
-    letterSpacing: 0.6,
-    color: s.inkMuted,
-    marginTop: space[1],
-    marginLeft: 4,
-  },
-  menuCardGroup: { borderTopWidth: 1, borderTopColor: colors.border, gap: 0, },
-  menuItemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border, },
-  menuItemPressed: {
-    backgroundColor: '#F5EFE2',
-  },
-  menuIconBox: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', },
-  menuItemTextCol: {
-    flex: 1,
-    gap: 2,
-  },
-  menuItemTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: s.ink,
-  },
-  menuItemSub: {
-    fontFamily: fontFamily.regular,
-    fontSize: 11,
-    color: s.inkMuted,
-  },
-  sidebarFooter: {
-    backgroundColor: '#EEF0E8',
-    borderRadius: 20,
-    paddingHorizontal: space[3],
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#E5DEC9',
-  },
-  footerRow: {
+  scrollBody: { paddingBottom: space[4] },
+  menuCardGroup: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  menuItemRow: {
     flexDirection: 'row',
+    minHeight: touchTarget.min,
     alignItems: 'center',
-    gap: space[2],
+    gap: space[3],
+    paddingVertical: space[3],
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
-  footerTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    color: s.ink,
+  menuItemPressed: { backgroundColor: colors.surfaceContainerLow },
+  menuIconBox: {
+    width: space[8],
+    height: space[8],
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  footerSub: {
-    fontFamily: fontFamily.regular,
-    fontSize: 11,
-    color: s.inkMuted,
-  },
+  menuItemTextCol: { flex: 1, gap: space[1] },
+  menuItemTitle: { ...typography.titleSmall, fontFamily: fontFamily.bold, color: s.ink },
+  menuItemSub: { ...typography.bodyMedium, fontFamily: fontFamily.regular, color: s.inkMuted },
 });

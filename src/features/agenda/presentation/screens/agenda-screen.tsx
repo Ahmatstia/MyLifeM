@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
-import { View, Pressable, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Pressable, StyleSheet, Alert } from 'react-native';
 import {
   CalendarDays,
-  ChevronRight,
   Plus,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, fontFamily } from '@/theme/tokens';
+import { space, radius, touchTarget } from '@/theme/tokens';
 import {
   Screen,
   AppText,
   Banner,
   EmptyState,
-  WaveBackdrop,
   PillTabs,
 } from '@/shared/ui';
 import { useAgenda } from '../hooks/use-agenda';
@@ -34,8 +32,6 @@ import type {
 } from '../../domain/entities/weekly-schedule.entity';
 import { getDayOfWeekFromDate } from '../../domain/entities/weekly-schedule.entity';
 import { isDateOnly } from '@/shared/utils/local-date';
-
-const s = colors.sprout;
 
 export const AgendaScreen: React.FC = () => {
   const { date: routeDate } = useLocalSearchParams<{ date?: string }>();
@@ -146,39 +142,20 @@ export const AgendaScreen: React.FC = () => {
       withBottomPadding={false}
       style={styles.screenBg}
       contentContainerStyle={styles.scrollContent}
-      overlay={
+      overlay={viewMode === 'WEEKLY_MASTER' && (
         <View style={styles.floatingFabContainer} pointerEvents="box-none">
           <Pressable
-            onPress={() => {
-              if (viewMode === 'DAILY') {
-                router.push({ pathname: '/agenda/new', params: { date: selectedDate } });
-              } else {
-                handleOpenAddWeekly(selectedDay);
-              }
-            }}
+            onPress={() => handleOpenAddWeekly(selectedDay)}
             accessibilityRole="button"
-            accessibilityLabel={
-              viewMode === 'DAILY' ? 'Tambah Agenda Baru' : 'Tambah Jadwal Tetap Baru'
-            }
-            style={({ pressed }) => [
-              styles.fabSquare,
-              pressed && styles.fabSquarePressed,
-            ]}
+            accessibilityLabel="Tambah Jadwal Tetap Baru"
+            style={({ pressed }) => [styles.fabSquare, pressed && styles.fabSquarePressed]}
           >
-            <Plus size={24} color={s.ink} strokeWidth={2.8} />
+            <Plus size={space[6]} color={colors.onHighlight} />
           </Pressable>
         </View>
-      }
+      )}
     >
-      <WaveBackdrop variant="home" height={285} withBottomHills />
-
-      {/* Top Header matching Sprout Home Wave (Non-sticky) */}
-      <View style={styles.header}>
-        <AppText style={{ fontFamily: fontFamily.bold, fontSize: 10, letterSpacing: 1.4, color: s.inkMuted }}>MYLIFE / RITME & WAKTU</AppText>
-        <AppText variant="headlineMedium" style={styles.headerTitle}>
-          Kalender
-        </AppText>
-      </View>
+      <AppText variant="displayMedium" accessibilityRole="header" style={styles.header}>Kalender</AppText>
 
       <PillTabs
           options={[
@@ -197,28 +174,24 @@ export const AgendaScreen: React.FC = () => {
               onSelectDate={setSelectedDate}
             />
 
-            {/* Sprout Summary Pill Card matching bottom of Kalender Reference UI */}
-            <Pressable
-              onPress={() => router.push({ pathname: '/agenda/new', params: { date: selectedDate } })}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.sproutSummaryBanner,
-                pressed && { transform: [{ scale: 0.99 }] },
-              ]}
-            >
-              <View style={styles.sproutBannerLeft}>
-                <CalendarDays size={20} color={s.forest} />
-                <View style={styles.sproutBannerTexts}>
-                  <AppText style={styles.sproutBannerTitle}>
-                    {selectedDate === todayDate ? 'Hari Ini' : 'Tanggal'} · {shortDateLabel}
-                  </AppText>
-                  <AppText style={styles.sproutBannerSub}>
-                    {totalDayTasks} Tugas
-                  </AppText>
-                </View>
+            <View style={styles.agendaHeading}>
+              <View style={styles.agendaCopy}>
+                <AppText variant="headlineSmall" accessibilityRole="header">
+                  {selectedDate === todayDate ? 'Hari ini, ' : 'Agenda '}{shortDateLabel}
+                </AppText>
+                <AppText variant="labelLarge" color="onSurfaceVariant">{totalDayTasks} kegiatan</AppText>
               </View>
-              <ChevronRight size={20} color={s.ink} strokeWidth={2.4} />
-            </Pressable>
+              <Pressable
+                onPress={() => router.push({ pathname: '/agenda/new', params: { date: selectedDate } })}
+                accessibilityRole="button"
+                accessibilityLabel="Tambah Agenda Baru"
+                accessibilityHint={'Pada ' + shortDateLabel}
+                style={({ pressed }) => [styles.addEvent, pressed && styles.pressed]}
+              >
+                <Plus size={space[4]} color={colors.primary} />
+                <AppText variant="labelLarge" color="primary">Kegiatan</AppText>
+              </Pressable>
+            </View>
 
             {reminderWarning && (
               <Banner
@@ -233,7 +206,7 @@ export const AgendaScreen: React.FC = () => {
             {!isAgendaLoading && !agendaError && conflicts.size > 0 && (
               <Banner
                 variant="info"
-                message="Ada agenda dengan waktu bertumpuk. Jadwal tetap disimpan; sesuaikan jika diperlukan."
+                message="Ada agenda dengan waktu bertumpuk. Periksa jam mulai dan selesai."
                 style={styles.notice}
               />
             )}
@@ -250,7 +223,7 @@ export const AgendaScreen: React.FC = () => {
 
             {isAgendaLoading ? (
               <View style={styles.loading}>
-                <ActivityIndicator color={s.forest} size="large" />
+                <View style={styles.placeholder} />
                 <AppText color="onSurfaceVariant">Memuat agenda…</AppText>
               </View>
             ) : (
@@ -322,9 +295,9 @@ export const AgendaScreen: React.FC = () => {
 
                   {weeklyOccurrences.length === 0 && events.length === 0 && (
                     <EmptyState
-                      title="Masih ada ruang di harimu"
-                      description="Belum ada jadwal tetap atau agenda khusus untuk tanggal ini."
-                      customIcon={<CalendarDays size={30} color={s.forest} strokeWidth={2.2} />}
+                      title="Belum ada kegiatan"
+                      description="Pilih jam untuk kegiatan pertama pada tanggal ini."
+                      customIcon={<CalendarDays size={space[6]} color={colors.primary} />}
                       actionTitle="Jadwalkan kegiatan"
                       onActionPress={() =>
                         router.push({ pathname: '/agenda/new', params: { date: selectedDate } })
@@ -374,7 +347,7 @@ export const AgendaScreen: React.FC = () => {
 
             {isWeeklyLoading ? (
               <View style={styles.loading}>
-                <ActivityIndicator color={s.forest} size="large" />
+                <View style={styles.placeholder} />
                 <AppText color="onSurfaceVariant">Memuat jadwal rutin mingguan…</AppText>
               </View>
             ) : (
@@ -415,61 +388,27 @@ export const AgendaScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  screenBg: {
-    backgroundColor: s.cream,
-  },
-  header: { paddingTop: 20, paddingBottom: 8, gap: 4, },
-  headerTitle: { fontSize: 28, lineHeight: 36, letterSpacing: -1, fontFamily: fontFamily.bold, color: s.ink, },
-  calendarIconBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: s.card,
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollContent: { paddingBottom: 100, gap: 12, },
-  sproutSummaryBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: s.sunSoft, borderRadius: 12, padding: 12, },
-  sproutBannerLeft: {
+  screenBg: { backgroundColor: colors.background },
+  header: { marginTop: space[5] },
+  scrollContent: { paddingBottom: touchTarget.min + space[10], gap: space[3] },
+  agendaHeading: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space[3],
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: space[2],
+    paddingTop: space[3],
+    borderTopColor: colors.outline,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
-  sproutBannerTexts: {
-    gap: 2,
-  },
-  sproutBannerTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: 14,
-    color: s.ink,
-  },
-  sproutBannerSub: {
-    fontFamily: fontFamily.medium,
-    fontSize: 12,
-    color: s.inkMuted,
-  },
-  notice: {
-    marginVertical: space[1],
-  },
-  loading: {
-    alignItems: 'center',
-    gap: space[3],
-    paddingVertical: space[10],
-  },
-  groupSection: {
-    marginTop: 4,
-  },
-  floatingFabContainer: {
-    position: 'absolute',
-    right: space[4],
-    bottom: space[4],
-    zIndex: 20,
-  },
-  fabSquare: { width: 48, height: 48, borderRadius: 14, backgroundColor: s.sun, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: s.forest, },
-  fabSquarePressed: {
-    transform: [{ scale: 0.94 }],
-    backgroundColor: s.sunDeep,
-  },
+  agendaCopy: { flexShrink: 1 },
+  addEvent: { minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', gap: space[1], paddingHorizontal: space[2], borderRadius: radius.sm },
+  pressed: { backgroundColor: colors.surfaceContainer },
+  notice: { marginVertical: space[1] },
+  loading: { alignItems: 'flex-start', gap: space[3], paddingVertical: space[4] },
+  placeholder: { width: '65%', height: space[3], backgroundColor: colors.surfaceContainer },
+  groupSection: { marginTop: space[1] },
+  floatingFabContainer: { position: 'absolute', right: space[4], bottom: space[4] },
+  fabSquare: { width: touchTarget.min, height: touchTarget.min, borderRadius: radius.md, backgroundColor: colors.highlight, alignItems: 'center', justifyContent: 'center' },
+  fabSquarePressed: { backgroundColor: colors.sprout.sunDeep },
 });

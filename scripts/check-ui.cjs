@@ -350,9 +350,11 @@ async function checkStartup() {
     react: { ...fakeReact, useMemo: work => work(), useCallback: work => work },
     'expo-router': { Stack, ThemeProvider: function TestThemeProvider() { return null; }, DefaultTheme: { colors: {} } },
     'expo-splash-screen': { preventAutoHideAsync: async () => {}, hideAsync: async () => {} },
-    '@expo-google-fonts/plus-jakarta-sans': { useFonts: () => [true, null] },
-    '@expo-google-fonts/fredoka': { useFonts: () => [true, null] },
-    '@expo-google-fonts/quicksand': { useFonts: () => [true, null] },
+    'expo-font': { useFonts: () => [true, null] },
+    '@expo-google-fonts/plus-jakarta-sans/400Regular': { PlusJakartaSans_400Regular: 1 },
+    '@expo-google-fonts/plus-jakarta-sans/500Medium': { PlusJakartaSans_500Medium: 1 },
+    '@expo-google-fonts/plus-jakarta-sans/600SemiBold': { PlusJakartaSans_600SemiBold: 1 },
+    '@expo-google-fonts/plus-jakarta-sans/700Bold': { PlusJakartaSans_700Bold: 1 },
     '@/db/client': { initDatabase: async () => { if (fails) throw new Error('Relasi legacy bermasalah'); } },
     '@/db/data-revision': { useDataRevision: () => 0 },
     '@/features/settings/data/services/backup-file.service': {},
@@ -508,7 +510,7 @@ async function checkSafeDeleteAndHonestSummary() {
   assert.deepEqual(calls, []); assert.ok(options.find(option => option.text === 'Batal'));
   await options.find(option => option.style === 'destructive').onPress(); assert.deepEqual(calls, ['mtask-delete']);
   const html = renderToStaticMarkup(React.createElement(load('src/features/targets/presentation/screens/target-list-screen.tsx').TargetListScreen));
-  assert.ok(html.includes('PROGRES TARGET')); assert.ok(!html.includes('Produktivitasmu') && !html.includes('+38%'));
+  assert.ok(html.includes('Progres tugas') && html.includes('38%')); assert.ok(!html.includes('Produktivitasmu') && !html.includes('+38%'));
   console.log('PASS: destructive task deletion requires explicit confirmation; target summary uses factual progress.');
 }
 async function checkWeeklyReminderFeedback() {
@@ -637,12 +639,12 @@ function checkTargetNavigation() {
   });
   const Today = navLoader('src/features/today-focus/presentation/screens/today-focus-screen.tsx').TodayFocusScreen;
   for (const [name, fields, route, prefix] of [
-    ['converted task', { targetId: 'converted-target', targetTitle: 'My former project' }, { pathname: '/targets/[id]', params: { id: 'converted-target' } }, 'Target · My former project'],
+    ['converted task', { targetId: 'converted-target', targetTitle: 'My former project' }, { pathname: '/targets/[id]', params: { id: 'converted-target' } }, 'Target, My former project'],
     ['target without title', { targetId: 't-two' }, { pathname: '/targets/[id]', params: { id: 't-two' } }, 'Dari Target'],
     ['cancelled target task', { targetId: 't-three', status: 'CANCELLED' }, { pathname: '/targets/[id]', params: { id: 't-three' } }, 'Dari Target'],
     ['completed target task', { targetId: 't-four', status: 'COMPLETED', isCompleted: true }, { pathname: '/targets/[id]', params: { id: 't-four' } }, 'Dari Target'],
-    ['direct target task', { targetId: 't-one', targetTitle: 'Target' }, { pathname: '/targets/[id]', params: { id: 't-one' } }, 'Target · Target'],
-    ['managed task', { id: 'mtask-one' }, '/task-manager', 'Manajemen Tugas · Jadwal Eksekusi'],
+    ['direct target task', { targetId: 't-one', targetTitle: 'Target' }, { pathname: '/targets/[id]', params: { id: 't-one' } }, 'Target, Target'],
+    ['managed task', { id: 'mtask-one' }, '/task-manager', 'Manajemen Tugas, Jadwal Eksekusi'],
   ]) verify('Today opens the correct owner: ' + name, () => {
     reset(); const fixture = { ...task, targetId: null, projectId: null, ...fields };
     todayState = { ...focus, focusItems: [{ id: 'navigation-item', taskId: fixture.id, task: fixture, isCompleted: fixture.isCompleted }] };

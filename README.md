@@ -2,7 +2,7 @@
 
 > **MyLife — mulai dari [peta produk dan audit](./docs/START_HERE.md).** Proyek ini adalah aplikasi tujuan, tugas, fokus, dan agenda lokal berbasis Expo SDK 58. Dokumen v2 menetapkan arah selanjutnya; implementasi saat ini masih memiliki masalah yang dicatat dalam audit. Petunjuk template Expo di bawah dipertahankan sebagai referensi setup.
 
-Redesign aktif MyLife memakai palet hijau dan netral dengan hierarki ringkas. Baca [arah desain terbaru](./docs/design/DESIGN_V3.md) dan [catatan implementasi UI](./docs/UI_IMPLEMENTATION_2026-10-26.md) sebelum menambah layar atau komponen.
+MyLife memakai pita waktu nila dan aprikot untuk membuka tugas berikutnya dari layar Hari Ini. Baca [arah desain terbaru](./docs/design/DESIGN_V3.md) dan [catatan implementasi UI](./docs/UI_IMPLEMENTATION_2026-10-26.md) sebelum menambah layar atau komponen.
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 

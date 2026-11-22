@@ -6,12 +6,10 @@ import {
   StyleSheet,
   type ViewStyle,
 } from 'react-native';
-import { fontFamily } from '@/theme/tokens';
+import { fontFamily, touchTarget, space, typography } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText } from '@/shared/ui/app-text';
 import type { CategoryWithCount } from '@/features/categories/domain/entities/category.entity';
-
-const s = colors.sprout;
 
 export interface CategoryFilterChipsProps {
   categories: CategoryWithCount[];
@@ -39,8 +37,9 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
           onPress={() => onSelectCategory(null)}
           accessibilityRole="button"
           accessibilityState={{ selected: isAllSelected }}
-          style={[
+          style={({ pressed }) => [
             styles.chip,
+            pressed && styles.pressed,
             isAllSelected ? styles.chipSelected : styles.chipUnselected,
           ]}
         >
@@ -64,8 +63,9 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
               onPress={() => onSelectCategory(cat.id)}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              style={[
+              style={({ pressed }) => [
                 styles.chip,
+                pressed && styles.pressed,
                 isSelected ? styles.chipSelected : styles.chipUnselected,
               ]}
             >
@@ -87,21 +87,22 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { borderBottomWidth: 1, borderBottomColor: colors.border, },
+  pressed: { backgroundColor: colors.surfaceContainer },
+  container: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, },
   scrollContent: {
-    gap: 6,
+    gap: space[1],
   },
-  chip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingVertical: 7, paddingHorizontal: 12, borderBottomWidth: 2, borderBottomColor: 'transparent', },
-  chipSelected: { borderBottomColor: s.forest, },
+  chip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minWidth: touchTarget.min, minHeight: touchTarget.min, paddingVertical: space[2], paddingHorizontal: space[3], borderBottomWidth: space[1], borderBottomColor: 'transparent', },
+  chipSelected: { borderBottomColor: colors.primary, },
   chipUnselected: {
     backgroundColor: 'transparent',
   },
   chipText: {
-    fontSize: 13,
+    fontSize: typography.labelLarge.fontSize,
     fontFamily: fontFamily.semibold,
   },
-  chipTextSelected: { color: s.forest, fontFamily: fontFamily.bold, },
+  chipTextSelected: { color: colors.primary, fontFamily: fontFamily.bold, },
   chipTextUnselected: {
-    color: s.inkMuted,
+    color: colors.onSurfaceVariant,
   },
 });

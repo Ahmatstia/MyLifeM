@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
-import { fontFamily } from '@/theme/tokens';
+import { fontFamily, radius, space, touchTarget, typography } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText } from './app-text';
 
@@ -30,7 +30,7 @@ export const FormScreenHeader: React.FC<FormScreenHeaderProps> = ({
         <ArrowLeft size={20} color={s.ink} strokeWidth={2.5} />
       </Pressable>
 
-      <AppText variant="titleMedium" style={styles.headerTitle}>
+      <AppText accessibilityRole="header" variant="titleMedium" style={styles.headerTitle}>
         {title}
       </AppText>
 
@@ -42,15 +42,29 @@ export const FormScreenHeader: React.FC<FormScreenHeaderProps> = ({
 };
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border, },
-  backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: s.card, alignItems: 'center', justifyContent: 'center', },
-  backBtnPressed: {
-    transform: [{ scale: 0.95 }],
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[2],
+    paddingHorizontal: space[4],
+    paddingVertical: space[1],
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
-  headerTitle: { fontSize: 16, fontFamily: fontFamily.bold, color: s.ink, flex: 1, textAlign: 'left', },
-  rightSlot: {
-    minWidth: 40,
-    alignItems: 'flex-end',
+  backBtn: {
+    width: touchTarget.min,
+    height: touchTarget.min,
+    borderRadius: radius.md,
+    alignItems: 'center',
     justifyContent: 'center',
   },
+  backBtnPressed: { backgroundColor: colors.primaryContainer },
+  headerTitle: {
+    ...typography.titleMedium,
+    fontFamily: fontFamily.bold,
+    color: s.ink,
+    flex: 1,
+    textAlign: 'left',
+  },
+  rightSlot: { alignItems: 'flex-end', justifyContent: 'center' },
 });

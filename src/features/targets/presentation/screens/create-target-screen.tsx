@@ -11,7 +11,6 @@ import {
 import { backOrHome } from '@/shared/utils/back-or-home';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Sparkles,
   GraduationCap,
   Heart,
   Briefcase,
@@ -21,12 +20,11 @@ import {
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase } from '@/shared/ui/form-control-styles';
-import { radius, space, fontFamily } from '@/theme/tokens';
+import { radius, space, fontFamily, stroke, typography } from '@/theme/tokens';
 import {
   Screen,
   AppText,
   FormScreenHeader,
-  WaveBackdrop,
   ChoiceTile,
   SunButton,
   FieldLabel,
@@ -114,7 +112,7 @@ export const CreateTargetScreen: React.FC = () => {
       style={styles.screenBg}
       contentContainerStyle={{ ...styles.scrollContent, paddingBottom: 120 + insets.bottom }}
     >
-      <WaveBackdrop variant="form" withBottomHills />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
@@ -146,7 +144,7 @@ export const CreateTargetScreen: React.FC = () => {
                   style={styles.cloudInput}
                   autoFocus
                 />
-                <Sparkles size={20} color={s.sun} fill={s.sun} />
+
               </View>
 
               <FieldLabel>Deskripsi (opsional)</FieldLabel>
@@ -193,7 +191,7 @@ export const CreateTargetScreen: React.FC = () => {
                   accessibilityState={{ selected }}
                   style={[styles.priorityPill, selected && styles.priorityPillSelected]}
                 >
-                  <Flag size={14} color={selected ? '#FFFFFF' : s.inkMuted} strokeWidth={2.3} />
+                  <Flag size={14} color={selected ? colors.surfaceContainerLowest : s.inkMuted} strokeWidth={2.3} />
                   <AppText
                     style={[styles.priorityPillText, selected && styles.priorityPillTextSelected]}
                   >
@@ -234,10 +232,10 @@ const styles = StyleSheet.create({
     marginBottom: space[2],
     position: 'relative',
   },
-  cloudOuterCard: { gap: 8, },
-  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, gap: 8, },
-  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: 14, color: s.ink, paddingVertical: 8, ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
-  cloudDescInput: { fontFamily: fontFamily.regular, fontSize: 13, color: s.ink, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: s.card, ...formInputBase, },
+  cloudOuterCard: { gap: space[2], },
+  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, paddingHorizontal: space[3], gap: space[2], },
+  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: typography.bodyMedium.fontSize, color: s.ink, paddingVertical: space[2], ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
+  cloudDescInput: { fontFamily: fontFamily.regular, fontSize: typography.labelMedium.fontSize, color: s.ink, padding: space[3], borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, backgroundColor: s.card, ...formInputBase, },
   categoryTilesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -252,12 +250,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#EEF0E8',
-    borderRadius: 20,
-    paddingVertical: 13,
-    borderWidth: 1,
-    borderColor: '#DDE3D8',
+    gap: space[1],
+    backgroundColor: colors.surfaceContainerLow,
+    borderRadius: radius.xl,
+    paddingVertical: space[3],
+    borderWidth: stroke.hairline,
+    borderColor: colors.border,
   },
   priorityPillSelected: {
     backgroundColor: s.forest,
@@ -265,12 +263,12 @@ const styles = StyleSheet.create({
   },
   priorityPillText: {
     fontFamily: fontFamily.semibold,
-    fontSize: 13,
+    fontSize: typography.labelMedium.fontSize,
     color: s.inkMuted,
   },
   priorityPillTextSelected: {
     fontFamily: fontFamily.bold,
-    color: '#FFFFFF',
+    color: colors.surfaceContainerLowest,
   },
   ctaWrap: {
     marginTop: space[4],

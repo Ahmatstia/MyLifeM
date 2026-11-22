@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "mylife",
     "userInterfaceStyle": "light",
-    "backgroundColor": "#FAF6EC",
+    "backgroundColor": "#F1F4F8",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -45,7 +45,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F7F5EF",
+          "backgroundColor": "#F1F4F8",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -58,7 +58,7 @@
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
-          "color": "#125B50"
+          "color": "#283E73"
         }
       ],
       "expo-font",

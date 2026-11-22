@@ -1,23 +1,21 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Plus, Sparkles, ArrowUpRight } from 'lucide-react-native';
+import { Plus, Flag } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { fontFamily } from '@/theme/tokens';
+import { radius, space, touchTarget } from '@/theme/tokens';
 import {
   Screen,
   AppText,
   Banner,
   EmptyState,
-  WaveBackdrop,
+  ProgressBar,
 } from '@/shared/ui';
 import { useTargets } from '../hooks/use-targets';
 import { CategoryFilterChips } from '../components/category-filter-chips';
 import { TargetCard } from '../components/target-card';
 import { AddTargetModal } from '../components/add-target-modal';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
-
-const s = colors.sprout;
 
 export const TargetListScreen: React.FC = () => {
   const {
@@ -60,7 +58,7 @@ export const TargetListScreen: React.FC = () => {
                 pressed && styles.fabSquarePressed,
               ]}
             >
-              <Plus size={24} color={s.ink} strokeWidth={2.8} />
+              <Plus size={space[6]} color={colors.onHighlight} />
             </Pressable>
           </View>
 
@@ -73,22 +71,9 @@ export const TargetListScreen: React.FC = () => {
         </>
       }
     >
-      <WaveBackdrop variant="home" height={285} />
-
-      {/* Header over Sprout Home Wave */}
-      <View style={styles.header}>
-        <View style={styles.headerTextCol}>
-          <AppText style={styles.eyebrow}>MYLIFE / ARAH & TUJUAN</AppText>
-          <AppText variant="headlineMedium" style={styles.headerTitle}>
-            Target Hidup
-          </AppText>
-          <AppText style={styles.headerSubtitle}>
-            Hal besar, langkah yang terukur.
-          </AppText>
-        </View>
-      </View>
-
-      {/* Segmented Category Pill Bar */}
+      <AppText variant="displayMedium" accessibilityRole="header" style={styles.heading}>
+        Target hidup
+      </AppText>
       <CategoryFilterChips
         categories={categories}
         selectedCategoryId={selectedCategoryId}
@@ -106,52 +91,42 @@ export const TargetListScreen: React.FC = () => {
       )}
 
       {isLoading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={s.forest} size="large" />
-          <AppText color="onSurfaceVariant">Memuat targetmu…</AppText>
+        <View style={styles.loading} accessibilityState={{ busy: true }}>
+          <AppText variant="bodyMedium" color="onSurfaceVariant">Memuat target…</AppText>
+          <View style={styles.placeholderLong} />
+          <View style={styles.placeholderShort} />
         </View>
       ) : (
         !error && (
           <>
-            <View style={styles.progressLedger}>
-              <View style={styles.progressCopy}>
-                <AppText style={styles.eyebrow}>PROGRES TARGET</AppText>
-                <AppText style={styles.progressCaption}>Tugas yang terselesaikan</AppText>
-                <AppText style={styles.progressFraction}>{completedTasks} dari {totalTasks} langkah tuntas</AppText>
+            {totalTasks > 0 && (
+              <View style={styles.summary}>
+                <View style={styles.summaryRow}>
+                  <AppText variant="titleMedium" accessibilityRole="header">Progres tugas</AppText>
+                  <AppText variant="titleMedium" color="primary" tabularNums>{progress}%</AppText>
+                </View>
+                <ProgressBar progress={progress} height={space[1]} />
+                <AppText variant="bodyMedium" color="onSurfaceVariant" tabularNums>
+                  {completedTasks} dari {totalTasks} tugas selesai
+                  {totalEstimatedHours > 0 ? `, estimasi ${totalEstimatedHours} jam` : ''}
+                </AppText>
               </View>
-              <AppText style={styles.progressNumber} tabularNums>{progress}%</AppText>
-              <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${progress}%` }]} /></View>
-            </View>
-            <View style={styles.summaryLine}>
-              <AppText style={styles.summaryText}>{targets.length} target</AppText>
-              <AppText style={styles.summaryText}>{totalEstimatedHours} jam estimasi</AppText>
-              <ArrowUpRight size={16} color={s.forest} />
-            </View>
-            <View style={styles.listHeading}>
-              <AppText style={styles.listTitle}>Tujuanmu</AppText>
-              <AppText style={styles.listHint}>Pilih untuk menyusun langkah</AppText>
-            </View>
+            )}
 
             {targets.length === 0 ? (
               <EmptyState
-                title={
-                  selectedCategoryId
-                    ? 'Belum ada target di kategori ini'
-                    : 'Apa yang ingin kamu wujudkan?'
-                }
-                description="Mulai dari satu tujuan, misalnya menjadi AI Engineer. Pecah menjadi tahapan dan tugas yang jelas."
-                customIcon={<Sparkles size={30} color={s.forest} strokeWidth={2} />}
+                title={selectedCategoryId ? 'Belum ada target di kategori ini' : 'Belum ada target'}
+                description="Buat satu target, lalu tambahkan tahap pertamanya."
+                customIcon={<Flag size={space[6]} color={colors.primary} />}
                 actionTitle="Buat target"
                 onActionPress={() => router.push('/targets/new')}
               />
             ) : (
               <View style={styles.trailListWrap}>
-                {targets.map((target, index) => (
+                {targets.map((target) => (
                   <TargetCard
                     key={target.id}
                     target={target}
-                    index={index}
-                    isLast={index === targets.length - 1}
                     onPress={() =>
                       router.push({
                         pathname: '/targets/[id]',
@@ -170,29 +145,24 @@ export const TargetListScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  screenBg: { backgroundColor: s.cream },
-  scrollContent: { paddingBottom: 100, gap: 12 },
-  header: { paddingTop: 20, paddingBottom: 8 },
-  headerTextCol: { gap: 4 },
-  eyebrow: { fontFamily: fontFamily.bold, fontSize: 10, lineHeight: 16, letterSpacing: 1.4, color: s.inkMuted },
-  headerTitle: { fontFamily: fontFamily.bold, fontSize: 28, lineHeight: 36, letterSpacing: -1, color: s.ink },
-  headerSubtitle: { fontSize: 12, color: s.inkMuted },
-  notice: { marginBottom: 8 },
-  loading: { paddingVertical: 40, alignItems: 'center', gap: 12 },
-  progressLedger: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, padding: 16, borderRadius: 16, borderTopLeftRadius: 4, backgroundColor: s.sunSoft },
-  progressCopy: { flex: 1, minWidth: 130, gap: 4 },
-  progressCaption: { fontFamily: fontFamily.semibold, fontSize: 14, color: s.ink },
-  progressFraction: { fontSize: 11, color: s.inkMuted },
-  progressNumber: { fontFamily: fontFamily.bold, fontSize: 36, lineHeight: 46, letterSpacing: -1.5, color: s.forest },
-  progressTrack: { width: '100%', height: 4, backgroundColor: '#D6DFBB', borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: s.forest },
-  summaryLine: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.border },
-  summaryText: { fontSize: 12, color: s.inkMuted },
-  listHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, marginTop: 8 },
-  listTitle: { fontFamily: fontFamily.bold, fontSize: 17, color: s.ink },
-  listHint: { fontSize: 11, color: s.inkMuted },
-  trailListWrap: { gap: 10 },
-  floatingFabContainer: { position: 'absolute', right: 16, bottom: 16, zIndex: 20 },
-  fabSquare: { width: 48, height: 48, borderRadius: 14, backgroundColor: s.sun, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: s.forest },
-  fabSquarePressed: { opacity: 0.8, transform: [{ scale: 0.96 }] },
+  screenBg: { backgroundColor: colors.background },
+  scrollContent: { paddingBottom: touchTarget.min + space[10], gap: space[3] },
+  heading: { marginTop: space[5] },
+  notice: { marginBottom: space[2] },
+  loading: { gap: space[3], paddingVertical: space[4] },
+  placeholderLong: { width: '70%', height: space[3], backgroundColor: colors.surfaceContainer },
+  placeholderShort: { width: '45%', height: space[2], backgroundColor: colors.surfaceContainer },
+  summary: { paddingVertical: space[3], gap: space[2] },
+  summaryRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: space[2] },
+  trailListWrap: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.outline },
+  floatingFabContainer: { position: 'absolute', right: space[4], bottom: space[4] },
+  fabSquare: {
+    width: touchTarget.min,
+    height: touchTarget.min,
+    borderRadius: radius.md,
+    backgroundColor: colors.highlight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabSquarePressed: { backgroundColor: colors.sprout.sunDeep },
 });

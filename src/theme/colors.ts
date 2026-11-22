@@ -1,105 +1,105 @@
 /**
  * MyLife Mobile Design System - Color Tokens
- * Sumber kebenaran: docs/design/DESIGN_V3.md (MyLife Fieldnotes).
+ * Sumber kebenaran: docs/design/DESIGN_V3.md (MyLife).
  * Nama key lama dipertahankan agar seluruh layar otomatis mengikuti tema baru.
  */
 
 export const colors = {
-  // Paper canvas (MyLife Fieldnotes).
-  background: '#F7F8F2',
-  surface: '#F7F8F2',
-  surfaceContainerLowest: '#FFFFFF',
-  surfaceContainerLow: '#EEF0E8',
-  surfaceContainer: '#E5E9DF',
-  surfaceContainerHigh: '#DAE0D3',
-  surfaceContainerHighest: '#CAD3C3',
+  // Paper canvas (MyLife).
+  background: '#F1F4F8',
+  surface: '#F1F4F8',
+  surfaceContainerLowest: '#FAFBFD',
+  surfaceContainerLow: '#E6EBF3',
+  surfaceContainer: '#DEE5EF',
+  surfaceContainerHigh: '#D0D9E6',
+  surfaceContainerHighest: '#C1CCDE',
 
-  // Deep forest green actions & hero blobs.
-  primary: '#203E35',
-  primaryHover: '#172E27',
-  primaryContainer: '#E7EDDC',
-  onPrimary: '#FFFFFF',
-  onPrimaryContainer: '#1B4A3F',
-  hero: '#203E35',
-  onHero: '#FFFFFF',
-  onHeroMuted: '#E7EDDC',
-  heroDecoration: '#36594C',
-  heroTrack: '#5E8F80',
+  // Indigo focus surface and controls.
+  primary: '#283E73',
+  primaryHover: '#1E2E55',
+  primaryContainer: '#DDE6F5',
+  onPrimary: '#FAFBFD',
+  onPrimaryContainer: '#22345A',
+  hero: '#283E73',
+  onHero: '#FAFBFD',
+  onHeroMuted: '#DDE6F5',
+  heroDecoration: '#3F5688',
+  heroTrack: '#8096C0',
 
-  // Citron accent (CTA & FAB).
-  secondary: '#8A5A00',
-  secondaryContainer: '#D7EF78',
-  onSecondary: '#FFFFFF',
-  onSecondaryContainer: '#3D2A00',
+  // Apricot accent (CTA & FAB).
+  secondary: '#764819',
+  secondaryContainer: '#FFC28A',
+  onSecondary: '#FAFBFD',
+  onSecondaryContainer: '#472807',
 
   // Leaf green
-  tertiary: '#3F7A2E',
-  tertiaryContainer: '#E7EDDC',
-  onTertiary: '#FFFFFF',
-  onTertiaryContainer: '#244A1A',
+  tertiary: '#275C53',
+  tertiaryContainer: '#DDE6F5',
+  onTertiary: '#FAFBFD',
+  onTertiaryContainer: '#214B42',
 
   // Highlight (sunshine)
-  highlight: '#D7EF78',
-  highlightContainer: '#EFF6D4',
-  onHighlight: '#3D2A00',
-  onHighlightContainer: '#3D2A00',
+  highlight: '#FFC28A',
+  highlightContainer: '#FBE7D8',
+  onHighlight: '#472807',
+  onHighlightContainer: '#472807',
 
   // Text hierarchy (deep green ink).
-  onSurface: '#202E29',
-  onSurfaceVariant: '#5E6B64',
-  onSurfaceSubtle: '#646F68',
+  onSurface: '#172A45',
+  onSurfaceVariant: '#475A70',
+  onSurfaceSubtle: '#526279',
 
   // Border & divider: soft warm lines
-  outline: '#8A9389',
-  outlineVariant: '#DDE3D8',
-  border: '#DDE3D8',
+  outline: '#68778A',
+  outlineVariant: '#CBD5E2',
+  border: '#CBD5E2',
 
   // Status
-  success: '#236341',
+  success: '#246050',
   successContainer: '#E0F1E6',
-  onSuccess: '#FFFFFF',
+  onSuccess: '#FAFBFD',
   onSuccessContainer: '#194B31',
 
-  error: '#A83030',
+  error: '#9E3341',
   errorContainer: '#FFE4E0',
-  onError: '#FFFFFF',
+  onError: '#FAFBFD',
   onErrorContainer: '#7B2424',
 
-  warning: '#775016',
+  warning: '#795018',
   warningContainer: '#FFF0CE',
-  onWarning: '#FFFFFF',
+  onWarning: '#FAFBFD',
   onWarningContainer: '#62400D',
 
   // Inverse (snackbar)
-  inverseSurface: '#173C36',
-  inverseOnSurface: '#FFFFFF',
-  inversePrimary: '#D5F478',
+  inverseSurface: '#1D3051',
+  inverseOnSurface: '#FAFBFD',
+  inversePrimary: '#FFC28A',
 
   // Scrim modal (hitam 32%)
-  scrim: 'rgba(20, 38, 30, 0.48)',
+  scrim: 'rgba(23, 42, 69, 0.48)',
 
-  // Fieldnotes palette; legacy sprout keys keep existing consumers compatible
+  // Shared visual roles for existing screens
   sprout: {
-    cream: '#F7F8F2',
-    creamDeep: '#EEF0E8',
-    card: '#FFFFFF',
-    cardShade: '#E9EDE3',
-    forest: '#203E35',
-    forestDeep: '#172E27',
-    forestSoft: '#36594C',
-    leaf: '#8CC152',
-    leafSoft: '#E7EDDC',
-    leafMist: '#EEF4E2',
-    sun: '#D7EF78',
-    sunDeep: '#C3DC60',
-    sunSoft: '#EFF6D4',
-    ink: '#202E29',
-    inkMuted: '#5E6B64',
-    inkSubtle: '#5E6B64',
-    inkFaint: '#646F68',
+    cream: '#F1F4F8',
+    creamDeep: '#E6EBF3',
+    card: '#FAFBFD',
+    cardShade: '#E6EBF3',
+    forest: '#283E73',
+    forestDeep: '#1E2E55',
+    forestSoft: '#3F5688',
+    leaf: '#43669B',
+    leafSoft: '#DDE6F5',
+    leafMist: '#E7EEF7',
+    sun: '#FFC28A',
+    sunDeep: '#E9A768',
+    sunSoft: '#FBE7D8',
+    ink: '#172A45',
+    inkMuted: '#475A70',
+    inkSubtle: '#475A70',
+    inkFaint: '#526279',
     rose: '#AD4B40',
     roseSoft: '#FBE3E1',
-    teal: '#2F8F83',
+    teal: '#21665C',
     tealSoft: '#DDEFEA',
     grape: '#66528C',
     grapeSoft: '#EEE8F5',

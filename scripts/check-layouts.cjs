@@ -19,7 +19,7 @@ const output = path.resolve(root, process.env.MYLIFE_LAYOUT_OUTPUT || '.expo/rem
 fs.mkdirSync(path.join(output, 'fonts'), { recursive: true });
 fs.mkdirSync(path.join(output, 'assets'), { recursive: true });
 let fonts = '';
-for (const [pkg, weights] of [['quicksand', ['500Medium', '600SemiBold']], ['fredoka', ['600SemiBold', '700Bold']], ['plus-jakarta-sans', ['400Regular', '500Medium', '600SemiBold', '700Bold']]]) {
+for (const [pkg, weights] of [['plus-jakarta-sans', ['400Regular', '500Medium', '600SemiBold', '700Bold']]]) {
   for (const weight of weights) {
     const base = path.join(root, 'node_modules/@expo-google-fonts', pkg, weight);
     const file = fs.readdirSync(base).find(file => file.endsWith('.ttf'));
@@ -67,7 +67,7 @@ async function main() {
         const markup = renderToStaticMarkup(React.createElement(load('src/features/' + file)[exported], props));
         const filename = `${name}-${width}-${fontScale}x.html`;
         const css = toolkit.native.StyleSheet.getSheet().textContent;
-        fs.writeFileSync(path.join(output, filename), '<!doctype html><html lang="id"><meta charset="utf-8"><style>' + fonts + css + 'body{margin:0}.phone{position:relative;width:' + width + 'px;height:844px;display:flex;overflow:auto;background:#FAF6EC}</style><body><main class="phone">' + markup + '</main></body></html>');
+        fs.writeFileSync(path.join(output, filename), '<!doctype html><html lang="id"><meta charset="utf-8"><style>' + fonts + css + 'body{margin:0}.phone{position:relative;width:' + width + 'px;height:844px;display:flex;overflow:auto;background:#F1F4F8}</style><body><main class="phone">' + markup + '</main></body></html>');
         cases.push({ name, width, fontScale, file: filename });
       }
     }

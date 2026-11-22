@@ -5,6 +5,7 @@
 
 export const space = {
   0: 0,
+  0.5: 2,
   1: 4,
   2: 8,
   3: 12,
@@ -14,6 +15,7 @@ export const space = {
   8: 32,
   10: 40,
   12: 48,
+  14: 56,
   16: 64,
 } as const;
 
@@ -34,21 +36,21 @@ export const radius = {
  */
 export const elevation = {
   level1: {
-    shadowColor: '#173C36',
+    shadowColor: '#172A45',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 1,
   },
   level2: {
-    shadowColor: '#173C36',
+    shadowColor: '#172A45',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
     shadowRadius: 20,
     elevation: 4,
   },
   level3: {
-    shadowColor: '#173C36',
+    shadowColor: '#172A45',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 14,
@@ -81,7 +83,7 @@ export const typography = {
   titleSmall: { fontSize: 14, lineHeight: 20, fontWeight: '600' as const },
   bodyLarge: { fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
   bodyMedium: { fontSize: 14, lineHeight: 20, fontWeight: '400' as const },
-  bodySmall: { fontSize: 12, lineHeight: 18, fontWeight: '400' as const },
+  bodySmall: { fontSize: 14, lineHeight: 20, fontWeight: '400' as const },
   labelLarge: { fontSize: 14, lineHeight: 20, fontWeight: '500' as const },
   labelMedium: { fontSize: 12, lineHeight: 18, fontWeight: '500' as const },
   labelSmall: { fontSize: 12, lineHeight: 18, fontWeight: '500' as const },
@@ -90,3 +92,8 @@ export const typography = {
 } as const;
 
 export type TypographyVariant = keyof typeof typography;
+
+/** Icon outlines stay legible when the tap surface grows with system text. */
+export const iconSize = { detail: 12, small: 16, standard: 20, large: 24, feature: 32 } as const;
+export const stroke = { hairline: 1, selected: 2, icon: 2, strong: 2.5 } as const;
+export const interaction = { pressedOpacity: 0.8, disabledOpacity: 0.55, duration: 200 } as const;
