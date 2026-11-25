@@ -16,7 +16,7 @@ export const TabFabButton: React.FC<TabFabButtonProps> = ({ onPress }) => (
       accessibilityLabel="Tambah baru"
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
-      <Plus size={space[6]} color={colors.onPrimaryContainer} />
+      <Plus size={space[6]} color={colors.onHighlight} />
     </Pressable>
   </View>
 );
@@ -26,10 +26,13 @@ const styles = StyleSheet.create({
   button: {
     width: touchTarget.min,
     height: touchTarget.min,
-    borderRadius: radius.md,
-    backgroundColor: colors.primaryContainer,
+    borderRadius: radius.lg,
+    borderTopRightRadius: radius.xxl,
+    borderBottomWidth: space[1],
+    borderColor: colors.sprout.sunDeep,
+    backgroundColor: colors.highlight,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pressed: { backgroundColor: colors.surfaceContainerHigh },
+  pressed: { backgroundColor: colors.sprout.sunDeep },
 });

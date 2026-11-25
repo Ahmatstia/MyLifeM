@@ -1,3 +1,4 @@
+import { backOrHome } from '@/shared/utils/back-or-home';
 import React, { useState } from 'react';
 import {
   View,
@@ -7,9 +8,8 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import {
-  ArrowLeft,
   ChevronRight,
   Palette,
   Vibrate,
@@ -33,6 +33,7 @@ import { space, fontFamily, radius, stroke, typography, touchTarget } from '@/th
 import {
   Screen,
   AppText,
+  FormScreenHeader,
   Card,
   Button,
   AppBottomSheet,
@@ -144,29 +145,11 @@ export const SettingsScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      withBottomPadding={false}
       style={styles.screenRoot}
-      contentContainerStyle={styles.scrollContent}
     >
 
 
-      {/* 1. Header Bar (Non-sticky, full-bleed wave) */}
-      <View style={styles.topBar}>
-        <View style={styles.topBarLeft}>
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Kembali"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={styles.circleButton}
-          >
-            <ArrowLeft size={20} color={s.ink} strokeWidth={2.4} />
-          </Pressable>
-          <AppText variant="headlineMedium" style={styles.topBarTitle}>
-            Pengaturan
-          </AppText>
-        </View>
-      </View>
+      <FormScreenHeader title="Pengaturan" onBack={backOrHome} />
 
       {settingsError && (
         <View style={styles.cardGroup}>
@@ -853,43 +836,17 @@ export const SettingsScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   screenRoot: { backgroundColor: s.cream },
-  topBar: {
-    paddingTop: space[3],
-    paddingBottom: space[2],
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  topBarLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: space[3] },
-  topBarTitle: { fontFamily: fontFamily.bold, fontSize: typography.headlineLarge.fontSize, lineHeight: typography.headlineLarge.lineHeight, letterSpacing: -0.6, color: s.ink, },
-  circleButton: {
-    width: 42,
-    height: 42,
-    borderRadius: radius.md,
-    backgroundColor: s.card,
-    borderWidth: stroke.hairline,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollContent: { paddingBottom: space[8], gap: space[2] },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: space[3],
-    marginBottom: space[1],
+    flexWrap: 'wrap',
   },
   sectionHeaderTag: {
     fontFamily: fontFamily.bold,
     fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.6,
     color: s.inkMuted,
-  },
-  sectionHeaderSub: {
-    fontFamily: fontFamily.medium,
-    fontSize: typography.labelMedium.fontSize,
-    color: s.forest,
   },
   cardGroup: { backgroundColor: s.card, borderRadius: radius.md, paddingHorizontal: space[1], borderWidth: stroke.hairline, borderColor: colors.border, },
   settingItemRow: { minHeight: touchTarget.comfortable, flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[2], borderRadius: radius.sm, },

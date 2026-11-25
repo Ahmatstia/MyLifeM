@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { backOrHome } from '@/shared/utils/back-or-home';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   GraduationCap,
   Heart,
@@ -20,7 +19,7 @@ import {
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase } from '@/shared/ui/form-control-styles';
-import { radius, space, fontFamily, stroke, typography } from '@/theme/tokens';
+import { touchTarget, layout, radius, space, fontFamily, stroke, typography } from '@/theme/tokens';
 import {
   Screen,
   AppText,
@@ -40,7 +39,6 @@ const CATEGORY_ICONS = [GraduationCap, Heart, Briefcase, Gamepad2, Compass];
 const CATEGORY_TONES = ['leaf', 'rose', 'teal', 'grape', 'sun'] as const;
 
 export const CreateTargetScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
@@ -108,18 +106,14 @@ export const CreateTargetScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      withBottomPadding={false}
       style={styles.screenBg}
-      contentContainerStyle={{ ...styles.scrollContent, paddingBottom: 120 + insets.bottom }}
     >
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
       >
-        <View style={{ marginHorizontal: -space[4] }}>
-          <FormScreenHeader title="Target Baru" onBack={() => backOrHome()} />
-        </View>
+        <FormScreenHeader title="Target Baru" onBack={() => backOrHome()} />
 
         {errorMessage && (
             <View style={styles.errorBox}>
@@ -129,34 +123,28 @@ export const CreateTargetScreen: React.FC = () => {
             </View>
           )}
 
-          <FieldLabel>Nama target</FieldLabel>
-          <View style={styles.cloudHeroWrap}>
-            <View style={styles.cloudOuterCard}>
-              <View style={styles.cloudInnerPill}>
-                <TextInput accessibilityLabel="Nama target"
-                  value={title}
-                  onChangeText={(text) => {
-                    setTitle(text);
-                    if (errorMessage) setErrorMessage(null);
-                  }}
-                  placeholder="Masukkan nama target"
-                  placeholderTextColor={s.inkSubtle}
-                  style={styles.cloudInput}
-                  autoFocus
-                />
-
-              </View>
-
-              <FieldLabel>Deskripsi (opsional)</FieldLabel>
-              <TextInput accessibilityLabel="Deskripsi target"
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Masukkan deskripsi target"
-                placeholderTextColor={s.inkSubtle}
-                multiline
-                style={styles.cloudDescInput}
-              />
-            </View>
+          <View style={styles.titleFields}>
+            <FieldLabel>Nama target</FieldLabel>
+            <TextInput accessibilityLabel="Nama target"
+              value={title}
+              onChangeText={(text) => {
+                setTitle(text);
+                if (errorMessage) setErrorMessage(null);
+              }}
+              placeholder="Masukkan nama target"
+              placeholderTextColor={s.inkSubtle}
+              style={formInputBase}
+              autoFocus
+            />
+            <FieldLabel>Deskripsi (opsional)</FieldLabel>
+            <TextInput accessibilityLabel="Deskripsi target"
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Masukkan deskripsi target"
+              placeholderTextColor={s.inkSubtle}
+              multiline
+              style={formInputBase}
+            />
           </View>
 
           {/* Kategori Squircle Tiles */}
@@ -211,31 +199,16 @@ export const CreateTargetScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  titleFields: { gap: layout.fieldGap },
   screenBg: {
     backgroundColor: s.cream,
   },
-  keyboardContainer: {
-    flex: 1,
-    gap: space[3],
-  },
-  scrollContent: {
-    paddingHorizontal: space[4],
-    paddingTop: space[2],
-    gap: space[3],
-  },
+  keyboardContainer: { flex: 1, gap: layout.sectionGap },
   errorBox: {
     backgroundColor: colors.errorContainer,
     borderRadius: radius.md,
     padding: space[3],
   },
-  cloudHeroWrap: {
-    marginBottom: space[2],
-    position: 'relative',
-  },
-  cloudOuterCard: { gap: space[2], },
-  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, paddingHorizontal: space[3], gap: space[2], },
-  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: typography.bodyMedium.fontSize, color: s.ink, paddingVertical: space[2], ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
-  cloudDescInput: { fontFamily: fontFamily.regular, fontSize: typography.labelMedium.fontSize, color: s.ink, padding: space[3], borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, backgroundColor: s.card, ...formInputBase, },
   categoryTilesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -246,6 +219,7 @@ const styles = StyleSheet.create({
     gap: space[2],
   },
   priorityPill: {
+    minHeight: touchTarget.min,
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',

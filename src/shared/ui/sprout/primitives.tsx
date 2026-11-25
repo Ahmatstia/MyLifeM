@@ -393,5 +393,5 @@ const styles = StyleSheet.create({
   choiceSelected: { backgroundColor: s.leafSoft, borderColor: s.forest },
   choiceLabel: { textAlign: 'center', flexShrink: 1, fontFamily: fontFamily.medium, ...typography.labelMedium, color: s.inkMuted, },
   choiceLabelSelected: { fontFamily: fontFamily.bold, color: s.forest },
-  fieldLabel: { fontFamily: fontFamily.semibold, ...typography.labelMedium, color: s.ink, marginTop: space[2], marginBottom: space[1], },
+  fieldLabel: { fontFamily: fontFamily.semibold, fontSize: typography.labelMedium.fontSize, lineHeight: typography.labelMedium.lineHeight, color: s.ink },
 });

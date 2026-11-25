@@ -19,7 +19,7 @@ const output = path.resolve(root, process.env.MYLIFE_LAYOUT_OUTPUT || '.expo/rem
 fs.mkdirSync(path.join(output, 'fonts'), { recursive: true });
 fs.mkdirSync(path.join(output, 'assets'), { recursive: true });
 let fonts = '';
-for (const [pkg, weights] of [['plus-jakarta-sans', ['400Regular', '500Medium', '600SemiBold', '700Bold']]]) {
+for (const [pkg, weights] of [['fredoka', ['500Medium']], ['plus-jakarta-sans', ['400Regular', '500Medium', '600SemiBold', '700Bold']]]) {
   for (const weight of weights) {
     const base = path.join(root, 'node_modules/@expo-google-fonts', pkg, weight);
     const file = fs.readdirSync(base).find(file => file.endsWith('.ttf'));
@@ -29,18 +29,18 @@ for (const [pkg, weights] of [['plus-jakarta-sans', ['400Regular', '500Medium', 
 }
 for (const file of fs.readdirSync(path.join(root, 'assets/images/mascot'))) fs.copyFileSync(path.join(root, 'assets/images/mascot', file), path.join(output, 'assets', file));
 const specs = [
-  ['today', 'today-focus/presentation/screens/today-focus-screen.tsx', 'TodayFocusScreen'],
-  ['targets', 'targets/presentation/screens/target-list-screen.tsx', 'TargetListScreen'],
-  ['agenda', 'agenda/presentation/screens/agenda-screen.tsx', 'AgendaScreen'],
-  ['target-detail', 'targets/presentation/screens/target-detail-screen.tsx', 'TargetDetailScreen', { targetId: 'target' }],
-  ['settings', 'settings/presentation/screens/settings-screen.tsx', 'SettingsScreen'],
-  ['create-target', 'targets/presentation/screens/create-target-screen.tsx', 'CreateTargetScreen'],
-  ['create-priority', 'today-focus/presentation/screens/create-priority-screen.tsx', 'CreatePriorityScreen'],
-  ['create-agenda', 'agenda/presentation/screens/create-agenda-screen.tsx', 'CreateAgendaScreen'],
-  ['task-manager', 'task-manager/presentation/screens/task-manager-screen.tsx', 'TaskManagerScreen'],
-  ['create-managed-task', 'task-manager/presentation/screens/create-managed-task-screen.tsx', 'CreateManagedTaskScreen'],
-  ['quick-add', 'quick-add/presentation/screens/quick-add-screen.tsx', 'QuickAddScreen'],
-  ['timer', 'today-focus/presentation/components/focus-timer-widget.tsx', 'FocusTimerWidget', {
+  ['today', 'features/today-focus/presentation/screens/today-focus-screen.tsx', 'TodayFocusScreen'],
+  ['targets', 'features/targets/presentation/screens/target-list-screen.tsx', 'TargetListScreen'],
+  ['agenda', 'features/agenda/presentation/screens/agenda-screen.tsx', 'AgendaScreen'],
+  ['target-detail', 'features/targets/presentation/screens/target-detail-screen.tsx', 'TargetDetailScreen', { targetId: 'target' }],
+  ['settings', 'features/settings/presentation/screens/settings-screen.tsx', 'SettingsScreen'],
+  ['create-target', 'features/targets/presentation/screens/create-target-screen.tsx', 'CreateTargetScreen'],
+  ['create-priority', 'features/today-focus/presentation/screens/create-priority-screen.tsx', 'CreatePriorityScreen'],
+  ['create-agenda', 'features/agenda/presentation/screens/create-agenda-screen.tsx', 'CreateAgendaScreen'],
+  ['task-manager', 'features/task-manager/presentation/screens/task-manager-screen.tsx', 'TaskManagerScreen'],
+  ['create-managed-task', 'features/task-manager/presentation/screens/create-managed-task-screen.tsx', 'CreateManagedTaskScreen'],
+  ['quick-add', 'features/quick-add/presentation/screens/quick-add-screen.tsx', 'QuickAddScreen'],
+  ['timer', 'features/today-focus/presentation/components/focus-timer-widget.tsx', 'FocusTimerWidget', {
     mode: 'POMODORO', formattedTime: '24:59', isRunning: true, hasSession: true,
     activeTask: { id: 'fixture', title: 'Selesaikan satu langkah yang berarti' }, progressRatio: 0.2,
     onChangeMode() {}, onStart() {}, onPause() {}, onReset() {}, onFinish() {},
@@ -51,7 +51,22 @@ const tracks = [{ id: 'builtin', name: 'Alarm bawaan', uri: 'builtin://siren-ene
 const managed = { id: 'mtask-fixture', title: 'Selesaikan laporan praktikum dan tinjau hasil', courseOrContext: 'Pemrograman', categoryType: 'COLLEGE', notes: 'Catatan fixture', priority: 'HIGH', estimatedMinutes: 60,
   executionDate: '2026-11-22', executionTime: '19:00', deadlineDate: '2026-11-24', deadlineTime: '23:59', alertMode: 'ALARM', alarmTrackId: 'builtin', alarmTrackName: tracks[0].name, alarmTrackUri: tracks[0].uri,
   snoozeMinutes: 10, autoAddToToday: true, subtasks: [{ id: 'sub', title: 'Tinjau data', isCompleted: false }], isCompleted: false, completedAt: null };
+const dialog = { visible: true, onClose: noop, onSubmit: async () => true };
+const dialogs = [
+  ['drawer', 'shared/ui/app-sidebar-drawer.tsx', 'AppSidebarDrawer', dialog],
+  ['weekly-schedule', 'features/agenda/presentation/components/add-edit-weekly-schedule-modal.tsx', 'AddEditWeeklyScheduleModal', dialog],
+  ['agenda-event', 'features/agenda/presentation/components/add-event-modal.tsx', 'AddEventModal', { ...dialog, selectedDate: '2026-11-22' }],
+  ['category-manager', 'features/categories/presentation/components/category-manager-modal.tsx', 'CategoryManagerModal', dialog],
+  ['target-stage', 'features/stages/presentation/components/add-edit-stage-modal.tsx', 'AddEditStageModal', dialog],
+  ['target-task', 'features/stages/presentation/components/add-edit-task-modal.tsx', 'AddEditTaskModal', { ...dialog, stageId: 'stage', stageName: 'Riset' }],
+  ['target-form', 'features/targets/presentation/components/add-target-modal.tsx', 'AddTargetModal', { ...dialog, categories: toolkit.categories }],
+  ['priority-picker', 'features/today-focus/presentation/components/add-priority-modal.tsx', 'AddPriorityModal', { ...dialog, availableTasks: [], currentCount: 0 }],
+  ['reflection', 'features/today-focus/presentation/components/session-reflection-modal.tsx', 'SessionReflectionModal', { ...dialog, durationMinutes: 25 }],
+];
+const fullScreens = new Set(specs.map(([name]) => name).filter(name => !['timer', 'quick-add'].includes(name)));
+const insets = { top: 24, bottom: 16, left: 0, right: 0 };
 const overrides = {
+  'react-native-safe-area-context': { useSafeAreaInsets: () => insets },
   'lucide-react-native': requireProject('lucide-react-native'),
   'expo-image': { Image: props => React.createElement(toolkit.native.Image, { ...props, source: typeof props.source === 'string' ? { uri: 'assets/' + path.basename(props.source) } : props.source }) },
   '@/features/categories/data/repositories/category.repository.impl': { categoryRepository: { getAll: async () => toolkit.categories } },
@@ -63,11 +78,11 @@ async function main() {
     for (const fontScale of [1, 2]) for (const width of [320, 360, 412, 768]) {
       toolkit.setViewport(width, fontScale);
       const load = toolkit.createLoader(overrides);
-      for (const [name, file, exported, props = {}] of specs) {
-        const markup = renderToStaticMarkup(React.createElement(load('src/features/' + file)[exported], props));
+      for (const [name, file, exported, props = {}] of [...specs, ...dialogs]) {
+        const markup = renderToStaticMarkup(React.createElement(load('src/' + file)[exported], props));
         const filename = `${name}-${width}-${fontScale}x.html`;
         const css = toolkit.native.StyleSheet.getSheet().textContent;
-        fs.writeFileSync(path.join(output, filename), '<!doctype html><html lang="id"><meta charset="utf-8"><style>' + fonts + css + 'body{margin:0}.phone{position:relative;width:' + width + 'px;height:844px;display:flex;overflow:auto;background:#F1F4F8}</style><body><main class="phone">' + markup + '</main></body></html>');
+        fs.writeFileSync(path.join(output, filename), '<!doctype html><html lang="id"><meta charset="utf-8"><style>' + fonts + css + 'body{margin:0}.phone{position:relative;width:' + width + 'px;height:844px;display:flex;overflow:auto;background:#F6F3F6}</style><body><main class="phone">' + markup + '</main></body></html>');
         cases.push({ name, width, fontScale, file: filename });
       }
     }
@@ -87,6 +102,23 @@ async function main() {
       await page.setViewportSize({ width: item.width, height: 844 });
       await page.goto(`http://127.0.0.1:${server.address().port}/${item.file}`);
       await page.evaluate(() => document.fonts.ready);
+      if (fullScreens.has(item.name)) {
+        const first = ['today', 'targets', 'agenda'].includes(item.name)
+          ? page.getByRole('heading').first()
+          : page.getByRole('button', { name: 'Kembali', exact: true }).first();
+        const rect = await first.boundingBox();
+        const left = Math.max(0, (item.width - 640) / 2) + (item.width >= 600 ? 24 : 16);
+        assert.ok(rect && Math.abs(rect.x - left) < 1, item.name + ' left gutter ' + JSON.stringify(rect));
+        const top = await first.evaluate(el => (el.tagName === 'BUTTON' ? el.parentElement : el).getBoundingClientRect().top);
+        assert.ok(Math.abs(top - insets.top - 12) < 1, item.name + ' header top ' + top);
+      }
+      const smallControls = await page.locator('button,[role="button"],[role="checkbox"]').evaluateAll(elements =>
+        elements.filter(el => el.tabIndex >= 0).flatMap(el => {
+          const { width, height } = el.getBoundingClientRect();
+          return width && height && (width < 47.9 || height < 47.9)
+            ? [{ name: el.getAttribute('aria-label') || el.textContent, width, height }] : [];
+        }));
+      assert.deepEqual(smallControls, [], item.name + ' touch targets at ' + item.width + ' / ' + item.fontScale);
       const overflow = await page.evaluate(() => {
         const phone = document.querySelector('.phone'), bounds = phone.getBoundingClientRect();
         const inScroller = element => { for (let p = element.parentElement; p && p !== phone; p = p.parentElement) if (['auto', 'scroll'].includes(getComputedStyle(p).overflowX) && p.scrollWidth > p.clientWidth + 1) return true; return false; };

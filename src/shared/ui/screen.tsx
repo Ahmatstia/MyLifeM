@@ -1,84 +1,60 @@
 import React from 'react';
-import {
-  View,
-  ScrollView,
-  useWindowDimensions,
-  type ViewStyle,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
-import { space } from '@/theme/tokens';
+import { layout, screenGutter, space, touchTarget } from '@/theme/tokens';
 
 export interface ScreenProps {
   children: React.ReactNode;
-   overlay?: React.ReactNode;
+  overlay?: React.ReactNode;
+  floatingAction?: React.ReactNode;
+  insideTabs?: boolean;
   scrollable?: boolean;
-  withHorizontalPadding?: boolean;
-  withBottomPadding?: boolean;
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
 }
 
 export const Screen: React.FC<ScreenProps> = ({
-  children,
-  overlay,
-  scrollable = true,
-  withHorizontalPadding = true,
-  withBottomPadding = true,
-  style,
-  contentContainerStyle,
+  children, overlay, floatingAction, insideTabs = false, scrollable = true,
+  style, contentContainerStyle,
 }) => {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-
-  const horizontalPadding = withHorizontalPadding ? (width < 360 ? space[4] : space[5]) : 0;
-  // Extra bottom padding for Android gesture bar and tabs
-  const bottomPadding = (withBottomPadding ? 80 : 0) + insets.bottom + space[4];
-
-  if (scrollable) {
-    return (
-      <View style={[{ flex: 1, backgroundColor: colors.background }, style]}>
-        <StatusBar style="dark" />
-        <ScrollView
-          style={{ flex: 1 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            {
-              paddingTop: insets.top,
-              paddingHorizontal: horizontalPadding,
-              paddingBottom: bottomPadding,
-              flexGrow: 1,
-              width: '100%',
-              maxWidth: 640,
-              alignSelf: 'center',
-            },
-            contentContainerStyle,
-          ]}
-        >
-          {children}
-        </ScrollView>
-        {overlay}
-      </View>
-    );
-  }
+  const gutter = screenGutter(width - insets.left - insets.right);
+  const bottom = insideTabs ? 0 : insets.bottom;
+  const content = [
+    styles.content,
+    contentContainerStyle,
+    {
+      paddingHorizontal: gutter,
+      paddingBottom: space[4] + bottom + (floatingAction ? touchTarget.min + space[4] : 0),
+    },
+  ];
 
   return (
-    <View
-      style={[
-        {
-          flex: 1,
-          backgroundColor: colors.background,
-          paddingTop: insets.top,
-          paddingHorizontal: horizontalPadding,
-          paddingBottom: bottomPadding,
-        },
-        style,
-      ]}
-    >
+    <View style={[styles.root, style, { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}>
       <StatusBar style="dark" />
-      {children}
+      <View style={styles.column}>
+        {scrollable ? (
+          <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false} contentContainerStyle={content}>
+            {children}
+          </ScrollView>
+        ) : <View style={content}>{children}</View>}
+        {floatingAction && (
+          <View style={[styles.floating, { right: gutter, bottom: bottom + space[4] }]}>{floatingAction}</View>
+        )}
+      </View>
+      {overlay}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.background },
+  column: { flex: 1, alignSelf: 'center', width: '100%', maxWidth: layout.maxWidth },
+  scroll: { flex: 1 },
+  content: { flexGrow: 1, paddingTop: layout.screenTop, gap: layout.sectionGap },
+  floating: { position: 'absolute' },
+});

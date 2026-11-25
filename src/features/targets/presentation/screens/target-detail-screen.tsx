@@ -1,3 +1,4 @@
+import { backOrHome } from '@/shared/utils/back-or-home';
 import React, { useState } from 'react';
 import {
   View,
@@ -6,9 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { router } from 'expo-router';
 import {
-  ArrowLeft,
   Trash2,
   Plus,
 } from 'lucide-react-native';
@@ -17,6 +16,7 @@ import { space, fontFamily, radius, stroke, typography, touchTarget } from '@/th
 import {
   Screen,
   AppText,
+  FormScreenHeader,
   Banner,
   Button,
   SoftCard,
@@ -95,7 +95,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           onPress: async () => {
             const ok = await deleteThisTarget();
             if (ok) {
-              router.back();
+              backOrHome();
             }
           },
         },
@@ -135,7 +135,7 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           variant="error"
           message={error || 'Target tidak ditemukan.'}
           actionText={error ? 'Coba Lagi' : 'Kembali'}
-          onActionPress={error ? refresh : () => router.back()}
+          onActionPress={error ? refresh : backOrHome}
         />
       </Screen>
     );
@@ -158,27 +158,24 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
     <Screen
       scrollable
       style={styles.screenBg}
-      withBottomPadding={false}
-      contentContainerStyle={styles.scrollContent}
+      floatingAction={
+        <Pressable
+          onPress={() => {
+            setEditingStage(undefined);
+            setStageModalVisible(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Tambah Tahap Baru"
+          style={({ pressed }) => [
+            styles.fabSquare,
+            pressed && styles.fabSquarePressed,
+          ]}
+        >
+          <Plus size={24} color={s.ink} strokeWidth={2.8} />
+        </Pressable>
+      }
       overlay={
         <>
-          <View style={styles.floatingFabContainer} pointerEvents="box-none">
-            <Pressable
-              onPress={() => {
-                setEditingStage(undefined);
-                setStageModalVisible(true);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Tambah Tahap Baru"
-              style={({ pressed }) => [
-                styles.fabSquare,
-                pressed && styles.fabSquarePressed,
-              ]}
-            >
-              <Plus size={24} color={s.ink} strokeWidth={2.8} />
-            </Pressable>
-          </View>
-
           <AddEditStageModal
             visible={stageModalVisible}
             initialData={editingStage}
@@ -223,30 +220,18 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
     >
 
 
-      {/* TOP NAVIGATION BAR */}
-      <View style={styles.topBar}>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Kembali"
-          style={styles.circleNavBtn}
-        >
-          <ArrowLeft size={20} color={s.ink} strokeWidth={2.4} />
-        </Pressable>
-
-        <AppText numberOfLines={1} style={styles.topBarTitle}>
-          Rincian Target
-        </AppText>
-
-        <Pressable
-          onPress={handleDeleteTarget}
-          accessibilityRole="button"
-          accessibilityLabel="Hapus target"
-          style={styles.circleDeleteBtn}
-        >
-          <Trash2 size={17} color={colors.error} strokeWidth={2.2} />
-        </Pressable>
-      </View>
+      <FormScreenHeader title="Rincian Target" onBack={backOrHome}
+        rightAction={
+          <Pressable
+            onPress={handleDeleteTarget}
+            accessibilityRole="button"
+            accessibilityLabel="Hapus target"
+            style={styles.circleDeleteBtn}
+          >
+            <Trash2 size={17} color={colors.error} strokeWidth={2.2} />
+          </Pressable>
+        }
+      />
 
       <View style={styles.overviewCard}>
         <View style={styles.metaTopRow}>
@@ -343,33 +328,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space[3],
   },
-  topBar: {
-    minHeight: touchTarget.comfortable,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: space[1],
-  },
-  topBarTitle: {
-    flex: 1,
-    textAlign: 'center',
-    fontFamily: fontFamily.bold,
-    color: s.ink,
-    fontSize: typography.titleMedium.fontSize,
-  },
-  circleNavBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.xl,
-    backgroundColor: s.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: stroke.hairline,
-    borderColor: colors.border,
-  },
   circleDeleteBtn: {
-    width: 44,
-    height: 44,
+    width: touchTarget.min,
+    height: touchTarget.min,
     borderRadius: radius.xl,
     backgroundColor: colors.errorContainer,
     alignItems: 'center',
@@ -377,12 +338,6 @@ const styles = StyleSheet.create({
     borderWidth: stroke.hairline,
     borderColor: colors.border,
   },
-  scrollContent: {
-    paddingBottom: 100,
-    gap: space[3],
-  },
-
-  // 1. Overview Command Card
   overviewCard: { paddingVertical: space[3], gap: space[3], borderBottomWidth: stroke.hairline, borderBottomColor: colors.border, },
   metaTopRow: { flexDirection: 'row', justifyContent: 'space-between', gap: space[2], flexWrap: 'wrap' },
   detailMetrics: { flexDirection: 'row', justifyContent: 'space-between', gap: space[2], flexWrap: 'wrap' },
@@ -421,12 +376,6 @@ const styles = StyleSheet.create({
   },
   emptyBtn: {
     borderRadius: radius.pill,
-  },
-  floatingFabContainer: {
-    position: 'absolute',
-    right: space[4],
-    bottom: space[4],
-    zIndex: 20,
   },
   fabSquare: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: s.sun, alignItems: 'center', justifyContent: 'center', borderWidth: stroke.hairline, borderColor: s.forest, },
   fabSquarePressed: {

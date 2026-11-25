@@ -14,6 +14,7 @@ import {
   ChevronUp,
   Check,
 } from 'lucide-react-native';
+import { MinuteDial } from './minute-dial';
 import { colors } from '@/theme/colors';
 import { space, fontFamily, radius, touchTarget, typography } from '@/theme/tokens';
 import type { UserSettingsEntity } from '@/features/settings/domain/entities/settings.entity';
@@ -32,6 +33,7 @@ export interface FocusTimerWidgetProps {
   onFinish?: () => void;
   mode: FocusTimerMode;
   formattedTime: string;
+  seconds?: number;
   isRunning: boolean;
   activeTask: Pick<TaskEntity, 'id' | 'title'> | null;
   progressRatio: number;
@@ -52,6 +54,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   onFinish,
   mode,
   formattedTime,
+  seconds,
   isRunning,
   activeTask,
   progressRatio,
@@ -113,8 +116,13 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
       </View>
 
       <View style={styles.orbitDisplayCard}>
-        <AppText variant="timer" tabularNums style={[styles.timerDigits, { fontSize: digitSize }]}>{formattedTime}</AppText>
-        <AppText style={styles.timerSubtitle}>{mode === 'STOPWATCH' ? 'Waktu berjalan' : 'Waktu tersisa'}</AppText>
+        <View style={[styles.readout, fontScale >= 1.5 && styles.stackedControls]}>
+          <MinuteDial minutes={seconds === undefined ? undefined : seconds / 60} />
+          <View style={styles.digitsColumn}>
+            <AppText variant="timer" tabularNums style={[styles.timerDigits, { fontSize: digitSize }]}>{formattedTime}</AppText>
+            <AppText style={styles.timerSubtitle}>{mode === 'STOPWATCH' ? 'Waktu berjalan' : 'Waktu tersisa'}</AppText>
+          </View>
+        </View>
         {mode !== 'STOPWATCH' && <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${Math.min(100, Math.max(0, progressRatio * 100))}%` }]} />
         </View>}
@@ -320,11 +328,13 @@ const styles = StyleSheet.create({
   activeTaskTitle: { color: colors.onSurface, fontFamily: fontFamily.bold },
   activeTaskActions: { flexDirection: 'row' },
   stripSmallBtn: { width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm },
-  orbitDisplayCard: { alignItems: 'center', backgroundColor: colors.hero, borderRadius: radius.lg, padding: space[4] },
-  timerDigits: { fontFamily: fontFamily.bold, color: colors.onHero, lineHeight: typography.timer.lineHeight },
-  timerSubtitle: { color: colors.onHeroMuted },
-  progressTrack: { width: '100%', height: space[1], backgroundColor: colors.heroTrack, marginTop: space[3] },
-  progressFill: { height: '100%', backgroundColor: colors.secondaryContainer },
+  orbitDisplayCard: { backgroundColor: colors.clockCase, borderRadius: radius.xl, borderTopRightRadius: space[10], padding: space[3], borderBottomWidth: space[1], borderColor: colors.clockEdge },
+  readout: { flexDirection: 'row', alignItems: 'center', gap: space[4] },
+  digitsColumn: { flexShrink: 1, alignItems: 'flex-start' },
+  timerDigits: { fontFamily: fontFamily.display, color: colors.clockInk, lineHeight: typography.timer.lineHeight },
+  timerSubtitle: { color: colors.onSurfaceVariant },
+  progressTrack: { width: '100%', height: space[1], backgroundColor: colors.clockEdge, marginTop: space[3] },
+  progressFill: { height: '100%', backgroundColor: colors.primary },
   modeSection: { gap: space[2] },
   modeCardsRow: { flexDirection: 'row', gap: space[1] },
   modeCard: { flex: 1, minWidth: 0, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center', paddingVertical: space[2], paddingHorizontal: space[1], borderRadius: radius.sm, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border },

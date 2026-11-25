@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { backOrHome } from '@/shared/utils/back-or-home';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Briefcase,
   Users,
@@ -21,7 +20,7 @@ import {
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase, formInputCompact } from '@/shared/ui/form-control-styles';
-import { radius, space, fontFamily, stroke, typography } from '@/theme/tokens';
+import { touchTarget, layout, radius, space, fontFamily, stroke, typography } from '@/theme/tokens';
 import {
   Screen,
   AppText,
@@ -56,7 +55,6 @@ const REMINDER_OPTIONS = [
 ];
 
 export const CreateAgendaScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ date?: string }>();
   const initialDate =
     typeof params.date === 'string' && isDateOnly(params.date)
@@ -131,18 +129,14 @@ export const CreateAgendaScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      withBottomPadding={false}
       style={styles.screenBg}
-      contentContainerStyle={{ ...styles.scrollContent, paddingBottom: 120 + insets.bottom }}
     >
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
       >
-        <View style={{ marginHorizontal: -space[4] }}>
-          <FormScreenHeader title="Tambah Agenda" onBack={() => backOrHome()} />
-        </View>
+        <FormScreenHeader title="Tambah Agenda" onBack={() => backOrHome()} />
 
         {errorMessage && (
             <View style={styles.errorBox}>
@@ -152,33 +146,27 @@ export const CreateAgendaScreen: React.FC = () => {
             </View>
           )}
 
-          <FieldLabel>Nama kegiatan</FieldLabel>
-          <View style={styles.cloudHeroWrap}>
-            <View style={styles.cloudOuterCard}>
-              <View style={styles.cloudInnerPill}>
-                <TextInput accessibilityLabel="Nama kegiatan"
-                  value={title}
-                  onChangeText={(text) => {
-                    setTitle(text);
-                    if (errorMessage) setErrorMessage(null);
-                  }}
-                  placeholder="Masukkan nama kegiatan"
-                  placeholderTextColor={s.inkSubtle}
-                  style={styles.cloudInput}
-                  autoFocus
-                />
-
-              </View>
-
-              <FieldLabel>Catatan (opsional)</FieldLabel>
-              <TextInput accessibilityLabel="Catatan (opsional)"
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Masukkan catatan (opsional)"
-                placeholderTextColor={s.inkSubtle}
-                style={styles.cloudDescInput}
-              />
-            </View>
+          <View style={styles.titleFields}>
+            <FieldLabel>Nama kegiatan</FieldLabel>
+            <TextInput accessibilityLabel="Nama kegiatan"
+              value={title}
+              onChangeText={(text) => {
+                setTitle(text);
+                if (errorMessage) setErrorMessage(null);
+              }}
+              placeholder="Masukkan nama kegiatan"
+              placeholderTextColor={s.inkSubtle}
+              style={formInputBase}
+              autoFocus
+            />
+            <FieldLabel>Catatan (opsional)</FieldLabel>
+            <TextInput accessibilityLabel="Catatan (opsional)"
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Masukkan catatan (opsional)"
+              placeholderTextColor={s.inkSubtle}
+              style={formInputBase}
+            />
           </View>
 
           {/* Kategori Squircle Tiles */}
@@ -252,7 +240,8 @@ export const CreateAgendaScreen: React.FC = () => {
                   {REMINDER_OPTIONS.map((opt) => {
                     const selected = reminderMinutes === opt.minutes;
                     return (
-                      <Pressable accessibilityState={{ selected: selected }}
+                      <Pressable accessibilityRole="button" accessibilityLabel={opt.label}
+                        accessibilityState={{ selected }}
                         key={String(opt.minutes)}
                         onPress={() => setReminderMinutes(opt.minutes)}
                         style={[styles.reminderChip, selected && styles.reminderChipSelected]}
@@ -294,31 +283,16 @@ export const CreateAgendaScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  titleFields: { gap: layout.fieldGap },
   screenBg: {
     backgroundColor: s.cream,
   },
-  keyboardContainer: {
-    flex: 1,
-    gap: space[3],
-  },
-  scrollContent: {
-    paddingHorizontal: space[5],
-    paddingTop: space[2],
-    gap: space[3],
-  },
+  keyboardContainer: { flex: 1, gap: layout.sectionGap },
   errorBox: {
     backgroundColor: colors.errorContainer,
     borderRadius: radius.md,
     padding: space[3],
   },
-  cloudHeroWrap: {
-    marginTop: space[2],
-    marginBottom: space[2],
-  },
-  cloudOuterCard: { gap: space[2], },
-  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, paddingHorizontal: space[3], gap: space[2], },
-  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: typography.bodyMedium.fontSize, color: s.ink, paddingVertical: space[2], ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
-  cloudDescInput: { fontFamily: fontFamily.regular, fontSize: typography.labelMedium.fontSize, color: s.ink, padding: space[3], borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, backgroundColor: s.card, ...formInputBase, },
   categoryTilesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -384,6 +358,8 @@ const styles = StyleSheet.create({
     gap: space[1],
   },
   reminderChip: {
+    minHeight: touchTarget.min,
+    justifyContent: 'center',
     paddingHorizontal: space[3],
     paddingVertical: space[2],
     borderRadius: radius.pill,

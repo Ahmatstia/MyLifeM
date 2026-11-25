@@ -104,7 +104,7 @@ function luminance(hex) {
 }
 function contrast(a, b) { const values = [luminance(a), luminance(b)].sort((x, y) => x - y); return (values[1] + 0.05) / (values[0] + 0.05); }
 assert.equal(contrast('#000000', '#FFFFFF'), 21);
-for (const [text, surface] of [['onPrimary', 'primary'], ['onHero', 'hero'], ['onHeroMuted', 'hero'], ['onSurface', 'background'], ['onSurfaceVariant', 'background'], ['onSurfaceSubtle', 'surfaceContainerLowest'], ['onPrimaryContainer', 'primaryContainer'], ['onSecondaryContainer', 'secondaryContainer'], ['onHighlight', 'highlight'], ['onError', 'error'], ['onErrorContainer', 'errorContainer'], ['success', 'surfaceContainerLowest']]) {
+for (const [text, surface] of [['clockInk', 'clockCase'], ['clockTick', 'clockFace'], ['onSurfaceVariant', 'clockCase'], ['onSurfaceVariant', 'folderLilac'], ['onSurfaceVariant', 'folderMint'], ['onSurfaceVariant', 'folderPeach'], ['onPrimary', 'primary'], ['onHero', 'hero'], ['onHeroMuted', 'hero'], ['onSurface', 'background'], ['onSurfaceVariant', 'background'], ['onSurfaceSubtle', 'surfaceContainerLowest'], ['onPrimaryContainer', 'primaryContainer'], ['onSecondaryContainer', 'secondaryContainer'], ['onHighlight', 'highlight'], ['onError', 'error'], ['onErrorContainer', 'errorContainer'], ['success', 'surfaceContainerLowest']]) {
   assert.ok(contrast(colors[text], colors[surface]) >= 4.5, text + '/' + surface);
 }
 for (const color of Object.values(colors.pillars)) assert.ok(contrast(color, colors.primaryContainer) >= 4.5, color);
@@ -130,22 +130,31 @@ const formLoader = createLoader({ react: fakeReact });
 const { AddTargetModal } = formLoader('src/features/targets/presentation/components/add-target-modal.tsx');
 const renderForm = () => { stateIndex = 0; effectIndex = 0; const element = AddTargetModal({ visible: true, categories, onClose: noop, onSubmit: noop }); while (effects.length) effects.shift()(); return element; };
 function descendants(element) { return element && typeof element === 'object' ? [element, ...React.Children.toArray(element.props?.children).flatMap(descendants)] : []; }
-const { DateStripHeader } = load('src/features/agenda/presentation/components/date-strip-header.tsx');
+const { DateStripHeader } = formLoader('src/features/agenda/presentation/components/date-strip-header.tsx');
 let selectedDay;
-const calendar = DateStripHeader({ selectedDate: '2026-12-31', onSelectDate: value => { selectedDay = value; } });
+const renderCalendar = props => { stateIndex = 0; return DateStripHeader(props); };
+const calendar = renderCalendar({ selectedDate: '2026-12-31', onSelectDate: value => { selectedDay = value; } });
 descendants(calendar).find(element => element.props?.accessibilityLabel === 'Minggu berikutnya').props.onPress();
 assert.equal(selectedDay, '2027-01-07', 'Week navigation must cross the year boundary.');
 descendants(calendar).find(element => element.props?.accessibilityLabel === 'Minggu sebelumnya').props.onPress();
 assert.equal(selectedDay, '2026-12-24');
 assert.ok(descendants(calendar).some(element => element.props?.accessibilityLabel?.startsWith('2027-01-03')), 'The displayed week may span two years.');
+assert.equal(descendants(calendar).filter(el => /^\d{4}-\d{2}-\d{2}/.test(el.props?.accessibilityLabel || '')).length, 7);
+descendants(calendar).find(el => el.props?.accessibilityLabel === 'Tampilkan satu bulan').props.onPress();
+for (const [date, next] of [['2024-01-31', '2024-02-29'], ['2026-01-31', '2026-02-28'], ['2026-12-31', '2027-01-31']]) {
+  const month = renderCalendar({ selectedDate: date, onSelectDate: day => { selectedDay = day; } });
+  descendants(month).find(el => el.props?.accessibilityLabel === 'Bulan berikutnya').props.onPress();
+  assert.equal(selectedDay, next);
+}
 for (const year of [2024, 2026, 2027]) for (let month = 1; month <= 12; month++) {
   const date = `${year}-${String(month).padStart(2, '0')}-21`;
-  const grid = DateStripHeader({ selectedDate: date, onSelectDate: noop });
+  const grid = renderCalendar({ selectedDate: date, onSelectDate: noop });
   const dates = descendants(grid).map(element => element.props?.accessibilityLabel?.slice(0, 10)).filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value || ''));
   assert.equal(dates.length, new Set(dates).size, 'Calendar dates must never be duplicated.');
   assert.ok([28, 35, 42].includes(dates.length));
   for (let day = 1; day <= new Date(year, month, 0).getDate(); day++) assert.ok(dates.includes(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`), 'Missing month date: ' + date + '/' + day);
 }
+state.length = 0; stateIndex = 0;
 renderForm();
 let form = renderForm();
 descendants(form).find(element => element.type === native.TextInput && element.props.value === '').props.onChangeText('My draft goal');
@@ -350,6 +359,7 @@ async function checkStartup() {
     react: { ...fakeReact, useMemo: work => work(), useCallback: work => work },
     'expo-router': { Stack, ThemeProvider: function TestThemeProvider() { return null; }, DefaultTheme: { colors: {} } },
     'expo-splash-screen': { preventAutoHideAsync: async () => {}, hideAsync: async () => {} },
+    '@expo-google-fonts/fredoka/500Medium': { Fredoka_500Medium: 1 },
     'expo-font': { useFonts: () => [true, null] },
     '@expo-google-fonts/plus-jakarta-sans/400Regular': { PlusJakartaSans_400Regular: 1 },
     '@expo-google-fonts/plus-jakarta-sans/500Medium': { PlusJakartaSans_500Medium: 1 },
@@ -413,7 +423,7 @@ async function checkAlarmControls() {
   const save = () => { events.push('save'); writes++; return new Promise((resolve, reject) => { releaseSave = resolve; rejectSave = reject; }); };
   const { AlarmRingingModal } = createLoader({
     react: fakeReact,
-    'react-native': { ...native, AppState: { currentState: 'active', addEventListener: (_event, callback) => { appStateListener = callback; return { remove: noop }; } }, Alert: { alert: (...args) => alerts.push(args) } },
+    'react-native': { ...native, useWindowDimensions: () => ({ width: 360, height: 800, fontScale: 1, scale: 1 }), AppState: { currentState: 'active', addEventListener: (_event, callback) => { appStateListener = callback; return { remove: noop }; } }, Alert: { alert: (...args) => alerts.push(args) } },
     '@/features/task-manager/data/repositories/managed-task.repository': {
       subscribeRingingAlarm: fn => { listener = fn; fn(null, false); return () => { listener = null; }; },
       clearRingingAlarm: () => { events.push('clear'); listener?.(null, false); },
@@ -545,7 +555,8 @@ async function checkQuickTaskForm() {
   const save = () => find(element => element.props?.title === 'Simpan').props.onPress();
   find(element => element.type === native.TextInput).props.onChangeText('Keep quick draft');
   find(element => element.props?.label === 'Kerja').props.onPress();
-  for (let i = 0; i < 3; i++) find(element => element.props?.accessibilityLabel === 'Pilih durasi fokus').props.onPress();
+  find(element => element.props?.accessibilityLabel === '45 menit').props.onPress();
+  assert.equal(find(element => element.props?.accessibilityLabel === '45 menit').props.accessibilityState.selected, true);
   await save(); assert.equal(backs, 0);
   assert.deepEqual(received, ['Keep quick draft', undefined, { category: 'Kerja', estimatedMinutes: 45 }]);
   assert.equal(find(element => element.type === native.TextInput).props.value, 'Keep quick draft');
@@ -606,6 +617,20 @@ function checkTargetNavigation() {
       mode: 'POMODORO', formattedTime: '25:00', isRunning: false, hasSession: false, ready: true,
       activeTask: null, progressRatio: 0, setActiveTask: value => selected.push(value),
     }) },
+  });
+  verify('The focus clock skips finished and cancelled tasks when switching', () => {
+    reset();
+    const next = { ...task, id: 'next', title: 'Tugas berikutnya', estimatedMinutes: 15 };
+    todayState = { ...focus, focusItems: [
+      focus.focusItems[0],
+      { id: 'complete', taskId: 'done', task: { ...task, id: 'done' }, isCompleted: true },
+      { id: 'cancel', taskId: 'gone', task: { ...task, id: 'gone', status: 'CANCELLED' }, isCompleted: false },
+      { id: 'second', taskId: next.id, task: next, isCompleted: false },
+    ] };
+    const screen = navLoader('src/features/today-focus/presentation/screens/today-focus-screen.tsx').TodayFocusScreen();
+    descendants(screen).find(el => el.props?.accessibilityLabel === 'Ganti tugas fokus').props.onPress();
+    assert.deepEqual(selected, [next]);
+    todayState = focus;
   });
   verify('Menu tab opens the drawer', () => {
     reset(); const TabLayout = navLoader('src/app/(tabs)/_layout.tsx').default;

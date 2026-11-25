@@ -1,3 +1,4 @@
+import { backOrHome } from '@/shared/utils/back-or-home';
 import React, { useState } from 'react';
 import {
   View,
@@ -10,8 +11,8 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
-  ArrowLeft,
-  ArrowRight,
+  ChevronDown,
+  ChevronUp,
   BellRing,
   Bell,
   CalendarClock,
@@ -35,11 +36,11 @@ import { colors } from '@/theme/colors';
 import { touchTarget, fontFamily, space, radius, stroke, typography } from '@/theme/tokens';
 import {
   AppText,
+  FormScreenHeader,
   Banner,
   EmptyState,
   Screen,
   SproutCheck,
-  sproutShadow,
 } from '@/shared/ui';
 import {
   computeDeadlineBufferInfo,
@@ -47,7 +48,6 @@ import {
   type ManagedTaskEntity,
   type TaskCategoryType,
 } from '../../domain/entities/managed-task.entity';
-import { AddManagedTaskModal } from '../components/add-managed-task-modal';
 import { useManagedTasks } from '../hooks/use-managed-tasks';
 
 const s = colors.sprout;
@@ -90,20 +90,16 @@ export const TaskManagerScreen: React.FC = () => {
     alarmWarning,
     retryAlarms,
     todayDate,
-    previewingTrackId,
     refresh,
-    addTask,
     toggleTask,
     toggleSubtask,
     deleteTask,
     pickAndSaveCustomSong,
-    togglePreviewTrack,
-    stopPreview,
     simulateAlarm,
   } = useManagedTasks();
 
   const [filter, setFilter] = useState<FilterTab>('ALL');
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [showSound, setShowSound] = useState(false);
 
   React.useEffect(() => {
     if (params?.openAdd === '1') {
@@ -184,46 +180,6 @@ export const TaskManagerScreen: React.FC = () => {
           item.isCompleted && styles.taskCardCompleted,
         ]}
       >
-        {/* Top Row: Category Context Badge + Buffer Pill + Delete */}
-        <View style={styles.cardTopRow}>
-          <View style={styles.contextPill}>
-            {renderCategoryBadgeIcon(item.categoryType)}
-            <AppText style={styles.contextPillText} numberOfLines={1}>
-              {item.courseOrContext
-                ? `${getCategoryDefaultName(item.categoryType)}, ${item.courseOrContext}`
-                : getCategoryDefaultName(item.categoryType)}
-            </AppText>
-          </View>
-
-          <View style={styles.cardTopRightActions}>
-            <View
-              style={[
-                styles.bufferBadge,
-                {
-                  backgroundColor: bufferColors.bg,
-                  borderColor: bufferColors.border,
-                },
-              ]}
-            >
-              <AppText
-                style={[styles.bufferBadgeText, { color: bufferColors.text }]}
-              >
-                {buffer.label}
-              </AppText>
-            </View>
-
-            <Pressable
-              onPress={() => confirmDelete(item)}
-              accessibilityRole="button"
-              accessibilityLabel={`Hapus tugas ${item.title}`}
-              hitSlop={8}
-              style={styles.deleteIconBtn}
-            >
-              <Trash2 size={15} color={s.inkMuted} strokeWidth={2.2} />
-            </Pressable>
-          </View>
-        </View>
-
         {/* Main Title Row with Checkbox */}
         <View style={styles.titleCheckRow}>
           <SproutCheck
@@ -232,7 +188,7 @@ export const TaskManagerScreen: React.FC = () => {
             accessibilityLabel={
               (item.isCompleted ? 'Buka kembali ' : 'Selesaikan ') + item.title
             }
-            size={28}
+            size={24}
           />
           <View style={{ flex: 1, gap: space[0.5] }}>
             <AppText
@@ -258,6 +214,41 @@ export const TaskManagerScreen: React.FC = () => {
               )}
             </View>
           </View>
+          <Pressable
+            onPress={() => confirmDelete(item)}
+            accessibilityRole="button"
+            accessibilityLabel={`Hapus tugas ${item.title}`}
+            style={styles.deleteIconBtn}
+          >
+            <Trash2 size={15} color={s.inkMuted} strokeWidth={2.2} />
+          </Pressable>
+        </View>
+
+        <View style={styles.cardTopRow}>
+          <View style={styles.contextPill}>
+            {renderCategoryBadgeIcon(item.categoryType)}
+            <AppText style={styles.contextPillText} numberOfLines={1}>
+              {item.courseOrContext
+                ? `${getCategoryDefaultName(item.categoryType)}, ${item.courseOrContext}`
+                : getCategoryDefaultName(item.categoryType)}
+            </AppText>
+          </View>
+
+          <View
+            style={[
+              styles.bufferBadge,
+              {
+                backgroundColor: bufferColors.bg,
+                borderColor: bufferColors.border,
+              },
+            ]}
+          >
+            <AppText
+              style={[styles.bufferBadgeText, { color: bufferColors.text }]}
+            >
+              {buffer.label}
+            </AppText>
+          </View>
         </View>
 
         {/* Visual Dual-Date Bridge: Kapan Dikerjakan -> Deadline */}
@@ -276,9 +267,6 @@ export const TaskManagerScreen: React.FC = () => {
             </AppText>
           </View>
 
-          <View style={styles.bridgeArrowCircle}>
-            <ArrowRight size={14} color={s.inkMuted} strokeWidth={2.5} />
-          </View>
 
           {/* Right: Batas Pengumpulan (Deadline) */}
           <View style={styles.deadlineDateBox}>
@@ -415,62 +403,17 @@ export const TaskManagerScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      withBottomPadding={false}
       style={styles.screenRoot}
-      contentContainerStyle={styles.scrollContent}
-      overlay={
-        <>
-          <View style={styles.floatingFabContainer} pointerEvents="box-none">
-            <Pressable
-              onPress={() => router.push('/task-manager/new' as any)}
-              accessibilityRole="button"
-              accessibilityLabel="Tambah Tugas Terjadwal Baru"
-              style={({ pressed }) => [
-                styles.fabSquare,
-                pressed && styles.fabSquarePressed,
-              ]}
-            >
-              <Plus size={24} color={s.ink} strokeWidth={2.8} />
-            </Pressable>
-          </View>
-
-          <AddManagedTaskModal
-            visible={isAddModalVisible}
-            alarmTracks={alarmTracks}
-            previewingTrackId={previewingTrackId}
-            onClose={() => {
-              stopPreview();
-              setIsAddModalVisible(false);
-            }}
-            onSubmit={addTask}
-            onPickCustomSong={pickAndSaveCustomSong}
-            onTogglePreviewTrack={togglePreviewTrack}
-          />
-        </>
-      }
     >
-
-
-      {/* 1. Header Bar */}
-      <View style={styles.headerRow}>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Kembali"
-          style={styles.backButton}
-        >
-          <ArrowLeft size={20} color={s.ink} strokeWidth={2.4} />
-        </Pressable>
-
-        <View style={{ flex: 1 }}>
-          <AppText style={styles.headerTitle}>Manajemen Tugas</AppText>
-          <AppText style={styles.headerSubtitle}>
-            Waktu mulai, tenggat, dan pengingat tugas.
-          </AppText>
-        </View>
-      </View>
-
-      <Banner variant="info" message="Lagu alarm diputar saat aplikasi aktif. Saat tertutup, pengingat memakai notifikasi perangkat. Ketuk notifikasi untuk membuka tugas; pengiriman mengikuti izin dan pembatasan sistem." />
+      <FormScreenHeader title="Manajemen Tugas" onBack={backOrHome}
+        rightAction={
+          <Pressable onPress={() => router.push('/task-manager/new')}
+            accessibilityRole="button" accessibilityLabel="Tambah Tugas Terjadwal Baru"
+            style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
+            <Plus size={22} color={colors.onHighlight} />
+          </Pressable>
+        }
+      />
       {alarmWarning && <Banner variant="warning" message={alarmWarning} actionText="Periksa izin pengingat" onActionPress={retryAlarms} />}
       {error && (
         <Banner
@@ -481,77 +424,9 @@ export const TaskManagerScreen: React.FC = () => {
         />
       )}
 
-      {/* 2. Command Overview Card */}
-      <View style={styles.overviewCard}>
-        <View style={styles.metricsGrid}>
-          <View style={styles.metricTile}>
-            <AppText style={styles.metricTinyLabel}>Aktif</AppText>
-            <AppText style={styles.metricBigVal} tabularNums>
-              {activeTasks.length}
-            </AppText>
-          </View>
-
-          <View style={styles.metricTile}>
-            <AppText style={styles.metricTinyLabel}>Hari ini</AppText>
-            <AppText
-              style={[styles.metricBigVal, { color: s.forest }]}
-              tabularNums
-            >
-              {todayExecTasks.length}
-            </AppText>
-          </View>
-
-          <View style={styles.metricTile}>
-            <AppText style={styles.metricTinyLabel}>Alarm aktif</AppText>
-            <AppText
-              style={[styles.metricBigVal, { color: colors.warning }]}
-              tabularNums
-            >
-              {alarmEnabledTasks.length}
-            </AppText>
-          </View>
-
-          <View style={styles.metricTile}>
-            <AppText style={styles.metricTinyLabel}>Tuntas</AppText>
-            <AppText style={styles.metricBigVal} tabularNums>
-              {completedTasks.length}
-            </AppText>
-          </View>
-        </View>
-
-        {/* Quick Custom Song Upload Bar */}
-        <View style={styles.customSongQuickBar}>
-          <View style={styles.customSongLeft}>
-            <View style={styles.musicSquircle}>
-              <Music size={16} color={s.forest} strokeWidth={2.4} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText style={styles.customSongBarTitle}>
-                Suara pengingat ({customUploadedSongsCount} lagu HP)
-              </AppText>
-              <AppText style={styles.customSongBarSub} numberOfLines={1}>
-                Pilih berkas audio dari perangkat.
-              </AppText>
-            </View>
-          </View>
-
-          <Pressable
-            onPress={() => void pickAndSaveCustomSong()}
-            accessibilityRole="button"
-            accessibilityLabel="Tambah lagu alarm dari penyimpanan HP"
-            style={({ pressed }) => [
-              styles.pickSongQuickBtn,
-              pressed && { opacity: 0.82 },
-            ]}
-          >
-            <FolderOpen size={13} color={s.ink} strokeWidth={2.5} />
-            <AppText style={styles.pickSongQuickBtnText}>+ Lagu HP</AppText>
-          </Pressable>
-        </View>
-      </View>
-
       {/* 3. Filter Pills */}
       <ScrollView
+        style={{ flexGrow: 0 }}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filterPillsRow}
@@ -559,9 +434,9 @@ export const TaskManagerScreen: React.FC = () => {
         {(
           [
             ['ALL', `Semua (${tasks.length})`],
-            ['TODAY_EXEC', `Jadwal Hari Ini (${todayExecTasks.length})`],
+            ['TODAY_EXEC', `Siap dikerjakan (${todayExecTasks.length})`],
             ['ALARM_ONLY', `Dengan alarm (${alarmEnabledTasks.length})`],
-            ['TIGHT', 'Mepet Deadline'],
+            ['TIGHT', 'Dekat tenggat'],
             ['DONE', `Selesai (${completedTasks.length})`],
           ] as const
         ).map(([key, label]) => {
@@ -597,119 +472,48 @@ export const TaskManagerScreen: React.FC = () => {
         </View>
       ) : filteredTasks.length === 0 ? (
         <EmptyState
-          title="Belum ada tugas terjadwal"
-          description="Punya tugas kuliah atau pekerjaan minggu depan? Atur kapan mau dikerjakan sebelum deadline dan pasang alarm lagu pilihanmu!"
-          actionTitle="Jadwalkan Tugas Pertama"
+          title={tasks.length ? "Tidak ada tugas di filter ini" : "Belum ada tugas terjadwal"}
+          description={tasks.length ? "Lihat semua tugas untuk memilih jadwal lain." : "Pilih waktu mulai dan tenggat untuk tugas pertamamu."}
+          actionTitle={tasks.length ? "Lihat semua tugas" : "Jadwalkan Tugas Pertama"}
           customIcon={<BellRing size={28} color={s.forest} strokeWidth={2.2} />}
-          onActionPress={() => router.push('/task-manager/new' as any)}
+          onActionPress={() => tasks.length ? setFilter('ALL') : router.push('/task-manager/new')}
         />
       ) : (
         <View style={styles.cardsStack}>
           {filteredTasks.map(renderTaskCard)}
         </View>
       )}
+      <View style={styles.soundSection}>
+        <Pressable onPress={() => setShowSound(!showSound)} accessibilityRole="button"
+          accessibilityState={{ expanded: showSound }} style={({ pressed }) => [styles.soundHeading, pressed && styles.pressed]}>
+          <Music size={18} color={s.forest} />
+          <AppText variant="titleSmall" style={{ flex: 1 }}>Suara pengingat</AppText>
+          {showSound ? <ChevronUp size={18} color={s.ink} /> : <ChevronDown size={18} color={s.ink} />}
+        </Pressable>
+        {showSound && (
+          <View style={styles.soundBody}>
+            <AppText color="onSurfaceVariant">Lagu diputar saat aplikasi terbuka. Saat aplikasi tertutup, tugas memakai notifikasi sesuai izin perangkat.</AppText>
+            <Pressable onPress={() => void pickAndSaveCustomSong()} accessibilityRole="button"
+              accessibilityLabel="Tambah lagu alarm dari penyimpanan HP"
+              style={({ pressed }) => [styles.soundHeading, pressed && styles.pressed]}>
+              <FolderOpen size={18} color={s.forest} />
+              <AppText variant="titleSmall">Tambah lagu dari HP ({customUploadedSongsCount})</AppText>
+            </Pressable>
+          </View>
+        )}
+      </View>
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
+  addButton: { width: touchTarget.min, height: touchTarget.min, borderRadius: radius.md, backgroundColor: colors.highlight, alignItems: 'center', justifyContent: 'center' },
+  pressed: { opacity: 0.8 },
+  soundSection: { borderTopWidth: stroke.hairline, borderTopColor: colors.border },
+  soundHeading: { minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', gap: space[2], paddingHorizontal: space[2] },
+  soundBody: { gap: space[2], paddingHorizontal: space[2] },
   screenRoot: {
     backgroundColor: s.cream,
-  },
-  scrollContent: {
-    paddingHorizontal: space[4],
-    paddingTop: space[3],
-    paddingBottom: 120,
-    gap: space[3],
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-  },
-  backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: radius.lg,
-    backgroundColor: s.card,
-    borderWidth: stroke.hairline,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...sproutShadow,
-  },
-  headerTitle: { fontFamily: fontFamily.bold, fontSize: typography.headlineMedium.fontSize, lineHeight: typography.headlineLarge.lineHeight, letterSpacing: -0.6, color: s.ink, },
-  headerSubtitle: {
-    fontFamily: fontFamily.medium,
-    fontSize: typography.labelMedium.fontSize,
-    color: s.inkMuted,
-  },
-  overviewCard: { paddingVertical: space[3], borderBottomWidth: stroke.hairline, borderBottomColor: colors.border, gap: space[3], },
-  metricsGrid: {
-    flexDirection: 'row',
-    gap: space[2],
-  },
-  metricTile: { flex: 1, padding: space[2], alignItems: 'center', gap: space[0.5], borderRightWidth: stroke.hairline, borderRightColor: colors.border, },
-  metricTinyLabel: {
-    fontFamily: fontFamily.bold,
-    fontSize: typography.labelMedium.fontSize,
-    letterSpacing: 0.4,
-    color: s.inkMuted,
-    textAlign: 'center',
-  },
-  metricBigVal: {
-    fontFamily: fontFamily.bold,
-    fontSize: typography.titleLarge.fontSize,
-    color: s.ink,
-  },
-  customSongQuickBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: space[2],
-    backgroundColor: colors.primaryContainer,
-    borderRadius: radius.xl,
-    padding: space[3],
-    borderWidth: stroke.hairline,
-    borderColor: colors.successContainer,
-  },
-  customSongLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[2],
-  },
-  musicSquircle: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    backgroundColor: s.leafSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  customSongBarTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: typography.labelMedium.fontSize,
-    color: s.ink,
-  },
-  customSongBarSub: {
-    fontFamily: fontFamily.regular,
-    fontSize: typography.labelMedium.fontSize,
-    color: s.inkMuted,
-  },
-  pickSongQuickBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[1],
-    backgroundColor: s.sun,
-    paddingHorizontal: space[3],
-    paddingVertical: space[2],
-    borderRadius: radius.pill,
-  },
-  pickSongQuickBtnText: {
-    fontFamily: fontFamily.bold,
-    fontSize: typography.labelMedium.fontSize,
-    color: s.ink,
   },
   filterPillsRow: {
     flexDirection: 'row',
@@ -737,7 +541,7 @@ const styles = StyleSheet.create({
   cardsStack: {
     gap: space[3],
   },
-  taskCard: { backgroundColor: s.card, borderRadius: radius.md, padding: space[3], borderWidth: stroke.hairline, borderColor: colors.border, borderLeftWidth: 3, borderLeftColor: s.grape, gap: space[2], },
+  taskCard: { backgroundColor: s.card, borderRadius: radius.md, padding: space[3], borderWidth: stroke.hairline, borderColor: colors.border, gap: space[2], },
   taskCardCompleted: {
     opacity: 0.72,
   },
@@ -763,14 +567,6 @@ const styles = StyleSheet.create({
     fontSize: typography.labelMedium.fontSize,
     color: s.forest,
   },
-  cardTopRightActions: {
-    maxWidth: '100%',
-    minWidth: 0,
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[1],
-  },
   bufferBadge: {
     maxWidth: '100%',
     flexShrink: 1,
@@ -784,16 +580,16 @@ const styles = StyleSheet.create({
     fontSize: typography.labelMedium.fontSize,
   },
   deleteIconBtn: {
-    width: 28,
-    height: 28,
+    width: touchTarget.min,
+    height: touchTarget.min,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   titleCheckRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: space[3],
+    alignItems: 'center',
+    gap: space[2],
   },
   taskTitle: {
     fontFamily: fontFamily.bold,
@@ -831,12 +627,13 @@ const styles = StyleSheet.create({
     color: s.forest,
   },
   dualDateBridge: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[1],
+    gap: space[2],
   },
   execDateBox: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 120,
     backgroundColor: colors.successContainer,
     borderRadius: radius.lg,
     padding: space[2],
@@ -845,7 +642,8 @@ const styles = StyleSheet.create({
     gap: space[0.5],
   },
   deadlineDateBox: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 120,
     backgroundColor: colors.warningContainer,
     borderRadius: radius.lg,
     padding: space[2],
@@ -890,16 +688,6 @@ const styles = StyleSheet.create({
     fontSize: typography.labelMedium.fontSize,
     color: colors.warning,
   },
-  bridgeArrowCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: radius.md,
-    backgroundColor: s.cream,
-    borderWidth: stroke.hairline,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   subtasksBlock: {
     backgroundColor: s.cream,
     borderRadius: radius.lg,
@@ -926,6 +714,7 @@ const styles = StyleSheet.create({
     color: s.forest,
   },
   subtaskRow: {
+    minHeight: touchTarget.min,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[2],
@@ -942,6 +731,7 @@ const styles = StyleSheet.create({
     color: s.inkMuted,
   },
   alarmFooterStrip: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -954,7 +744,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   alarmModeInfo: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 120,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[2],
@@ -983,11 +774,13 @@ const styles = StyleSheet.create({
     color: s.forest,
   },
   footerButtonsGroup: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[1],
   },
   testAlarmButton: {
+    minHeight: touchTarget.min,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[1],
@@ -1004,6 +797,7 @@ const styles = StyleSheet.create({
     color: s.ink,
   },
   focusGoButton: {
+    minHeight: touchTarget.min,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[1],
@@ -1017,28 +811,5 @@ const styles = StyleSheet.create({
     fontSize: typography.labelMedium.fontSize,
     color: colors.surfaceContainerLowest,
   },
-  floatingFabContainer: {
-    position: 'absolute',
-    right: space[4],
-    bottom: 24,
-    zIndex: 30,
-  },
-  fabSquare: {
-    width: 58,
-    height: 58,
-    borderRadius: radius.xl,
-    backgroundColor: s.sun,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: stroke.selected,
-    borderColor: colors.warningContainer,
-    shadowColor: colors.warning,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 14,
-    elevation: 8,
-  },
-  fabSquarePressed: {
-    transform: [{ scale: 0.94 }],
-  },
+
 });

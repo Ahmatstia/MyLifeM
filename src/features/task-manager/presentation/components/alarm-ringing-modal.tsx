@@ -5,8 +5,11 @@ import {
   Alert,
   View,
   Pressable,
+  ScrollView,
   StyleSheet,
+  useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
   BellRing,
@@ -19,7 +22,7 @@ import {
 } from 'lucide-react-native';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { colors } from '@/theme/colors';
-import { fontFamily, space, radius, stroke, typography } from '@/theme/tokens';
+import { layout, screenGutter, touchTarget, fontFamily, space, radius, stroke, typography } from '@/theme/tokens';
 import { AppText } from '@/shared/ui';
 import {
   formatDayAndDateIndo,
@@ -35,6 +38,9 @@ import { TaskAlarmAudioService } from '../../data/services/task-alarm-audio.serv
 const s = colors.sprout;
 
 export const AlarmRingingModal: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const gutter = screenGutter(width - insets.left - insets.right);
   const reducedMotion = useReducedMotion();
   const [ringingTask, setRingingTask] = useState<ManagedTaskEntity | null>(
     null
@@ -145,149 +151,143 @@ export const AlarmRingingModal: React.FC = () => {
       statusBarTranslucent
       onRequestClose={handleDismiss}
     >
-      <View style={styles.fullScreenRoot}>
-        {actionError && <AppText color="error" accessibilityLiveRegion="polite">{actionError}</AppText>}
-        {/* Top Pulsing Badge */}
-        <View style={styles.topAlertPill}>
-          <BellRing size={16} color={s.ink} strokeWidth={2.6} />
-          <AppText style={styles.topAlertPillText}>
-            {isTest ? 'Tes alarm, maksimal 10 detik' : 'Pengingat mulai tugas'}
-          </AppText>
-        </View>
-
-        {/* Big Alarm Clock Readout */}
-        <View style={styles.clockBlock}>
-          <AppText style={styles.bigClockText} tabularNums>
-            {nowClock}
-          </AppText>
-          <AppText style={styles.wakeHeadline}>
-            {isTest ? 'Uji suara alarm' : 'Waktu mulai tugas'}
-          </AppText>
-        </View>
-
-        {/* Center Task Details Card */}
-        <View style={styles.taskCommandCard}>
-          <View style={styles.contextBadgeRow}>
-            <View style={styles.contextChip}>
-              <AppText style={styles.contextChipText}>
-                {ringingTask.courseOrContext || 'Tugas'}
+      <View style={[styles.fullScreenRoot, { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right, paddingBottom: insets.bottom }]}>
+        <View style={[styles.column, { paddingHorizontal: gutter }]}>
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.alarmBody}>
+            {actionError && <View style={styles.errorNotice}>
+              <AppText color="onErrorContainer" accessibilityLiveRegion="polite">{actionError}</AppText>
+            </View>}
+            {/* Top Pulsing Badge */}
+            <View style={styles.topAlertPill}>
+              <BellRing size={16} color={s.ink} strokeWidth={2.6} />
+              <AppText style={styles.topAlertPillText}>
+                {isTest ? 'Tes alarm, maksimal 10 detik' : 'Pengingat mulai tugas'}
               </AppText>
             </View>
-            <View style={styles.durationChip}>
-              <Clock size={12} color={s.forest} strokeWidth={2.4} />
-              <AppText style={styles.durationChipText}>
-                Estimasi {ringingTask.estimatedMinutes} mnt
+
+            {/* Big Alarm Clock Readout */}
+            <View style={styles.clockBlock}>
+              <AppText style={styles.bigClockText} tabularNums>
+                {nowClock}
+              </AppText>
+              <AppText style={styles.wakeHeadline}>
+                {isTest ? 'Uji suara alarm' : 'Waktu mulai tugas'}
               </AppText>
             </View>
-          </View>
 
-          <AppText style={styles.taskTitleText}>{ringingTask.title}</AppText>
+            {/* Center Task Details Card */}
+            <View style={styles.taskCommandCard}>
+              <View style={styles.contextBadgeRow}>
+                <View style={styles.contextChip}>
+                  <AppText style={styles.contextChipText}>
+                    {ringingTask.courseOrContext || 'Tugas'}
+                  </AppText>
+                </View>
+                <View style={styles.durationChip}>
+                  <Clock size={12} color={s.forest} strokeWidth={2.4} />
+                  <AppText style={styles.durationChipText}>
+                    Estimasi {ringingTask.estimatedMinutes} mnt
+                  </AppText>
+                </View>
+              </View>
 
-          {ringingTask.notes ? (
-            <AppText style={styles.taskNotesText} numberOfLines={2}>
-              {ringingTask.notes}
-            </AppText>
-          ) : null}
+              <AppText style={styles.taskTitleText}>{ringingTask.title}</AppText>
 
-          {/* Deadline Reminder Box */}
-          <View style={styles.deadlineBanner}>
-            <CalendarClock size={16} color={colors.warning} strokeWidth={2.4} />
-            <View style={{ flex: 1 }}>
-              <AppText style={styles.deadlineBannerLabel}>
-                Tenggat
-              </AppText>
-              <AppText style={styles.deadlineBannerValue}>
-                {formatDayAndDateIndo(ringingTask.deadlineDate)}, Pukul{' '}
-                {ringingTask.deadlineTime}
-              </AppText>
+              {ringingTask.notes ? (
+                <AppText style={styles.taskNotesText} numberOfLines={2}>
+                  {ringingTask.notes}
+                </AppText>
+              ) : null}
+
+              {/* Deadline Reminder Box */}
+              <View style={styles.deadlineBanner}>
+                <CalendarClock size={16} color={colors.warning} strokeWidth={2.4} />
+                <View style={{ flex: 1 }}>
+                  <AppText style={styles.deadlineBannerLabel}>
+                    Tenggat
+                  </AppText>
+                  <AppText style={styles.deadlineBannerValue}>
+                    {formatDayAndDateIndo(ringingTask.deadlineDate)}, Pukul{' '}
+                    {ringingTask.deadlineTime}
+                  </AppText>
+                </View>
+              </View>
+
+              {/* Playing Song Indicator */}
+              <View style={styles.audioPlayingStrip}>
+                <Volume2 size={16} color={s.forest} strokeWidth={2.5} />
+                <AppText style={styles.audioPlayingText} numberOfLines={1}>
+                  Pilihan suara alarm: {ringingTask.alarmTrackName}
+                </AppText>
+              </View>
             </View>
-          </View>
 
-          {/* Playing Song Indicator */}
-          <View style={styles.audioPlayingStrip}>
-            <Volume2 size={16} color={s.forest} strokeWidth={2.5} />
-            <AppText style={styles.audioPlayingText} numberOfLines={1}>
-              Pilihan suara alarm: {ringingTask.alarmTrackName}
-            </AppText>
-          </View>
-        </View>
+            {!isTest && <View style={styles.actionsStack}>
+              {/* 1. Primary Action: Start Working Now */}
+              <Pressable
+                onPress={handleStartFocusNow}
+                accessibilityRole="button"
+                accessibilityLabel="Mulai kerjakan tugas sekarang"
+                style={({ pressed }) => [
+                  styles.startNowButton,
+                  pressed && { transform: [{ scale: 0.98 }] },
+                ]}
+              >
+                <Play size={20} color={s.ink} fill={s.ink} strokeWidth={2.4} />
+                <AppText style={styles.startNowButtonText}>
+                  Mulai Kerjakan Sekarang
+                </AppText>
+              </Pressable>
 
-        {/* Bottom Action Buttons */}
-        <View style={styles.actionsStack}>
-          {isTest ? (
-            <Pressable onPress={handleDismiss} accessibilityRole="button"
-              accessibilityLabel="Hentikan tes alarm" style={styles.startNowButton}>
-              <X size={20} color={s.ink} />
-              <AppText style={styles.startNowButtonText}>Hentikan Tes Alarm</AppText>
-            </Pressable>
-          ) : <>
-          {/* 1. Primary Action: Start Working Now */}
-          <Pressable
-            onPress={handleStartFocusNow}
-            accessibilityRole="button"
-            accessibilityLabel="Mulai kerjakan tugas sekarang"
-            style={({ pressed }) => [
-              styles.startNowButton,
-              pressed && { transform: [{ scale: 0.98 }] },
-            ]}
-          >
-            <Play size={20} color={s.ink} fill={s.ink} strokeWidth={2.4} />
-            <AppText style={styles.startNowButtonText}>
-              Mulai Kerjakan Sekarang
-            </AppText>
-          </Pressable>
+              {/* 2. Snooze Options */}
+              <View style={styles.snoozeBlock}>
+                <AppText style={styles.snoozeHeaderLabel}>
+                  Tunda selama
+                </AppText>
+                <View style={styles.snoozeButtonsRow}>
+                  {[5, 10, 15].map((mins) => (
+                    <Pressable
+                      key={mins}
+                      onPress={() => handleSnooze(mins)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Tunda alarm ${mins} menit`}
+                      style={({ pressed }) => [
+                        styles.snoozeBtn,
+                        pressed && { opacity: 0.8 },
+                      ]}
+                    >
+                      <Clock size={13} color={colors.surfaceContainerLowest} strokeWidth={2.3} />
+                      <AppText style={styles.snoozeBtnText}>+{mins} Menit</AppText>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
 
-          {/* 2. Snooze Options */}
-          <View style={styles.snoozeBlock}>
-            <AppText style={styles.snoozeHeaderLabel}>
-              Tunda selama
-            </AppText>
-            <View style={styles.snoozeButtonsRow}>
-              {[5, 10, 15].map((mins) => (
+              {/* 3. Secondary Actions: Mark Done or Dismiss */}
+              <View style={styles.bottomSecondaryRow}>
                 <Pressable
-                  key={mins}
-                  onPress={() => handleSnooze(mins)}
+                  onPress={handleMarkDone}
                   accessibilityRole="button"
-                  accessibilityLabel={`Tunda alarm ${mins} menit`}
-                  style={({ pressed }) => [
-                    styles.snoozeBtn,
-                    pressed && { opacity: 0.8 },
-                  ]}
+                  accessibilityLabel="Tandai tugas sudah selesai"
+                  style={styles.secondaryActionBtn}
                 >
-                  <Clock size={13} color={colors.surfaceContainerLowest} strokeWidth={2.3} />
-                  <AppText style={styles.snoozeBtnText}>+{mins} Menit</AppText>
+                  <CheckCircle2 size={16} color={colors.onHeroMuted} strokeWidth={2.4} />
+                  <AppText style={styles.secondaryActionText}>
+                    Tandai Sudah Selesai
+                  </AppText>
                 </Pressable>
-              ))}
-            </View>
-          </View>
 
-          {/* 3. Secondary Actions: Mark Done or Dismiss */}
-          <View style={styles.bottomSecondaryRow}>
-            <Pressable
-              onPress={handleMarkDone}
-              accessibilityRole="button"
-              accessibilityLabel="Tandai tugas sudah selesai"
-              style={styles.secondaryActionBtn}
-            >
-              <CheckCircle2 size={16} color={colors.onHeroMuted} strokeWidth={2.4} />
-              <AppText style={styles.secondaryActionText}>
-                Tandai Sudah Selesai
-              </AppText>
-            </Pressable>
-
-            <Pressable
-              onPress={handleDismiss}
-              accessibilityRole="button"
-              accessibilityLabel="Matikan alarm"
-              style={styles.secondaryActionBtn}
-            >
-              <X size={16} color={colors.onHeroMuted} strokeWidth={2.4} />
-              <AppText style={styles.secondaryActionText}>
-                Matikan Alarm
-              </AppText>
+              </View>
+            </View>}
+          </ScrollView>
+          <View style={styles.dismissFooter}>
+            <Pressable onPress={handleDismiss} accessibilityRole="button"
+              accessibilityLabel={isTest ? 'Hentikan tes alarm' : 'Matikan alarm'}
+              style={({ pressed }) => [styles.startNowButton, pressed && { opacity: 0.8 }]}>
+              <X size={20} color={s.ink} />
+              <AppText style={styles.startNowButtonText}>{isTest ? 'Hentikan Tes Alarm' : 'Matikan Alarm'}</AppText>
             </Pressable>
           </View>
-          </>}
         </View>
       </View>
     </Modal>
@@ -295,15 +295,12 @@ export const AlarmRingingModal: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  fullScreenRoot: {
-    flex: 1,
-    backgroundColor: colors.inverseSurface,
-    paddingHorizontal: space[5],
-    paddingTop: space[14],
-    paddingBottom: space[10],
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+  fullScreenRoot: { flex: 1, backgroundColor: colors.inverseSurface },
+  column: { flex: 1, width: '100%', maxWidth: layout.maxWidth, alignSelf: 'center' },
+  scroll: { flex: 1 },
+  alarmBody: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: layout.sectionGap, paddingVertical: layout.screenTop },
+  errorNotice: { backgroundColor: colors.errorContainer, padding: space[3], borderRadius: radius.md, width: '100%' },
+  dismissFooter: { paddingTop: space[2], paddingBottom: space[4] },
   topAlertPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -344,6 +341,7 @@ const styles = StyleSheet.create({
     borderColor: s.sun,
   },
   contextBadgeRow: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -429,6 +427,7 @@ const styles = StyleSheet.create({
     gap: space[3],
   },
   startNowButton: {
+    minHeight: touchTarget.min,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -460,6 +459,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   snoozeBtn: {
+    minHeight: touchTarget.min,
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -483,6 +483,7 @@ const styles = StyleSheet.create({
     marginTop: space[0.5],
   },
   secondaryActionBtn: {
+    minHeight: touchTarget.min,
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',

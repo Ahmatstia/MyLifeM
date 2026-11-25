@@ -6,7 +6,7 @@ import {
   Plus,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, radius, touchTarget } from '@/theme/tokens';
+import { space, radius, touchTarget, fontFamily } from '@/theme/tokens';
 import {
   Screen,
   AppText,
@@ -139,20 +139,17 @@ export const AgendaScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      withBottomPadding={false}
+      insideTabs
       style={styles.screenBg}
-      contentContainerStyle={styles.scrollContent}
-      overlay={viewMode === 'WEEKLY_MASTER' && (
-        <View style={styles.floatingFabContainer} pointerEvents="box-none">
-          <Pressable
-            onPress={() => handleOpenAddWeekly(selectedDay)}
-            accessibilityRole="button"
-            accessibilityLabel="Tambah Jadwal Tetap Baru"
-            style={({ pressed }) => [styles.fabSquare, pressed && styles.fabSquarePressed]}
-          >
-            <Plus size={space[6]} color={colors.onHighlight} />
-          </Pressable>
-        </View>
+      floatingAction={viewMode === 'WEEKLY_MASTER' && (
+        <Pressable
+          onPress={() => handleOpenAddWeekly(selectedDay)}
+          accessibilityRole="button"
+          accessibilityLabel="Tambah Jadwal Tetap Baru"
+          style={({ pressed }) => [styles.fabSquare, pressed && styles.fabSquarePressed]}
+        >
+          <Plus size={space[6]} color={colors.onHighlight} />
+        </Pressable>
       )}
     >
       <AppText variant="displayMedium" accessibilityRole="header" style={styles.header}>Kalender</AppText>
@@ -389,8 +386,7 @@ export const AgendaScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   screenBg: { backgroundColor: colors.background },
-  header: { marginTop: space[5] },
-  scrollContent: { paddingBottom: touchTarget.min + space[10], gap: space[3] },
+  header: { fontFamily: fontFamily.display },
   agendaHeading: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -408,7 +404,6 @@ const styles = StyleSheet.create({
   loading: { alignItems: 'flex-start', gap: space[3], paddingVertical: space[4] },
   placeholder: { width: '65%', height: space[3], backgroundColor: colors.surfaceContainer },
   groupSection: { marginTop: space[1] },
-  floatingFabContainer: { position: 'absolute', right: space[4], bottom: space[4] },
   fabSquare: { width: touchTarget.min, height: touchTarget.min, borderRadius: radius.md, backgroundColor: colors.highlight, alignItems: 'center', justifyContent: 'center' },
   fabSquarePressed: { backgroundColor: colors.sprout.sunDeep },
 });

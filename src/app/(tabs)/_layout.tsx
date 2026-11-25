@@ -47,6 +47,7 @@ export default function TabLayout() {
             elevation: 2,
           },
           tabBarActiveTintColor: s.forest,
+          tabBarActiveBackgroundColor: colors.surfaceContainerLow,
           tabBarInactiveTintColor: s.inkMuted,
           tabBarItemStyle: {
             borderRadius: radius.lg,

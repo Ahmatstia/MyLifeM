@@ -19,6 +19,20 @@ export const space = {
   16: 64,
 } as const;
 
+export const layout = {
+  phoneGutter: space[4],
+  wideGutter: space[6],
+  wideBreakpoint: 600,
+  maxWidth: 640,
+  screenTop: space[3],
+  sectionGap: space[4],
+  fieldGap: space[2],
+} as const;
+
+export function screenGutter(width: number) {
+  return width >= layout.wideBreakpoint ? layout.wideGutter : layout.phoneGutter;
+}
+
 export const radius = {
   none: 0,
   xs: 6,
@@ -36,21 +50,21 @@ export const radius = {
  */
 export const elevation = {
   level1: {
-    shadowColor: '#172A45',
+    shadowColor: '#332538',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 1,
   },
   level2: {
-    shadowColor: '#172A45',
+    shadowColor: '#332538',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
     shadowRadius: 20,
     elevation: 4,
   },
   level3: {
-    shadowColor: '#172A45',
+    shadowColor: '#332538',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 14,
@@ -60,6 +74,7 @@ export const elevation = {
 
 /** Plus Jakarta Sans: compact editorial hierarchy, using the existing bundled fonts. */
 export const fontFamily = {
+  display: 'Fredoka_500Medium',
   regular: 'PlusJakartaSans_400Regular',
   medium: 'PlusJakartaSans_500Medium',
   semibold: 'PlusJakartaSans_600SemiBold',

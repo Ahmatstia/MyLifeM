@@ -9,7 +9,7 @@ import {
 import { CalendarPlus, Clock, MapPin, Bell } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase, formInputCompact, formLabelSpacing, formTextArea } from '@/shared/ui/form-control-styles';
-import { radius, space, fontFamily } from '@/theme/tokens';
+import { touchTarget, radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
@@ -388,6 +388,8 @@ const styles = StyleSheet.create({
     gap: space[2],
   },
   typeChip: {
+    minHeight: touchTarget.min,
+    justifyContent: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: space[2],

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
-import { fontFamily, radius, space, touchTarget, typography } from '@/theme/tokens';
+import { fontFamily, radius, space, touchTarget } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText } from './app-text';
 
@@ -24,19 +24,16 @@ export const FormScreenHeader: React.FC<FormScreenHeaderProps> = ({
         onPress={onBack}
         accessibilityRole="button"
         accessibilityLabel="Kembali"
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
       >
         <ArrowLeft size={20} color={s.ink} strokeWidth={2.5} />
       </Pressable>
 
-      <AppText accessibilityRole="header" variant="titleMedium" style={styles.headerTitle}>
+      <AppText accessibilityRole="header" variant="titleLarge" style={styles.headerTitle}>
         {title}
       </AppText>
 
-      <View style={styles.rightSlot}>
-        {rightAction || null}
-      </View>
+      {rightAction}
     </View>
   );
 };
@@ -46,7 +43,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[2],
-    paddingHorizontal: space[4],
+    minHeight: touchTarget.min,
     paddingVertical: space[1],
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
@@ -60,11 +57,9 @@ const styles = StyleSheet.create({
   },
   backBtnPressed: { backgroundColor: colors.primaryContainer },
   headerTitle: {
-    ...typography.titleMedium,
-    fontFamily: fontFamily.bold,
+    fontFamily: fontFamily.display,
     color: s.ink,
     flex: 1,
     textAlign: 'left',
   },
-  rightSlot: { alignItems: 'flex-end', justifyContent: 'center' },
 });

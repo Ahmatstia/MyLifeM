@@ -265,6 +265,8 @@ const styles = StyleSheet.create({
     gap: space[2],
   },
   choiceChip: {
+    minHeight: touchTarget.min,
+    justifyContent: 'center',
     paddingVertical: space[2],
     paddingHorizontal: space[4],
     borderRadius: radius.pill,

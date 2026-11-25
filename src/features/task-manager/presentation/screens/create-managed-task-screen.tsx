@@ -9,7 +9,6 @@ import {
   StyleSheet,
 } from 'react-native';
 import { backOrHome } from '@/shared/utils/back-or-home';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BellRing,
   Bell,
@@ -30,12 +29,13 @@ import {
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase, formInputCompact } from '@/shared/ui/form-control-styles';
-import { touchTarget, fontFamily, radius, space, stroke, typography } from '@/theme/tokens';
+import { layout, touchTarget, fontFamily, radius, space, stroke, typography } from '@/theme/tokens';
 import {
   Screen,
   AppText,
   Banner,
   FormScreenHeader,
+  FieldLabel,
   SunButton,
 } from '@/shared/ui';
 import { formatLocalDate } from '@/shared/utils/local-date';
@@ -108,7 +108,6 @@ const ALERT_MODES: {
 const QUICK_EXEC_TIMES = ['08:00', '14:00', '19:00', '20:30'];
 
 export const CreateManagedTaskScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
   const {
     alarmTracks,
     previewingTrackId,
@@ -230,27 +229,20 @@ export const CreateManagedTaskScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      withBottomPadding={false}
       style={styles.screenBg}
-      contentContainerStyle={{
-        ...styles.scrollContent,
-        paddingBottom: 130 + insets.bottom,
-      }}
     >
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
       >
-        <View style={{ marginHorizontal: -space[4] }}>
-          <FormScreenHeader
-            title="Jadwalkan Tugas Baru"
-            onBack={() => {
-              stopPreview();
-              backOrHome();
-            }}
-          />
-        </View>
+        <FormScreenHeader
+          title="Jadwalkan Tugas Baru"
+          onBack={() => {
+            stopPreview();
+            backOrHome();
+          }}
+        />
 
         <View style={styles.formStack}>
           {(errorMessage || saveError) && (
@@ -259,33 +251,28 @@ export const CreateManagedTaskScreen: React.FC = () => {
             </View>
           )}
 
-          <AppText style={styles.sectionHeading}>Nama tugas</AppText>
-          <View style={styles.cloudHeroWrap}>
-            <View style={styles.cloudOuterCard}>
-              <View style={styles.cloudInnerPill}>
-                <TextInput accessibilityLabel="Nama tugas"
-                  value={title}
-                  onChangeText={(text) => {
-                    setTitle(text);
-                    if (errorMessage) setErrorMessage(null);
-                  }}
-                  placeholder="Masukkan nama tugas"
-                  placeholderTextColor={s.inkSubtle}
-                  style={styles.cloudInput}
-                  autoFocus
-                />
-                <Sparkles size={16} color={s.sun} fill={s.sun} />
-              </View>
-
-              <TextInput accessibilityLabel="Catatan"
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Masukkan catatan tugas (opsional)"
-                placeholderTextColor={s.inkSubtle}
-                multiline
-                style={styles.cloudDescInput}
-              />
-            </View>
+          <View style={styles.titleFields}>
+            <FieldLabel>Nama tugas</FieldLabel>
+            <TextInput accessibilityLabel="Nama tugas"
+              value={title}
+              onChangeText={(text) => {
+                setTitle(text);
+                if (errorMessage) setErrorMessage(null);
+              }}
+              placeholder="Masukkan nama tugas"
+              placeholderTextColor={s.inkSubtle}
+              style={formInputBase}
+              autoFocus
+            />
+            <FieldLabel>Catatan (opsional)</FieldLabel>
+            <TextInput accessibilityLabel="Catatan"
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Masukkan catatan tugas (opsional)"
+              placeholderTextColor={s.inkSubtle}
+              multiline
+              style={formInputBase}
+            />
           </View>
 
           {/* 1. Identitas Tugas */}
@@ -659,6 +646,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
                       ]}
                     >
                       <Pressable
+                        accessibilityState={{ selected: isSelected }}
                         onPress={() => setSelectedTrack(track)}
                         accessibilityRole="button"
                         style={styles.trackSelectArea}
@@ -782,6 +770,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
             />
             <Pressable
               onPress={handleAddSubtask}
+              accessibilityLabel="Tambahkan langkah"
               accessibilityRole="button"
               style={styles.addSubtaskCircle}
             >
@@ -798,7 +787,9 @@ export const CreateManagedTaskScreen: React.FC = () => {
                   </AppText>
                   <Pressable
                     onPress={() => handleRemoveSubtask(idx)}
-                    hitSlop={6}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Hapus langkah ${st}`}
+                    style={styles.removeStep}
                   >
                     <X size={14} color={s.inkMuted} />
                   </Pressable>
@@ -840,21 +831,12 @@ export const CreateManagedTaskScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  titleFields: { gap: layout.fieldGap },
   screenBg: {
     backgroundColor: s.cream,
   },
-  keyboardContainer: {
-    flex: 1,
-  },
-  formStack: {
-    gap: space[3],
-    paddingBottom: space[3],
-  },
-  scrollContent: {
-    paddingHorizontal: space[5],
-    paddingTop: space[2],
-    gap: space[3],
-  },
+  keyboardContainer: { flex: 1, gap: layout.sectionGap },
+  formStack: { gap: layout.sectionGap },
   errorBox: {
     backgroundColor: colors.errorContainer,
     borderRadius: radius.md,
@@ -865,20 +847,13 @@ const styles = StyleSheet.create({
     fontSize: typography.labelMedium.fontSize,
     color: colors.onErrorContainer,
   },
-  cloudHeroWrap: {
-    marginBottom: space[2],
-  },
-  cloudOuterCard: { gap: space[2], },
-  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, paddingHorizontal: space[3], gap: space[2], },
-  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: typography.bodyMedium.fontSize, color: s.ink, paddingVertical: space[2], ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
-  cloudDescInput: { fontFamily: fontFamily.regular, fontSize: typography.labelMedium.fontSize, color: s.ink, padding: space[3], borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, backgroundColor: s.card, ...formInputBase, },
   sectionHeading: {
     fontFamily: fontFamily.bold,
     fontSize: typography.labelMedium.fontSize,
     letterSpacing: 0.7,
     color: s.forest,
     marginTop: space[1],
-    marginLeft: space[0.5],
+    marginLeft: 0,
   },
   categoryTilesRow: {
     flexDirection: 'row',
@@ -956,6 +931,7 @@ const styles = StyleSheet.create({
     gap: space[1],
   },
   smallChip: {
+    minWidth: touchTarget.min,
     minHeight: touchTarget.min,
     justifyContent: 'center',
     paddingHorizontal: space[3],
@@ -1016,6 +992,7 @@ const styles = StyleSheet.create({
     gap: space[1],
   },
   presetChip: {
+    justifyContent: 'center',
     minHeight: touchTarget.min,
     paddingHorizontal: space[2],
     paddingVertical: space[1],
@@ -1105,6 +1082,7 @@ const styles = StyleSheet.create({
     gap: space[2],
   },
   alertModeCard: {
+    minHeight: touchTarget.min,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[3],
@@ -1185,6 +1163,7 @@ const styles = StyleSheet.create({
     color: s.ink,
   },
   uploadSongBtn: {
+    minHeight: touchTarget.min,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[1],
@@ -1218,6 +1197,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryContainer,
   },
   trackSelectArea: {
+    minHeight: touchTarget.min,
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1237,6 +1217,7 @@ const styles = StyleSheet.create({
     color: s.inkMuted,
   },
   previewPlayBtn: {
+    minHeight: touchTarget.min,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[1],
@@ -1265,9 +1246,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space[2],
   },
+  removeStep: { width: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' },
   addSubtaskCircle: {
-    width: 46,
-    height: 46,
+    width: touchTarget.min,
+    height: touchTarget.min,
     borderRadius: radius.lg,
     backgroundColor: s.forest,
     alignItems: 'center',

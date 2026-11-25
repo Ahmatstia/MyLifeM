@@ -1,8 +1,9 @@
 import { colors } from '@/theme/colors';
-import { fontFamily, radius, space } from '@/theme/tokens';
+import { touchTarget, typography, fontFamily, radius, space } from '@/theme/tokens';
 
 export const formInputBase = Object.assign(Object.create(null), {
-  minHeight: 48,
+  minHeight: touchTarget.min,
+  minWidth: 0,
   paddingHorizontal: space[3],
   paddingVertical: space[1],
   borderRadius: radius.md,
@@ -11,17 +12,18 @@ export const formInputBase = Object.assign(Object.create(null), {
   backgroundColor: colors.surfaceContainerLowest,
   color: colors.onSurface,
   fontFamily: fontFamily.regular,
-  fontSize: 14,
+  fontSize: typography.bodyMedium.fontSize,
 });
 
 export const formInputCompact = Object.assign(Object.create(null), {
-  minHeight: 48,
+  minHeight: touchTarget.min,
+  minWidth: 0,
   paddingHorizontal: space[2],
   paddingVertical: space[1],
   borderRadius: radius.md,
   color: colors.onSurface,
   fontFamily: fontFamily.regular,
-  fontSize: 14,
+  fontSize: typography.bodyMedium.fontSize,
 });
 
 export const formTextArea = Object.assign(Object.create(null), {

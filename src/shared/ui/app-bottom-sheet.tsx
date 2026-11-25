@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  useWindowDimensions,
   type DimensionValue,
   type StyleProp,
   type ViewStyle,
@@ -14,7 +15,7 @@ import {
 import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget, stroke } from '@/theme/tokens';
+import { layout, screenGutter, fontFamily, radius, space, touchTarget, stroke } from '@/theme/tokens';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { AppText } from './app-text';
 
@@ -47,12 +48,13 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
   headerRight,
   children,
   footer,
-  maxHeight,
   scrollable = true,
   contentContainerStyle,
   style,
 }) => {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const gutter = screenGutter(width - insets.left - insets.right);
   const reducedMotion = useReducedMotion();
 
   return (
@@ -63,7 +65,7 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingLeft: insets.left, paddingRight: insets.right }]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardAvoid}
@@ -72,20 +74,20 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
             style={[
               styles.sheetContainer,
               {
-                paddingTop: insets.top + space[2],
-                paddingBottom: Math.max(insets.bottom, space[3]),
+                paddingTop: insets.top + layout.screenTop,
+                paddingBottom: insets.bottom,
               },
               style,
             ]}
           >
             {/* Standard Full-Screen Header */}
             {(title || icon || headerRight !== undefined) && (
-              <View style={styles.header}>
+              <View style={[styles.header, { paddingHorizontal: gutter }]}>
                 <View style={styles.headerLeft}>
                   {icon && <View style={styles.iconCircle}>{icon}</View>}
                   <View style={styles.titleCol}>
                     {title && (
-                      <AppText accessibilityRole="header" variant="titleLarge">
+                      <AppText accessibilityRole="header" variant="titleLarge" style={{ fontFamily: fontFamily.display }}>
                         {title}
                       </AppText>
                     )}
@@ -118,15 +120,15 @@ export const AppBottomSheet: React.FC<AppBottomSheetProps> = ({
                 style={styles.scroll}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
+                contentContainerStyle={[styles.scrollContent, contentContainerStyle, { paddingHorizontal: gutter }]}
               >
                 {children}
               </ScrollView>
             ) : (
-              <View style={[styles.staticContent, contentContainerStyle]}>{children}</View>
+              <View style={[styles.staticContent, contentContainerStyle, { paddingHorizontal: gutter }]}>{children}</View>
             )}
 
-            {footer && <View style={styles.footer}>{footer}</View>}
+            {footer && <View style={[styles.footer, { paddingHorizontal: gutter }]}>{footer}</View>}
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -145,7 +147,8 @@ const styles = StyleSheet.create({
   },
   sheetContainer: {
     flex: 1,
-    height: '100%',
+    alignSelf: 'center',
+    maxWidth: layout.maxWidth,
     width: '100%',
     backgroundColor: colors.surfaceContainerLowest,
   },
@@ -153,8 +156,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: space[4],
-    paddingVertical: space[3],
+    paddingVertical: space[1],
     borderBottomWidth: stroke.hairline,
     borderBottomColor: colors.outlineVariant,
     backgroundColor: colors.surfaceContainerLowest,
@@ -192,7 +194,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footer: {
-    paddingHorizontal: space[4],
     paddingTop: space[3],
     paddingBottom: space[2],
     borderTopWidth: stroke.hairline,
@@ -200,13 +201,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
   },
   scrollContent: {
-    padding: space[4],
+    paddingVertical: space[4],
     paddingBottom: space[6],
-    gap: space[3],
+    gap: layout.sectionGap,
   },
   staticContent: {
     flex: 1,
-    padding: space[4],
+    paddingVertical: space[4],
     gap: space[3],
   },
 });

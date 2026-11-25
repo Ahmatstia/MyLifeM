@@ -19,7 +19,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { fontFamily, radius, space, touchTarget, typography } from '@/theme/tokens';
+import { layout, fontFamily, radius, space, touchTarget, typography } from '@/theme/tokens';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { AppText } from './app-text';
 
@@ -100,14 +100,15 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
             styles.drawerPanel,
             {
               width: drawerWidth,
-              paddingTop: insets.top + space[3],
-              paddingBottom: Math.max(insets.bottom, space[4]),
+              paddingTop: insets.top + layout.screenTop,
+              paddingLeft: layout.phoneGutter + insets.left,
+              paddingBottom: insets.bottom + space[4],
               transform: [{ translateX: slideAnim }],
             },
           ]}
         >
           <View style={styles.drawerHeader}>
-            <AppText accessibilityRole="header" variant="headlineSmall" style={styles.drawerTitle}>
+            <AppText accessibilityRole="header" variant="titleLarge" style={styles.drawerTitle}>
               Menu MyLife
             </AppText>
 
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
     borderTopRightRadius: radius.xl,
     borderBottomRightRadius: radius.xl,
-    paddingHorizontal: space[4],
+    paddingRight: layout.phoneGutter,
     gap: space[2],
   },
   drawerHeader: {
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: space[2],
   },
-  drawerTitle: { flex: 1, color: colors.onSurface },
+  drawerTitle: { flex: 1, fontFamily: fontFamily.display, color: colors.onSurface },
   closeCircleBtn: {
     width: touchTarget.min,
     height: touchTarget.min,

@@ -8,19 +8,17 @@ import {
   StyleSheet,
 } from 'react-native';
 import { backOrHome } from '@/shared/utils/back-or-home';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Plus,
   GraduationCap,
   Heart,
   Briefcase,
   Gamepad2,
-  Clock,
-  ChevronRight,
+  Check,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase } from '@/shared/ui/form-control-styles';
-import { radius, space, fontFamily, stroke, typography, touchTarget } from '@/theme/tokens';
+import { layout, radius, space, fontFamily, typography, touchTarget } from '@/theme/tokens';
 import {
   Screen,
   AppText,
@@ -42,31 +40,20 @@ const QUICK_CATEGORIES = [
   { id: 'Hobi', label: 'Hobi', icon: Gamepad2, tone: 'grape' as const },
 ];
 
-const DURATION_OPTIONS = [15, 30, 45, 60];
+const DURATION_OPTIONS = [null, 15, 30, 45, 60] as const;
 
 export const CreatePriorityScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
   const { focusItems = [], availableTasks = [], addQuickTask, addTaskToToday, isLoading, error } = useTodayFocus();
 
   const [quickTitle, setQuickTitle] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<QuickTaskCategory>('Belajar');
   const submitting = useRef(false);
-  const [durationIdx, setDurationIdx] = useState<number | null>(null);
+  const [selectedMinutes, setSelectedMinutes] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const currentCount = focusItems.length;
   const isFull = currentCount >= 5;
-
-  const selectedMinutes = durationIdx !== null ? DURATION_OPTIONS[durationIdx] : null;
-
-  const cycleDuration = () => {
-    setDurationIdx((prev) => {
-      if (prev === null) return 0;
-      if (prev >= DURATION_OPTIONS.length - 1) return null;
-      return prev + 1;
-    });
-  };
 
   const savePriority = async (work: () => Promise<boolean>) => {
     if (submitting.current || isLoading) return;
@@ -96,18 +83,14 @@ export const CreatePriorityScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      withBottomPadding={false}
       style={styles.screenBg}
-      contentContainerStyle={{ ...styles.scrollContent, paddingBottom: 120 + insets.bottom }}
     >
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
       >
-        <View style={{ marginHorizontal: -space[4] }}>
-          <FormScreenHeader title="Tambah Tugas" onBack={() => { if (!submitting.current) backOrHome(); }} />
-        </View>
+        <FormScreenHeader title="Tambah Tugas" onBack={() => { if (!submitting.current) backOrHome(); }} />
 
         {(errorMessage || error) && (
             <View style={styles.errorBox}>
@@ -117,25 +100,20 @@ export const CreatePriorityScreen: React.FC = () => {
             </View>
           )}
 
-          <FieldLabel>Nama tugas</FieldLabel>
-          <View style={styles.cloudHeroWrap}>
-            <View style={styles.cloudOuterCard}>
-              <View style={styles.cloudInnerPill}>
-                <TextInput accessibilityLabel="Nama tugas"
-                  value={quickTitle}
-                  onChangeText={(text) => {
-                    setQuickTitle(text);
-                    if (errorMessage) setErrorMessage(null);
-                  }}
-                  placeholder="Masukkan nama tugas"
-                  placeholderTextColor={s.inkSubtle}
-                  style={styles.cloudInput}
-                  autoFocus
-                  editable={!isFull && !isSubmitting && !isLoading}
-                />
-
-              </View>
-            </View>
+          <View style={styles.titleFields}>
+            <FieldLabel>Nama tugas</FieldLabel>
+            <TextInput accessibilityLabel="Nama tugas"
+              value={quickTitle}
+              onChangeText={(text) => {
+                setQuickTitle(text);
+                if (errorMessage) setErrorMessage(null);
+              }}
+              placeholder="Masukkan nama tugas"
+              placeholderTextColor={s.inkSubtle}
+              style={formInputBase}
+              autoFocus
+              editable={!isFull && !isSubmitting && !isLoading}
+            />
           </View>
 
           {/* Kategori Squircle Tiles */}
@@ -153,25 +131,27 @@ export const CreatePriorityScreen: React.FC = () => {
             ))}
           </View>
 
-          {/* Waktu (Optional Pill Row matching Reference UI) */}
-          <FieldLabel>Durasi fokus (opsional)</FieldLabel>
-          <Pressable
-            onPress={cycleDuration}
-            accessibilityRole="button"
-            accessibilityLabel="Pilih durasi fokus"
-            disabled={isSubmitting || isLoading || isFull}
-            style={({ pressed }) => [styles.timePillRow, pressed && { opacity: 0.9 }]}
-          >
-            <View style={styles.timePillLeft}>
-              <Clock size={20} color={s.ink} strokeWidth={2.2} />
-              <AppText style={styles.timePillText}>
-                {selectedMinutes
-                  ? `${selectedMinutes} menit, ${selectedCategory}`
-                  : 'Ikuti pengaturan fokus'}
-              </AppText>
-            </View>
-            <ChevronRight size={20} color={s.ink} strokeWidth={2.2} />
-          </Pressable>
+          <FieldLabel>Durasi fokus (menit)</FieldLabel>
+          <View style={styles.durationKeys}>
+            {DURATION_OPTIONS.map(minutes => {
+              const selected = minutes === selectedMinutes;
+              const label = minutes === null ? 'Otomatis' : `${minutes} menit`;
+              return (
+                <Pressable key={minutes ?? 'auto'} onPress={() => setSelectedMinutes(minutes)}
+                  accessibilityRole="button" accessibilityState={{ selected }}
+                  accessibilityLabel={label} disabled={isSubmitting || isLoading || isFull}
+                  style={({ pressed }) => [styles.durationKey, selected && styles.selectedKey, pressed && styles.keyPressed]}>
+                  <AppText variant="titleSmall" tabularNums color={selected ? 'onPrimary' : 'onSurface'}>
+                    {minutes ?? 'Auto'}
+                  </AppText>
+                  {selected && <Check size={space[3]} color={colors.onPrimary} />}
+                </Pressable>
+              );
+            })}
+          </View>
+          <AppText variant="labelMedium" color="onSurfaceVariant">
+            {selectedMinutes === null ? 'Mengikuti durasi di pengaturan fokus.' : `Fokus selama ${selectedMinutes} menit.`}
+          </AppText>
 
           {/* Pilih dari Rencana Tersimpan */}
           {availableTasks.length > 0 && (
@@ -218,61 +198,26 @@ export const CreatePriorityScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  titleFields: { gap: layout.fieldGap },
   screenBg: {
     backgroundColor: s.cream,
   },
-  keyboardContainer: {
-    flex: 1,
-    gap: space[3],
-  },
-  scrollContent: {
-    paddingHorizontal: space[4],
-    paddingTop: space[2],
-    gap: space[3],
-  },
+  keyboardContainer: { flex: 1, gap: layout.sectionGap },
   errorBox: {
     backgroundColor: colors.errorContainer,
     borderRadius: radius.md,
     padding: space[3],
   },
-  cloudHeroWrap: {
-    marginBottom: space[2],
-    position: 'relative',
-  },
-  cloudOuterCard: { gap: space[2], },
-  cloudInnerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: s.card, borderRadius: radius.md, borderWidth: stroke.hairline, borderColor: colors.border, paddingHorizontal: space[3], gap: space[2], },
-  cloudInput: { flex: 1, fontFamily: fontFamily.medium, fontSize: typography.bodyMedium.fontSize, color: s.ink, paddingVertical: space[2], ...formInputBase, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, },
   categoryTilesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: space[2],
   },
-  timePillRow: {
-    minHeight: touchTarget.min,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: radius.md,
-    paddingHorizontal: space[3],
-    paddingVertical: space[2],
-    borderWidth: stroke.hairline,
-    borderColor: colors.border,
-  },
-  timePillLeft: {
-    minWidth: 0,
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[3],
-  },
-  timePillText: {
-    flexShrink: 1,
-    fontFamily: fontFamily.medium,
-    fontSize: typography.bodyMedium.fontSize,
-    color: s.ink,
-  },
+  durationKeys: { flexDirection: 'row', flexWrap: 'wrap', gap: space[1] },
+  durationKey: { flexGrow: 1, minWidth: touchTarget.min, minHeight: touchTarget.min, paddingHorizontal: space[2], paddingVertical: space[1], alignItems: 'center', justifyContent: 'center', gap: space[1], backgroundColor: colors.folderLilac, borderRadius: radius.sm },
+  selectedKey: { backgroundColor: colors.primary },
+  keyPressed: { opacity: 0.82 },
   savedSection: {
     marginTop: space[2],
     gap: space[2],

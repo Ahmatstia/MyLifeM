@@ -12,6 +12,7 @@ import {
   Play,
   Plus,
   Repeat,
+  SkipForward,
   X,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
@@ -27,6 +28,7 @@ import { useAgenda } from '@/features/agenda/presentation/hooks/use-agenda';
 import { PrayerTimesWidget } from '@/features/prayer-times/presentation/components/prayer-times-widget';
 import { usePrayerTimes } from '@/features/prayer-times/presentation/hooks/use-prayer-times';
 import { AddPriorityModal } from '../components/add-priority-modal';
+import { MinuteDial } from '../components/minute-dial';
 import { FocusTimerWidget } from '../components/focus-timer-widget';
 import { SessionReflectionModal } from '../components/session-reflection-modal';
 import { useFocusTimer } from '../hooks/use-focus-timer';
@@ -66,7 +68,8 @@ export const TodayFocusScreen: React.FC = () => {
 
   const completedCount = focusItems.filter((item) => item.isCompleted).length;
   const activeItems = focusItems.filter((item) => item.task.status !== 'CANCELLED');
-  const nextTask = activeItems.find((item) => !item.isCompleted)?.task;
+  const pending = activeItems.filter(item => !item.isCompleted);
+  const nextTask = pending[0]?.task;
 
   const activeOccurrences = weeklyOccurrences.filter((occ) => !occ.isCancelled);
   const totalAgendaCount = events.length + activeOccurrences.length;
@@ -81,28 +84,30 @@ export const TodayFocusScreen: React.FC = () => {
       ? Math.round((completedCombinedCount / totalCombinedCount) * 100)
       : 0;
 
-  const ribbonTask = timer.activeTask ?? (timer.hasSession ? null : nextTask);
+  const picked = pending.find(item => item.taskId === timer.activeTask?.id)?.task;
+  const focusTask = timer.hasSession ? timer.activeTask : picked ?? nextTask;
+  const followingTask = pending.length > 1
+    ? pending[(pending.findIndex(item => item.taskId === focusTask?.id) + 1) % pending.length].task
+    : null;
   const emptyTitle = activeItems.length ? 'Semua tugas selesai' : 'Pilih tugas pertama';
-  const ribbonTitle = ribbonTask?.title ?? (timer.hasSession ? 'Fokus mandiri' : emptyTitle);
-  const estimate = timer.activeTask
-    ? focusItems.find(item => item.taskId === timer.activeTask?.id)?.task.estimatedMinutes
-    : nextTask?.estimatedMinutes;
+  const focusTitle = focusTask?.title ?? (timer.hasSession ? 'Fokus mandiri' : emptyTitle);
+  const estimate = pending.find(item => item.taskId === focusTask?.id)?.task.estimatedMinutes;
   const hasEstimate = estimate !== undefined && Number.isFinite(estimate) && estimate > 0;
-  const ribbonState = timer.reflection ? 'Sesi tercatat' : timer.isRunning ? 'Sesi berjalan' : timer.hasSession ? 'Sesi dijeda' : 'Fokus berikutnya';
-  const ribbonAction = timer.hasSession ? 'Lihat sesi fokus' : ribbonTask ? 'Buka fokus' : 'Pilih tugas';
+  const focusState = timer.reflection ? 'Sesi tercatat' : timer.isRunning ? 'Sesi berjalan' : timer.hasSession ? 'Sesi dijeda' : 'Fokus berikutnya';
+  const focusAction = timer.hasSession ? 'Lihat sesi fokus' : focusTask ? 'Buka fokus' : 'Pilih tugas';
   const dateLabel = todayDate ? new Date(`${todayDate}T12:00:00`).toLocaleDateString('id-ID', {
     weekday: 'long', day: 'numeric', month: 'long',
   }) : '';
 
   const handleHeroPress = () => {
-    if (!nextTask && !timer.activeTask && !timer.hasSession) {
+    if (!focusTask && !timer.hasSession) {
       router.push('/today/new');
-    } else {
-      if (!timer.hasSession && !timer.activeTask && nextTask) {
-        timer.setActiveTask(nextTask);
-      }
-      setIsTimerExpanded((prev) => !prev);
+      return;
     }
+    if (!timer.hasSession && focusTask && timer.activeTask?.id !== focusTask.id) {
+      timer.setActiveTask(focusTask);
+    }
+    setIsTimerExpanded(true);
   };
 
   // Build total count to know which row is the very last on the timeline spine
@@ -112,9 +117,8 @@ export const TodayFocusScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      withBottomPadding={false}
+      insideTabs
       style={styles.screenBg}
-      contentContainerStyle={styles.scrollContent}
       overlay={
         <>
           <AddPriorityModal
@@ -173,46 +177,46 @@ export const TodayFocusScreen: React.FC = () => {
         !error && (
           <>
             {!isTimerExpanded && (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={ribbonAction}
-                accessibilityHint={ribbonTitle}
-                onPress={handleHeroPress}
-                style={({ pressed }) => [styles.ribbon, pressed && styles.ribbonPressed]}
-              >
-                <View style={styles.ribbonBody}>
-                  <AppText variant="labelLarge" style={styles.ribbonState}>{ribbonState}</AppText>
-                  <AppText variant="headlineLarge" style={styles.ribbonTitle}>{ribbonTitle}</AppText>
-                </View>
-                <View style={styles.ribbonSeam} accessible={false} pointerEvents="none">
-                  <View style={styles.ribbonNotch} />
-                  <View style={styles.ribbonPerforation} />
-                  <View style={styles.ribbonNotch} />
-                </View>
-                <View style={[styles.ribbonStub, largeText && styles.stack]}>
-                  <View style={styles.ribbonAction}>
-                    {ribbonTask || timer.hasSession
-                      ? <Play size={space[4]} color={s.ink} fill={s.ink} />
-                      : <Plus size={space[4]} color={s.ink} />}
-                    <AppText variant="titleSmall" style={styles.actionText}>{ribbonAction}</AppText>
+              <View style={styles.clockCase}>
+                <View style={[styles.clockFace, largeText && styles.clockFaceLarge]}>
+                  <MinuteDial minutes={timer.hasSession ? timer.secondsLeft / 60 : hasEstimate ? estimate : undefined} />
+                  <View style={styles.clockCopy} accessibilityLiveRegion={timer.hasSession ? 'none' : 'polite'}>
+                    <AppText variant="labelMedium" color="onSurfaceVariant">{focusState}</AppText>
+                    <AppText variant="headlineLarge" style={styles.clockTitle}>{focusTitle}</AppText>
+                    {timer.hasSession || hasEstimate ? (
+                      <AppText variant="labelMedium" color="onSurfaceVariant">
+                        {timer.hasSession ? timer.mode === 'STOPWATCH' ? 'Waktu berjalan ' : 'Sisa waktu ' : 'Perkiraan '}
+                        <AppText variant="titleSmall" tabularNums color="primary">
+                          {timer.hasSession ? timer.formattedTime : `${estimate} menit`}
+                        </AppText>
+                      </AppText>
+                    ) : null}
                   </View>
-                  {timer.hasSession || hasEstimate ? (
-                    <View style={styles.timeColumn}>
-                      <AppText variant="titleLarge" tabularNums style={styles.ribbonTime}>
-                        {timer.hasSession ? timer.formattedTime : `${estimate} mnt`}
-                      </AppText>
-                      <AppText variant="labelSmall" style={styles.timeLabel}>
-                        {timer.hasSession ? timer.mode === 'STOPWATCH' ? 'waktu berjalan' : 'waktu tersisa' : 'perkiraan tugas'}
-                      </AppText>
-                    </View>
+                </View>
+                <View style={styles.clockKeys}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={focusAction} accessibilityHint={focusTitle}
+                    onPress={handleHeroPress} style={({ pressed }) => [styles.startKey, pressed && styles.keyPressed]}>
+                    {focusTask || timer.hasSession
+                      ? <Play size={space[4]} color={colors.onPrimary} fill={colors.onPrimary} />
+                      : <Plus size={space[5]} color={colors.onPrimary} />}
+                    <AppText variant="titleSmall" color="onPrimary">{focusAction}</AppText>
+                  </Pressable>
+                  {!timer.hasSession && followingTask ? (
+                    <Pressable accessibilityRole="button" accessibilityLabel="Ganti tugas fokus"
+                      accessibilityHint={followingTask.title} onPress={() => timer.setActiveTask(followingTask)}
+                      style={({ pressed }) => [styles.nextKey, pressed && styles.keyPressed]}>
+                      <SkipForward size={space[4]} color={colors.clockInk} />
+                      <AppText variant="labelLarge" color="onSurface">Ganti tugas</AppText>
+                    </Pressable>
                   ) : null}
                 </View>
-              </Pressable>
+              </View>
             )}
             {isTimerExpanded && (
               <FocusTimerWidget
                 mode={timer.mode}
                 formattedTime={timer.formattedTime}
+                seconds={timer.secondsLeft}
                 ready={timer.ready}
                 hasSession={timer.hasSession}
                 preferences={timer.preferences}
@@ -552,36 +556,28 @@ export const TodayFocusScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   screenBg: { backgroundColor: colors.background },
-  scrollContent: { paddingBottom: space[10], gap: space[4] },
   header: {
-    paddingTop: space[5],
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     gap: space[2],
   },
-  greetingTitle: { color: colors.onSurface },
+  greetingTitle: { fontFamily: fontFamily.display, color: colors.onSurface },
   greetingSubtext: { color: colors.onSurfaceVariant },
   notice: { marginBottom: space[2] },
   loading: { gap: space[3], paddingVertical: space[4] },
   skeletonLong: { width: '75%', height: space[3], borderRadius: radius.sm, backgroundColor: colors.surfaceContainer },
   skeletonShort: { width: '50%', height: space[3], borderRadius: radius.sm, backgroundColor: colors.surfaceContainer },
-  ribbon: { borderRadius: radius.lg, backgroundColor: colors.hero, overflow: 'hidden' },
-  ribbonPressed: { backgroundColor: colors.primaryHover },
-  ribbonBody: { padding: space[5], gap: space[2] },
-  ribbonState: { color: colors.onHeroMuted },
-  ribbonTitle: { fontFamily: fontFamily.bold, color: colors.onHero },
-  ribbonSeam: { flexDirection: 'row', height: space[3], alignItems: 'center', marginHorizontal: -space[1] },
-  ribbonNotch: { width: space[3], height: space[3], borderRadius: radius.full, backgroundColor: colors.background },
-  ribbonPerforation: { flex: 1, borderBottomWidth: StyleSheet.hairlineWidth, borderStyle: 'dashed', borderColor: colors.heroTrack },
-  ribbonStub: { paddingHorizontal: space[5], paddingTop: space[2], paddingBottom: space[4], flexDirection: 'row', gap: space[3], alignItems: 'center', justifyContent: 'space-between' },
-  stack: { flexDirection: 'column-reverse', alignItems: 'stretch' },
-  ribbonAction: { minHeight: touchTarget.min, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: space[2], paddingHorizontal: space[4], paddingVertical: space[2], borderRadius: radius.sm, backgroundColor: s.sun, flexShrink: 1 },
-  actionText: { color: s.ink, fontFamily: fontFamily.bold },
-  timeColumn: { minWidth: 0, flexShrink: 1, alignItems: 'flex-end' },
-  ribbonTime: { color: colors.onHero, fontFamily: fontFamily.bold },
-  timeLabel: { color: colors.onHeroMuted },
+  clockCase: { backgroundColor: colors.clockCase, padding: space[3], gap: space[3], borderRadius: radius.xl, borderTopRightRadius: space[10], borderBottomWidth: space[1], borderColor: colors.clockEdge },
+  clockFace: { flexDirection: 'row', alignItems: 'center', gap: space[3], paddingVertical: space[1] },
+  clockFaceLarge: { flexDirection: 'column', alignItems: 'flex-start' },
+  clockCopy: { flexShrink: 1, minWidth: 0, gap: space[1] },
+  clockTitle: { fontFamily: fontFamily.display, color: colors.clockInk },
+  clockKeys: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
+  startKey: { flexGrow: 1, minHeight: touchTarget.min, borderRadius: radius.md, paddingHorizontal: space[3], paddingVertical: space[2], backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2] },
+  nextKey: { minHeight: touchTarget.min, paddingHorizontal: space[3], borderRadius: radius.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], borderWidth: StyleSheet.hairlineWidth, borderColor: colors.clockEdge, backgroundColor: colors.folderMint },
+  keyPressed: { opacity: 0.82 },
   sectionHeaderBlock: { gap: space[2] },
   sectionHeaderTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[2] },
   sectionTitleGroup: { flex: 1, gap: space[1] },

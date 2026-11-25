@@ -7,7 +7,7 @@ import {
   type StyleProp,
 } from 'react-native';
 import { Trash2, AlertTriangle, MapPin, CalendarDays } from 'lucide-react-native';
-import { fontFamily, space, radius, typography } from '@/theme/tokens';
+import { touchTarget, fontFamily, space, radius, typography } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText, SoftCard, SproutCheck, IconTile } from '@/shared/ui';
 import type { AgendaEventEntity, AgendaEventType } from '../../domain/entities/agenda.entity';
@@ -123,7 +123,6 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
             onPress={onDelete}
             accessibilityRole="button"
             accessibilityLabel={'Hapus agenda ' + event.title}
-            hitSlop={8}
             style={styles.deleteBtn}
           >
             <Trash2 size={15} color={s.inkSubtle} strokeWidth={2} />
@@ -200,8 +199,7 @@ const styles = StyleSheet.create({
     gap: space[1],
   },
   deleteBtn: {
-    width: 28,
-    height: 28,
+    width: touchTarget.min, height: touchTarget.min,
     alignItems: 'center',
     justifyContent: 'center',
   },

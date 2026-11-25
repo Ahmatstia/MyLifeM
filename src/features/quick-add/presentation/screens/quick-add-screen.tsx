@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Pressable, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -11,7 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space, radius, touchTarget } from '@/theme/tokens';
+import { layout, screenGutter, fontFamily, space, radius, touchTarget } from '@/theme/tokens';
 import { AppText } from '@/shared/ui';
 
 type QuickAddItem = {
@@ -20,6 +20,7 @@ type QuickAddItem = {
   subtitle: string;
   pathname: string;
   icon: LucideIcon;
+  color: string;
 };
 
 const ITEMS: QuickAddItem[] = [
@@ -29,6 +30,7 @@ const ITEMS: QuickAddItem[] = [
     subtitle: 'Pilih satu tugas untuk dikerjakan hari ini.',
     pathname: '/today/new',
     icon: CheckCircle2,
+    color: colors.clockFace,
   },
   {
     id: 'task-manager',
@@ -36,6 +38,7 @@ const ITEMS: QuickAddItem[] = [
     subtitle: 'Tentukan tenggat dan jam pengingat.',
     pathname: '/task-manager/new',
     icon: BellRing,
+    color: colors.folderPeach,
   },
   {
     id: 'target',
@@ -43,6 +46,7 @@ const ITEMS: QuickAddItem[] = [
     subtitle: 'Susun tujuan dengan tahapan dan tugas.',
     pathname: '/targets/new',
     icon: Target,
+    color: colors.folderLilac,
   },
   {
     id: 'agenda',
@@ -50,19 +54,22 @@ const ITEMS: QuickAddItem[] = [
     subtitle: 'Catat kegiatan pada tanggal tertentu.',
     pathname: '/agenda/new',
     icon: Calendar,
+    color: colors.folderMint,
   },
 ];
 
 export const QuickAddScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
 
   const handleSelect = (item: QuickAddItem) => {
     router.replace(item.pathname as any);
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}>
       <Pressable
+        accessible={false} focusable={false} tabIndex={-1}
         style={styles.scrim}
         onPress={() => router.back()}
         accessibilityLabel="Tutup"
@@ -71,7 +78,7 @@ export const QuickAddScreen: React.FC = () => {
       <View
         style={[
           styles.sheet,
-          { paddingBottom: Math.max(insets.bottom, space[5]) + space[3] },
+          { paddingBottom: insets.bottom + space[4], paddingHorizontal: screenGutter(width - insets.left - insets.right) },
         ]}
       >
         <View style={styles.header}>
@@ -95,10 +102,11 @@ export const QuickAddScreen: React.FC = () => {
               accessibilityLabel={item.label}
               style={({ pressed }) => [
                 styles.actionRow,
+                item.id === 'priority' && styles.quickTask,
                 pressed && styles.actionRowPressed,
               ]}
             >
-              <item.icon size={space[6]} color={colors.primary} />
+              <View style={[styles.keyCap, { backgroundColor: item.color }]}><item.icon size={space[5]} color={colors.clockInk} /></View>
               <View style={styles.actionCopy}>
                 <AppText variant="titleMedium">{item.label}</AppText>
                 <AppText variant="bodyMedium" color="onSurfaceVariant">
@@ -121,12 +129,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    paddingHorizontal: space[5],
+    width: '100%',
+    maxWidth: layout.maxWidth,
+    alignSelf: 'center',
     paddingTop: space[4],
   },
   actionScroll: { flexShrink: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[2], marginBottom: space[2] },
-  sheetTitle: { flex: 1 },
+  sheetTitle: { flex: 1, fontFamily: fontFamily.display },
   closeButton: { width: touchTarget.min, height: touchTarget.min, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   actionRow: {
     minHeight: touchTarget.min,
@@ -138,5 +148,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.outlineVariant,
   },
   actionRowPressed: { backgroundColor: colors.surfaceContainer },
+  quickTask: { backgroundColor: colors.clockCase, borderRadius: radius.lg, paddingHorizontal: space[3], marginBottom: space[1], borderBottomWidth: space[1], borderBottomColor: colors.clockEdge },
+  keyCap: { width: space[10], height: space[10], borderRadius: radius.md, borderTopRightRadius: radius.xl, alignItems: 'center', justifyContent: 'center' },
   actionCopy: { flex: 1, gap: space[1] },
 });

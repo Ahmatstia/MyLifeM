@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     color: s.inkMuted,
   },
   menuButton: {
-    width: 44,
+    width: touchTarget.min,
     minHeight: touchTarget.min,
     alignItems: 'center',
     justifyContent: 'center',
@@ -359,6 +359,7 @@ const styles = StyleSheet.create({
     color: s.inkMuted,
   },
   addTaskPill: {
+    minHeight: touchTarget.min,
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',

@@ -1,8 +1,7 @@
-import { space } from '@/theme/tokens';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Stack, ThemeProvider, DefaultTheme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { View, ScrollView, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { initDatabase } from '@/db/client';
 import { useDataRevision } from '@/db/data-revision';
 import { AlarmRingingModal } from '@/features/task-manager/presentation/components/alarm-ringing-modal';
@@ -10,8 +9,9 @@ import { CalendarReminderSync } from '@/features/agenda/presentation/components/
 import { ManagedAlarmSync } from '@/features/task-manager/presentation/components/managed-alarm-sync';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import { colors } from '@/theme/colors';
-import { AppText, Button } from '@/shared/ui';
+import { AppText, Button, Screen } from '@/shared/ui';
 import { readMigrationBackup, saveBackupFile } from '@/features/settings/data/services/backup-file.service';
+import { Fredoka_500Medium } from '@expo-google-fonts/fredoka/500Medium';
 import { useFonts } from 'expo-font';
 import { PlusJakartaSans_400Regular } from '@expo-google-fonts/plus-jakarta-sans/400Regular';
 import { PlusJakartaSans_500Medium } from '@expo-google-fonts/plus-jakarta-sans/500Medium';
@@ -43,6 +43,7 @@ export default function RootLayout() {
   }, [setupApp]);
 
   const [fontsLoaded, fontError] = useFonts({
+    Fredoka_500Medium,
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
@@ -73,8 +74,8 @@ export default function RootLayout() {
   );
 
   if (databaseError && (fontsLoaded || fontError)) {
-    return <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: space[6], gap: space[4] }}>
-      <AppText variant="headlineSmall">Data belum dapat dibuka</AppText>
+    return <Screen contentContainerStyle={{ justifyContent: 'center' }}>
+      <AppText accessibilityRole="header" variant="headlineSmall">Data belum dapat dibuka</AppText>
       <AppText>Inisialisasi database gagal. Data tidak dihapus. Coba buka kembali sebelum melanjutkan.</AppText>
       <AppText>{databaseError}</AppText>
       <Button title="Coba lagi" onPress={setupApp} />
@@ -87,7 +88,7 @@ export default function RootLayout() {
         } catch { setRecoveryMessage('Salinan belum dapat diekspor. Database asli tetap dipertahankan.'); }
       }} />
       {recoveryMessage && <AppText>{recoveryMessage}</AppText>}
-    </ScrollView>;
+    </Screen>;
   }
   if (!isReady || !(fontsLoaded || fontError)) {
     return (

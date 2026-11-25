@@ -33,7 +33,7 @@ async function main() {
     const title = 'Audit web ' + Date.now();
     await page.getByRole('textbox', { name: 'Nama tugas', exact: true }).fill(title, { timeout: 120000 });
     await page.getByRole('button', { name: 'Kerja', exact: true }).click();
-    for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Pilih durasi fokus', exact: true }).click();
+    await page.getByRole('button', { name: '45 menit', exact: true }).click();
     await page.getByRole('button', { name: 'Simpan', exact: true }).click();
     await page.waitForURL(url => !url.pathname.endsWith('/today/new'), { timeout: 30000 });
     await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 120000 });

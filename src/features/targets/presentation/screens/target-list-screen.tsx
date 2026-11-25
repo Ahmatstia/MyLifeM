@@ -3,7 +3,7 @@ import { View, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Plus, Flag } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { radius, space, touchTarget } from '@/theme/tokens';
+import { fontFamily, radius, space, touchTarget } from '@/theme/tokens';
 import {
   Screen,
   AppText,
@@ -43,25 +43,23 @@ export const TargetListScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      withBottomPadding={false}
+      insideTabs
       style={styles.screenBg}
-      contentContainerStyle={styles.scrollContent}
+      floatingAction={
+        <Pressable
+          onPress={() => router.push('/targets/new')}
+          accessibilityRole="button"
+          accessibilityLabel="Tambah Target Baru"
+          style={({ pressed }) => [
+            styles.fabSquare,
+            pressed && styles.fabSquarePressed,
+          ]}
+        >
+          <Plus size={space[6]} color={colors.onHighlight} />
+        </Pressable>
+      }
       overlay={
         <>
-          <View style={styles.floatingFabContainer} pointerEvents="box-none">
-            <Pressable
-              onPress={() => router.push('/targets/new')}
-              accessibilityRole="button"
-              accessibilityLabel="Tambah Target Baru"
-              style={({ pressed }) => [
-                styles.fabSquare,
-                pressed && styles.fabSquarePressed,
-              ]}
-            >
-              <Plus size={space[6]} color={colors.onHighlight} />
-            </Pressable>
-          </View>
-
           <AddTargetModal
             visible={isModalVisible}
             categories={categories}
@@ -146,16 +144,14 @@ export const TargetListScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   screenBg: { backgroundColor: colors.background },
-  scrollContent: { paddingBottom: touchTarget.min + space[10], gap: space[3] },
-  heading: { marginTop: space[5] },
+  heading: { fontFamily: fontFamily.display },
   notice: { marginBottom: space[2] },
   loading: { gap: space[3], paddingVertical: space[4] },
   placeholderLong: { width: '70%', height: space[3], backgroundColor: colors.surfaceContainer },
   placeholderShort: { width: '45%', height: space[2], backgroundColor: colors.surfaceContainer },
   summary: { paddingVertical: space[3], gap: space[2] },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: space[2] },
-  trailListWrap: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.outline },
-  floatingFabContainer: { position: 'absolute', right: space[4], bottom: space[4] },
+  trailListWrap: { gap: space[4] },
   fabSquare: {
     width: touchTarget.min,
     height: touchTarget.min,

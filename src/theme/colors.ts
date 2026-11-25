@@ -1,102 +1,113 @@
 /**
  * MyLife Mobile Design System - Color Tokens
- * Sumber kebenaran: docs/design/DESIGN_V3.md (MyLife).
+ * Sumber kebenaran: docs/design/DESIGN_V4.md (MyLife).
  * Nama key lama dipertahankan agar seluruh layar otomatis mengikuti tema baru.
  */
 
 export const colors = {
-  // Paper canvas (MyLife).
-  background: '#F1F4F8',
-  surface: '#F1F4F8',
-  surfaceContainerLowest: '#FAFBFD',
-  surfaceContainerLow: '#E6EBF3',
-  surfaceContainer: '#DEE5EF',
-  surfaceContainerHigh: '#D0D9E6',
-  surfaceContainerHighest: '#C1CCDE',
+  // Enamel surfaces and hands on the focus clock.
+  clockCase: '#CAE5D9',
+  clockEdge: '#A5C7B8',
+  clockFace: '#FFD1B7',
+  clockSector: '#F39A78',
+  clockInk: '#48283F',
+  clockTick: '#834B54',
+  folderLilac: '#E9DFF1',
+  folderMint: '#DDECE3',
+  folderPeach: '#F9E1D6',
 
-  // Indigo focus surface and controls.
-  primary: '#283E73',
-  primaryHover: '#1E2E55',
-  primaryContainer: '#DDE6F5',
-  onPrimary: '#FAFBFD',
-  onPrimaryContainer: '#22345A',
-  hero: '#283E73',
-  onHero: '#FAFBFD',
-  onHeroMuted: '#DDE6F5',
-  heroDecoration: '#3F5688',
-  heroTrack: '#8096C0',
+  // General surfaces.
+  background: '#F6F3F6',
+  surface: '#F6F3F6',
+  surfaceContainerLowest: '#FFFCFD',
+  surfaceContainerLow: '#F0EAF0',
+  surfaceContainer: '#E9DFE7',
+  surfaceContainerHigh: '#DCCDD9',
+  surfaceContainerHighest: '#CCB9C9',
 
-  // Apricot accent (CTA & FAB).
-  secondary: '#764819',
-  secondaryContainer: '#FFC28A',
-  onSecondary: '#FAFBFD',
-  onSecondaryContainer: '#472807',
+  // Mulberry controls.
+  primary: '#572C50',
+  primaryHover: '#41233F',
+  primaryContainer: '#EADCF0',
+  onPrimary: '#FFFCFD',
+  onPrimaryContainer: '#462748',
+  hero: '#572C50',
+  onHero: '#FFFCFD',
+  onHeroMuted: '#EADCF0',
+  heroDecoration: '#75486A',
+  heroTrack: '#AE8FA6',
+
+  // Coral actions.
+  secondary: '#774234',
+  secondaryContainer: '#FFB298',
+  onSecondary: '#FFFCFD',
+  onSecondaryContainer: '#50271E',
 
   // Leaf green
   tertiary: '#275C53',
-  tertiaryContainer: '#DDE6F5',
-  onTertiary: '#FAFBFD',
+  tertiaryContainer: '#EADCF0',
+  onTertiary: '#FFFCFD',
   onTertiaryContainer: '#214B42',
 
   // Highlight (sunshine)
-  highlight: '#FFC28A',
-  highlightContainer: '#FBE7D8',
-  onHighlight: '#472807',
-  onHighlightContainer: '#472807',
+  highlight: '#FFB298',
+  highlightContainer: '#FFE2D6',
+  onHighlight: '#50271E',
+  onHighlightContainer: '#50271E',
 
-  // Text hierarchy (deep green ink).
-  onSurface: '#172A45',
-  onSurfaceVariant: '#475A70',
-  onSurfaceSubtle: '#526279',
+  // Plum-tinted text.
+  onSurface: '#332538',
+  onSurfaceVariant: '#635568',
+  onSurfaceSubtle: '#6A5B70',
 
   // Border & divider: soft warm lines
-  outline: '#68778A',
-  outlineVariant: '#CBD5E2',
-  border: '#CBD5E2',
+  outline: '#847184',
+  outlineVariant: '#DCCFDA',
+  border: '#DCCFDA',
 
   // Status
   success: '#246050',
   successContainer: '#E0F1E6',
-  onSuccess: '#FAFBFD',
+  onSuccess: '#FFFCFD',
   onSuccessContainer: '#194B31',
 
   error: '#9E3341',
   errorContainer: '#FFE4E0',
-  onError: '#FAFBFD',
+  onError: '#FFFCFD',
   onErrorContainer: '#7B2424',
 
   warning: '#795018',
   warningContainer: '#FFF0CE',
-  onWarning: '#FAFBFD',
+  onWarning: '#FFFCFD',
   onWarningContainer: '#62400D',
 
   // Inverse (snackbar)
-  inverseSurface: '#1D3051',
-  inverseOnSurface: '#FAFBFD',
-  inversePrimary: '#FFC28A',
+  inverseSurface: '#362538',
+  inverseOnSurface: '#FFFCFD',
+  inversePrimary: '#FFB298',
 
   // Scrim modal (hitam 32%)
-  scrim: 'rgba(23, 42, 69, 0.48)',
+  scrim: 'rgba(51, 37, 56, 0.48)',
 
   // Shared visual roles for existing screens
   sprout: {
-    cream: '#F1F4F8',
-    creamDeep: '#E6EBF3',
-    card: '#FAFBFD',
-    cardShade: '#E6EBF3',
-    forest: '#283E73',
-    forestDeep: '#1E2E55',
-    forestSoft: '#3F5688',
-    leaf: '#43669B',
-    leafSoft: '#DDE6F5',
-    leafMist: '#E7EEF7',
-    sun: '#FFC28A',
-    sunDeep: '#E9A768',
-    sunSoft: '#FBE7D8',
-    ink: '#172A45',
-    inkMuted: '#475A70',
-    inkSubtle: '#475A70',
-    inkFaint: '#526279',
+    cream: '#F6F3F6',
+    creamDeep: '#F0EAF0',
+    card: '#FFFCFD',
+    cardShade: '#F0EAF0',
+    forest: '#572C50',
+    forestDeep: '#41233F',
+    forestSoft: '#75486A',
+    leaf: '#785578',
+    leafSoft: '#EADCF0',
+    leafMist: '#F0E8F4',
+    sun: '#FFB298',
+    sunDeep: '#F2987B',
+    sunSoft: '#FFE2D6',
+    ink: '#332538',
+    inkMuted: '#635568',
+    inkSubtle: '#635568',
+    inkFaint: '#6A5B70',
     rose: '#AD4B40',
     roseSoft: '#FBE3E1',
     teal: '#21665C',

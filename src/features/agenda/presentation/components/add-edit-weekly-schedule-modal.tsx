@@ -10,7 +10,7 @@ import {
 import { Clock, MapPin, FileText, Bell } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import { formInputBase, formInputCompact, formLabelSpacing } from '@/shared/ui/form-control-styles';
-import { radius, space, fontFamily } from '@/theme/tokens';
+import { touchTarget, radius, space, fontFamily } from '@/theme/tokens';
 import { AppText } from '@/shared/ui/app-text';
 import { Button } from '@/shared/ui/button';
 import { AppBottomSheet } from '@/shared/ui/app-bottom-sheet';
@@ -332,10 +332,6 @@ export const AddEditWeeklyScheduleModal: React.FC<AddEditWeeklyScheduleModalProp
               <AppText variant="bodySmall" color="onSurfaceVariant">Mulai</AppText>
             </View>
 
-            <AppText variant="titleMedium" color="onSurfaceVariant" style={styles.dash}>
-              –
-            </AppText>
-
             <View style={styles.timeInputCol}>
               <View style={styles.timeBox}>
                 <Clock size={16} color={colors.primary} />
@@ -478,6 +474,9 @@ const styles = StyleSheet.create({
     gap: space[1],
   },
   presetChip: {
+    minHeight: touchTarget.min,
+    minWidth: touchTarget.min,
+    justifyContent: 'center',
     paddingHorizontal: space[2],
     paddingVertical: 2,
     borderRadius: radius.full,
@@ -491,12 +490,12 @@ const styles = StyleSheet.create({
   },
   daySelectorRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
     gap: space[1],
   },
   dayChip: {
-    flex: 1,
-    minHeight: 44,
+    minWidth: touchTarget.min,
+    minHeight: touchTarget.min,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surfaceContainerLow,
@@ -552,6 +551,9 @@ const styles = StyleSheet.create({
     gap: space[2],
   },
   typeChip: {
+    minHeight: touchTarget.min,
+    minWidth: touchTarget.min,
+    justifyContent: 'center',
     paddingHorizontal: space[3],
     paddingVertical: space[2],
     borderRadius: radius.full,
@@ -561,12 +563,15 @@ const styles = StyleSheet.create({
   },
   timeRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: space[3],
   },
   timeInputCol: {
-    flex: 1,
-    alignItems: 'center',
+    flexGrow: 1,
+    flexBasis: 152,
+    minWidth: 0,
+    alignItems: 'flex-start',
     gap: space[1],
   },
   timeBox: {
@@ -589,16 +594,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     ...formInputCompact,
   },
-  dash: {
-    alignSelf: 'center',
-    paddingBottom: 20,
-  },
   reminderRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: space[2],
   },
   reminderChip: {
+    minHeight: touchTarget.min,
+    minWidth: touchTarget.min,
+    justifyContent: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[1],
