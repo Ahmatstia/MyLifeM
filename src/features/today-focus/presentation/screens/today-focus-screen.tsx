@@ -8,6 +8,7 @@ import {
 import { router } from 'expo-router';
 import {
   CalendarDays,
+  Check,
   Pause,
   Play,
   Plus,
@@ -16,6 +17,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
+import { todayColors as c } from '@/theme/today';
 import { fontFamily, radius, space, touchTarget } from '@/theme/tokens';
 import {
   AppText,
@@ -61,6 +63,7 @@ export const TodayFocusScreen: React.FC = () => {
   } = useAgenda();
 
   const prayerSchedule = usePrayerTimes();
+  const [planFilter, setPlanFilter] = useState<'ALL' | 'OPEN' | 'DONE'>('ALL');
   const [isTimerExpanded, setIsTimerExpanded] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   useOpenAddFromParam(() => router.push('/today/new'));
@@ -110,9 +113,11 @@ export const TodayFocusScreen: React.FC = () => {
     setIsTimerExpanded(true);
   };
 
-  // Build total count to know which row is the very last on the timeline spine
-  const totalTimelineNodes =
-    focusItems.length + events.length + activeOccurrences.length;
+  const matchesFilter = (completed: boolean) => planFilter === 'ALL' || (planFilter === 'DONE' ? completed : !completed);
+  const visibleTasks = focusItems.filter(item => matchesFilter(item.isCompleted));
+  const visibleEvents = events.filter(item => matchesFilter(item.isCompleted));
+  const visibleRoutines = activeOccurrences.filter(item => matchesFilter(item.isCompleted));
+  const visibleCount = visibleTasks.length + visibleEvents.length + visibleRoutines.length;
 
   return (
     <Screen
@@ -144,9 +149,17 @@ export const TodayFocusScreen: React.FC = () => {
       }
     >
       <View style={styles.header}>
-        <AppText variant="displayMedium" accessibilityRole="header" style={styles.greetingTitle}>Hari ini</AppText>
-        {dateLabel ? <AppText variant="bodyMedium" style={styles.greetingSubtext}>{dateLabel}</AppText> : null}
+        <View style={styles.headerCopy}>
+          <AppText variant="displayMedium" accessibilityRole="header" style={styles.greetingTitle}>Hari ini</AppText>
+          {dateLabel ? <AppText variant="labelLarge" style={styles.greetingSubtext}>{dateLabel}</AppText> : null}
+        </View>
+        <Pressable onPress={() => router.push('/(tabs)/agenda')}
+          accessibilityRole="button" accessibilityLabel="Buka kalender"
+          style={({ pressed }) => [styles.dateStamp, pressed && styles.keyPressed]}>
+          <CalendarDays size={24} color={c.ink} strokeWidth={2} />
+        </Pressable>
       </View>
+      <PrayerTimesWidget schedule={prayerSchedule} />
 
       {timer.error && (
         <Banner
@@ -179,14 +192,14 @@ export const TodayFocusScreen: React.FC = () => {
             {!isTimerExpanded && (
               <View style={styles.clockCase}>
                 <View style={[styles.clockFace, largeText && styles.clockFaceLarge]}>
-                  <MinuteDial minutes={timer.hasSession ? timer.secondsLeft / 60 : hasEstimate ? estimate : undefined} />
+                  <MinuteDial size={60} minutes={timer.hasSession ? timer.secondsLeft / 60 : hasEstimate ? estimate : undefined} />
                   <View style={styles.clockCopy} accessibilityLiveRegion={timer.hasSession ? 'none' : 'polite'}>
-                    <AppText variant="labelMedium" color="onSurfaceVariant">{focusState}</AppText>
-                    <AppText variant="headlineLarge" style={styles.clockTitle}>{focusTitle}</AppText>
+                    <AppText variant="labelMedium" color={c.skyInk}>{focusState}</AppText>
+                    <AppText variant="headlineSmall" style={styles.clockTitle}>{focusTitle}</AppText>
                     {timer.hasSession || hasEstimate ? (
                       <AppText variant="labelMedium" color="onSurfaceVariant">
                         {timer.hasSession ? timer.mode === 'STOPWATCH' ? 'Waktu berjalan ' : 'Sisa waktu ' : 'Perkiraan '}
-                        <AppText variant="titleSmall" tabularNums color="primary">
+                        <AppText variant="titleSmall" tabularNums color={c.skyInk}>
                           {timer.hasSession ? timer.formattedTime : `${estimate} menit`}
                         </AppText>
                       </AppText>
@@ -197,16 +210,16 @@ export const TodayFocusScreen: React.FC = () => {
                   <Pressable accessibilityRole="button" accessibilityLabel={focusAction} accessibilityHint={focusTitle}
                     onPress={handleHeroPress} style={({ pressed }) => [styles.startKey, pressed && styles.keyPressed]}>
                     {focusTask || timer.hasSession
-                      ? <Play size={space[4]} color={colors.onPrimary} fill={colors.onPrimary} />
-                      : <Plus size={space[5]} color={colors.onPrimary} />}
-                    <AppText variant="titleSmall" color="onPrimary">{focusAction}</AppText>
+                      ? <Play size={space[4]} color={c.card} fill={colors.onPrimary} />
+                      : <Plus size={space[5]} color={c.card} />}
+                    <AppText variant="titleSmall" color={c.card}>{focusAction}</AppText>
                   </Pressable>
                   {!timer.hasSession && followingTask ? (
                     <Pressable accessibilityRole="button" accessibilityLabel="Ganti tugas fokus"
                       accessibilityHint={followingTask.title} onPress={() => timer.setActiveTask(followingTask)}
                       style={({ pressed }) => [styles.nextKey, pressed && styles.keyPressed]}>
-                      <SkipForward size={space[4]} color={colors.clockInk} />
-                      <AppText variant="labelLarge" color="onSurface">Ganti tugas</AppText>
+                      <SkipForward size={space[4]} color={c.skyInk} />
+                      <AppText variant="labelLarge" color={c.skyInk}>Ganti tugas</AppText>
                     </Pressable>
                   ) : null}
                 </View>
@@ -249,9 +262,9 @@ export const TodayFocusScreen: React.FC = () => {
                   onPress={() => router.push('/today/new')}
                   accessibilityRole="button"
                   accessibilityLabel="Tambah Tugas Prioritas"
-                  style={({ pressed }) => [styles.addButton, pressed && styles.timelineItemPressed]}
+                  style={({ pressed }) => [styles.addButton, pressed && styles.keyPressed]}
                 >
-                  <Plus size={space[5]} color={s.forest} />
+                  <Plus size={space[5]} color={c.ink} />
                 </Pressable>
               </View>
               {totalCombinedCount > 0 && (
@@ -266,14 +279,39 @@ export const TodayFocusScreen: React.FC = () => {
               )}
             </View>
 
-            {totalCombinedCount === 0 ? (
-              <AppText variant="bodyMedium" color="onSurfaceVariant">
-                Belum ada tugas atau agenda untuk hari ini.
-              </AppText>
+            <View style={styles.filterRow}>
+              {([
+                ['ALL', 'Semua'],
+                ['OPEN', 'Belum selesai'],
+                ['DONE', 'Selesai'],
+              ] as const).map(([value, label]) => (
+                <Pressable key={value} onPress={() => setPlanFilter(value)}
+                  accessibilityRole="button" accessibilityState={{ selected: planFilter === value }}
+                  style={({ pressed }) => [styles.filter, planFilter === value && styles.selectedFilter, pressed && styles.keyPressed]}>
+                  {value === 'DONE' && <Check size={14} color={planFilter === value ? c.card : c.muted} />}
+                  <AppText variant="labelMedium" color={planFilter === value ? c.card : c.muted}>{label}</AppText>
+                </Pressable>
+              ))}
+            </View>
+            {visibleCount === 0 ? (
+              <View style={styles.emptyPlan}>
+                <View style={styles.emptyIcon}><Check size={24} color={c.mintInk} /></View>
+                <AppText variant="titleMedium" color={c.ink}>
+                  {totalCombinedCount === 0 ? 'Hari ini masih terbuka' : planFilter === 'DONE' ? 'Satu langkah dulu, yuk' : 'Rencana hari ini sudah tuntas'}
+                </AppText>
+                <AppText color={c.muted} align="center">
+                  {totalCombinedCount === 0 ? 'Pilih satu hal kecil yang ingin kamu selesaikan.' : planFilter === 'DONE' ? 'Aktivitas yang selesai akan terkumpul di sini.' : 'Ada ruang untuk istirahat atau rencana baru.'}
+                </AppText>
+                {totalCombinedCount === 0 && (
+                  <Pressable accessibilityRole="button" onPress={() => router.push('/today/new')}
+                    style={({ pressed }) => [styles.emptyAction, pressed && styles.keyPressed]}>
+                    <Plus size={18} color={c.ink} /><AppText variant="titleSmall" color={c.ink}>Tambah rencana</AppText>
+                  </Pressable>
+                )}
+              </View>
             ) : (
-              <View style={styles.timelineContainer}>
-                {focusItems.map((item, idx) => {
-                  const isLastNode = idx + 1 === totalTimelineNodes;
+              <View style={styles.planList}>
+                {visibleTasks.map((item) => {
                   const isCompleted = item.isCompleted;
                   const isCancelled = item.task.status === 'CANCELLED';
                   const isActive = timer.activeTask?.id === item.taskId;
@@ -292,11 +330,11 @@ export const TodayFocusScreen: React.FC = () => {
 
                   const isFromManagedTask =
                     !item.task.targetId && item.task.id.startsWith('mtask-');
-                  const accentColor = s.forest;
+                  const accentColor = c.lilacInk;
 
                   const originKicker = item.task.targetId
                     ? item.task.targetTitle ? `Target, ${item.task.targetTitle}` : 'Dari Target'
-                    : isFromManagedTask ? 'Manajemen Tugas, Jadwal Eksekusi'
+                    : isFromManagedTask ? 'Tugas terjadwal'
                       : item.task.quickCategory || 'Tugas hari ini';
 
                   const handleRowPress = () => {
@@ -314,8 +352,8 @@ export const TodayFocusScreen: React.FC = () => {
                   };
 
                   return (
-                    <View key={item.id} style={styles.timelineItem}>
-                      <View style={styles.timelineRail}>
+                    <View key={item.id} style={[styles.planCard, styles.taskCard, (isCompleted || isCancelled) && styles.completedCard]}>
+                      <View style={styles.checkRail}>
                         <View style={styles.checkNodeWrap}>
                           <SproutCheck
                             checked={isCompleted}
@@ -327,23 +365,15 @@ export const TodayFocusScreen: React.FC = () => {
                             size={space[6]}
                           />
                         </View>
-                        {!isLastNode && (
-                          <View
-                            style={[
-                              styles.timelineSpineLine,
-                              isCompleted && styles.timelineSpineLineDone,
-                            ]}
-                          />
-                        )}
                       </View>
-                      <View style={styles.timelineBody}>
-                        <View style={styles.timelineMainRow}>
+                      <View style={styles.planBody}>
+                        <View style={styles.planMain}>
                           <Pressable onPress={handleRowPress}
                             accessibilityRole="button"
-                            accessibilityLabel={`Buka ${originKicker}: ${item.task.title}`} style={({ pressed }) => [styles.timelineTextCol, pressed && styles.timelineItemPressed]}>
-                            <View style={styles.kickerInlineRow}>
+                            accessibilityLabel={`Buka ${originKicker}: ${item.task.title}`} style={({ pressed }) => [styles.planText, pressed && styles.keyPressed]}>
+                            <View style={styles.categoryRow}>
                               <AppText
-                                variant="labelMedium" style={[styles.kickerText, { color: accentColor }]}
+                                variant="labelMedium" style={[styles.categoryText, { color: accentColor }]}
                                 numberOfLines={largeText ? undefined : 1}
                               >
                                 {originKicker}
@@ -351,21 +381,21 @@ export const TodayFocusScreen: React.FC = () => {
                             </View>
                             <AppText
                               style={[
-                                styles.timelineTitle,
-                                isCompleted && styles.timelineTitleDone,
-                                isCancelled && styles.timelineTitleCancelled,
+                                styles.planTitle,
+                                isCompleted && styles.planTitleDone,
+                                isCancelled && styles.planTitleCancelled,
                               ]}
                               numberOfLines={largeText ? undefined : 2}
                             >
                               {item.task.title}
                             </AppText>
                             {detail ? (
-                              <AppText style={styles.timelineSubtext} numberOfLines={largeText ? undefined : 2}>
+                              <AppText style={styles.planDetail} numberOfLines={largeText ? undefined : 2}>
                                 {detail}
                               </AppText>
                             ) : null}
                           </Pressable>
-                          <View style={styles.timelineActions}>
+                          <View style={styles.planActions}>
                             {isCompleted || isCancelled ? null : isActive && timer.isRunning ? (
                               <Pressable
                                 onPress={timer.pauseTimer}
@@ -374,7 +404,7 @@ export const TodayFocusScreen: React.FC = () => {
                                 hitSlop={0}
                                 style={[styles.focusOrbBtn, styles.focusOrbBtnActive]}
                               >
-                                <Pause size={space[4]} color={s.ink} strokeWidth={2.6} />
+                                <Pause size={space[4]} color={c.ink} strokeWidth={2.6} /><AppText variant="labelMedium" color={c.ink}>Jeda</AppText>
                               </Pressable>
                             ) : (
                               <Pressable
@@ -385,14 +415,15 @@ export const TodayFocusScreen: React.FC = () => {
                                 accessibilityRole="button"
                                 accessibilityLabel={'Mulai fokus ' + item.task.title}
                                 hitSlop={0}
-                                style={styles.focusOrbBtn}
+                                style={({ pressed }) => [styles.focusOrbBtn, pressed && styles.keyPressed]}
                               >
                                 <Play
                                   size={space[4]}
-                                  color={s.forest}
-                                  fill={s.forest}
+                                  color={c.ink}
+                                  fill={c.ink}
                                   strokeWidth={2.2}
                                 />
+                                <AppText variant="labelMedium" color={c.ink}>Fokus</AppText>
                               </Pressable>
                             )}
 
@@ -407,16 +438,11 @@ export const TodayFocusScreen: React.FC = () => {
                             </Pressable>
                           </View>
                         </View>
-                        {!isLastNode && (
-                          <View style={styles.divider} />
-                        )}
                       </View>
                     </View>
                   );
                 })}
-                {events.map((ev, idx) => {
-                  const isLastNode =
-                    focusItems.length + idx + 1 === totalTimelineNodes;
+                {visibleEvents.map((ev) => {
                   const startTime = ev.isAllDay
                     ? 'Sepanjang hari'
                     : new Date(ev.startTime).toLocaleTimeString('id-ID', {
@@ -424,11 +450,11 @@ export const TodayFocusScreen: React.FC = () => {
                         minute: '2-digit',
                       });
                   const isDone = ev.isCompleted;
-                  const agendaColor = s.forest;
+                  const agendaColor = c.peachInk;
 
                   return (
-                    <View key={ev.id} style={styles.timelineItem}>
-                      <View style={styles.timelineRail}>
+                    <View key={ev.id} style={[styles.planCard, styles.agendaCard, isDone && styles.completedCard]}>
+                      <View style={styles.checkRail}>
                         <View style={styles.checkNodeWrap}>
                           <SproutCheck
                             checked={isDone}
@@ -437,60 +463,46 @@ export const TodayFocusScreen: React.FC = () => {
                             size={space[6]}
                           />
                         </View>
-                        {!isLastNode && (
-                          <View
-                            style={[
-                              styles.timelineSpineLine,
-                              isDone && styles.timelineSpineLineDone,
-                            ]}
-                          />
-                        )}
                       </View>
 
-                      <View style={styles.timelineBody}>
-                        <View style={styles.timelineMainRow}>
+                      <View style={styles.planBody}>
+                        <View style={styles.planMain}>
                           <Pressable onPress={() => router.push('/(tabs)/agenda')}
                             accessibilityRole="button"
-                            accessibilityLabel={`Buka Agenda: ${ev.title}`} style={({ pressed }) => [styles.timelineTextCol, pressed && styles.timelineItemPressed]}>
-                            <View style={styles.kickerInlineRow}>
+                            accessibilityLabel={`Buka Agenda: ${ev.title}`} style={({ pressed }) => [styles.planText, pressed && styles.keyPressed]}>
+                            <View style={styles.categoryRow}>
                               <CalendarDays size={space[3]} color={agendaColor} strokeWidth={2.4} />
-                              <AppText variant="labelMedium" style={[styles.kickerText, { color: agendaColor }]}>
+                              <AppText variant="labelMedium" style={[styles.categoryText, { color: agendaColor }]}>
                                 {`Agenda, ${startTime}`}
                               </AppText>
                             </View>
 
                             <AppText
-                              style={[styles.timelineTitle, isDone && styles.timelineTitleDone]}
-                              numberOfLines={1}
+                              style={[styles.planTitle, isDone && styles.planTitleDone]}
+                              numberOfLines={largeText ? undefined : 2}
                             >
                               {ev.title}
                             </AppText>
 
-                            <AppText style={styles.timelineSubtext} numberOfLines={1}>
+                            <AppText style={styles.planDetail} numberOfLines={largeText ? undefined : 2}>
                               {ev.location
-                                ? `Lokasi: ${ev.location}`
-                                : 'Ketuk untuk melihat di Kalender Agenda'}
+                                ? `${ev.location}`
+                                : 'Lihat di kalender'}
                             </AppText>
                           </Pressable>
                         </View>
 
-                        {!isLastNode && (
-                          <View style={styles.divider} />
-                        )}
                       </View>
                     </View>
                   );
                 })}
-                {activeOccurrences.map((occ, idx) => {
-                  const isLastNode =
-                    focusItems.length + events.length + idx + 1 ===
-                    totalTimelineNodes;
+                {visibleRoutines.map((occ) => {
                   const isDone = occ.isCompleted;
-                  const routineColor = s.forest;
+                  const routineColor = c.skyInk;
 
                   return (
-                    <View key={occ.schedule.id} style={styles.timelineItem}>
-                      <View style={styles.timelineRail}>
+                    <View key={occ.schedule.id} style={[styles.planCard, styles.routineCard, isDone && styles.completedCard]}>
+                      <View style={styles.checkRail}>
                         <View style={styles.checkNodeWrap}>
                           <SproutCheck
                             checked={isDone}
@@ -501,44 +513,33 @@ export const TodayFocusScreen: React.FC = () => {
                             size={space[6]}
                           />
                         </View>
-                        {!isLastNode && (
-                          <View
-                            style={[
-                              styles.timelineSpineLine,
-                              isDone && styles.timelineSpineLineDone,
-                            ]}
-                          />
-                        )}
                       </View>
 
-                      <View style={styles.timelineBody}>
-                        <View style={styles.timelineMainRow}>
+                      <View style={styles.planBody}>
+                        <View style={styles.planMain}>
                           <Pressable onPress={() => router.push('/(tabs)/agenda')}
                             accessibilityRole="button"
-                            accessibilityLabel={`Buka Jadwal Rutin: ${occ.schedule.title}`} style={({ pressed }) => [styles.timelineTextCol, pressed && styles.timelineItemPressed]}>
-                            <View style={styles.kickerInlineRow}>
+                            accessibilityLabel={`Buka Jadwal Rutin: ${occ.schedule.title}`} style={({ pressed }) => [styles.planText, pressed && styles.keyPressed]}>
+                            <View style={styles.categoryRow}>
                               <Repeat size={space[3]} color={routineColor} strokeWidth={2.4} />
-                              <AppText variant="labelMedium" style={[styles.kickerText, { color: routineColor }]}>
+                              <AppText variant="labelMedium" style={[styles.categoryText, { color: routineColor }]}>
                                 {`Jadwal Rutin, ${occ.schedule.startTime}–${occ.schedule.endTime}`}
                               </AppText>
                             </View>
 
                             <AppText
-                              style={[styles.timelineTitle, isDone && styles.timelineTitleDone]}
-                              numberOfLines={1}
+                              style={[styles.planTitle, isDone && styles.planTitleDone]}
+                              numberOfLines={largeText ? undefined : 2}
                             >
                               {occ.schedule.title}
                             </AppText>
 
-                            <AppText style={styles.timelineSubtext} numberOfLines={1}>
-                              Rutinitas mingguan, Ketuk untuk buka kalender
+                            <AppText style={styles.planDetail} numberOfLines={largeText ? undefined : 2}>
+                              Lihat jadwal rutin
                             </AppText>
                           </Pressable>
                         </View>
 
-                        {!isLastNode && (
-                          <View style={styles.divider} />
-                        )}
                       </View>
                     </View>
                   );
@@ -546,7 +547,6 @@ export const TodayFocusScreen: React.FC = () => {
               </View>
             )}
 
-            <PrayerTimesWidget schedule={prayerSchedule} />
           </>
         )
       )}
@@ -555,56 +555,58 @@ export const TodayFocusScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  screenBg: { backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: space[2],
-  },
-  greetingTitle: { fontFamily: fontFamily.display, color: colors.onSurface },
-  greetingSubtext: { color: colors.onSurfaceVariant },
+  screenBg: { backgroundColor: c.paper },
+  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space[3] },
+  headerCopy: { flex: 1, gap: space[1] },
+  dateStamp: { width: 48, height: 48, borderRadius: 18, backgroundColor: c.goldSoft, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '6deg' }] },
+  greetingTitle: { fontFamily: fontFamily.display, color: c.ink },
+  greetingSubtext: { color: c.muted },
   notice: { marginBottom: space[2] },
   loading: { gap: space[3], paddingVertical: space[4] },
-  skeletonLong: { width: '75%', height: space[3], borderRadius: radius.sm, backgroundColor: colors.surfaceContainer },
-  skeletonShort: { width: '50%', height: space[3], borderRadius: radius.sm, backgroundColor: colors.surfaceContainer },
-  clockCase: { backgroundColor: colors.clockCase, padding: space[3], gap: space[3], borderRadius: radius.xl, borderTopRightRadius: space[10], borderBottomWidth: space[1], borderColor: colors.clockEdge },
-  clockFace: { flexDirection: 'row', alignItems: 'center', gap: space[3], paddingVertical: space[1] },
+  skeletonLong: { width: '75%', height: space[3], borderRadius: radius.sm, backgroundColor: c.line },
+  skeletonShort: { width: '50%', height: space[3], borderRadius: radius.sm, backgroundColor: c.line },
+  clockCase: { backgroundColor: c.sky, padding: space[3], gap: space[3], borderRadius: radius.xxl },
+  clockFace: { flexDirection: 'row', alignItems: 'center', gap: space[3] },
   clockFaceLarge: { flexDirection: 'column', alignItems: 'flex-start' },
   clockCopy: { flexShrink: 1, minWidth: 0, gap: space[1] },
-  clockTitle: { fontFamily: fontFamily.display, color: colors.clockInk },
+  clockTitle: { fontFamily: fontFamily.display, color: c.ink },
   clockKeys: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
-  startKey: { flexGrow: 1, minHeight: touchTarget.min, borderRadius: radius.md, paddingHorizontal: space[3], paddingVertical: space[2], backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2] },
-  nextKey: { minHeight: touchTarget.min, paddingHorizontal: space[3], borderRadius: radius.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], borderWidth: StyleSheet.hairlineWidth, borderColor: colors.clockEdge, backgroundColor: colors.folderMint },
-  keyPressed: { opacity: 0.82 },
-  sectionHeaderBlock: { gap: space[2] },
+  startKey: { flexGrow: 1, minHeight: touchTarget.min, borderRadius: radius.pill, paddingHorizontal: space[3], paddingVertical: space[2], backgroundColor: c.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2] },
+  nextKey: { minHeight: touchTarget.min, paddingHorizontal: space[3], borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], backgroundColor: '#EAF5F7' },
+  keyPressed: { opacity: 0.72 },
+  sectionHeaderBlock: { gap: space[3], marginTop: space[1] },
   sectionHeaderTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[2] },
   sectionTitleGroup: { flex: 1, gap: space[1] },
-  sectionHeading: { color: s.ink },
-  sectionProgressLabel: { color: s.inkMuted },
-  addButton: { width: touchTarget.min, minHeight: touchTarget.min, justifyContent: 'center', alignItems: 'center', borderRadius: radius.md, backgroundColor: colors.surfaceContainerLow },
-  headerProgressTrack: { height: space[1], borderRadius: radius.pill, backgroundColor: colors.surfaceContainer, overflow: 'hidden' },
-  headerProgressFill: { height: '100%', backgroundColor: s.forest },
-  timelineContainer: { gap: space[1] },
-  timelineItem: { flexDirection: 'row', alignItems: 'stretch', gap: space[2] },
-  timelineItemPressed: { backgroundColor: colors.surfaceContainerLow },
-  timelineRail: { width: touchTarget.min, alignItems: 'center' },
+  sectionHeading: { color: c.ink, fontFamily: fontFamily.display },
+  sectionProgressLabel: { color: c.muted },
+  addButton: { width: touchTarget.min, minHeight: touchTarget.min, justifyContent: 'center', alignItems: 'center', borderRadius: 18, backgroundColor: c.gold },
+  headerProgressTrack: { height: 6, borderRadius: radius.pill, backgroundColor: c.line, overflow: 'hidden' },
+  headerProgressFill: { height: '100%', borderRadius: radius.pill, backgroundColor: c.mintInk },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space[1] },
+  filter: { minHeight: touchTarget.min, paddingHorizontal: space[3], paddingVertical: space[2], borderRadius: radius.pill, justifyContent: 'center', alignItems: 'center', gap: space[1], flexDirection: 'row' },
+  selectedFilter: { backgroundColor: c.ink },
+  emptyPlan: { padding: space[5], borderRadius: radius.xxl, backgroundColor: c.card, alignItems: 'center', gap: space[2] },
+  emptyIcon: { backgroundColor: c.mint, borderRadius: radius.full, width: 48, height: 48, justifyContent: 'center', alignItems: 'center' },
+  emptyAction: { minHeight: touchTarget.min, borderRadius: radius.pill, backgroundColor: c.gold, flexDirection: 'row', alignItems: 'center', gap: space[2], paddingHorizontal: space[4], marginTop: space[2] },
+  planList: { gap: space[3] },
+  planCard: { flexDirection: 'row', alignItems: 'flex-start', padding: space[3], gap: space[2], borderRadius: radius.xl },
+  taskCard: { backgroundColor: c.lilac },
+  agendaCard: { backgroundColor: c.peach },
+  routineCard: { backgroundColor: c.sky },
+  completedCard: { backgroundColor: c.completed },
+  checkRail: { width: touchTarget.min, alignItems: 'center' },
   checkNodeWrap: { minHeight: touchTarget.min, width: touchTarget.min, alignItems: 'center', justifyContent: 'center' },
-  timelineSpineLine: { flex: 1, width: StyleSheet.hairlineWidth, backgroundColor: colors.border },
-  timelineSpineLineDone: { backgroundColor: colors.success },
-  timelineBody: { flex: 1, minWidth: 0, paddingVertical: space[1] },
-  timelineMainRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: space[1] },
-  timelineTextCol: { flexGrow: 1, flexBasis: touchTarget.min * 3, minWidth: 0, minHeight: touchTarget.min, justifyContent: 'center', gap: space[1] },
-  kickerInlineRow: { flexDirection: 'row', alignItems: 'center', gap: space[1] },
-  kickerText: { fontFamily: fontFamily.medium, flexShrink: 1 },
-  timelineTitle: { fontFamily: fontFamily.bold, color: s.ink },
-  timelineTitleDone: { textDecorationLine: 'line-through', color: s.inkMuted },
-  timelineTitleCancelled: { textDecorationLine: 'line-through', color: s.inkMuted },
-  timelineSubtext: { color: s.inkMuted },
-  timelineActions: { flexDirection: 'row', marginLeft: 'auto' },
-  focusOrbBtn: { width: touchTarget.min, height: touchTarget.min, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  focusOrbBtnActive: { backgroundColor: s.leafSoft },
-  dismissBtn: { width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center' },
-  divider: { marginTop: space[2], height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
+  planBody: { flex: 1, minWidth: 0 },
+  planMain: { gap: space[2] },
+  planText: { minHeight: touchTarget.min, justifyContent: 'center', gap: space[1] },
+  categoryRow: { flexDirection: 'row', alignItems: 'center', gap: space[1] },
+  categoryText: { fontFamily: fontFamily.medium, flexShrink: 1 },
+  planTitle: { fontFamily: fontFamily.display, fontSize: 18, lineHeight: 24, color: c.ink },
+  planTitleDone: { textDecorationLine: 'line-through', color: c.muted },
+  planTitleCancelled: { textDecorationLine: 'line-through', color: c.muted },
+  planDetail: { color: c.muted, fontSize: 12, lineHeight: 18 },
+  planActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space[2] },
+  focusOrbBtn: { minHeight: touchTarget.min, paddingHorizontal: space[3], borderRadius: radius.pill, gap: space[2], flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: c.card },
+  focusOrbBtnActive: { backgroundColor: c.gold },
+  dismissBtn: { width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill },
 });

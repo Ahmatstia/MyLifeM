@@ -1,0 +1,20 @@
+/** Warm stationery palette for the Today experience. */
+export const todayColors = {
+  paper: '#F8EFDF',
+  card: '#FFFBF3',
+  ink: '#352E26',
+  muted: '#716351',
+  line: '#E6D9C3',
+  gold: '#F4D187',
+  goldSoft: '#FBE9BB',
+  goldInk: '#72521F',
+  sky: '#D4EAF0',
+  skyInk: '#2B5C6D',
+  lilac: '#E8DFF7',
+  lilacInk: '#624886',
+  peach: '#F9E1CF',
+  peachInk: '#86502E',
+  mint: '#DEEDCF',
+  mintInk: '#3A683C',
+  completed: '#F0EADD',
+} as const;

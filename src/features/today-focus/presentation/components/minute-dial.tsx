@@ -11,8 +11,7 @@ const ticks = Array.from({ length: 60 }, (_, minute) => (
 ));
 
 /** One turn is an hour. The adjacent text gives the full time for longer sessions. */
-export function MinuteDial({ minutes }: { minutes?: number }) {
-  const size = space[16] + space[10];
+export function MinuteDial({ minutes, size = space[16] + space[10] }: { minutes?: number; size?: number }) {
   const known = minutes != null && Number.isFinite(minutes) && minutes >= 0;
   const fraction = known && minutes > 0 ? (minutes % 60 || 60) / 60 : 0;
   const angle = fraction * Math.PI * 2;

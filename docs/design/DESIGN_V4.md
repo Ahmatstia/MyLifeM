@@ -39,3 +39,16 @@ Gambar diambil dari aplikasi web pada lebar 360 piksel menggunakan data contoh y
 [Manajemen Tugas](screenshots/jam-meja/manajemen-tugas.png) • [Jadwalkan Tugas](screenshots/jam-meja/jadwalkan-tugas.png) • [Tes alarm pada layar 320 × 500](screenshots/jam-meja/tes-alarm.png)
 
 [Formulir dengan keyboard Android di Expo Go](screenshots/jam-meja/android-keyboard.png)
+
+
+## Hari Ini dengan referensi kertas hangat
+
+Pembaruan 26 November 2026 berfokus pada Hari Ini. Referensi pengguna memberi arah berupa latar krem, bidang kuning lembut, judul membulat, dan kontrol berbentuk kapsul. Pengguna meminta karakter lucu melalui komponen dan tipografi tanpa maskot.
+
+Palet khusus Hari Ini menggunakan kertas #F8EFDF, tinta #352E26, kuning #F4D187, biru #D4EAF0, ungu #E8DFF7, dan persik #F9E1CF. Fredoka Medium membentuk judul dan waktu, sedangkan Plus Jakarta Sans digunakan untuk keterangan dan kontrol.
+
+Jadwal azan menampilkan salat berikutnya, jam pelaksanaan, sisa waktu, lokasi, dan kelima waktu salat. Pemilihan waktu mengikuti perhitungan lokasi yang sudah tersedia. Pilihan lokasi tetap dapat dibuka. Panel fokus memakai bidang biru, dial waktu kecil, dan tombol kapsul. Rencana harian memakai kartu berwarna sesuai jenis kegiatan, penanda selesai, keterangan, dan aksi fokus. Filter Semua, Belum selesai, dan Selesai mengikuti status aktivitas.
+
+Ukuran komponen menjaga tepi 16 dp, bidang sentuh minimal 48 dp, judul yang dapat turun baris, dan penyesuaian untuk ukuran teks besar. Angka progres dan waktu berasal dari data aplikasi.
+
+[Hari Ini](screenshots/hari-ini-paper/hari-ini.png) • [Rencana harian](screenshots/hari-ini-paper/rencana.png) • [Timer](screenshots/hari-ini-paper/timer.png)

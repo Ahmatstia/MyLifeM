@@ -59,6 +59,12 @@ async function main() {
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 120000 });
     await page.getByRole('checkbox', { name: new RegExp(title) }).waitFor({ timeout: 120000 });
     assert.equal(await page.getByRole('checkbox', { name: new RegExp(title) }).getAttribute('aria-checked'), 'true'); evidence.checks.push('Completion update persists across reload');
+    await page.getByRole('button', { name: 'Belum selesai', exact: true }).click();
+    assert.equal(await page.getByRole('checkbox', { name: new RegExp(title) }).count(), 0);
+    await page.getByRole('button', { name: 'Selesai', exact: true }).click();
+    assert.equal(await page.getByRole('checkbox', { name: new RegExp(title) }).getAttribute('aria-checked'), 'true');
+    await page.getByRole('button', { name: 'Semua', exact: true }).click();
+    evidence.checks.push('Daily plan filters follow persisted completion state');
     await page.goto(target + '/task-manager/new', { waitUntil: 'domcontentloaded', timeout: 120000 });
     const managedTitle = 'Managed web ' + Date.now();
     await page.getByRole('textbox', { name: 'Nama tugas', exact: true }).fill(managedTitle, { timeout: 120000 });

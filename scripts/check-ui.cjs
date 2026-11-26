@@ -669,7 +669,7 @@ function checkTargetNavigation() {
     ['cancelled target task', { targetId: 't-three', status: 'CANCELLED' }, { pathname: '/targets/[id]', params: { id: 't-three' } }, 'Dari Target'],
     ['completed target task', { targetId: 't-four', status: 'COMPLETED', isCompleted: true }, { pathname: '/targets/[id]', params: { id: 't-four' } }, 'Dari Target'],
     ['direct target task', { targetId: 't-one', targetTitle: 'Target' }, { pathname: '/targets/[id]', params: { id: 't-one' } }, 'Target, Target'],
-    ['managed task', { id: 'mtask-one' }, '/task-manager', 'Manajemen Tugas, Jadwal Eksekusi'],
+    ['managed task', { id: 'mtask-one' }, '/task-manager', 'Tugas terjadwal'],
   ]) verify('Today opens the correct owner: ' + name, () => {
     reset(); const fixture = { ...task, targetId: null, projectId: null, ...fields };
     todayState = { ...focus, focusItems: [{ id: 'navigation-item', taskId: fixture.id, task: fixture, isCompleted: fixture.isCompleted }] };

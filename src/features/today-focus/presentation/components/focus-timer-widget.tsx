@@ -15,7 +15,7 @@ import {
   Check,
 } from 'lucide-react-native';
 import { MinuteDial } from './minute-dial';
-import { colors } from '@/theme/colors';
+import { todayColors as c } from '@/theme/today';
 import { space, fontFamily, radius, touchTarget, typography } from '@/theme/tokens';
 import type { UserSettingsEntity } from '@/features/settings/domain/entities/settings.entity';
 import { DEFAULT_SETTINGS } from '@/features/settings/domain/entities/settings.entity';
@@ -97,7 +97,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 
               style={({ pressed }) => [styles.stripSmallBtn, pressed && styles.buttonPressed]}
             >
-              <X size={space[4]} color={colors.onSurface} />
+              <X size={space[4]} color={c.ink} />
             </Pressable>
           )}
 
@@ -109,7 +109,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 
               style={({ pressed }) => [styles.stripSmallBtn, pressed && styles.buttonPressed]}
             >
-              <ChevronUp size={space[5]} color={colors.onSurface} />
+              <ChevronUp size={space[5]} color={c.ink} />
             </Pressable>
           )}
         </View>
@@ -258,15 +258,15 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
           ]}
         >
           {isRunning ? (
-            <Pause size={space[5]} color={colors.onPrimary} />
+            <Pause size={space[5]} color={c.card} />
           ) : (
-            <Play size={space[5]} color={colors.onSurface} fill={colors.onSurface} />
+            <Play size={space[5]} color={c.ink} fill={c.ink} />
           )}
           <AppText
             variant="titleMedium"
             style={[
               styles.mainActionButtonText,
-              isRunning && { color: colors.onPrimary },
+              isRunning && { color: c.card },
             ]}
           >
             {!ready
@@ -289,7 +289,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
                 pressed && styles.buttonPressed,
               ]}
             >
-              <Check size={space[4]} color={colors.onSurface} strokeWidth={2.5} />
+              <Check size={space[4]} color={c.ink} strokeWidth={2.5} />
               <AppText variant="labelMedium" style={styles.finishBtnText}>
                 Akhiri & catat
               </AppText>
@@ -308,7 +308,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
               pressed && styles.buttonPressed,
             ]}
           >
-            <RotateCcw size={space[4]} color={colors.onSurface} />
+            <RotateCcw size={space[4]} color={c.ink} />
             <AppText variant="labelMedium" style={styles.resetBtnText}>
               Reset Timer
             </AppText>
@@ -321,40 +321,40 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { width: '100%', minWidth: 0, gap: space[3] },
+  container: { width: '100%', minWidth: 0, gap: space[3], backgroundColor: c.card, borderRadius: radius.xxl, padding: space[3] },
   activeTaskStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[1] },
   activeTaskLeft: { flex: 1, minWidth: 0 },
   activeTaskTexts: { gap: space[1] },
-  activeTaskTitle: { color: colors.onSurface, fontFamily: fontFamily.bold },
+  activeTaskTitle: { color: c.ink, fontFamily: fontFamily.bold },
   activeTaskActions: { flexDirection: 'row' },
-  stripSmallBtn: { width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm },
-  orbitDisplayCard: { backgroundColor: colors.clockCase, borderRadius: radius.xl, borderTopRightRadius: space[10], padding: space[3], borderBottomWidth: space[1], borderColor: colors.clockEdge },
+  stripSmallBtn: { width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill },
+  orbitDisplayCard: { backgroundColor: c.sky, borderRadius: radius.xxl, padding: space[4] },
   readout: { flexDirection: 'row', alignItems: 'center', gap: space[4] },
   digitsColumn: { flexShrink: 1, alignItems: 'flex-start' },
-  timerDigits: { fontFamily: fontFamily.display, color: colors.clockInk, lineHeight: typography.timer.lineHeight },
-  timerSubtitle: { color: colors.onSurfaceVariant },
-  progressTrack: { width: '100%', height: space[1], backgroundColor: colors.clockEdge, marginTop: space[3] },
-  progressFill: { height: '100%', backgroundColor: colors.primary },
+  timerDigits: { fontFamily: fontFamily.display, color: c.ink, lineHeight: typography.timer.lineHeight },
+  timerSubtitle: { color: c.muted },
+  progressTrack: { width: '100%', height: space[1], backgroundColor: c.line, marginTop: space[3] },
+  progressFill: { height: '100%', backgroundColor: c.ink },
   modeSection: { gap: space[2] },
   modeCardsRow: { flexDirection: 'row', gap: space[1] },
-  modeCard: { flex: 1, minWidth: 0, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center', paddingVertical: space[2], paddingHorizontal: space[1], borderRadius: radius.sm, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border },
-  modeCardActive: { borderColor: colors.primary, backgroundColor: colors.primaryContainer },
-  modeCardTitle: { color: colors.onSurface, textAlign: 'center' },
+  modeCard: { flex: 1, minWidth: 0, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center', paddingVertical: space[2], paddingHorizontal: space[1], borderRadius: radius.pill, borderWidth: StyleSheet.hairlineWidth, borderColor: c.line },
+  modeCardActive: { borderColor: c.ink, backgroundColor: c.lilac },
+  modeCardTitle: { color: c.ink, textAlign: 'center' },
   modeCardTitleActive: { fontFamily: fontFamily.bold },
-  modeCardSub: { color: colors.onSurfaceVariant, textAlign: 'center' },
-  modeCardSubActive: { color: colors.onPrimaryContainer },
-  lockHintText: { color: colors.onSurfaceVariant },
+  modeCardSub: { color: c.muted, textAlign: 'center' },
+  modeCardSubActive: { color: c.lilacInk },
+  lockHintText: { color: c.muted },
   controlsSection: { gap: space[2] },
-  mainActionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], minHeight: touchTarget.min, borderRadius: radius.sm, padding: space[2] },
-  mainActionIdle: { backgroundColor: colors.secondaryContainer },
-  mainActionRunning: { backgroundColor: colors.primary },
-  mainActionButtonText: { color: colors.onSurface, fontFamily: fontFamily.bold },
+  mainActionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], minHeight: touchTarget.min, borderRadius: radius.pill, padding: space[2] },
+  mainActionIdle: { backgroundColor: c.gold },
+  mainActionRunning: { backgroundColor: c.ink },
+  mainActionButtonText: { color: c.ink, fontFamily: fontFamily.bold },
   buttonPressed: { opacity: 0.8 },
-  disabled: { backgroundColor: colors.surfaceContainerLow },
+  disabled: { backgroundColor: c.completed },
   secondaryActionsRow: { flexDirection: 'row', gap: space[2] },
   stackedControls: { flexDirection: 'column' },
-  finishBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], minHeight: touchTarget.min, borderColor: colors.border, borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.sm },
-  finishBtnText: { color: colors.onSurface },
-  resetBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], minHeight: touchTarget.min, borderRadius: radius.sm },
-  resetBtnText: { color: colors.onSurfaceVariant },
+  finishBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], minHeight: touchTarget.min, borderColor: c.line, borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.pill },
+  finishBtnText: { color: c.ink },
+  resetBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space[2], minHeight: touchTarget.min, borderRadius: radius.pill },
+  resetBtnText: { color: c.muted },
 });
