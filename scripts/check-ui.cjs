@@ -41,6 +41,7 @@ const stubs = {
   'expo-haptics': { selectionAsync: noop, impactAsync: noop, notificationAsync: noop, ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' } },
   'expo-image': { Image: native.Image },
   'expo-router': { router: { canGoBack: () => true, replace: noop, push: noop, back: noop, navigate: noop, setParams: noop }, useFocusEffect: noop, useLocalSearchParams: () => ({}) },
+  'expo-router/react-navigation': { PlatformPressable: native.Pressable },
   'expo-status-bar': { StatusBar: () => null },
   'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) },
   'lucide-react-native': icons,

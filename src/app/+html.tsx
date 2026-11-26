@@ -11,8 +11,9 @@ const interactionStyles = `
     outline-offset: ${stroke.selected}px;
     box-shadow: 0 0 0 ${space[1]}px ${colors.surfaceContainerLowest};
   }
+  [data-testid^="bottom-nav-"] { -webkit-tap-highlight-color: transparent; }
   @media (hover: hover) {
-    :is(${controls}):not(:disabled, [aria-disabled="true"]):hover { filter: brightness(.96); }
+    :is(${controls}):not(:disabled, [aria-disabled="true"], [data-testid^="bottom-nav-"]):hover { filter: brightness(.96); }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {

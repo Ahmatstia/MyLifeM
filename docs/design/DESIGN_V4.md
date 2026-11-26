@@ -52,3 +52,10 @@ Jadwal azan menampilkan salat berikutnya, jam pelaksanaan, sisa waktu, lokasi, d
 Ukuran komponen menjaga tepi 16 dp, bidang sentuh minimal 48 dp, judul yang dapat turun baris, dan penyesuaian untuk ukuran teks besar. Angka progres dan waktu berasal dari data aplikasi.
 
 [Hari Ini](screenshots/hari-ini-paper/hari-ini.png) • [Rencana harian](screenshots/hari-ini-paper/rencana.png) • [Timer](screenshots/hari-ini-paper/timer.png)
+
+
+## Navigasi bawah
+
+Navigasi memakai kapsul krem dengan sudut membulat dan jarak dari tepi perangkat. Tab terpilih ditandai ikon di atas bidang pastel serta label lebih gelap. Tombol tambah berbentuk kancing persik dengan gerakan tekan kecil. Hover dan tekan mempertahankan warna latar tab. Penanda fokus keyboard tetap terlihat, tautan tab mempertahankan perilaku navigasi, dan menu serta tambah membuka panel masing-masing.
+
+[Pratinjau navigasi](screenshots/bottom-nav/navigasi.png)
