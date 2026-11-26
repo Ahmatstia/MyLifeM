@@ -1,3 +1,4 @@
+import { NotificationButton } from '@/shared/notifications/notification-button';
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { View, Pressable, StyleSheet, Alert } from 'react-native';
@@ -25,7 +26,6 @@ import { WeeklyScheduleManager } from '../components/weekly-schedule-manager';
 import { AddEditWeeklyScheduleModal } from '../components/add-edit-weekly-schedule-modal';
 import { useOpenAddFromParam } from '@/shared/hooks/use-open-add-from-param';
 import { conflictingEventIds } from '../../domain/agenda-time';
-import { WEEKLY_REMINDER_DAYS } from '../../domain/weekly-reminders';
 import type {
   WeeklyScheduleEntity,
   WeeklyScheduleType,
@@ -46,8 +46,6 @@ export const AgendaScreen: React.FC = () => {
     weeklyOccurrences = [],
     isLoading: isAgendaLoading,
     error: agendaError,
-    reminderWarning,
-    retryReminders,
     refresh: refreshAgenda,
     addEvent,
     toggleEvent,
@@ -66,8 +64,6 @@ export const AgendaScreen: React.FC = () => {
     setSelectedDay = () => {},
     isLoading: isWeeklyLoading,
     error: weeklyError,
-    reminderWarning: weeklyReminderWarning,
-    retryReminders: retryWeeklyReminders,
     refresh: refreshWeekly,
     addSchedule,
     addSchedulesForDays,
@@ -152,7 +148,7 @@ export const AgendaScreen: React.FC = () => {
         </Pressable>
       )}
     >
-      <AppText variant="displayMedium" accessibilityRole="header" style={styles.header}>Kalender</AppText>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}><AppText variant="displayMedium" accessibilityRole="header" style={[styles.header, { flex: 1 }]}>Kalender</AppText><NotificationButton /></View>
 
       <PillTabs
           options={[
@@ -189,16 +185,6 @@ export const AgendaScreen: React.FC = () => {
                 <AppText variant="labelLarge" color="primary">Kegiatan</AppText>
               </Pressable>
             </View>
-
-            {reminderWarning && (
-              <Banner
-                variant="warning"
-                message={reminderWarning}
-                actionText="Periksa izin pengingat"
-                onActionPress={retryReminders}
-                style={styles.notice}
-              />
-            )}
 
             {!isAgendaLoading && !agendaError && conflicts.size > 0 && (
               <Banner
@@ -318,20 +304,6 @@ export const AgendaScreen: React.FC = () => {
 
         {viewMode === 'WEEKLY_MASTER' && (
           <>
-            <Banner
-              variant="info"
-              message={`Pengingat disiapkan untuk ${WEEKLY_REMINDER_DAYS} hari ke depan, maksimal 50 pengingat kalender terdekat. Buka aplikasi secara berkala untuk memperbaruinya.`}
-              style={styles.notice}
-            />
-            {weeklyReminderWarning && (
-              <Banner
-                variant="warning"
-                message={weeklyReminderWarning}
-                actionText="Periksa izin pengingat"
-                onActionPress={retryWeeklyReminders}
-                style={styles.notice}
-              />
-            )}
             {weeklyError && (
               <Banner
                 variant="error"

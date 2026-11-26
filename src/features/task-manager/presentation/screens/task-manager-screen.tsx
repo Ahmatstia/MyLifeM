@@ -1,3 +1,4 @@
+import { NotificationButton } from '@/shared/notifications/notification-button';
 import { backOrHome } from '@/shared/utils/back-or-home';
 import React, { useState } from 'react';
 import {
@@ -87,8 +88,6 @@ export const TaskManagerScreen: React.FC = () => {
     alarmTracks,
     isLoading,
     error,
-    alarmWarning,
-    retryAlarms,
     todayDate,
     refresh,
     toggleTask,
@@ -407,14 +406,14 @@ export const TaskManagerScreen: React.FC = () => {
     >
       <FormScreenHeader title="Manajemen Tugas" onBack={backOrHome}
         rightAction={
-          <Pressable onPress={() => router.push('/task-manager/new')}
+          <View style={{ flexDirection: 'row', gap: 8 }}><NotificationButton /><Pressable onPress={() => router.push('/task-manager/new')}
             accessibilityRole="button" accessibilityLabel="Tambah Tugas Terjadwal Baru"
             style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
             <Plus size={22} color={colors.onHighlight} />
-          </Pressable>
+          </Pressable></View>
         }
       />
-      {alarmWarning && <Banner variant="warning" message={alarmWarning} actionText="Periksa izin pengingat" onActionPress={retryAlarms} />}
+
       {error && (
         <Banner
           variant="error"

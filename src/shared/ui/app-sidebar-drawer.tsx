@@ -158,6 +158,15 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
               />
 
               <SidebarMenuItem
+                icon={BellRing}
+                iconBg={s.sunSoft}
+                iconColor={s.ink}
+                title="Notifikasi"
+                subtitle="Info pengingat dan hal yang perlu diperiksa"
+                onPress={() => navigateTo('/notifications')}
+              />
+
+              <SidebarMenuItem
                 icon={Settings}
                 iconBg={s.sunSoft}
                 iconColor={s.ink}

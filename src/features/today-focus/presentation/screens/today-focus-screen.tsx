@@ -1,3 +1,4 @@
+import { NotificationButton } from '@/shared/notifications/notification-button';
 import React, { useState } from 'react';
 import {
   useWindowDimensions,
@@ -153,11 +154,7 @@ export const TodayFocusScreen: React.FC = () => {
           <AppText variant="displayMedium" accessibilityRole="header" style={styles.greetingTitle}>Hari ini</AppText>
           {dateLabel ? <AppText variant="labelLarge" style={styles.greetingSubtext}>{dateLabel}</AppText> : null}
         </View>
-        <Pressable onPress={() => router.push('/(tabs)/agenda')}
-          accessibilityRole="button" accessibilityLabel="Buka kalender"
-          style={({ pressed }) => [styles.dateStamp, pressed && styles.keyPressed]}>
-          <CalendarDays size={24} color={c.ink} strokeWidth={2} />
-        </Pressable>
+        <NotificationButton />
       </View>
       <PrayerTimesWidget schedule={prayerSchedule} />
 

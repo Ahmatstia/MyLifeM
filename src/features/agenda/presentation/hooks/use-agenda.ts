@@ -1,3 +1,4 @@
+import { useNotificationStore } from '@/shared/notifications/notification-store';
 import { useFocusEffect } from 'expo-router';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDeviceCalendar } from '@/shared/hooks/use-device-calendar';
@@ -62,7 +63,11 @@ export function useAgenda() {
     // Notification failures are separate from the committed database write, avoiding duplicate retries.
     await syncReminders(true);
     const trigger = reminderTrigger(created);
-    if (trigger !== null && trigger <= Date.now()) setReminderWarning('Agenda tersimpan. Waktu pengingat sudah lewat sehingga pengingat untuk agenda ini tidak dijadwalkan.');
+    if (trigger !== null && trigger <= Date.now()) {
+      const message = 'Agenda tersimpan. Waktu pengingat sudah lewat sehingga pengingat untuk agenda ini tidak dijadwalkan.';
+      setReminderWarning(message);
+      useNotificationStore.getState().publish({ id: 'calendar-past', kind: 'calendar', title: 'Waktu pengingat sudah lewat', message }, 'calendar-past');
+    }
     await loadEvents();
     return true;
   };

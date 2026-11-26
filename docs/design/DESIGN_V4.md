@@ -59,3 +59,14 @@ Ukuran komponen menjaga tepi 16 dp, bidang sentuh minimal 48 dp, judul yang dapa
 Navigasi memakai kapsul krem dengan sudut membulat dan jarak dari tepi perangkat. Tab terpilih ditandai ikon di atas bidang pastel serta label lebih gelap. Tombol tambah berbentuk kancing persik dengan gerakan tekan kecil. Hover dan tekan mempertahankan warna latar tab. Penanda fokus keyboard tetap terlihat, tautan tab mempertahankan perilaku navigasi, dan menu serta tambah membuka panel masing-masing.
 
 [Pratinjau navigasi](screenshots/bottom-nav/navigasi.png)
+
+
+## Pusat notifikasi
+
+Peringatan status pengingat kalender, jadwal rutin, dan tugas dikumpulkan di halaman Notifikasi. Lonceng kanan atas memakai bidang kuning pastel dan badge jumlah pemberitahuan belum dibaca. Formulir dan halaman lanjutan memakai akses yang sama melalui header. Menu samping juga menyediakan akses Notifikasi.
+
+Pemberitahuan status digabung berdasarkan sumber. Sinkronisasi berulang mempertahankan status dibaca; perubahan pesan membuatnya belum dibaca kembali; status yang sudah pulih dihapus otomatis. Status baca berlaku selama sesi aplikasi. Pesan waktu pengingat agenda yang sudah lewat juga masuk ke pusat ini. Ketuk pemberitahuan untuk membuka detail, pemeriksaan izin, dan navigasi ke kalender atau manajemen tugas. Izin hanya diminta melalui tindakan pengguna. Kesalahan simpan/muat, konflik pada agenda, dan konfirmasi penggantian data tetap muncul pada konteks tindakan terkait.
+
+Verifikasi: lint, pemeriksaan tipe, regresi UI, kalender, dan jadwal/pengaturan lulus. Ekspor web dan Android berhasil. Uji browser memakai data terisolasi untuk badge, pemberitahuan, baca semua, pemeriksaan izin, navigasi tujuan, dan empat lebar layar. Pengiriman notifikasi pada perangkat fisik belum diverifikasi ulang.
+
+[Kalender tanpa banner](screenshots/notifications/kalender.png) • [Pusat notifikasi](screenshots/notifications/pusat-notifikasi.png) • [Detail pengingat](screenshots/notifications/detail.png)

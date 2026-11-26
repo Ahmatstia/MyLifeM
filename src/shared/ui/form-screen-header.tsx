@@ -1,3 +1,4 @@
+import { NotificationButton } from '@/shared/notifications/notification-button';
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
@@ -16,7 +17,7 @@ export interface FormScreenHeaderProps {
 export const FormScreenHeader: React.FC<FormScreenHeaderProps> = ({
   title,
   onBack,
-  rightAction,
+  rightAction = <NotificationButton />,
 }) => {
   return (
     <View style={styles.header}>

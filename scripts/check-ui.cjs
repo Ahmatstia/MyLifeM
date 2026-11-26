@@ -294,7 +294,7 @@ for (const scale of [1, 2]) {
     reminderWarning: 'Agenda tetap tersimpan. Pengingat belum aktif; periksa izin notifikasi.', retryReminders: noop, addEvent: noop, toggleEvent: noop, removeEvent: noop,
   }) } })('src/features/agenda/presentation/screens/agenda-screen.tsx').AgendaScreen;
   const html = renderToStaticMarkup(React.createElement(AgendaWarning));
-  assert.ok(html.includes('Waktu bertumpuk') && html.includes('Berlanjut dari hari sebelumnya') && html.includes('Periksa izin pengingat'));
+  assert.ok(html.includes('Waktu bertumpuk') && html.includes('Berlanjut dari hari sebelumnya') && html.includes('Notifikasi') && !html.includes('Agenda tetap tersimpan. Pengingat belum aktif'));
   previews.push(['agenda-overlap-warning' + (scale === 2 ? '-large-text' : ''), 320, html]);
 }
 fontScale = 1;
@@ -535,10 +535,23 @@ async function checkWeeklyReminderFeedback() {
   const render = () => { stateIndex = 0; effectIndex = 0; return AgendaScreen(); };
   descendants(render()).find(element => element.props?.options?.some(option => option.value === 'WEEKLY_MASTER')).props.onChange('WEEKLY_MASTER');
   const elements = descendants(render());
-  assert.ok(elements.some(element => element.props?.message?.includes('28 hari ke depan, maksimal 50')));
-  const warning = elements.find(element => element.props?.message === 'Jadwal tetap tersimpan. Pengingat belum aktif.');
-  assert.ok(warning); warning.props.onActionPress(); assert.equal(retries, 1);
-  console.log('PASS: weekly reminder window/limit and unavailable-permission warning/retry are visible in the active weekly screen.');
+  assert.ok(!elements.some(element => element.props?.message?.includes('28 hari ke depan, maksimal 50')));
+  assert.ok(!elements.some(element => element.props?.message === 'Jadwal tetap tersimpan. Pengingat belum aktif.'));
+  assert.equal(retries, 0);
+  const { useNotificationStore } = load('src/shared/notifications/notification-store.ts');
+  const store = useNotificationStore;
+  const notice = { id: 'calendar-reminders', title: 'Periksa kalender', message: 'Izin belum aktif', kind: 'calendar' };
+  store.getState().publish(notice, notice.id);
+  assert.equal(store.getState().notices.length, 1);
+  store.getState().markRead(notice.id);
+  store.getState().publish(notice, notice.id);
+  assert.equal(store.getState().notices.length, 1);
+  assert.equal(store.getState().notices[0].read, true, 'Repeated status must not recreate unread warnings');
+  store.getState().publish({ ...notice, message: 'Status berubah' }, notice.id);
+  assert.equal(store.getState().notices[0].read, false);
+  store.getState().publish(null, notice.id);
+  assert.equal(store.getState().notices.length, 0);
+  console.log('PASS: calendar warning banners moved to inbox; notices deduplicate, retain read state, refresh on change and resolve.');
 }
 async function checkQuickTaskForm() {
   state.length = 0; dependencies.length = 0; effects.length = 0;

@@ -1,3 +1,4 @@
+import { NotificationButton } from '@/shared/notifications/notification-button';
 import React, { useState } from 'react';
 import {
   View,
@@ -33,7 +34,6 @@ import { layout, touchTarget, fontFamily, radius, space, stroke, typography } fr
 import {
   Screen,
   AppText,
-  Banner,
   FormScreenHeader,
   FieldLabel,
   SunButton,
@@ -113,8 +113,6 @@ export const CreateManagedTaskScreen: React.FC = () => {
     previewingTrackId,
     addTask,
     error: saveError,
-    alarmWarning,
-    retryAlarms,
     pickAndSaveCustomSong,
     togglePreviewTrack,
     stopPreview,
@@ -238,6 +236,7 @@ export const CreateManagedTaskScreen: React.FC = () => {
       >
         <FormScreenHeader
           title="Jadwalkan Tugas Baru"
+          rightAction={<NotificationButton />}
           onBack={() => {
             stopPreview();
             backOrHome();
@@ -561,9 +560,9 @@ export const CreateManagedTaskScreen: React.FC = () => {
             Pengingat dan alarm
           </AppText>
 
-          {alarmWarning && <Banner variant="warning" message={alarmWarning} actionText="Periksa izin pengingat" onActionPress={retryAlarms} />}
+
           <View style={styles.alertModeStack}>
-            <Banner variant="info" message="Lagu dan layar alarm tersedia saat aplikasi aktif. Saat aplikasi di latar belakang atau ditutup, pengingat memakai suara notifikasi perangkat; ketuk untuk membuka tugas. Waktu pengiriman mengikuti izin dan pembatasan sistem." />
+
             {ALERT_MODES.map((mode) => {
               const Icon = mode.icon;
               const selected = alertMode === mode.id;
