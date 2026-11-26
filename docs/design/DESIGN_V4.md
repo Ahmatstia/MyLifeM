@@ -26,6 +26,10 @@ Saat ada waktu setengah jam, pengguna perlu memilih tugas yang muat dan segera m
 
 Konten memakai tepi 16 dp pada ponsel dan 24 dp saat lebar aman mencapai 600 dp. Kolom maksimal 640 dp dan berada di tengah. Judul dimulai 12 dp di bawah area aman, bagian utama berjarak 16 dp, dan label nama berjarak 8 dp dari kolom isian. Tombol kembali, tutup, dan tambah memiliki bidang sentuh 48 dp. Pada tab, navigasi bawah menyediakan ruang untuk gestur perangkat. Pada halaman yang memiliki tombol melayang, daftar menyediakan ruang tambahan agar baris terakhir bisa dibaca dan ditekan.
 
+## Pengujian tampilan
+
+Sebanyak 21 layar, komponen, dan dialog diperiksa di Chromium pada lebar 320, 360, 412, dan 768 piksel dengan teks 100% dan 200%. Seluruh 168 kombinasi lulus pemeriksaan luapan horizontal dan ukuran tombol. Alur Manajemen Tugas juga diuji lewat Expo Go pada emulator Android dengan lebar 360 dp. Tombol tambah membuka formulir, nama tugas bisa diketik saat keyboard tampil, dan tombol kembali membawa pengguna ke daftar.
+
 ## Pratinjau
 
 Gambar diambil dari aplikasi web pada lebar 360 piksel menggunakan data contoh yang dibuat lewat formulir. Tes alarm menggunakan ukuran 320 × 500.
@@ -33,3 +37,5 @@ Gambar diambil dari aplikasi web pada lebar 360 piksel menggunakan data contoh y
 [Beranda](screenshots/jam-meja/hari-ini.png) • [Timer](screenshots/jam-meja/timer.png) • [Target](screenshots/jam-meja/target.png) • [Kalender](screenshots/jam-meja/kalender.png) • [Tambah](screenshots/jam-meja/tambah.png) • [Formulir](screenshots/jam-meja/formulir.png)
 
 [Manajemen Tugas](screenshots/jam-meja/manajemen-tugas.png) • [Jadwalkan Tugas](screenshots/jam-meja/jadwalkan-tugas.png) • [Tes alarm pada layar 320 × 500](screenshots/jam-meja/tes-alarm.png)
+
+[Formulir dengan keyboard Android di Expo Go](screenshots/jam-meja/android-keyboard.png)
