@@ -1,4 +1,4 @@
-/** Warm stationery palette for the Today experience. */
+/** Shared warm stationery palette, established by the Today experience. */
 export const todayColors = {
   paper: '#F8EFDF',
   card: '#FFFBF3',

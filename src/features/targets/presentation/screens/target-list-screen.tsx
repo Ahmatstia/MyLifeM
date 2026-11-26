@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   loading: { gap: space[3], paddingVertical: space[4] },
   placeholderLong: { width: '70%', height: space[3], backgroundColor: colors.surfaceContainer },
   placeholderShort: { width: '45%', height: space[2], backgroundColor: colors.surfaceContainer },
-  summary: { paddingVertical: space[3], gap: space[2] },
+  summary: { padding: space[4], gap: space[2], backgroundColor: colors.folderMint, borderRadius: radius.xl },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: space[2] },
   trailListWrap: { gap: space[4] },
   fabSquare: {

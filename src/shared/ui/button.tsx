@@ -92,7 +92,7 @@ export const Button: React.FC<ButtonProps> = ({
     minHeight: height,
     minWidth: fullWidth ? '100%' : touchTarget.min,
     backgroundColor,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     borderWidth: borderColor ? 1 : 0,
     borderColor,
     paddingHorizontal: size === 'compact' ? space[3] : space[5],

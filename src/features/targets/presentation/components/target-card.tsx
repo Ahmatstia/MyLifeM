@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   tabWrap: { maxWidth: '100%', flexDirection: 'row', alignItems: 'flex-end' },
   tab: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: space[2], paddingLeft: space[4], paddingRight: space[2], paddingTop: space[2], paddingBottom: space[1], borderTopLeftRadius: radius.md, borderTopRightRadius: radius.xs },
   tabSlope: { borderBottomWidth: space[5], borderRightWidth: space[4], borderRightColor: 'transparent' },
-  cover: { gap: space[1], padding: space[4], borderTopRightRadius: radius.md, borderBottomLeftRadius: radius.md, borderBottomRightRadius: radius.md },
+  cover: { gap: space[1], padding: space[4], borderTopRightRadius: radius.xl, borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl },
   name: { fontFamily: fontFamily.display, color: colors.onSurface },
   status: { flexDirection: 'row', alignItems: 'center', gap: space[1] },
   metrics: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', justifyContent: 'space-between', gap: space[2] },

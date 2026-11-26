@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     gap: space[2],
     paddingVertical: space[0.5],
   },
-  filterPill: { minHeight: touchTarget.min, justifyContent: 'center', paddingHorizontal: space[3], paddingVertical: space[2], borderRadius: radius.sm, backgroundColor: s.card, borderWidth: stroke.hairline, borderColor: colors.border, },
+  filterPill: { minHeight: touchTarget.min, justifyContent: 'center', paddingHorizontal: space[3], paddingVertical: space[2], borderRadius: radius.pill, backgroundColor: s.card, borderWidth: stroke.hairline, borderColor: colors.border, },
   filterPillActive: {
     backgroundColor: s.forest,
     borderColor: s.forest,
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
   cardsStack: {
     gap: space[3],
   },
-  taskCard: { backgroundColor: s.card, borderRadius: radius.md, padding: space[3], borderWidth: stroke.hairline, borderColor: colors.border, gap: space[2], },
+  taskCard: { backgroundColor: s.card, borderRadius: radius.xl, padding: space[4], borderWidth: stroke.hairline, borderColor: colors.border, gap: space[2], },
   taskCardCompleted: {
     opacity: 0.72,
   },

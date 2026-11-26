@@ -1,4 +1,22 @@
-# Jam meja MyLife
+# Kertas hangat MyLife
+
+## Tampilan yang berlaku — 26 November 2026
+
+Gaya Hari Ini kini menjadi dasar seluruh aplikasi. `src/theme/today.ts` menyediakan palet bersama: kertas #F8EFDF, tinta #352E26, kuning #F4D187, biru #D4EAF0, ungu #E8DFF7, dan mint #DEEDCF. `colors.ts` memetakan palet ini ke peran warna yang digunakan layar dan dialog. Fredoka Medium digunakan untuk judul utama, Plus Jakarta Sans untuk isi. Aksi utama memakai tinta gelap atau kuning, kontrol terpilih memiliki penanda yang jelas, dan kartu mempertahankan warna lembut yang sesuai fungsi.
+
+Target memakai map pastel dan filter kapsul. Rincian target memakai sampul ungu. Kalender memakai kepingan tanggal membulat, dengan tanggal terpilih berwarna tinta. Manajemen Tugas memakai kartu krem, bidang waktu mulai mint, dan tenggat kuning. Pengaturan memakai kelompok kartu krem dan ikon pastel. Formulir, pilihan kategori, tombol simpan, dialog, tambah cepat, menu, notifikasi, dan detail pengingat mengikuti palet serta geometri yang sama. Ikon lonceng hanya ada di Hari Ini.
+
+Jarak layar tetap 16 dp pada ponsel, 24 dp pada layar lebar, dan lebar konten maksimal 640 dp. Tombol memiliki bidang sentuh minimal 48 dp. Sudut dibedakan menurut fungsi: input dan kontrol 16 dp, kartu 22–28 dp, aksi utama dan filter berbentuk kapsul. Isi panjang dapat turun baris dan daftar tetap dapat digulir.
+
+Validasi versi ini: lint dan pemeriksaan tipe lulus; regresi UI lulus; 168 kombinasi tata letak Chromium pada lebar 320/360/412/768 dengan ukuran teks 100/200% lulus tanpa luapan horizontal. Ekspor web dan Android berhasil. Browser aplikasi dengan data terisolasi menguji penyimpanan target/tugas, navigasi detail, kalender mingguan/bulanan, dialog jadwal, kategori, tambah cepat, menu, serta pusat notifikasi tanpa kesalahan runtime. Tata letak dan keyboard pada perangkat fisik belum diuji ulang untuk versi ini.
+
+[Target](screenshots/paper-all/target.png) • [Rincian Target](screenshots/paper-all/detail-target.png) • [Kalender](screenshots/paper-all/kalender.png) • [Manajemen Tugas](screenshots/paper-all/manajemen-tugas.png) • [Pengaturan](screenshots/paper-all/pengaturan.png)
+
+[Formulir Target](screenshots/paper-all/form-target.png) • [Formulir Tugas](screenshots/paper-all/form-tugas.png) • [Formulir Agenda](screenshots/paper-all/form-agenda.png) • [Tambah Cepat](screenshots/paper-all/tambah.png) • [Menu](screenshots/paper-all/menu.png)
+
+## Arsip arah desain sebelumnya
+
+# Jam meja MyLife (arsip)
 
 ## Titik awal
 

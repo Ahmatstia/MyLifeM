@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     borderWidth: stroke.hairline,
     borderColor: colors.border,
   },
-  overviewCard: { paddingVertical: space[3], gap: space[3], borderBottomWidth: stroke.hairline, borderBottomColor: colors.border, },
+  overviewCard: { padding: space[4], gap: space[3], backgroundColor: colors.folderLilac, borderRadius: radius.xl, },
   metaTopRow: { flexDirection: 'row', justifyContent: 'space-between', gap: space[2], flexWrap: 'wrap' },
   detailMetrics: { flexDirection: 'row', justifyContent: 'space-between', gap: space[2], flexWrap: 'wrap' },
   aggregationTrack: {

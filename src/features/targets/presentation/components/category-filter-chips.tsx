@@ -6,7 +6,7 @@ import {
   StyleSheet,
   type ViewStyle,
 } from 'react-native';
-import { fontFamily, touchTarget, space, typography } from '@/theme/tokens';
+import { fontFamily, touchTarget, space, typography, radius } from '@/theme/tokens';
 import { colors } from '@/theme/colors';
 import { AppText } from '@/shared/ui/app-text';
 import type { CategoryWithCount } from '@/features/categories/domain/entities/category.entity';
@@ -88,20 +88,20 @@ export const CategoryFilterChips: React.FC<CategoryFilterChipsProps> = ({
 
 const styles = StyleSheet.create({
   pressed: { backgroundColor: colors.surfaceContainer },
-  container: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, },
+  container: {},
   scrollContent: {
     gap: space[1],
   },
-  chip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minWidth: touchTarget.min, minHeight: touchTarget.min, paddingVertical: space[2], paddingHorizontal: space[3], borderBottomWidth: space[1], borderBottomColor: 'transparent', },
-  chipSelected: { borderBottomColor: colors.primary, },
+  chip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minWidth: touchTarget.min, minHeight: touchTarget.min, paddingVertical: space[2], paddingHorizontal: space[3], borderRadius: radius.pill, },
+  chipSelected: { backgroundColor: colors.primary, },
   chipUnselected: {
-    backgroundColor: 'transparent',
+    backgroundColor: colors.surfaceContainerLowest,
   },
   chipText: {
     fontSize: typography.labelLarge.fontSize,
     fontFamily: fontFamily.semibold,
   },
-  chipTextSelected: { color: colors.primary, fontFamily: fontFamily.bold, },
+  chipTextSelected: { color: colors.onPrimary, fontFamily: fontFamily.bold, },
   chipTextUnselected: {
     color: colors.onSurfaceVariant,
   },

@@ -25,7 +25,7 @@ export const DateStripHeader: React.FC<DateStripHeaderProps> = ({
   const { width, fontScale } = useWindowDimensions();
   const [expanded, setExpanded] = useState(false);
   const cellWidth = Math.max(touchTarget.min, Math.ceil(fontScale * space[10]));
-  const gridMinWidth = 7 * cellWidth;
+  const gridMinWidth = 7 * cellWidth + 6 * space[0.5];
   const insets = useSafeAreaInsets();
   const available = width - insets.left - insets.right;
   const columnWidth = Math.min(available, layout.maxWidth) - 2 * screenGutter(available);
@@ -171,12 +171,12 @@ const styles = StyleSheet.create({
   navArrow: { width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm },
   monthCenter: { flexGrow: 1, flexShrink: 1, minHeight: touchTarget.min, gap: space[1], flexDirection: 'row', alignItems: 'center' },
   todayKey: { minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' },
-  weekKey: { minHeight: space[16], backgroundColor: colors.folderLilac, borderRadius: radius.none, borderBottomWidth: space[1], borderColor: colors.surfaceContainerHigh },
-  weekdayRow: { flexDirection: 'row', paddingVertical: space[2] },
+  weekKey: { minHeight: space[16], backgroundColor: colors.surfaceContainerLowest, borderRadius: radius.md, borderBottomWidth: 0 },
+  weekdayRow: { flexDirection: 'row', gap: space[0.5], paddingVertical: space[2] },
   weekdayCell: { flex: 1, alignItems: 'center' },
   weekdayText: { color: colors.onSurfaceVariant },
   gridContainer: { gap: 0 },
-  weekRow: { flexDirection: 'row' },
+  weekRow: { flexDirection: 'row', gap: space[0.5] },
   wrapWeek: { flexWrap: 'wrap', gap: space[1] },
   wrappedDay: { flexBasis: '23%', flexGrow: 1, borderRadius: radius.sm },
   dayCell: {
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     paddingVertical: space[1],
   },
-  dayCellSelected: { backgroundColor: colors.primary, borderColor: colors.clockSector, borderRadius: radius.sm },
+  dayCellSelected: { backgroundColor: colors.primary, borderColor: colors.highlight, borderRadius: radius.md },
   dayCellToday: { borderWidth: StyleSheet.hairlineWidth, borderColor: colors.primary },
   dayNumber: { color: colors.onSurface, fontFamily: fontFamily.semibold },
   dayNumberOutside: { color: colors.onSurfaceVariant },

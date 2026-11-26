@@ -1,9 +1,9 @@
+import { AppSwitch as Switch } from '@/shared/ui/app-switch';
 import { backOrHome } from '@/shared/utils/back-or-home';
 import React, { useState } from 'react';
 import {
   View,
   Pressable,
-  Switch,
   TextInput,
   StyleSheet,
   ScrollView,
@@ -845,10 +845,10 @@ const styles = StyleSheet.create({
   sectionHeaderTag: {
     fontFamily: fontFamily.bold,
     fontSize: typography.labelMedium.fontSize,
-    letterSpacing: 0.6,
+    letterSpacing: 0,
     color: s.inkMuted,
   },
-  cardGroup: { backgroundColor: s.card, borderRadius: radius.md, paddingHorizontal: space[1], borderWidth: stroke.hairline, borderColor: colors.border, },
+  cardGroup: { backgroundColor: s.card, borderRadius: radius.xl, paddingHorizontal: space[1], borderWidth: stroke.hairline, borderColor: colors.border, },
   settingItemRow: { minHeight: touchTarget.comfortable, flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[2], borderRadius: radius.sm, },
   pressedRow: { backgroundColor: colors.surfaceContainerLow },
   settingItemContent: { flex: 1 },
@@ -870,7 +870,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: radius.md,
-    backgroundColor: s.leafSoft,
+    backgroundColor: colors.folderLilac,
     alignItems: 'center',
     justifyContent: 'center',
   },

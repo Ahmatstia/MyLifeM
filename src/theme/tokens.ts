@@ -35,12 +35,12 @@ export function screenGutter(width: number) {
 
 export const radius = {
   none: 0,
-  xs: 6,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 22,
+  xl: 24,
+  xxl: 28,
   pill: 9999,
   full: 9999,
 } as const;
@@ -50,21 +50,21 @@ export const radius = {
  */
 export const elevation = {
   level1: {
-    shadowColor: '#332538',
+    shadowColor: '#352E26',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 1,
   },
   level2: {
-    shadowColor: '#332538',
+    shadowColor: '#352E26',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
     shadowRadius: 20,
     elevation: 4,
   },
   level3: {
-    shadowColor: '#332538',
+    shadowColor: '#352E26',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 14,

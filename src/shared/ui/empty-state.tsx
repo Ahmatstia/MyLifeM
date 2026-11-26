@@ -2,7 +2,7 @@ import React from 'react';
 import { View, type ViewStyle, StyleSheet } from 'react-native';
 import { FolderOpen, CheckCircle, AlertOctagon } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
-import { space } from '@/theme/tokens';
+import { space, radius, fontFamily } from '@/theme/tokens';
 import { AppText } from './app-text';
 import { Button } from './button';
 
@@ -96,12 +96,13 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 64,
     height: 64,
-    borderRadius: 16,
+    borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: space[4], // 16 dp
   },
   title: {
+    fontFamily: fontFamily.display,
     marginBottom: space[2], // 8 dp
   },
   description: {

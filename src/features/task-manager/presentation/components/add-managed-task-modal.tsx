@@ -1,9 +1,9 @@
+import { AppSwitch as Switch } from '@/shared/ui/app-switch';
 import React, { useState } from 'react';
 import {
   View,
   TextInput,
   Pressable,
-  Switch,
   StyleSheet,
 } from 'react-native';
 import {
