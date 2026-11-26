@@ -1,4 +1,3 @@
-import { NotificationButton } from '@/shared/notifications/notification-button';
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
@@ -70,9 +69,9 @@ export const TargetListScreen: React.FC = () => {
         </>
       }
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><AppText variant="displayMedium" accessibilityRole="header" style={[styles.heading, { flex: 1 }]}>
+      <AppText variant="displayMedium" accessibilityRole="header" style={styles.heading}>
         Target hidup
-      </AppText><NotificationButton /></View>
+      </AppText>
       <CategoryFilterChips
         categories={categories}
         selectedCategoryId={selectedCategoryId}

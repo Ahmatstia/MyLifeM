@@ -1,4 +1,3 @@
-import { NotificationButton } from '@/shared/notifications/notification-button';
 import React, { useState } from 'react';
 import {
   View,
@@ -236,7 +235,6 @@ export const CreateManagedTaskScreen: React.FC = () => {
       >
         <FormScreenHeader
           title="Jadwalkan Tugas Baru"
-          rightAction={<NotificationButton />}
           onBack={() => {
             stopPreview();
             backOrHome();

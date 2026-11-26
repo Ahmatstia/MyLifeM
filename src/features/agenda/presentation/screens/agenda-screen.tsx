@@ -1,4 +1,3 @@
-import { NotificationButton } from '@/shared/notifications/notification-button';
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { View, Pressable, StyleSheet, Alert } from 'react-native';
@@ -148,7 +147,7 @@ export const AgendaScreen: React.FC = () => {
         </Pressable>
       )}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}><AppText variant="displayMedium" accessibilityRole="header" style={[styles.header, { flex: 1 }]}>Kalender</AppText><NotificationButton /></View>
+      <AppText variant="displayMedium" accessibilityRole="header" style={styles.header}>Kalender</AppText>
 
       <PillTabs
           options={[

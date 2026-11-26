@@ -63,10 +63,10 @@ Navigasi memakai kapsul krem dengan sudut membulat dan jarak dari tepi perangkat
 
 ## Pusat notifikasi
 
-Peringatan status pengingat kalender, jadwal rutin, dan tugas dikumpulkan di halaman Notifikasi. Lonceng kanan atas memakai bidang kuning pastel dan badge jumlah pemberitahuan belum dibaca. Formulir dan halaman lanjutan memakai akses yang sama melalui header. Menu samping juga menyediakan akses Notifikasi.
+Peringatan status pengingat kalender, jadwal rutin, dan tugas dikumpulkan di halaman Notifikasi. Lonceng kanan atas memakai bidang kuning pastel dan badge jumlah pemberitahuan belum dibaca. Ikon lonceng hanya ditampilkan di kanan atas Beranda/Hari Ini. Halaman lain menggunakan header sesuai tugas masing-masing.
 
 Pemberitahuan status digabung berdasarkan sumber. Sinkronisasi berulang mempertahankan status dibaca; perubahan pesan membuatnya belum dibaca kembali; status yang sudah pulih dihapus otomatis. Status baca berlaku selama sesi aplikasi. Pesan waktu pengingat agenda yang sudah lewat juga masuk ke pusat ini. Ketuk pemberitahuan untuk membuka detail, pemeriksaan izin, dan navigasi ke kalender atau manajemen tugas. Izin hanya diminta melalui tindakan pengguna. Kesalahan simpan/muat, konflik pada agenda, dan konfirmasi penggantian data tetap muncul pada konteks tindakan terkait.
 
 Verifikasi: lint, pemeriksaan tipe, regresi UI, kalender, dan jadwal/pengaturan lulus. Ekspor web dan Android berhasil. Uji browser memakai data terisolasi untuk badge, pemberitahuan, baca semua, pemeriksaan izin, navigasi tujuan, dan empat lebar layar. Pengiriman notifikasi pada perangkat fisik belum diverifikasi ulang.
 
-[Kalender tanpa banner](screenshots/notifications/kalender.png) • [Pusat notifikasi](screenshots/notifications/pusat-notifikasi.png) • [Detail pengingat](screenshots/notifications/detail.png)
+[Pusat notifikasi](screenshots/notifications/pusat-notifikasi.png) • [Detail pengingat](screenshots/notifications/detail.png)

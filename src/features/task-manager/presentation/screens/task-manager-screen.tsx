@@ -1,4 +1,3 @@
-import { NotificationButton } from '@/shared/notifications/notification-button';
 import { backOrHome } from '@/shared/utils/back-or-home';
 import React, { useState } from 'react';
 import {
@@ -406,11 +405,11 @@ export const TaskManagerScreen: React.FC = () => {
     >
       <FormScreenHeader title="Manajemen Tugas" onBack={backOrHome}
         rightAction={
-          <View style={{ flexDirection: 'row', gap: 8 }}><NotificationButton /><Pressable onPress={() => router.push('/task-manager/new')}
+          <Pressable onPress={() => router.push('/task-manager/new')}
             accessibilityRole="button" accessibilityLabel="Tambah Tugas Terjadwal Baru"
             style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
             <Plus size={22} color={colors.onHighlight} />
-          </Pressable></View>
+          </Pressable>
         }
       />
 

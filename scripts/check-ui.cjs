@@ -294,7 +294,7 @@ for (const scale of [1, 2]) {
     reminderWarning: 'Agenda tetap tersimpan. Pengingat belum aktif; periksa izin notifikasi.', retryReminders: noop, addEvent: noop, toggleEvent: noop, removeEvent: noop,
   }) } })('src/features/agenda/presentation/screens/agenda-screen.tsx').AgendaScreen;
   const html = renderToStaticMarkup(React.createElement(AgendaWarning));
-  assert.ok(html.includes('Waktu bertumpuk') && html.includes('Berlanjut dari hari sebelumnya') && html.includes('Notifikasi') && !html.includes('Agenda tetap tersimpan. Pengingat belum aktif'));
+  assert.ok(html.includes('Waktu bertumpuk') && html.includes('Berlanjut dari hari sebelumnya') && !html.includes('aria-label="Notifikasi') && !html.includes('Agenda tetap tersimpan. Pengingat belum aktif'));
   previews.push(['agenda-overlap-warning' + (scale === 2 ? '-large-text' : ''), 320, html]);
 }
 fontScale = 1;
