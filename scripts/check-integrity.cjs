@@ -71,7 +71,7 @@ function environment(overrides = {}) {
 async function migrations() {
   let env = environment();
   await Promise.all([env.client.initDatabase(), env.client.initDatabase()]);
-  assert.equal(env.version(), 1);
+  assert.equal(env.version(), 2);
   assert.equal(env.raw.getAllSync('PRAGMA foreign_key_list(tasks)').length, 4);
   assert.equal(env.raw.getAllSync('PRAGMA foreign_key_list(stages)').length, 2);
   const fresh = env.state(); await env.retry(); assert.equal(env.state(), fresh);
@@ -79,7 +79,7 @@ async function migrations() {
   env = environment(); env.seedLegacy(); const before = env.state();
   await env.client.initDatabase();
   assert.ok(env.archive().includes('mylife-migration-snapshot'));
-  assert.equal(JSON.parse(env.archive()).version, 1);
+  assert.equal(JSON.parse(env.archive()).version, 2);
   assert.equal(env.raw.getFirstSync('SELECT target_id FROM tasks').target_id, 'target-from-project-projects');
   assert.equal(env.raw.getFirstSync('SELECT project_id FROM stages WHERE id = ?', 'stages').project_id, null);
   assert.equal(env.raw.getFirstSync('SELECT task_title FROM focus_sessions').task_title, fixture().tasks[0].title);
@@ -91,15 +91,15 @@ async function migrations() {
   assert.deepEqual(migrated.targets.find(row => row.id === 'targets'), expected.targets[0]);
   assert.equal(migrated.tasks[0].id, expected.tasks[0].id); assert.equal(migrated.tasks[0].status, expected.tasks[0].status);
   assert.deepEqual(env.raw.getAllSync('PRAGMA foreign_key_check'), []);
-  assert.equal(env.version(), 1);
+  assert.equal(env.version(), 2);
   for (const spec of env.format.TABLE_SPECS) {
-    const expectedCount = ['weeklySchedules', 'weeklyScheduleLogs'].includes(spec.key) ? 0 : ['targets', 'stages', 'userSettings'].includes(spec.key) ? 2 : 1;
+    const expectedCount = ['weeklySchedules', 'weeklyScheduleLogs','taskProfiles','taskSteps','dayPlans','dayReviews','taskActions'].includes(spec.key) ? 0 : ['targets', 'stages', 'userSettings'].includes(spec.key) ? 2 : 1;
     assert.equal(env.raw.getFirstSync(`SELECT count(*) AS n FROM ${spec.name}`).n, expectedCount);
   }
   const upgraded = env.state(); await env.retry(); assert.equal(env.state(), upgraded);
   assert.notEqual(before, upgraded);
   passed('v0 upgrades into Targets; original records, task IDs/status and session labels survive'); env.close();
-  env = environment(); await env.client.initDatabase(); assert.equal(env.version(), 1);
+  env = environment(); await env.client.initDatabase(); assert.equal(env.version(), 2);
   env.raw.execSync('DROP TABLE weekly_schedule_logs; DROP TABLE weekly_schedules;');
   assert.equal(env.raw.getAllSync("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'weekly_schedules'").length, 0);
   await env.retry();
@@ -116,12 +116,12 @@ async function migrations() {
   assert.deepEqual(env.store.readBackupData(env.raw).focusSessions, archiveData.focusSessions);
   assert.deepEqual(env.store.readBackupData(env.raw).projects, archiveData.projects);
   assert.equal(env.raw.getFirstSync('SELECT target_id FROM tasks').target_id, 'target-from-project-projects');
-  assert.equal(env.version(), 1); assert.deepEqual(env.raw.getAllSync('PRAGMA foreign_key_check'), []);
+  assert.equal(env.version(), 2); assert.deepEqual(env.raw.getAllSync('PRAGMA foreign_key_check'), []);
   passed('pre-migration archive restores through the current repository without executing any archived SQL'); env.close();
   env = environment(); env.seedLegacy(fixture(), true); await env.client.initDatabase();
   assert.equal(env.raw.getFirstSync('SELECT category_id FROM targets').category_id, null);
   assert.equal(env.raw.getFirstSync('SELECT name FROM tasks').name, null);
-  assert.equal(env.version(), 1); passed('older columns upgrade with explicit defaults without inventing a career category'); env.close();
+  assert.equal(env.version(), 2); passed('older columns upgrade with explicit defaults without inventing a career category'); env.close();
   for (const problem of ['orphan', 'conflict', 'unknown', 'object', 'storage', 'copy', 'index', 'version', 'commit', 'changed', 'future']) {
     env = environment(); env.seedLegacy();
     if (problem === 'orphan') env.raw.execSync("UPDATE tasks SET stage_id = 'missing'");
@@ -143,13 +143,13 @@ async function migrations() {
     else assert.equal(env.state(), original, problem);
     assert.equal(env.raw.getFirstSync('PRAGMA foreign_keys').foreign_keys, 1);
     if (problem !== 'future') assert.equal(env.version(), 0);
-    if (['copy', 'index', 'version', 'commit'].includes(problem)) { env.fault(() => {}); await env.client.initDatabase(); assert.equal(env.version(), 1); }
+    if (['copy', 'index', 'version', 'commit'].includes(problem)) { env.fault(() => {}); await env.client.initDatabase(); assert.equal(env.version(), 2); }
     passed(problem + ' prevents partial migration and schema-version advancement; FK restored'); env.close();
   }
   env = environment(); env.seedLegacy(); let failEnable = true;
-  env.fault(sql => { if (failEnable && sql === 'PRAGMA foreign_keys = ON;' && env.version() === 1) { failEnable = false; throw new Error('Cannot enable FK'); } });
+  env.fault(sql => { if (failEnable && sql === 'PRAGMA foreign_keys = ON;' && env.version() === 2) { failEnable = false; throw new Error('Cannot enable FK'); } });
   await assert.rejects(env.client.initDatabase(), /Cannot enable FK/);
-  assert.equal(env.version(), 1);
+  assert.equal(env.version(), 2);
   await env.client.initDatabase(); assert.equal(env.raw.getFirstSync('PRAGMA foreign_keys').foreign_keys, 1);
   passed('post-commit FK activation failure blocks startup and retry re-enables protection'); env.close();
 }
@@ -202,8 +202,8 @@ async function repositories() {
   env.raw.execSync('DROP TRIGGER fail_delete'); passed('failed cascading delete leaves aggregate and every dependent unchanged');
   reset();
   for (let i = 0; i < 4; i++) await focus.createQuickTask('extra ' + i, '2026-10-26');
-  original = env.state(); await assert.rejects(focus.createQuickTask('sixth', '2026-10-26'), /Maksimal/); assert.equal(env.state(), original);
-  passed('sixth priority rolls back its quick task, leaving no hidden orphan');
+  await focus.createQuickTask('sixth', '2026-10-26'); assert.equal((await focus.getTodayFocusItems('2026-10-26')).length,6);
+  passed('sixth priority is permitted; guidance replaces the former hard cap');
   reset();
   env.raw.execSync("INSERT INTO stages (id, parent_type, parent_id, project_id, name, sort_order, created_at, updated_at) VALUES ('second', 'PROJECT', 'projects', 'projects', 'second', 1, '2026-10-26', '2026-10-26');");
   const otherStage = { id: 'second' };

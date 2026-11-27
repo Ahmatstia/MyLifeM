@@ -1,5 +1,6 @@
+import { migrateTaskPlanning } from './task-planning-migration';
 import { getSqliteDb, prepareSqliteDb } from './connection';
-import { TABLES_DDL, INDEXES_DDL, SEED_CATEGORIES_SQL, SEED_PILLARS_SQL, WEEKLY_SCHEDULES_DDL } from './schema-sql';
+import { TABLES_DDL, INDEXES_DDL, SEED_CATEGORIES_SQL, SEED_PILLARS_SQL, WEEKLY_SCHEDULES_DDL, PLANNING_DDL } from './schema-sql';
 import { INTEGRITY_DDL } from './integrity';
 import { TABLE_SPECS, parseBackup, checkBackupSize, serializeBackup } from '@/features/settings/data/backup-format';
 import { readBackupData, replaceBackupData } from '@/features/settings/data/backup-store';
@@ -8,7 +9,7 @@ import { setPrayerLocation } from '@/features/prayer-times/data/prayer-location-
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { consolidateProjects, hasPendingProjects } from './project-consolidation';
 
-export const DATABASE_VERSION = 1;
+export const DATABASE_VERSION = 2;
 let initialized = false;
 let initialization: Promise<void> | null = null;
 
@@ -26,7 +27,21 @@ async function initialize(): Promise<void> {
   if (connection.getFirstSync<{ foreign_keys: number }>('PRAGMA foreign_keys')?.foreign_keys !== 1) throw new Error('Perlindungan relasi database belum aktif. Database tidak diubah.');
   const version = connection.getFirstSync<{ user_version: number }>('PRAGMA user_version')!.user_version;
   if (version > DATABASE_VERSION) throw new Error('Database berasal dari versi aplikasi lebih baru. Gunakan versi aplikasi yang sesuai.');
-  if (version === DATABASE_VERSION) {
+  if (version === 1) {
+    let before = '';
+    connection.withTransactionSync(() => { before = snapshot(connection); });
+    await saveMigrationBackup(JSON.stringify({ ...JSON.parse(before), capturedAt: new Date().toISOString() }));
+    connection.withTransactionSync(() => {
+      if (snapshot(connection) !== before) throw new Error('Data berubah selama pencadangan. Coba lagi.');
+      connection.execSync(PLANNING_DDL);
+      connection.execSync('DROP TRIGGER IF EXISTS task_history_delete;' + INTEGRITY_DDL);
+      migrateTaskPlanning(connection);
+      parseBackup(serializeBackup(readBackupData(connection)));
+      if (connection.getAllSync('PRAGMA foreign_key_check').length) throw new Error('Relasi migrasi tugas tidak utuh.');
+      connection.execSync(`PRAGMA user_version = ${DATABASE_VERSION}`);
+    });
+  }
+  if (version === DATABASE_VERSION || version === 1) {
     const hasWeeklySchedules = connection.getFirstSync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'weekly_schedules'"
     );
@@ -37,7 +52,7 @@ async function initialize(): Promise<void> {
     // Reading every expected column detects an incomplete/tampered schema before mounting CRUD.
     readBackupData(connection);
     const foreignKeys = TABLE_SPECS.reduce((sum, spec) => sum + connection.getAllSync(`PRAGMA foreign_key_list("${spec.name}")`).length, 0);
-    if (foreignKeys !== 16 || connection.getAllSync("SELECT name FROM sqlite_master WHERE type = 'trigger' AND name IN ('task_owner_insert', 'task_owner_update', 'stage_owner_update', 'milestone_owner_update', 'task_history_delete')").length !== 5) throw new Error('Constraint database belum lengkap. Database tidak diubah.');
+    if (foreignKeys !== 19 || connection.getAllSync("SELECT name FROM sqlite_master WHERE type = 'trigger' AND name IN ('task_owner_insert', 'task_owner_update', 'stage_owner_update', 'milestone_owner_update', 'task_history_delete')").length !== 5) throw new Error('Constraint database belum lengkap. Database tidak diubah.');
     return;
   }
   let before = '';
@@ -60,6 +75,7 @@ async function initialize(): Promise<void> {
       if (data) replaceBackupData(connection, data);
       else connection.execSync(SEED_CATEGORIES_SQL + SEED_PILLARS_SQL);
       connection.execSync(INTEGRITY_DDL);
+      migrateTaskPlanning(connection);
       if (connection.getAllSync('PRAGMA foreign_key_check').length || connection.getFirstSync<{ integrity_check: string }>('PRAGMA integrity_check')?.integrity_check !== 'ok') throw new Error('Integritas hasil migrasi gagal. Semua perubahan dibatalkan.');
       connection.execSync(`PRAGMA user_version = ${DATABASE_VERSION};`);
     });

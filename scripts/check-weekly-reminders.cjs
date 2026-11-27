@@ -96,7 +96,11 @@ async function controllerChecks() {
     const calls = []; let calendar = { key: 'initial' };
     const h = harness({
       '@/shared/hooks/use-device-calendar': { useDeviceCalendar: () => calendar },
-      '../../data/services/calendar-reminder.service': { syncCalendarReminders: async (...args) => { calls.push(args); return true; } },
+      'expo-router': { router: {push() {}} },
+      '../../data/services/agenda-notification.service': { AgendaNotificationService: {observeResponses: () => () => {}} },
+      '@/features/task-manager/data/services/task-alarm-notification.service': {subscribeTaskAlarmStatus: () => () => {}},
+      '@/shared/notifications/notification-store': {useNotificationStore:{getState:()=>({publish(){}})}},
+      '../../data/services/calendar-reminder.service': { subscribeCalendarReminderStatus: () => () => {}, syncCalendarReminders: async (...args) => { calls.push(args); return true; } },
     });
     try {
       const component = h.load('src/features/agenda/presentation/components/calendar-reminder-sync.tsx').CalendarReminderSync;

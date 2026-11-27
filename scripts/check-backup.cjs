@@ -63,6 +63,7 @@ function fixture() {
     column.key === spec.primaryKey ? spec.key : !column.notNull ? null : column.type === 'number' ? 0
       : /(?:At|Date|Time)$/.test(column.key) ? now : column.key === 'date' ? '2026-10-26' : 'Custom ' + column.key,
   ]))]]));
+  for (const key of ['taskProfiles','taskSteps','dayPlans','dayReviews','taskActions']) data[key] = [];
   Object.assign(data.targets[0], { categoryId: 'categories', pillarId: 'lifePillars', type: 'MILESTONE_BASED', status: 'ACTIVE', priority: 'HIGH', targetValue: 100 });
   Object.assign(data.projects[0], { targetId: 'targets', status: 'ACTIVE', priority: 'HIGH' });
   Object.assign(data.stages[0], { parentType: 'PROJECT', parentId: 'projects', projectId: 'projects', targetId: null });
@@ -88,14 +89,14 @@ async function main() {
   legacy.data.tasks[0].targetId = 'targets';
   check('previous complete v1 backups upgrade to one owner, stage FKs and session labels', () => {
     const upgraded = format.parseBackup(JSON.stringify(legacy));
-    assert.equal(upgraded.schemaVersion, 2);
+    assert.equal(upgraded.schemaVersion, 3);
     assert.equal(upgraded.data.tasks[0].targetId, null);
     assert.equal(upgraded.data.stages[0].projectId, 'projects');
     assert.equal(upgraded.data.focusSessions[0].taskTitle, source.tasks[0].title);
   });
-  check('all 13 tables round trip, including custom labels, nulls, legacy status and quoted SQL text', () => {
+  check('all 18 tables round trip, including custom labels, nulls, legacy status and quoted SQL text', () => {
     assert.deepEqual(format.parseBackup(json).data, JSON.parse(JSON.stringify(source)));
-    assert.equal(Object.keys(format.parseBackup(json).data).length, 13);
+    assert.equal(Object.keys(format.parseBackup(json).data).length, 18);
   });
   for (const scheduleType of ['COLLEGE', 'WORK', 'STUDY', 'PERSONAL', 'ROUTINE']) {
     check(`${scheduleType} schedules and daily logs survive current and legacy backup parsing`, () => {

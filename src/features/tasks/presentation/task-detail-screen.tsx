@@ -1,0 +1,42 @@
+import { isTaskOverdue } from '../domain/deadline';
+import React, { useCallback, useState, useRef } from 'react';
+import { View, TextInput, Alert } from 'react-native';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { Screen, AppText, Button, Banner, FormScreenHeader, SproutCheck, PillTabs } from '@/shared/ui';
+import { taskService, type UnifiedTask } from '../data/task.service';
+import { formatLocalDate, shiftDate } from '@/shared/utils/local-date';
+import { formInputBase } from '@/shared/ui/form-control-styles';
+import { todayColors as c } from '@/theme/today';
+import { backOrHome } from '@/shared/utils/back-or-home';
+
+export function TaskDetailScreen() {
+ const {id}=useLocalSearchParams<{id:string}>();
+ const [task,setTask]=useState<UnifiedTask>(),[steps,setSteps]=useState<Awaited<ReturnType<typeof taskService.steps>>>([]),[blocks,setBlocks]=useState<Awaited<ReturnType<typeof taskService.blocks>>>([]),[step,setStep]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const today=formatLocalDate();
+ const [schedule,setSchedule]=useState(false),[blockId,setBlockId]=useState<string>(),[day,setDay]=useState(today),[endDay,setEndDay]=useState(today),[start,setStart]=useState('09:00'),[end,setEnd]=useState('09:30'),[reminder,setReminder]=useState('0'),[loud,setLoud]=useState(false);
+ const saving=useRef(false);
+ const load=useCallback(async()=>{try{const [all,steps,blocks]=await Promise.all([taskService.list(),taskService.steps(id),taskService.blocks(id)]);const item=all.find(t=>t.id===id);if(!item)throw new Error('Tugas tidak ditemukan.');setTask(item);setSteps(steps);setBlocks(blocks);setError('');}catch(e){setError(e instanceof Error?e.message:'Tugas belum dapat dimuat.');}},[id]);
+ useFocusEffect(useCallback(()=>{void load();},[load]));
+ const act=async(work:()=>Promise<unknown>)=>{if(saving.current)return;saving.current=true;setBusy(true);setError('');try{await work();await load();}catch(e){setError(e instanceof Error?e.message:'Perubahan belum tersimpan.');}finally{saving.current=false;setBusy(false);}};
+ const box={backgroundColor:c.card,borderRadius:24,padding:16,gap:12};
+ return <Screen><FormScreenHeader title="Rincian tugas" onBack={backOrHome}/>{error?<Banner variant="error" message={error} actionText="Coba lagi" onActionPress={load}/>:null}
+ {task&&<>
+ <View style={[box,{backgroundColor:c.sky}]}><AppText accessibilityRole="header" variant="headlineLarge">{task.title}</AppText><AppText color={c.muted}>{task.targetName??'Tugas mandiri'} · {task.estimate==null?'Estimasi belum diketahui':task.estimate+' menit'}</AppText>{task.profile?.nextAction?<AppText variant="titleMedium">Mulai dari: {task.profile.nextAction}</AppText>:null}{task.description?<AppText>{task.description}</AppText>:null}<AppText>{task.dueDate?'Tenggat '+task.dueDate+(task.profile?.deadlineTime?' '+task.profile.deadlineTime:' (sepanjang tanggal tersebut)'):'Tanpa tenggat'}</AppText></View>
+ {isTaskOverdue(task.dueDate,task.profile?.deadlineTime,task.status)?<AppText color={c.peachInk}>Tenggat sudah lewat. Kamu bisa menentukan langkah kecil atau mengatur ulang pengerjaannya.</AppText>:null}
+ <Button title="Ubah rincian" variant="outlined" onPress={()=>router.push({pathname:'/tasks/new',params:{id}})}/>
+ <Button title={task.status==='COMPLETED'?'Buka kembali tugas':'Tandai selesai'} disabled={busy||task.status==='CANCELLED'} onPress={()=>void act(()=>taskService.setStatus(id,task.status==='COMPLETED'?'TODO':'COMPLETED'))}/>
+ {['TODO','IN_PROGRESS'].includes(task.status)&&<>
+ <Button title={task.selectedDates.includes(today)?'Lepas dari Hari Ini':'Pilih untuk Hari Ini'} disabled={busy} variant="tonal" onPress={()=>void act(()=>task.selectedDates.includes(today)?taskService.removeFromDay(id):taskService.select(id))}/>
+ <Button title="Mulai fokus" disabled={busy} onPress={()=>void act(async()=>{await taskService.select(id);router.navigate({pathname:'/(tabs)',params:{focusTask:id}});})}/>
+ <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}><Button title="Lanjut besok" disabled={busy} variant="text" onPress={()=>void act(async()=>{await taskService.moveDay(id,today,shiftDate(today,1));})}/><Button title="Simpan untuk nanti" disabled={busy} variant="text" onPress={()=>void act(()=>taskService.park(id,'SOMEDAY'))}/><Button title="Menunggu" disabled={busy} variant="text" onPress={()=>void act(()=>taskService.park(id,'WAITING'))}/></View>
+ </>}
+ <View style={box}><AppText variant="headlineSmall">Langkah kecil</AppText><AppText color={c.muted}>Checklist ini membantu mulai. Menyelesaikan langkah tidak otomatis menutup tugas.</AppText>{steps.map(item=><View key={item.id} style={{flexDirection:'row',alignItems:'center',gap:8}}><SproutCheck checked={!!item.isCompleted} disabled={busy} accessibilityLabel={'Langkah '+item.title} onPress={()=>void act(()=>taskService.toggleStep(item.id))}/><AppText style={{flex:1}}>{item.title}</AppText></View>)}<TextInput accessibilityLabel="Langkah baru" placeholder="Langkah paling kecil berikutnya" value={step} onChangeText={setStep} style={formInputBase} editable={!busy}/><Button title="Tambah langkah" disabled={busy||!step.trim()} variant="tonal" onPress={()=>void act(async()=>{await taskService.addStep(id,step);setStep('');})}/></View>
+ <View style={box}><AppText variant="headlineSmall">Waktu pengerjaan</AppText><AppText color={c.muted}>Satu tugas boleh dicicil dalam beberapa blok. Mengubah blok tidak mengubah tenggat.</AppText>
+ {blocks.map(block=><View key={block.id} style={{gap:8,borderTopWidth:1,borderColor:c.line,paddingTop:12}}><AppText>{new Date(block.startTime).toLocaleString('id-ID')} – {new Date(block.endTime).toLocaleString('id-ID')}</AppText><Button title="Ubah blok" disabled={busy} variant="text" onPress={()=>{const from=new Date(block.startTime),to=new Date(block.endTime);const clock=(d:Date)=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');setBlockId(block.id);setLoud(block.id==='task-block-legacy-'+id&&['ALARM','BOTH'].includes(task.profile?.alertMode??'NONE'));setDay(formatLocalDate(from));setEndDay(formatLocalDate(to));setStart(clock(from));setEnd(clock(to));setReminder(block.reminderMinutes===null?'NONE':String(block.reminderMinutes));setSchedule(true);}}/><Button title="Hapus blok" disabled={busy} variant="text" onPress={()=>Alert.alert('Hapus blok waktu?','Tugas dan tenggat tetap tersimpan.',[{text:'Batal',style:'cancel'},{text:'Hapus blok',style:'destructive',onPress:()=>void act(()=>taskService.deleteBlock(block.id))}])}/></View>)}
+ <Button title="Tambah blok pengerjaan" disabled={busy||['COMPLETED','CANCELLED'].includes(task.status)} variant="tonal" onPress={()=>{setBlockId(undefined);setLoud(false);setSchedule(true);}}/>
+ {schedule&&<><AppText>Mulai</AppText><TextInput accessibilityLabel="Tanggal mulai blok" value={day} onChangeText={setDay} style={formInputBase}/><TextInput accessibilityLabel="Jam mulai blok" value={start} onChangeText={setStart} style={formInputBase}/><AppText>Selesai</AppText><TextInput accessibilityLabel="Tanggal selesai blok" value={endDay} onChangeText={setEndDay} style={formInputBase}/><TextInput accessibilityLabel="Jam selesai blok" value={end} onChangeText={setEnd} style={formInputBase}/><PillTabs options={[{value:'NONE',label:'Tanpa pengingat'},{value:'0',label:'Tepat waktu'},{value:'10',label:'10 menit sebelum'}]} value={reminder} onChange={setReminder}/><AppText>Alarm keras hanya untuk satu blok utama, dan harus kamu pilih sendiri. Blok lain dapat memakai notifikasi biasa.</AppText><PillTabs options={[{value:'NO',label:'Notifikasi biasa'},{value:'YES',label:'Alarm keras'}]} value={loud?'YES':'NO'} onChange={value=>setLoud(value==='YES')}/><Button title="Simpan blok" disabled={busy} onPress={()=>void act(async()=>{await taskService.schedule(id,day,start,endDay,end,reminder==='NONE'?null:Number(reminder),blockId,loud);setSchedule(false);})}/><Button title="Batal mengatur waktu" variant="text" disabled={busy} onPress={()=>setSchedule(false)}/></>}
+ </View>
+ {task.status==='CANCELLED'?<Button title="Aktifkan kembali" disabled={busy} onPress={()=>void act(()=>taskService.setStatus(id,'TODO'))}/>:<Button title="Batalkan tugas" variant="text" disabled={busy} onPress={()=>Alert.alert('Batalkan tugas?','Riwayat pekerjaan tetap tersimpan.',[{text:'Kembali',style:'cancel'},{text:'Batalkan tugas',style:'destructive',onPress:()=>void act(()=>taskService.setStatus(id,'CANCELLED'))}])}/>}
+ </>}
+ </Screen>;
+}

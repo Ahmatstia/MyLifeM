@@ -43,7 +43,7 @@ const QUICK_CATEGORIES = [
 const DURATION_OPTIONS = [null, 15, 30, 45, 60] as const;
 
 export const CreatePriorityScreen: React.FC = () => {
-  const { focusItems = [], availableTasks = [], addQuickTask, addTaskToToday, isLoading, error } = useTodayFocus();
+  const { availableTasks = [], addQuickTask, addTaskToToday, isLoading, error } = useTodayFocus();
 
   const [quickTitle, setQuickTitle] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<QuickTaskCategory>('Belajar');
@@ -52,15 +52,10 @@ export const CreatePriorityScreen: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const currentCount = focusItems.length;
-  const isFull = currentCount >= 5;
+
 
   const savePriority = async (work: () => Promise<boolean>) => {
     if (submitting.current || isLoading) return;
-    if (isFull) {
-      setErrorMessage('Maksimal 5 tugas prioritas per hari.');
-      return;
-    }
 
     submitting.current = true; setErrorMessage(null); setIsSubmitting(true);
     try {
@@ -112,7 +107,7 @@ export const CreatePriorityScreen: React.FC = () => {
               placeholderTextColor={s.inkSubtle}
               style={formInputBase}
               autoFocus
-              editable={!isFull && !isSubmitting && !isLoading}
+              editable={!false && !isSubmitting && !isLoading}
             />
           </View>
 
@@ -139,7 +134,7 @@ export const CreatePriorityScreen: React.FC = () => {
               return (
                 <Pressable key={minutes ?? 'auto'} onPress={() => setSelectedMinutes(minutes)}
                   accessibilityRole="button" accessibilityState={{ selected }}
-                  accessibilityLabel={label} disabled={isSubmitting || isLoading || isFull}
+                  accessibilityLabel={label} disabled={isSubmitting || isLoading || false}
                   style={({ pressed }) => [styles.durationKey, selected && styles.selectedKey, pressed && styles.keyPressed]}>
                   <AppText variant="titleSmall" tabularNums color={selected ? 'onPrimary' : 'onSurface'}>
                     {minutes ?? 'Auto'}
@@ -189,7 +184,7 @@ export const CreatePriorityScreen: React.FC = () => {
               title="Simpan"
               onPress={handleQuickAdd}
               loading={isSubmitting}
-              disabled={isFull || isLoading || isSubmitting || !quickTitle.trim()}
+              disabled={false || isLoading || isSubmitting || !quickTitle.trim()}
             />
           </View>
       </KeyboardAvoidingView>

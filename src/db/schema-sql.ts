@@ -1,4 +1,27 @@
-export const TABLES_DDL = `
+export const PLANNING_DDL = `
+CREATE TABLE IF NOT EXISTS task_profiles (
+ id TEXT PRIMARY KEY NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+ planning_state TEXT NOT NULL DEFAULT 'INBOX' CHECK(planning_state IN ('INBOX','READY','SOMEDAY','WAITING')),
+ next_action TEXT, estimate_known INTEGER NOT NULL DEFAULT 0 CHECK(estimate_known IN(0,1)),
+ context TEXT NOT NULL DEFAULT '', category_type TEXT NOT NULL DEFAULT 'PERSONAL',
+ execution_date TEXT, execution_time TEXT, deadline_time TEXT,
+ alert_mode TEXT NOT NULL DEFAULT 'NONE' CHECK(alert_mode IN ('NONE','NOTIFICATION','ALARM','BOTH')),
+ alarm_track_id TEXT NOT NULL DEFAULT 'builtin-morning-chime', alarm_track_name TEXT NOT NULL DEFAULT 'Harmoni Pagi', alarm_track_uri TEXT,
+ snooze_minutes INTEGER NOT NULL DEFAULT 10 CHECK(snooze_minutes>0), snoozed_until_iso TEXT, last_alarm_fired_key TEXT
+);
+CREATE TABLE IF NOT EXISTS task_steps (
+ id TEXT PRIMARY KEY NOT NULL, task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+ title TEXT NOT NULL, is_completed INTEGER NOT NULL DEFAULT 0 CHECK(is_completed IN(0,1)), sort_order INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS day_plans (id TEXT PRIMARY KEY NOT NULL, available_minutes INTEGER NOT NULL DEFAULT 120 CHECK(available_minutes>=0));
+CREATE TABLE IF NOT EXISTS day_reviews (id TEXT PRIMARY KEY NOT NULL, accomplishment TEXT NOT NULL, obstacle TEXT NOT NULL, next_action TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS task_actions (id TEXT PRIMARY KEY NOT NULL, task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL, task_title TEXT NOT NULL, date TEXT NOT NULL, action TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_task_steps_task ON task_steps(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_actions_date ON task_actions(date);
+`;
+
+export const TABLES_DDL = `${PLANNING_DDL}
+
 CREATE TABLE IF NOT EXISTS categories (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,

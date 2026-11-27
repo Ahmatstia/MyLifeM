@@ -1,12 +1,13 @@
 import { NotificationButton } from '@/shared/notifications/notification-button';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   useWindowDimensions,
   Pressable,
   StyleSheet,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { DayPlanPanel } from '@/features/tasks/presentation/day-plan-panel';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
   CalendarDays,
   Check,
@@ -57,18 +58,25 @@ export const TodayFocusScreen: React.FC = () => {
   } = useTodayFocus();
 
   const {
-    events = [],
+    events: rawEvents = [],
     weeklyOccurrences = [],
     toggleEvent,
     toggleWeeklyOccurrence,
   } = useAgenda();
 
+  const events = rawEvents.filter(event => !event.taskId);
   const prayerSchedule = usePrayerTimes();
   const [planFilter, setPlanFilter] = useState<'ALL' | 'OPEN' | 'DONE'>('ALL');
   const [isTimerExpanded, setIsTimerExpanded] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   useOpenAddFromParam(() => router.push('/today/new'));
   const timer = useFocusTimer({ onSessionRecorded: refresh });
+  const {focusTask: requestedTask}=useLocalSearchParams<{focusTask?:string}>();
+  useEffect(()=>{
+    if(!requestedTask || timer.hasSession)return;
+    const chosen=focusItems.find(item=>item.taskId===requestedTask);
+    if(chosen){timer.setActiveTask(chosen.task);setIsTimerExpanded(true);router.setParams({focusTask:undefined});}
+  },[requestedTask,focusItems,timer]);
 
   const completedCount = focusItems.filter((item) => item.isCompleted).length;
   const activeItems = focusItems.filter((item) => item.task.status !== 'CANCELLED');
@@ -243,6 +251,8 @@ export const TodayFocusScreen: React.FC = () => {
                 onMinimize={() => setIsTimerExpanded(false)}
               />
             )}
+
+            <DayPlanPanel revision={focusItems.map(item=>item.taskId+item.isCompleted).join(',')} onChange={refresh} />
 
             <View style={styles.sectionHeaderBlock}>
               <View style={styles.sectionHeaderTop}>

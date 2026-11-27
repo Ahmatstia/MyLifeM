@@ -1,60 +1,44 @@
-# Welcome to your Expo app 👋
+# MyLife
 
-> **MyLife — mulai dari [peta produk dan audit](./docs/START_HERE.md).** Proyek ini adalah aplikasi tujuan, tugas, fokus, dan agenda lokal berbasis Expo SDK 58. Dokumen v2 menetapkan arah selanjutnya; implementasi saat ini masih memiliki masalah yang dicatat dalam audit. Petunjuk template Expo di bawah dipertahankan sebagai referensi setup.
+MyLife membantu mencatat tugas, memilih rencana harian, mengatur waktu pengerjaan, dan meninjau hasil. Aplikasi menggunakan Expo SDK 58, React Native, dan SQLite lokal.
 
-Pada layar Hari Ini, jam meja menunjukkan durasi tugas dan membuka timer fokus. Baca [arah desain terbaru](./docs/design/DESIGN_V4.md) dan [catatan implementasi UI](./docs/UI_IMPLEMENTATION_2026-10-26.md) sebelum menambah layar atau komponen.
+Mulai dari [Blueprint produk dan implementasi 27 November 2026](docs/PRODUCT_BLUEPRINT_2026-11-27.md). Riset awal pengguna dipertahankan pada [naskah riset](mylife-riset-arsitektur.md); koreksi dan keputusan produk yang berlaku ada pada blueprint.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Alur utama
 
-## Get started
+1. Catat pekerjaan di Tugas; judul saja sudah cukup.
+2. Pilih tugas untuk Hari Ini, sesuaikan dengan waktu fokus yang tersedia.
+3. Jika perlu, atur satu atau beberapa blok pengerjaan di Kalender. Tenggat tetap terpisah.
+4. Kerjakan langkah kecil atau gunakan timer. Tandai selesai secara terpisah.
+5. Buka Tinjauan untuk mencatat hasil dan memilih apa yang dilanjutkan.
 
-1. Install dependencies
+Navigasi utama: Hari Ini, Tugas, Tambah, Kalender, Menu. Target dan Tinjauan tersedia dari Menu. Lonceng hanya pada Hari Ini. Lihat [arah visual](docs/design/DESIGN_V4.md) untuk konteks desain.
 
-   ```bash
-   npm install
-   ```
+## Menjalankan pengembangan
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+npm install
+npm start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Gunakan Expo Go untuk pengembangan dengan modul yang sudah tersedia. Pengujian pengiriman notifikasi dan alarm harus dilakukan pada perangkat native. Setelah menambahkan modul native di masa depan, ikuti petunjuk Expo mengenai development build.
 
-### Other setup steps
+## Pemeriksaan
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```sh
+npm run lint
+npx tsc --noEmit
+npm run test:task-planning
+npm run test:backup
+npm run test:integrity
+npm run test:ui
+npm run test:layouts
+```
 
-## Learn more
+Pengujian data menggunakan SQLite sementara; tidak membuka database pribadi pengguna. Pengujian tata letak browser membutuhkan Chromium/Playwright dan membedakan hasil browser dari bukti native.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Data dan kompatibilitas
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Peningkatan database menyimpan salinan pengaman sebelum konversi. Tugas lama, ID, riwayat sesi, dan pengaturan alarm dipertahankan. Cadangan skema 3 mencakup rencana serta tinjauan; format lama tetap dapat dibaca dan dikonversi. Jangan menggunakan aplikasi versi lama untuk membuka database atau cadangan yang dibuat versi lebih baru.
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Dokumen pada [START_HERE](docs/START_HERE.md) dan [arsitektur v2](docs/ARCHITECTURE_V2.md) menyimpan konteks audit/pengembangan sebelumnya. Blueprint terbaru menjadi acuan alur yang berlaku.

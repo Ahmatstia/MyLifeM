@@ -1,5 +1,8 @@
+import { router, useFocusEffect } from 'expo-router';
+import type { UnifiedTask } from '@/features/tasks/data/task.service';
+import { taskService } from '@/features/tasks/data/task.service';
 import { backOrHome } from '@/shared/utils/back-or-home';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Pressable,
@@ -71,6 +74,8 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
     deleteThisTarget,
   } = useTargetDetail(targetId);
 
+  const [directTasks,setDirectTasks]=useState<UnifiedTask[]>([]);
+  useFocusEffect(useCallback(()=>{let alive=true;void taskService.list().then(items=>{if(alive)setDirectTasks(items.filter(item=>item.owner===targetId&&!item.stageId));}).catch(()=>{});return()=>{alive=false;};},[targetId]));
   const [stageModalVisible, setStageModalVisible] = useState(false);
   const [editingStage, setEditingStage] = useState<
     { id: string; name: string; description?: string | null } | undefined
@@ -248,10 +253,21 @@ export const TargetDetailScreen: React.FC<TargetDetailScreenProps> = ({ targetId
           <View style={[styles.aggregationFill, { width: `${progress}%` }]} />
         </View>
         <AppText variant="labelMedium" color="onSurfaceVariant">
-          {target.totalTasks ? `${progress}% selesai` : 'Belum ada rencana'}
+          {target.totalTasks ? `${progress}% rencana selesai` : 'Belum ada rencana'}
         </AppText>
         <AppText>Estimasi {target.totalEstimatedHours || 0} jam</AppText>
         <AppText>Tenggat {formattedTargetDate}</AppText>
+      </View>
+
+      <Button title={target.status === 'COMPLETED' ? 'Aktifkan kembali Target' : 'Konfirmasi Target tercapai'} variant="outlined" onPress={() => Alert.alert('Hasil Target', 'Pastikan hasil yang kamu tulis pada deskripsi sudah tercapai. Persentase tugas hanya menunjukkan progres rencana.', [
+        { text: 'Kembali', style: 'cancel' },
+        { text: target.status === 'COMPLETED' ? 'Aktifkan' : 'Tercapai', onPress: () => { void taskService.setTargetStatus(targetId,target.status !== 'COMPLETED').then(refresh).catch(() => Alert.alert('Belum tersimpan','Coba kembali.')); } },
+      ])} />
+
+      <View style={{gap:12}}>
+        <AppText accessibilityRole="header" variant="headlineSmall">Tugas untuk Target ini</AppText>
+        {directTasks.map(item=><Button key={item.id} title={(item.status==='COMPLETED'?'Selesai: ':'')+item.title} variant="tonal" onPress={()=>router.push({pathname:'/tasks/[id]',params:{id:item.id}})}/>)}
+        <Button title="Tambah tugas langsung" variant="outlined" onPress={()=>router.push({pathname:'/tasks/new',params:{target:targetId}})}/>
       </View>
 
       <View style={styles.detailDates}>

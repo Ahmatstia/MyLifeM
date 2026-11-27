@@ -106,9 +106,7 @@ function addPriority(tx: Pick<typeof db, 'select' | 'insert'>, date: string, tas
       .where(eq(dailyFocusItems.date, date)).all();
 
     const currentCount = countRows[0]?.count || 0;
-    if (currentCount >= 5) {
-      throw new Error('Maksimal 5 fokus tugas per hari (Rule of 3-5 Priorities).');
-    }
+
 
     tx.insert(dailyFocusItems).values({
       id: generateId(),

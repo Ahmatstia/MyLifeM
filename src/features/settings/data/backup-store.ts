@@ -1,3 +1,4 @@
+import { migrateTaskPlanning } from '@/db/task-planning-migration';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { TABLE_SPECS, parseBackup, serializeBackup, type BackupData, type BackupRow } from './backup-format';
 import { consolidateProjects } from '@/db/project-consolidation';
@@ -36,6 +37,7 @@ export function replaceIfUnchanged(connection: BackupConnection, data: BackupDat
     }
     replaceBackupData(connection, data);
     consolidateProjects(connection);
+    migrateTaskPlanning(connection);
     parseBackup(serializeBackup(readBackupData(connection)));
     if (connection.getAllSync('PRAGMA foreign_key_check').length) throw new Error('Relasi hasil pemulihan tidak utuh. Semua perubahan dibatalkan.');
   });

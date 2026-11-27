@@ -38,6 +38,7 @@ const focus = { ...base, focusItems: [{ id: 'daily', taskId: task.id, task, isCo
 todayState = focus;
 const events = [{ id: 'event', title: 'Ruang belajar Python', eventType: 'LEARNING', startTime: '2026-10-26T19:30:00', endTime: '2026-10-26T20:00:00', isAllDay: false, isCompleted: false, location: 'Rumah' }];
 const stubs = {
+  '@/features/tasks/data/task.service': { taskService: { list: async () => [], plan: async () => 120, setTargetStatus: async () => {} } },
   'expo-haptics': { selectionAsync: noop, impactAsync: noop, notificationAsync: noop, ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' } },
   'expo-image': { Image: native.Image },
   'expo-router': { router: { canGoBack: () => true, replace: noop, push: noop, back: noop, navigate: noop, setParams: noop }, useFocusEffect: noop, useLocalSearchParams: () => ({}) },
@@ -666,13 +667,13 @@ function checkTargetNavigation() {
     const original = globalThis.setTimeout; let navigate;
     try { globalThis.setTimeout = callback => { navigate = callback; return 1; }; item.props.onPress(); }
     finally { globalThis.setTimeout = original; }
-    assert.equal(closed, true); assert.equal(pushed.length, 0); navigate(); assert.deepEqual(pushed, ['/(tabs)/targets']);
+    assert.equal(closed, true); assert.equal(pushed.length, 0); navigate(); assert.deepEqual(pushed, ['/targets']);
   });
   verify('Quick Add retains target/task/agenda actions without a separate project choice', () => {
     reset(); const QuickAdd = navLoader('src/features/quick-add/presentation/screens/quick-add-screen.tsx').QuickAddScreen;
     const buttons = descendants(QuickAdd()).filter(element => element.type === native.Pressable);
     assert.ok(!buttons.some(element => element.props.accessibilityLabel === 'Proyek'));
-    for (const [label, route] of [['Tugas Hari Ini', '/today/new'], ['Tugas & Alarm', '/task-manager/new'], ['Target Hidup', '/targets/new'], ['Agenda & Kalender', '/agenda/new']]) {
+    for (const [label, route] of [['Catat Tugas', '/tasks/new'], ['Target Hidup', '/targets/new'], ['Agenda & Kalender', '/agenda/new']]) {
       const item = buttons.find(element => element.props.accessibilityLabel === label); assert.ok(item, label); item.props.onPress(); assert.equal(replaced.at(-1), route);
     }
   });
@@ -699,11 +700,11 @@ function checkTargetNavigation() {
   });
   verify('Old project links redirect to Target and missing/deleted conversions return to the list', () => {
     reset();
-    assert.equal(navLoader('src/app/(tabs)/projects.tsx').default().props.href, '/(tabs)/targets');
+    assert.equal(navLoader('src/app/(tabs)/projects.tsx').default().props.href, '/targets');
     assert.equal(navLoader('src/app/projects/new.tsx').default().props.href, '/targets/new');
     const Detail = navLoader('src/app/projects/[id].tsx').default;
     assert.deepEqual(Detail().props.href, { pathname: '/targets/[id]', params: { id: 'converted-target' } });
-    oldProjectId = 'deleted-project'; assert.equal(Detail().props.href, '/(tabs)/targets');
+    oldProjectId = 'deleted-project'; assert.equal(Detail().props.href, '/targets');
   });
   reset(); todayState = focus;
   if (failures.length) throw new AggregateError(failures, `${failures.length}/${checked} target navigation checks failed`);

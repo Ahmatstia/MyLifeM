@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React from 'react';
 import {
   View,
@@ -89,7 +90,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
           </AppText>
 
           <AppText tabularNums style={styles.subtext}>
-            {timeSpanLabel}, {config.label}
+            {timeSpanLabel}, {event.taskId ? 'Blok pengerjaan tugas' : config.label}
           </AppText>
 
           {selectedDate &&
@@ -107,6 +108,7 @@ export const TimelineEventCard: React.FC<TimelineEventCardProps> = ({
             </View>
           )}
 
+          {event.taskId && <Pressable accessibilityRole="button" accessibilityLabel={'Buka tugas '+event.title} onPress={()=>router.push({pathname:'/tasks/[id]',params:{id:event.taskId!}})} style={{minHeight:48,justifyContent:'center'}}><AppText variant="labelMedium" color="primary">Buka tugas</AppText></Pressable>}
           {event.location ? (
             <View style={styles.locationRow}>
               <MapPin size={12} color={s.inkMuted} strokeWidth={2} />

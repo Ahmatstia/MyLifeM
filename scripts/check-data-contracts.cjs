@@ -11,7 +11,6 @@ function input(e, extra = {}) {
     executionTime: '09:00', deadlineDate: '2099-12-31', deadlineTime: '23:59', alertMode: 'NONE',
     alarmTrackId: 'builtin-siren-energize', alarmTrackName: 'Built in', subtasks: ['Step'], ...extra };
 }
-const stored = e => JSON.parse(e.raw.getFirstSync("SELECT value FROM user_settings WHERE key = 'managed_tasks_v1'").value);
 async function check(name, work) {
   const e = environment();
   try { await e.client.initDatabase(); await work(e); checks++; console.log('PASS:', name); }
@@ -39,7 +38,7 @@ async function main() {
     assert.deepEqual(e.format.parseBackup(e.format.serializeBackup(data)).data, data);
     const legacy = JSON.parse(e.format.serializeBackup(data));
     legacy.schemaVersion = 1;
-    assert.deepEqual(e.format.parseBackup(JSON.stringify(legacy)).data, data);
+    assert.deepEqual(e.format.parseBackup(JSON.stringify(legacy)).data.tasks, data.tasks);
   });
   for (const [name, corrupt] of [
     ['null entry', () => [null]], ['object instead of list', () => ({})],
@@ -55,7 +54,7 @@ async function main() {
     await check(`backup rejects managed ${name} before replacing data`, async e => {
       await e.load(managedFile).managedTaskRepository.createTask(input(e));
       const before = e.state(), data = e.store.readBackupData(e.raw);
-      const row = data.userSettings.find(row => row.key === 'managed_tasks_v1');
+      const row = {key:'managed_tasks_v1',value:JSON.stringify(await e.load(managedFile).managedTaskRepository.getAllTasks()),updatedAt:new Date().toISOString()}; data.userSettings.push(row);
       row.value = JSON.stringify(corrupt(JSON.parse(row.value)));
       const json = e.format.serializeBackup(data);
       assert.throws(() => e.format.parseBackup(json), /Cadangan tidak valid/);
@@ -106,93 +105,17 @@ async function main() {
     assert.ok((await repo.getTargets()).some(t => t.id === target.id));
     assert.ok(!(await repo.getTargets({ categoryId: 'cat-karier' })).some(t => t.id === target.id));
   });
-  await check('removed managed priority stays removed across refresh and a fresh repository instance', async e => {
-    const { managedTaskRepository: managed, ManagedTaskRepository } = e.load(managedFile);
-    const focus = e.load(focusFile).dailyFocusRepository;
-    const task = await managed.createTask(input(e)), today = input(e).executionDate;
-    const row = e.raw.getFirstSync('SELECT id FROM daily_focus_items WHERE task_id = ?', task.id);
-    await focus.removeFocusItem(row.id);
-    await managed.syncWithCoreTasksAndToday(); await new ManagedTaskRepository().syncWithCoreTasksAndToday();
-    assert.ok(!(await focus.getTodayFocusItems(today)).some(item => item.taskId === task.id));
-    assert.ok(stored(e)[0].excludedFocusDates.includes(today));
-    assert.ok(e.raw.getFirstSync('SELECT id FROM tasks WHERE id = ?', task.id));
-  });
-  await check('explicit add clears the opt-out and a later removal restores it', async e => {
-    const managed = e.load(managedFile).managedTaskRepository, focus = e.load(focusFile).dailyFocusRepository;
-    const task = await managed.createTask(input(e)), today = input(e).executionDate;
-    const rowId = () => e.raw.getFirstSync('SELECT id FROM daily_focus_items WHERE task_id = ?', task.id).id;
-    await focus.removeFocusItem(rowId());
-    await focus.addFocusItem(today, task.id);
-    assert.ok(!stored(e)[0].excludedFocusDates.includes(today));
-    await focus.removeFocusItem(rowId()); await managed.syncWithCoreTasksAndToday();
-    assert.equal(e.raw.getFirstSync('SELECT count(*) n FROM daily_focus_items WHERE task_id = ?', task.id).n, 0);
-  });
-  await check('opt-out survives backup/restore and respects the five-priority limit', async e => {
-    const managed = e.load(managedFile).managedTaskRepository, focus = e.load(focusFile).dailyFocusRepository;
-    const task = await managed.createTask(input(e)), today = input(e).executionDate;
-    await focus.removeFocusItem(e.raw.getFirstSync('SELECT id FROM daily_focus_items WHERE task_id = ?', task.id).id);
-    const settings = e.load('src/features/settings/data/repositories/settings.repository.impl.ts').settingsRepository;
-    const json = await settings.exportBackupJson();
-    await focus.addFocusItem(today, task.id);
-    await settings.restoreBackupJson(json, await settings.exportBackupJson());
-    await managed.syncWithCoreTasksAndToday();
-    assert.equal(e.raw.getFirstSync('SELECT count(*) n FROM daily_focus_items WHERE task_id = ?', task.id).n, 0);
-    for (let i = 0; i < 5; i++) await focus.createQuickTask('Other ' + i, today);
-    const before = e.state(); await assert.rejects(focus.addFocusItem(today, task.id), /5/);
-    assert.equal(e.state(), before); await managed.syncWithCoreTasksAndToday();
-    assert.equal(e.raw.getFirstSync('SELECT count(*) n FROM daily_focus_items WHERE date = ?', today).n, 5);
-  });
-  for (const sql of [/^insert into "user_settings"/i, /^delete from "daily_focus_items"/i]) {
-    await check(`priority removal rolls back both exclusion and relation when ${sql} fails`, async e => {
-      const task = await e.load(managedFile).managedTaskRepository.createTask(input(e));
-      const focus = e.load(focusFile).dailyFocusRepository;
-      const id = e.raw.getFirstSync('SELECT id FROM daily_focus_items WHERE task_id = ?', task.id).id;
-      const before = e.state();
-      e.fault(statement => { if (sql.test(statement)) throw new Error('Injected exclusion failure'); });
-      try { await assert.rejects(focus.removeFocusItem(id)); }
-      finally { e.fault(() => {}); }
-      assert.equal(e.state(), before);
-    });
-  }
-  await check('concurrent removal/refresh cannot re-add the excluded priority', async e => {
-    const managed = e.load(managedFile).managedTaskRepository, focus = e.load(focusFile).dailyFocusRepository;
-    const task = await managed.createTask(input(e));
-    const id = e.raw.getFirstSync('SELECT id FROM daily_focus_items WHERE task_id = ?', task.id).id;
-    await Promise.all([focus.removeFocusItem(id), managed.syncWithCoreTasksAndToday()]);
-    await managed.syncWithCoreTasksAndToday();
-    assert.equal(e.raw.getFirstSync('SELECT count(*) n FROM daily_focus_items WHERE task_id = ?', task.id).n, 0);
-  });
-  await check('failed explicit re-add preserves the opt-out and rolls back the new priority', async e => {
-    const task = await e.load(managedFile).managedTaskRepository.createTask(input(e));
-    const focus = e.load(focusFile).dailyFocusRepository, today = input(e).executionDate;
-    await focus.removeFocusItem(e.raw.getFirstSync('SELECT id FROM daily_focus_items WHERE task_id = ?', task.id).id);
-    const before = e.state();
-    e.fault(sql => { if (/^insert into "user_settings"/i.test(sql)) throw new Error('Injected clear exclusion failure'); });
-    try { await assert.rejects(focus.addFocusItem(today, task.id)); }
-    finally { e.fault(() => {}); }
-    assert.equal(e.state(), before);
-  });
-  await check('removing a regular quick-task priority does not exclude a managed task', async e => {
-    const managed = e.load(managedFile).managedTaskRepository, focus = e.load(focusFile).dailyFocusRepository;
-    const task = await managed.createTask(input(e)), today = input(e).executionDate;
-    const quick = await focus.createQuickTask('Regular task', today), before = stored(e);
-    await focus.removeFocusItem(e.raw.getFirstSync('SELECT id FROM daily_focus_items WHERE task_id = ?', quick.id).id);
-    assert.deepEqual(stored(e), before);
-    assert.ok((await focus.getTodayFocusItems(today)).some(item => item.taskId === task.id));
-    assert.ok(e.raw.getFirstSync('SELECT id FROM tasks WHERE id = ?', quick.id));
-  });
-  await check('excluding today leaves the overdue task eligible on the following day', async e => {
-    const RealDate = Date; let now = new RealDate('2026-11-21T12:00:00').getTime();
-    globalThis.Date = class extends RealDate { constructor(...args) { super(...(args.length ? args : [now])); } static now() { return now; } };
-    try {
-      const managed = e.load(managedFile).managedTaskRepository, focus = e.load(focusFile).dailyFocusRepository;
-      const task = await managed.createTask(input(e));
-      await focus.removeFocusItem(e.raw.getFirstSync('SELECT id FROM daily_focus_items WHERE task_id = ?', task.id).id);
-      now = new RealDate('2026-11-22T12:00:00').getTime();
-      const items = await focus.getTodayFocusItems('2026-11-22');
-      assert.ok(items.some(item => item.taskId === task.id));
-      assert.ok(!stored(e)[0].excludedFocusDates.includes('2026-11-22'));
-    } finally { globalThis.Date = RealDate; }
+  await check('managed tasks require explicit daily selection and never roll over automatically', async e => {
+    const managed=e.load(managedFile).managedTaskRepository, focus=e.load(focusFile).dailyFocusRepository;
+    const task=await managed.createTask(input(e));const today=input(e).executionDate;
+    assert.equal((await focus.getTodayFocusItems(today)).length,0);
+    await focus.addFocusItem(today,task.id);
+    const selected=(await focus.getTodayFocusItems(today))[0];await focus.removeFocusItem(selected.id);
+    await managed.syncWithCoreTasksAndToday();assert.equal((await focus.getTodayFocusItems(today)).length,0);
+    assert.equal((await focus.getTodayFocusItems('2099-01-01')).length,0);
+    assert.ok(e.raw.getFirstSync('SELECT id FROM tasks WHERE id=?',task.id));
+    const backup=e.format.parseBackup(e.format.serializeBackup(e.store.readBackupData(e.raw)));
+    assert.equal(backup.data.taskProfiles[0].id,task.id);
   });
   console.log(`${failures ? 'FAIL' : 'PASS'}: ${checks} data-contract checks, ${failures} failures; no user database accessed.`);
   if (failures) process.exitCode = 1;

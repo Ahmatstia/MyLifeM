@@ -1,3 +1,4 @@
+import { subscribeTaskChanges } from '@/shared/data/task-changes';
 import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { useDeviceCalendar } from '@/shared/hooks/use-device-calendar';
@@ -8,6 +9,7 @@ import { syncCalendarReminders } from '@/features/agenda/data/services/calendar-
 /** The root mounts this only after the database is ready, including after a restore. */
 export function ManagedAlarmSync() {
   const calendar = useDeviceCalendar();
+  useEffect(() => subscribeTaskChanges(() => { void managedTaskRepository.syncAlarms().then(() => syncCalendarReminders()); }), []);
   useEffect(() => {
     let alive = true;
     void managedTaskRepository.syncAlarms().then(async () => {
@@ -19,7 +21,7 @@ export function ManagedAlarmSync() {
   }, [calendar.key]);
   useEffect(() => TaskAlarmNotificationService.observeResponses(async response => {
     if (!response.isAlarm || !await managedTaskRepository.openAlarmFromNotification(response.taskId, response.occurrence)) {
-      router.push('/task-manager');
+      router.push({pathname:'/tasks/[id]',params:{id:response.taskId}});
     }
   }), []);
   return null;

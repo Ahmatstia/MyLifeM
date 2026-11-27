@@ -11,11 +11,11 @@ export function useFocusedResource<T>(key: string, read: () => Promise<T>, error
       setState(previous => ({ ...previous, error, isLoading: false }));
     }
   }, [key]);
-  const refresh = useCallback(async () => {
+  const refreshResource = useCallback(async (background: boolean) => {
     const view = current.current;
     if (!view.active || view.key !== key) return;
     const request = ++view.request;
-    setState(previous => ({ ...previous, key, error: null, isLoading: true }));
+    setState(previous => ({ ...previous, key, error: null, isLoading: !(background && previous.data && previous.key === key) }));
     try {
       const data = await read();
       if (view.active && view.key === key && view.request === request) setState({ key, data, error: null, isLoading: false });
@@ -23,6 +23,8 @@ export function useFocusedResource<T>(key: string, read: () => Promise<T>, error
       if (view.active && view.key === key && view.request === request) setState({ key, error: error instanceof Error ? error.message : errorMessage, isLoading: false });
     }
   }, [key, read, errorMessage]);
+  const refresh = useCallback(() => refreshResource(false), [refreshResource]);
+  const refreshInBackground = useCallback(() => refreshResource(true), [refreshResource]);
   useFocusEffect(useCallback(() => {
     const view = current.current;
     view.key = key; view.active = true;
@@ -30,5 +32,5 @@ export function useFocusedResource<T>(key: string, read: () => Promise<T>, error
     return () => { view.active = false; view.request++; };
   }, [key, refresh]));
   return { data: state.key === key ? state.data : undefined, isLoading: state.key !== key || state.isLoading,
-    error: state.key === key ? state.error : null, refresh, setError };
+    error: state.key === key ? state.error : null, refresh, refreshInBackground, setError };
 }

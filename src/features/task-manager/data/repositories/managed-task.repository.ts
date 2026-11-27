@@ -1,11 +1,11 @@
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { normalizeTaskStatus } from '@/shared/domain/task-status';
 import { writeTaskStatus } from '@/shared/data/task-status';
 import { removeOrphanQuickTaskDetails } from '@/shared/data/quick-task-details';
-import { userSettings, tasks, dailyFocusItems } from '@/db/schema';
+import { userSettings, tasks, taskProfiles, taskSteps } from '@/db/schema';
 import { formatLocalDate, isDateOnly, localTimeToIso } from '@/shared/utils/local-date';
-import { MANAGED_TASKS_KEY, parseManagedTasks, validateManagedTask } from '../../domain/managed-task-validation';
+import { validateManagedTask } from '../../domain/managed-task-validation';
 import {
   BUILT_IN_ALARM_TRACKS,
   type CreateManagedTaskInput,
@@ -77,21 +77,22 @@ export class ManagedTaskRepository {
   private alarmUpdates: Promise<void> = Promise.resolve();
 
   private readTasks(connection: Pick<TaskConnection, 'select'>): ManagedTaskEntity[] {
-    const row = connection.select().from(userSettings)
-      .where(eq(userSettings.key, MANAGED_TASKS_KEY)).get();
-    if (!row) return [];
-    const parsed = parseManagedTasks(row.value);
-
+    const profiles = connection.select().from(taskProfiles).all();
     const coreMap = new Map(connection.select().from(tasks).all().map(task => [task.id, task]));
-    return parsed.map((item: ManagedTaskEntity) => {
-      const core = coreMap.get(item.id);
-      if (!core) return item;
-      const completed = normalizeTaskStatus(core.status) === 'COMPLETED';
-      return {
-        ...item,
-        isCompleted: completed,
-        completedAt: completed ? core.completedAt || item.completedAt : null,
-      };
+    const steps = connection.select().from(taskSteps).all();
+    return profiles.flatMap(profile => {
+      const core = coreMap.get(profile.id);
+      if (!core || !profile.executionDate || !profile.executionTime) return [];
+      const prefix = profile.context ? '['+profile.context+'] ' : '';
+      return [{ id: core.id, title: prefix && core.title.startsWith(prefix) ? core.title.slice(prefix.length) : core.title,
+        courseOrContext: profile.context, categoryType: profile.categoryType as ManagedTaskEntity['categoryType'], notes: core.description,
+        priority: core.priority as ManagedTaskEntity['priority'], estimatedMinutes: core.estimatedMinutes,
+        executionDate: profile.executionDate, executionTime: profile.executionTime,
+        deadlineDate: core.dueDate ?? profile.executionDate, deadlineTime: profile.deadlineTime ?? '23:59',
+        alertMode: profile.alertMode as ManagedTaskEntity['alertMode'], alarmTrackId: profile.alarmTrackId, alarmTrackName: profile.alarmTrackName, alarmTrackUri: profile.alarmTrackUri,
+        snoozeMinutes: profile.snoozeMinutes, snoozedUntilIso: profile.snoozedUntilIso, lastAlarmFiredKey: profile.lastAlarmFiredKey,
+        autoAddToToday: false, subtasks: steps.filter(step => step.taskId === core.id).sort((a,b)=>a.sortOrder-b.sortOrder).map(step=>({id:step.id,title:step.title,isCompleted:!!step.isCompleted})),
+        isCompleted: normalizeTaskStatus(core.status) === 'COMPLETED', completedAt: core.completedAt, createdAt: core.createdAt, updatedAt: core.updatedAt }];
     });
   }
 
@@ -112,22 +113,21 @@ export class ManagedTaskRepository {
 
   private writeTasks(connection: TaskConnection, list: ManagedTaskEntity[]): void {
     list.forEach(validateManagedTask);
-    const value = JSON.stringify(list), updatedAt = new Date().toISOString();
-    connection.insert(userSettings).values({ key: MANAGED_TASKS_KEY, value, updatedAt })
-      .onConflictDoUpdate({ target: userSettings.key, set: { value, updatedAt } }).run();
+    for (const item of list) {
+      const fields = { id:item.id, planningState:'READY', estimateKnown:1, context:item.courseOrContext, categoryType:item.categoryType,
+        executionDate:item.executionDate, executionTime:item.executionTime, deadlineTime:item.deadlineTime, alertMode:item.alertMode,
+        alarmTrackId:item.alarmTrackId, alarmTrackName:item.alarmTrackName, alarmTrackUri:item.alarmTrackUri,
+        snoozeMinutes:item.snoozeMinutes, snoozedUntilIso:item.snoozedUntilIso,lastAlarmFiredKey:item.lastAlarmFiredKey };
+      connection.insert(taskProfiles).values(fields).onConflictDoUpdate({target:taskProfiles.id,set:fields}).run();
+      connection.delete(taskSteps).where(eq(taskSteps.taskId,item.id)).run();
+      item.subtasks.forEach((step,index)=>connection.insert(taskSteps).values({id:step.id,taskId:item.id,title:step.title,isCompleted:Number(step.isCompleted),sortOrder:index}).run());
+    }
   }
 
   /** Update the opt-out inside the same transaction as the caller's priority mutation. */
   setDailyFocusExcluded(connection: TaskConnection, taskId: string, date: string, excluded: boolean): void {
     if (!isDateOnly(date)) throw new Error('Tanggal prioritas tidak valid.');
-    const current = this.readTasks(connection), task = current.find(item => item.id === taskId);
-    if (!task) return;
-    const dates = task.excludedFocusDates ?? [];
-    if (dates.includes(date) === excluded) return;
-    this.writeTasks(connection, current.map(item => item.id === taskId ? {
-      ...item, excludedFocusDates: excluded ? [...dates, date] : dates.filter(value => value !== date),
-      updatedAt: new Date().toISOString(),
-    } : item));
+    // Selection is explicit. There is no automatic daily insertion to opt out from.
   }
 
   private reconcileAlarms(askPermission = false): Promise<void> {
@@ -158,7 +158,6 @@ export class ManagedTaskRepository {
   }
 
   private syncCoreTasks(tx: TaskConnection, all: ManagedTaskEntity[], completionId?: string): void {
-    const todayDate = formatLocalDate(new Date());
     const nowIso = new Date().toISOString();
     for (const item of all) {
       const prefix = item.courseOrContext ? '[' + item.courseOrContext + '] ' : '';
@@ -185,31 +184,15 @@ export class ManagedTaskRepository {
           ...fields, id: item.id, status, isCompleted: status === 'COMPLETED' ? 1 : 0,
           completedAt: item.completedAt, actualMinutes: 0, sortOrder: 0, createdAt: item.createdAt,
         }).run();
-      } else {
-        tx.update(tasks).set(fields).where(eq(tasks.id, item.id)).run();
       }
       writeTaskStatus(tx, item.id, status, nowIso);
 
-      if (item.autoAddToToday && ['TODO', 'IN_PROGRESS'].includes(status) && item.executionDate <= todayDate
-        && !item.excludedFocusDates?.includes(todayDate)) {
-        const existingFocus = tx.select().from(dailyFocusItems).where(
-          and(eq(dailyFocusItems.date, todayDate), eq(dailyFocusItems.taskId, item.id))
-        ).get();
-        if (!existingFocus) {
-          const todayFocusRows = tx.select().from(dailyFocusItems).where(eq(dailyFocusItems.date, todayDate)).all();
-          if (todayFocusRows.length < 5) {
-            tx.insert(dailyFocusItems).values({
-              id: 'df-mt-' + item.id + '-' + todayDate, date: todayDate, taskId: item.id,
-              sortOrder: todayFocusRows.length, isCompleted: 0, createdAt: nowIso,
-            }).run();
-          }
-        }
-      }
+
     }
   }
 
   async syncWithCoreTasksAndToday(): Promise<void> {
-    db.transaction(tx => this.syncCoreTasks(tx, this.readTasks(tx)));
+    // Legacy entry point retained. Startup migration now establishes the canonical rows.
   }
 
   async createTask(input: CreateManagedTaskInput): Promise<ManagedTaskEntity> {
@@ -339,7 +322,7 @@ export class ManagedTaskRepository {
       // 1. Check if snoozed alarm is due
       if (item.snoozedUntilIso) {
         const snoozeMs = Date.parse(item.snoozedUntilIso);
-        if (Number.isFinite(snoozeMs) && now.getTime() >= snoozeMs && now.getTime() - snoozeMs <= 86_400_000) {
+        if (Number.isFinite(snoozeMs) && now.getTime() >= snoozeMs && now.getTime() - snoozeMs <= 5 * 60_000) {
           currentRingingTask = item;
           currentAlarmIsTest = false;
           notifyAlarmListeners();
@@ -352,7 +335,7 @@ export class ManagedTaskRepository {
       const fireKey = `${item.executionDate}T${item.executionTime}`;
       const executionMs = Date.parse(localTimeToIso(item.executionDate, item.executionTime));
       if (
-        executionMs <= now.getTime() && now.getTime() - executionMs <= 86_400_000 &&
+        executionMs <= now.getTime() && now.getTime() - executionMs <= 5 * 60_000 &&
         !item.lastAlarmFiredKey?.startsWith(fireKey)
       ) {
         currentRingingTask = item;

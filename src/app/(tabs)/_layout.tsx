@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { Tabs, router } from 'expo-router';
-import { Home, Target, CalendarDays, Menu } from 'lucide-react-native';
+import { Home, ListTodo, CalendarDays, Menu } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fontFamily, typography, space, layout } from '@/theme/tokens';
 import { todayColors as c } from '@/theme/today';
@@ -76,11 +76,11 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="targets"
+          name="tasks"
           options={{
-            title: 'Target',
+            title: 'Tugas',
             tabBarIcon: ({ focused }) => (
-              <BottomNavIcon icon={Target} focused={focused} tint={c.lilac} />
+              <BottomNavIcon icon={ListTodo} focused={focused} tint={c.lilac} />
             ),
           }}
         />
@@ -96,7 +96,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="agenda"
           options={{
-            title: 'Agenda',
+            title: 'Kalender',
             tabBarIcon: ({ focused }) => (
               <BottomNavIcon icon={CalendarDays} focused={focused} tint={c.sky} />
             ),

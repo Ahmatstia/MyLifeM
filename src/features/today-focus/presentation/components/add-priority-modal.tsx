@@ -41,10 +41,6 @@ export const AddPriorityModal: React.FC<AddPriorityModalProps> = ({
       return;
     }
 
-    if (currentCount >= 5) {
-      setErrorMessage('Maksimal 5 prioritas per hari.');
-      return;
-    }
 
     setErrorMessage(null);
     setIsSubmitting(true);
@@ -59,10 +55,6 @@ export const AddPriorityModal: React.FC<AddPriorityModalProps> = ({
   };
 
   const handleSelectTask = async (taskId: string) => {
-    if (currentCount >= 5) {
-      setErrorMessage('Maksimal 5 prioritas per hari.');
-      return;
-    }
 
     const success = await onSelectExistingTask(taskId);
     if (success) {
@@ -75,7 +67,7 @@ export const AddPriorityModal: React.FC<AddPriorityModalProps> = ({
       visible={visible}
       onClose={onClose}
       title="Tambah Prioritas Hari Ini"
-      subtitle={`Maksimal 5 tugas pilihan (${currentCount}/5 terisi)`}
+      subtitle={`${currentCount} tugas dipilih. Mulai dari yang paling penting.`}
     >
       {/* Error notice */}
       {errorMessage && (
@@ -105,7 +97,7 @@ export const AddPriorityModal: React.FC<AddPriorityModalProps> = ({
           variant="filled"
           size="standard"
           loading={isSubmitting}
-          disabled={currentCount >= 5}
+          disabled={false}
           leftIcon={<Plus size={16} color={colors.onPrimary} />}
           style={styles.addButton}
         />
@@ -124,7 +116,7 @@ export const AddPriorityModal: React.FC<AddPriorityModalProps> = ({
                 key={t.id}
                 onPress={() => handleSelectTask(t.id)}
                 accessibilityRole="button"
-                disabled={currentCount >= 5}
+                disabled={false}
                 style={styles.taskOptionItem}
               >
                 <View style={styles.taskOptionTextCol}>

@@ -1,3 +1,4 @@
+import { notifyTaskChanges } from '@/shared/data/task-changes';
 import { normalizeTaskStatus, summarizeTasks, taskStatusFields } from '@/shared/domain/task-status';
 import { writeTaskStatus } from '@/shared/data/task-status';
 import { removeOrphanQuickTaskDetails } from '@/shared/data/quick-task-details';
@@ -160,6 +161,7 @@ export class StageRepositoryImpl implements StageRepository {
 
   async deleteStage(id: string): Promise<void> {
     db.transaction(tx => { tx.delete(stages).where(eq(stages.id, id)).run(); removeOrphanQuickTaskDetails(tx); });
+    notifyTaskChanges();
   }
 
   async reorderStage(id: string, direction: 'UP' | 'DOWN'): Promise<void> {
@@ -305,6 +307,7 @@ export class StageRepositoryImpl implements StageRepository {
 
   async deleteTask(id: string): Promise<void> {
     db.transaction(tx => { tx.delete(tasks).where(eq(tasks.id, id)).run(); removeOrphanQuickTaskDetails(tx); });
+    notifyTaskChanges();
   }
 
   async setTaskStatus(id: string, status: TaskStatus): Promise<TaskItemEntity> {

@@ -479,3 +479,35 @@ export type NewWeeklySchedule = typeof weeklySchedules.$inferInsert;
 
 export type WeeklyScheduleLog = typeof weeklyScheduleLogs.$inferSelect;
 export type NewWeeklyScheduleLog = typeof weeklyScheduleLogs.$inferInsert;
+
+// Task metadata has no copy of task title/status. Those always live in tasks.
+export const taskProfiles = sqliteTable('task_profiles', {
+  id: text('id').primaryKey().notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+  planningState: text('planning_state').notNull().default('INBOX'),
+  nextAction: text('next_action'),
+  estimateKnown: integer('estimate_known').notNull().default(0),
+  context: text('context').notNull().default(''),
+  categoryType: text('category_type').notNull().default('PERSONAL'),
+  executionDate: text('execution_date'), executionTime: text('execution_time'),
+  deadlineTime: text('deadline_time'),
+  alertMode: text('alert_mode').notNull().default('NONE'),
+  alarmTrackId: text('alarm_track_id').notNull().default('builtin-morning-chime'),
+  alarmTrackName: text('alarm_track_name').notNull().default('Harmoni Pagi'),
+  alarmTrackUri: text('alarm_track_uri'),
+  snoozeMinutes: integer('snooze_minutes').notNull().default(10),
+  snoozedUntilIso: text('snoozed_until_iso'), lastAlarmFiredKey: text('last_alarm_fired_key'),
+});
+export const taskSteps = sqliteTable('task_steps', {
+  id: text('id').primaryKey().notNull(), taskId: text('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(), isCompleted: integer('is_completed').notNull().default(0), sortOrder: integer('sort_order').notNull().default(0),
+});
+export const dayPlans = sqliteTable('day_plans', {
+  id: text('id').primaryKey().notNull(), availableMinutes: integer('available_minutes').notNull().default(120),
+});
+export const dayReviews = sqliteTable('day_reviews', {
+  id: text('id').primaryKey().notNull(), accomplishment: text('accomplishment').notNull(), obstacle: text('obstacle').notNull(), nextAction: text('next_action').notNull(), updatedAt: text('updated_at').notNull(),
+});
+export const taskActions = sqliteTable('task_actions', {
+  id: text('id').primaryKey().notNull(), taskId: text('task_id').references(() => tasks.id, { onDelete: 'set null' }),
+  taskTitle: text('task_title').notNull(), date: text('date').notNull(), action: text('action').notNull(), createdAt: text('created_at').notNull(),
+});

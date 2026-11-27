@@ -1,3 +1,4 @@
+import { notifyTaskChanges } from '@/shared/data/task-changes';
 import { summarizeTasks } from '@/shared/domain/task-status';
 import { removeOrphanQuickTaskDetails } from '@/shared/data/quick-task-details';
 import { eq, and, desc } from 'drizzle-orm';
@@ -179,6 +180,7 @@ export class TargetRepositoryImpl implements TargetRepository {
 
   async deleteTarget(id: string): Promise<void> {
     db.transaction(tx => { tx.delete(targets).where(eq(targets.id, id)).run(); removeOrphanQuickTaskDetails(tx); });
+    notifyTaskChanges();
   }
 }
 

@@ -10,7 +10,7 @@ function input(e, title = 'Managed task') {
     deadlineDate: '2099-12-31', deadlineTime: '23:59', alertMode: 'NONE', alarmTrackId: 'builtin-siren-energize',
     alarmTrackName: 'Built in', subtasks: ['Read', 'Write'] };
 }
-const metadata = e => JSON.parse(e.raw.getFirstSync("SELECT value FROM user_settings WHERE key = 'managed_tasks_v1'").value);
+const metadata = e => e.raw.getAllSync('SELECT t.*,p.* FROM tasks t JOIN task_profiles p ON t.id=p.id').map(row=>({...row,isCompleted:['COMPLETED','DONE'].includes(row.status),snoozedUntilIso:row.snoozed_until_iso,subtasks:e.raw.getAllSync('SELECT id,title,is_completed FROM task_steps WHERE task_id=?',row.id).map(step=>({...step,isCompleted:!!step.is_completed}))}));
 async function check(name, work, overrides) {
   const e = environment(overrides);
   try {
@@ -30,12 +30,12 @@ async function main() {
       if (status === 'CANCELLED') e.raw.runSync('DELETE FROM daily_focus_items WHERE task_id = ?', task.id);
       await repo.syncWithCoreTasksAndToday();
       const core = e.raw.getFirstSync('SELECT status, is_completed FROM tasks WHERE id = ?', task.id);
-      assert.equal(core.status, status === 'DONE' ? 'COMPLETED' : status);
-      assert.equal(core.is_completed, completed ? 1 : 0);
+      assert.equal(core.status, status);
+      assert.equal((await repo.getAllTasks())[0].isCompleted, completed);
       assert.equal((await repo.getAllTasks())[0].isCompleted, completed);
       const focus = e.raw.getAllSync('SELECT is_completed FROM daily_focus_items WHERE task_id = ?', task.id);
       if (status === 'CANCELLED') assert.equal(focus.length, 0);
-      else assert.ok(focus.length && focus.every(row => row.is_completed === (completed ? 1 : 0)));
+      else assert.equal(focus.length, 0, 'Refresh must not auto-select a task');
     });
   }
   await check('explicit managed completion/reopen updates core, metadata and priorities on every date', async (e, repo) => {
@@ -66,7 +66,7 @@ async function main() {
     assert.equal(new Set(tasks.map(task => task.id)).size, 2);
     assert.equal(metadata(e).length, 2);
     assert.equal(e.raw.getFirstSync('SELECT count(*) n FROM tasks').n, 2);
-    assert.equal(e.raw.getFirstSync('SELECT count(*) n FROM daily_focus_items').n, 2);
+    assert.equal(e.raw.getFirstSync('SELECT count(*) n FROM daily_focus_items').n, 0);
   });
   await check('concurrent subtask, snooze and create mutations retain every change', async (e, repo) => {
     const task = await repo.createTask(input(e));
@@ -85,13 +85,13 @@ async function main() {
   });
   for (const [label, sql, action] of [
     ['core insert', /^insert into "tasks"/i, (repo, e) => repo.createTask(input(e, 'Failure'))],
-    ['metadata write', /^insert into "user_settings"/i, (repo, e) => repo.createTask(input(e, 'Failure'))],
-    ['priority insert', /^insert into "daily_focus_items"/i, (repo, e) => repo.createTask(input(e, 'Failure'))],
+    ['metadata write', /^insert into "task_profiles"/i, (repo, e) => repo.createTask(input(e, 'Failure'))],
+    ['step insert', /^insert into "task_steps"/i, (repo, e) => repo.createTask(input(e, 'Failure'))],
     ['core status update', /^update "tasks"/i, (repo, _e, task) => repo.toggleTaskCompletion(task.id)],
     ['priority status update', /^update "daily_focus_items"/i, (repo, _e, task) => repo.toggleTaskCompletion(task.id)],
     ['core delete', /^delete from "tasks"/i, (repo, _e, task) => repo.deleteTask(task.id)],
     ['commit', /^commit$/i, (repo, e) => repo.createTask(input(e, 'Failure'))],
-    ['metadata read', /from "user_settings"/i, (repo, e) => repo.createTask(input(e, 'Failure'))],
+    ['metadata read', /from "task_profiles"/i, (repo, e) => repo.createTask(input(e, 'Failure'))],
   ]) {
     let notifications = 0;
     await check(`${label} failure rejects and rolls back the entire managed mutation`, async (e, repo) => {
@@ -115,9 +115,9 @@ async function main() {
   for (const invalid of ['{', '{}', '[null]']) {
     await check(`unreadable managed metadata ${invalid} is preserved instead of overwritten`, async (e, repo) => {
       await repo.createTask(input(e));
-      e.raw.runSync("UPDATE user_settings SET value = ? WHERE key = 'managed_tasks_v1'", invalid);
+      e.raw.runSync("INSERT INTO user_settings(key,value,updated_at) VALUES('managed_tasks_v1',?,?)", invalid,new Date().toISOString());
       const before = e.state();
-      await assert.rejects(repo.createTask(input(e, 'Must not replace data')));
+      assert.throws(()=>e.raw.withTransactionSync(()=>e.load('src/db/task-planning-migration.ts').migrateTaskPlanning(e.raw)));
       assert.equal(e.state(), before);
     });
   }

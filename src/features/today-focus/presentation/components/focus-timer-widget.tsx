@@ -115,6 +115,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         </View>
       </View>
 
+      {!hasSession && <Pressable accessibilityRole="button" accessibilityLabel="Siapkan fokus 5 menit" onPress={()=>onChangeMode('POMODORO',5)} style={{minHeight:48,justifyContent:'center',alignItems:'center'}}><AppText color={c.skyInk}>Mulai kecil: siapkan 5 menit</AppText></Pressable>}
       <View style={styles.orbitDisplayCard}>
         <View style={[styles.readout, fontScale >= 1.5 && styles.stackedControls]}>
           <MinuteDial minutes={seconds === undefined ? undefined : seconds / 60} />

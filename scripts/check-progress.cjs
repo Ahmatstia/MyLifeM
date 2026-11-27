@@ -109,6 +109,16 @@ async function hooks() {
   assert.match(race.render(Resource).error, /belum tersimpan/);
   assert.equal(race.render(Resource).isLoading, false); race.close();
   passed('an older successful read cannot clear a newer mutation failure');
+  const quiet = harness();
+  const useQuiet = quiet.load('src/shared/hooks/use-focused-resource.ts').useFocusedResource;
+  let quietValue = 'first'; let quietPending;
+  const readQuiet = () => quietPending ? quietPending.promise : Promise.resolve(quietValue);
+  const Quiet = () => useQuiet('quiet', readQuiet, 'failed');
+  quiet.render(Quiet); await tick();
+  quietPending = deferred(); const quietRequest = quiet.render(Quiet).refreshInBackground();
+  assert.equal(quiet.render(Quiet).isLoading,false); assert.equal(quiet.render(Quiet).data,'first');
+  quietPending.resolve('second');await quietRequest;assert.equal(quiet.render(Quiet).data,'second');quiet.close();
+  passed('background refresh preserves the mounted planner while fetching updated data');
   for (const kind of ['targets', 'target-detail', 'today-focus']) {
     let id = 'old', defer = true, version = 'old', fail = false; const pending = [];
     const get = async () => { if (fail) throw new Error('read failed'); if (!defer) return { id: version }; const item = deferred(); pending.push(item); return item.promise; };

@@ -1,3 +1,4 @@
+import { backOrHome } from '@/shared/utils/back-or-home';
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
@@ -6,6 +7,7 @@ import { colors } from '@/theme/colors';
 import { fontFamily, radius, space, touchTarget } from '@/theme/tokens';
 import {
   Screen,
+  FormScreenHeader,
   AppText,
   Banner,
   EmptyState,
@@ -43,7 +45,6 @@ export const TargetListScreen: React.FC = () => {
   return (
     <Screen
       scrollable
-      insideTabs
       style={styles.screenBg}
       floatingAction={
         <Pressable
@@ -69,9 +70,7 @@ export const TargetListScreen: React.FC = () => {
         </>
       }
     >
-      <AppText variant="displayMedium" accessibilityRole="header" style={styles.heading}>
-        Target hidup
-      </AppText>
+      <FormScreenHeader title="Target hidup" onBack={backOrHome} />
       <CategoryFilterChips
         categories={categories}
         selectedCategoryId={selectedCategoryId}

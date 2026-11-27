@@ -18,9 +18,10 @@ export function useTodayFocus() {
     ]);
     return { focusItems, completedMinutes, availableTasks };
   }, [todayDate]);
-  const { data, isLoading, error, refresh, setError } = useFocusedResource(calendar.key, read, 'Gagal memuat fokus hari ini.');
+  const { data, isLoading, error, refresh, refreshInBackground, setError } = useFocusedResource(calendar.key, read, 'Gagal memuat fokus hari ini.');
   const { focusItems = [], completedMinutes = 0, availableTasks = [] } = data || {};
   const loadData = refresh;
+  const refreshQuietly = refreshInBackground;
 
   const toggleTask = async (taskId: string, currentCompleted: boolean) => {
     try {
@@ -83,7 +84,7 @@ export function useTodayFocus() {
     availableTasks,
     isLoading,
     error,
-    refresh,
+    refresh: refreshQuietly,
     toggleTask,
     addQuickTask,
     addTaskToToday,

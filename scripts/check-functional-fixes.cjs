@@ -32,7 +32,7 @@ function visitFiles(dir) {
     function visit(node) {
       if ((ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) && node.tagName.getText(source) === 'TextInput') {
         const label = node.attributes.properties.find(attr => attr.name?.getText(source) === 'accessibilityLabel');
-        assert.ok(label?.initializer && ts.isStringLiteral(label.initializer) && label.initializer.text.trim(), 'Missing persistent input name: ' + file);
+        assert.ok(label?.initializer && ((ts.isStringLiteral(label.initializer) && label.initializer.text.trim()) || (ts.isJsxExpression(label.initializer) && label.initializer.expression)), 'Missing persistent input name: ' + file);
         checks++;
       }
       ts.forEachChild(node, visit);

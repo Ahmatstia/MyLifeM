@@ -1,6 +1,2 @@
-import { CreatePriorityScreen } from '@/features/today-focus/presentation/screens/create-priority-screen';
-
-export default function CreatePriorityRoute() {
-  return <CreatePriorityScreen />;
-}
-
+import { Redirect } from 'expo-router';
+export default function LegacyToday(){return <Redirect href={{pathname:'/tasks/new',params:{today:'1'}}}/>;}

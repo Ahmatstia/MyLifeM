@@ -1,3 +1,5 @@
+import { router } from 'expo-router';
+import { AgendaNotificationService } from '../../data/services/agenda-notification.service';
 import { useEffect } from 'react';
 import { useDeviceCalendar } from '@/shared/hooks/use-device-calendar';
 import { subscribeTaskAlarmStatus } from '@/features/task-manager/data/services/task-alarm-notification.service';
@@ -7,6 +9,10 @@ import { syncCalendarReminders, subscribeCalendarReminderStatus } from '../../da
 /** Mounted once after database readiness; renew the window on launch, resume and calendar changes. */
 export function CalendarReminderSync() {
   const calendar = useDeviceCalendar();
+  useEffect(() => AgendaNotificationService.observeResponses((taskId,date) => {
+    if(taskId)router.push({pathname:'/tasks/[id]',params:{id:taskId}});
+    else router.push({pathname:'/(tabs)/agenda',params:date?{date}:{}});
+  }), []);
   useEffect(() => {
     const publish = useNotificationStore.getState().publish;
     const calendarStatus = subscribeCalendarReminderStatus(message => publish(message ? {

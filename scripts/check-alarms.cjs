@@ -119,7 +119,7 @@ async function main() {
   }));
   await check('silencing is immediate and survives a database failure for the current occurrence', () => repositoryCase(async ({ e, module, repo, task }) => {
     await repo.checkDueAlarmsNow(); module.clearRingingAlarm();
-    e.fault(sql => { if (/^insert into "user_settings"/i.test(sql)) throw new Error('Injected dismiss failure'); });
+    e.fault(sql => { if (/^insert into "task_profiles"/i.test(sql)) throw new Error('Injected dismiss failure'); });
     try { await assert.rejects(repo.dismissTaskAlarm(task.id)); } finally { e.fault(() => {}); }
     assert.equal(await repo.checkDueAlarmsNow(), null);
   }));

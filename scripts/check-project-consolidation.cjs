@@ -117,7 +117,7 @@ async function main() {
     const repo = e.load('src/features/settings/data/repositories/settings.repository.impl.ts').settingsRepository;
     await repo.restoreBackupJson(JSON.stringify(input), await repo.exportBackupJson()); converted(e, m);
     seed(e); await e.retry();
-    const archive = e.archive(); assert.equal(e.format.parseBackup(archive).schemaVersion, 2);
+    const archive = e.archive(); assert.equal(e.format.parseBackup(archive).schemaVersion, 3);
     const incomplete = JSON.parse(archive); incomplete.tables.pop();
     assert.throws(() => e.format.parseBackup(JSON.stringify(incomplete)), /tidak lengkap/);
     await repo.restoreBackupJson(archive, await repo.exportBackupJson()); converted(e, m);

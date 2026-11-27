@@ -1,7 +1,1 @@
-import React from 'react';
-import { CreateManagedTaskScreen } from '@/features/task-manager/presentation/screens/create-managed-task-screen';
-
-export default function CreateManagedTaskRoute() {
-  return <CreateManagedTaskScreen />;
-}
-
+export { TaskEditorScreen as default } from '@/features/tasks/presentation/task-editor-screen';

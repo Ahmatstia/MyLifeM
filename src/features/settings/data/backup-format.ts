@@ -24,6 +24,8 @@ export const BACKUP_TABLES = {
   userSettings: schema.userSettings,
   weeklySchedules: schema.weeklySchedules,
   weeklyScheduleLogs: schema.weeklyScheduleLogs,
+  taskProfiles: schema.taskProfiles, taskSteps: schema.taskSteps,
+  dayPlans: schema.dayPlans, dayReviews: schema.dayReviews, taskActions: schema.taskActions,
 } as const;
 export type BackupTable = keyof typeof BACKUP_TABLES;
 export type BackupRow = Record<string, string | number | null>;
@@ -31,7 +33,7 @@ export type BackupData = { [Key in BackupTable]: (typeof BACKUP_TABLES)[Key]['$i
 export interface BackupDocument {
   format: 'mylife-backup';
   formatVersion: 1;
-  schemaVersion: 2;
+  schemaVersion: 3;
   exportedAt: string;
   data: BackupData;
 }
@@ -68,7 +70,7 @@ export function checkBackupSize(bytes: number): void {
 
 export function serializeBackup(data: BackupData): string {
   if (TABLE_SPECS.reduce((sum, spec) => sum + data[spec.key].length, 0) > MAX_BACKUP_ROWS) invalid('maksimal 50.000 catatan per cadangan.');
-  const json = JSON.stringify({ format: 'mylife-backup', formatVersion: 1, schemaVersion: 2,
+  const json = JSON.stringify({ format: 'mylife-backup', formatVersion: 1, schemaVersion: 3,
     exportedAt: new Date().toISOString(), data } satisfies BackupDocument, null, 2);
   checkBackupSize(new Blob([json]).size);
   return json;
@@ -81,13 +83,17 @@ export function parseBackup(json: string): BackupDocument {
   let input: unknown;
   try { input = JSON.parse(json.replace(/^\uFEFF/, '')); } catch { return invalid('berkas bukan JSON yang dapat dibaca.'); }
   if (record(input) && input.format === 'mylife-migration-snapshot') return parseMigrationArchive(input);
-  if (!record(input) || input.format !== 'mylife-backup' || input.formatVersion !== 1 || (input.schemaVersion !== 1 && input.schemaVersion !== 2)) {
+  if (!record(input) || input.format !== 'mylife-backup' || input.formatVersion !== 1 || (input.schemaVersion !== 1 && input.schemaVersion !== 2 && input.schemaVersion !== 3)) {
     return invalid('format/versi tidak didukung. Snapshot lama tanpa kategori dan tahapan tidak dapat dipulihkan.');
   }
   if (typeof input.exportedAt !== 'string' || !dateText(input.exportedAt) || !record(input.data)) return invalid('metadata tidak lengkap.');
   if (input.schemaVersion === 1) {
     upgradeLegacyBackup(input.data);
     input.schemaVersion = 2;
+  }
+  if (input.schemaVersion === 2) {
+    for (const key of ['taskProfiles','taskSteps','dayPlans','dayReviews','taskActions']) input.data[key] = [];
+    input.schemaVersion = 3;
   }
   const data = input.data;
   const allowed = Object.keys(BACKUP_TABLES);
@@ -109,7 +115,7 @@ export function parseBackup(json: string): BackupDocument {
         if (column.type === 'string' ? typeof value !== 'string' : typeof value !== 'number' || !Number.isFinite(value) || (column.integer && !Number.isInteger(value))) return invalid('tipe nilai ' + location + ' tidak sesuai.');
         if (typeof value === 'number' && !Number.isSafeInteger(value) && column.integer) return invalid(location + ' di luar batas angka aman.');
         if (/^(isCompleted|isAllDay)$/.test(column.key) && value !== 0 && value !== 1) return invalid(location + ' harus 0 atau 1.');
-        if (typeof value === 'string' && spec.key !== 'weeklySchedules' && /(?:At|Date|Time)$/.test(column.key) && !dateText(value)) return invalid('tanggal ' + location + ' tidak benar.');
+        if (typeof value === 'string' && spec.key !== 'weeklySchedules' && !(spec.key === 'taskProfiles' && ['executionTime','deadlineTime'].includes(column.key)) && /(?:At|Date|Time)$/.test(column.key) && !dateText(value)) return invalid('tanggal ' + location + ' tidak benar.');
       }
       const id = row[spec.primaryKey];
       const label = row.title ?? row.name;
@@ -178,6 +184,21 @@ export function parseBackup(json: string): BackupDocument {
     if (!String(row.title).trim() || Date.parse(String(row.endTime)) <= Date.parse(String(row.startTime))) return invalid('judul/rentang waktu agenda tidak benar.');
     nonnegative(row, ['reminderMinutes']);
   }
+  for (const row of typed.taskProfiles) {
+    ref(row, 'id', 'tasks'); choice(row, 'planningState', ['INBOX','READY','SOMEDAY','WAITING']);
+    choice(row, 'alertMode', ['NONE','NOTIFICATION','ALARM','BOTH']);
+    choice(row, 'categoryType', ['COLLEGE','WORK','PROJECT','PERSONAL']);
+    if (![0,1].includes(row.estimateKnown) || !Number.isSafeInteger(row.snoozeMinutes) || row.snoozeMinutes < 1) invalid('profil tugas tidak valid.');
+    if (row.executionDate !== null && !dateOnly(row.executionDate)) invalid('tanggal pengerjaan tidak valid.');
+    for (const clock of [row.executionTime,row.deadlineTime]) if (clock !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(clock)) invalid('jam tugas tidak valid.');
+    if ((row.executionDate === null) !== (row.executionTime === null)) invalid('tanggal dan jam pengerjaan harus berpasangan.');
+    if (row.deadlineTime !== null && !ids.get('tasks')!.get(row.id)?.dueDate) invalid('jam tenggat memerlukan tanggal.');
+    if (row.snoozedUntilIso !== null) { try { parseInstant(row.snoozedUntilIso); } catch { invalid('waktu tunda tidak valid.'); } }
+  }
+  for (const row of typed.taskSteps) { ref(row,'taskId','tasks'); if (!row.title.trim() || ![0,1].includes(row.isCompleted) || row.sortOrder < 0) invalid('langkah tugas tidak valid.'); }
+  for (const row of typed.dayPlans) if (!dateOnly(row.id) || row.availableMinutes < 0 || row.availableMinutes > 1440) invalid('rencana harian tidak valid.');
+  for (const row of typed.dayReviews) if (!dateOnly(row.id)) invalid('tanggal tinjauan tidak valid.');
+  for (const row of typed.taskActions) { ref(row,'taskId','tasks'); if (!dateOnly(row.date) || !['SELECT','REMOVE','COMPLETE','REOPEN','SOMEDAY','WAITING','CANCEL','SCHEDULE'].includes(row.action)) invalid('keputusan tugas tidak valid.'); }
   const names = new Set<string>();
   for (const row of typed.categories) {
     const name = normalizeCategoryName(row.name);
@@ -243,22 +264,22 @@ export function upgradeLegacyBackup(data: Record<string, unknown>): void {
 
 /** Import only row values from a pre-upgrade archive; archived SQL is never executed. */
 function parseMigrationArchive(input: Record<string, unknown>): BackupDocument {
-  if ((input.version !== 0 && input.version !== 1) || !Array.isArray(input.tables) || typeof input.capturedAt !== 'string' || !dateText(input.capturedAt)) return invalid('versi/metadata arsip pra-migrasi tidak didukung.');
+  if ((input.version !== 0 && input.version !== 1 && input.version !== 2) || !Array.isArray(input.tables) || typeof input.capturedAt !== 'string' || !dateText(input.capturedAt)) return invalid('versi/metadata arsip pra-migrasi tidak didukung.');
   const tables = new Map<string, Record<string, unknown>[]>();
   for (const table of input.tables) {
     if (!record(table) || typeof table.name !== 'string' || tables.has(table.name) || !TABLE_SPECS.some(spec => spec.name === table.name) || !Array.isArray(table.rows) || table.rows.some(row => !record(row))) return invalid('tabel arsip pra-migrasi tidak sesuai.');
     tables.set(table.name, table.rows);
   }
-  if (input.version === 1 && tables.size !== TABLE_SPECS.length) return invalid('tabel arsip versi 1 tidak lengkap.');
+  if (Number(input.version) >= 1 && tables.size !== TABLE_SPECS.length && tables.size !== TABLE_SPECS.length - 5) return invalid('tabel arsip versi 1 tidak lengkap.');
   const data = Object.fromEntries(TABLE_SPECS.map(spec => {
-    const columns = input.version === 1 ? spec.columns : spec.columns.filter(column => !(spec.key === 'stages' && ['targetId', 'projectId'].includes(column.key)) && !(spec.key === 'focusSessions' && column.key === 'taskTitle'));
+    const columns = Number(input.version) >= 1 ? spec.columns : spec.columns.filter(column => !(spec.key === 'stages' && ['targetId', 'projectId'].includes(column.key)) && !(spec.key === 'focusSessions' && column.key === 'taskTitle'));
     const defaults: Record<string, unknown> = { categoryId: null, stageId: null, name: null, estimatedHours: 1, sortOrder: 0 };
     return [spec.key, (tables.get(spec.name) ?? []).map(row => {
       if (Object.keys(row).some(name => !columns.some(column => column.name === name))) return invalid('kolom legacy belum dikenal pada ' + spec.name + '.');
       return Object.fromEntries(columns.map(column => [column.key, Object.hasOwn(row, column.name) ? row[column.name] : defaults[column.key]]));
     })];
   }));
-  return parseBackup(JSON.stringify({ format: 'mylife-backup', formatVersion: 1, schemaVersion: input.version === 1 ? 2 : 1, exportedAt: input.capturedAt, data }));
+  return parseBackup(JSON.stringify({ format: 'mylife-backup', formatVersion: 1, schemaVersion: input.version === 2 ? 3 : input.version === 1 ? 2 : 1, exportedAt: input.capturedAt, data }));
 }
 
 export function summarizeBackup(backup: BackupDocument) {

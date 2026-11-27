@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   CheckCircle2,
-  BellRing,
   Target,
   Calendar,
   X,
@@ -26,19 +25,11 @@ type QuickAddItem = {
 const ITEMS: QuickAddItem[] = [
   {
     id: 'priority',
-    label: 'Tugas Hari Ini',
-    subtitle: 'Pilih satu tugas untuk dikerjakan hari ini.',
-    pathname: '/today/new',
+    label: 'Catat Tugas',
+    subtitle: 'Simpan dulu. Tentukan rencananya nanti.',
+    pathname: '/tasks/new',
     icon: CheckCircle2,
     color: colors.clockFace,
-  },
-  {
-    id: 'task-manager',
-    label: 'Tugas & Alarm',
-    subtitle: 'Tentukan tenggat dan jam pengingat.',
-    pathname: '/task-manager/new',
-    icon: BellRing,
-    color: colors.folderPeach,
   },
   {
     id: 'target',

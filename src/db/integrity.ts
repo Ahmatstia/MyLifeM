@@ -20,5 +20,5 @@ CREATE TRIGGER IF NOT EXISTS milestone_owner_update BEFORE UPDATE OF project_id 
 WHEN NEW.project_id IS NOT OLD.project_id AND EXISTS (SELECT 1 FROM tasks WHERE milestone_id = OLD.id)
 BEGIN SELECT RAISE(ABORT, 'Milestone berisi tugas tidak dapat dipindah proyek'); END;
 CREATE TRIGGER IF NOT EXISTS task_history_delete BEFORE DELETE ON tasks
-BEGIN UPDATE focus_sessions SET task_title = COALESCE(task_title, OLD.title) WHERE task_id = OLD.id; END;
+BEGIN UPDATE focus_sessions SET task_title = COALESCE(task_title, OLD.title) WHERE task_id = OLD.id; UPDATE agenda_events SET reminder_minutes = NULL, is_completed = 1 WHERE task_id = OLD.id; END;
 `;

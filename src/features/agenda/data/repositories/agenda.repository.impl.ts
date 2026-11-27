@@ -1,3 +1,6 @@
+import { notifyTaskChanges } from '@/shared/data/task-changes';
+import { writeTaskStatus } from '@/shared/data/task-status';
+import { tasks, taskProfiles } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { localDayBounds, parseInstant } from '@/shared/utils/local-date';
 import { allDayDates, occursOnDate, validateAgenda } from '../../domain/agenda-time';
@@ -22,12 +25,13 @@ function generateId(): string {
 
 function mapToAgendaEntity(row: AgendaEvent): AgendaEventEntity {
   if (!row.isAllDay && parseInstant(row.endTime) <= parseInstant(row.startTime)) throw new Error('Agenda ' + row.id + ' memiliki rentang waktu lama yang tidak valid. Catatan asli tidak diubah.');
+  const linked = row.taskId ? db.select().from(tasks).where(eq(tasks.id,row.taskId)).get() : null;
   return {
     id: row.id,
     targetId: row.targetId,
     projectId: row.projectId,
     taskId: row.taskId,
-    title: row.title,
+    title: linked?.title ?? row.title,
     description: row.description,
     startTime: row.isAllDay ? allDayDates(row.startTime, row.endTime).start : parseInstant(row.startTime).toISOString(),
     endTime: row.isAllDay ? allDayDates(row.startTime, row.endTime).end : parseInstant(row.endTime).toISOString(),
@@ -35,7 +39,7 @@ function mapToAgendaEntity(row: AgendaEvent): AgendaEventEntity {
     eventType: row.eventType as AgendaEventEntity['eventType'],
     location: row.location,
     reminderMinutes: row.isAllDay ? null : row.reminderMinutes,
-    isCompleted: row.isCompleted === 1,
+    isCompleted: linked ? ['COMPLETED','DONE'].includes(linked.status) : row.isCompleted === 1,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -60,7 +64,7 @@ export class AgendaRepositoryImpl implements AgendaRepository {
 
   async getReminderEvents(): Promise<AgendaEventEntity[]> {
     const rows = await db.select().from(agendaEvents).where(sql`${agendaEvents.isCompleted} = 0 AND ${agendaEvents.isAllDay} = 0 AND ${agendaEvents.reminderMinutes} IS NOT NULL`);
-    return rows.map(mapToAgendaEntity);
+    return rows.filter(row=>!row.taskId||['TODO','IN_PROGRESS'].includes(db.select().from(tasks).where(eq(tasks.id,row.taskId)).get()?.status??'CANCELLED')).map(mapToAgendaEntity).filter(item=>!item.isCompleted);
   }
 
   async createEvent(input: CreateAgendaInput): Promise<AgendaEventEntity> {
@@ -91,17 +95,20 @@ export class AgendaRepositoryImpl implements AgendaRepository {
   }
 
   async toggleEventCompletion(id: string, isCompleted: boolean): Promise<void> {
-    await db
-      .update(agendaEvents)
-      .set({
-        isCompleted: isCompleted ? 1 : 0,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(agendaEvents.id, id));
+    db.transaction(tx => {
+      const event = tx.select().from(agendaEvents).where(eq(agendaEvents.id,id)).get();
+      if (!event) throw new Error('Agenda tidak ditemukan.');
+      if (event.taskId) writeTaskStatus(tx,event.taskId,isCompleted ? 'COMPLETED' : 'TODO',new Date().toISOString());
+      else tx.update(agendaEvents).set({isCompleted:Number(isCompleted),updatedAt:new Date().toISOString()}).where(eq(agendaEvents.id,id)).run();
+    });
   }
 
   async deleteEvent(id: string): Promise<void> {
-    await db.delete(agendaEvents).where(eq(agendaEvents.id, id));
+    db.transaction(tx=>{const event=tx.select().from(agendaEvents).where(eq(agendaEvents.id,id)).get();
+      tx.delete(agendaEvents).where(eq(agendaEvents.id,id)).run();
+      if(event?.taskId && id==='task-block-legacy-'+event.taskId)tx.update(taskProfiles).set({executionDate:null,executionTime:null,alertMode:'NONE',snoozedUntilIso:null}).where(eq(taskProfiles.id,event.taskId)).run();
+    });
+    notifyTaskChanges();
   }
 }
 

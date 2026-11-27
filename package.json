@@ -77,7 +77,8 @@
     "test:alarm-lifecycle": "node scripts/check-alarm-lifecycle.cjs",
     "test:layouts": "node scripts/check-layouts.cjs",
     "test:web-bootstrap": "node scripts/check-web-bootstrap.cjs",
-    "test:web": "node scripts/check-web.cjs"
+    "test:web": "node scripts/check-web.cjs",
+    "test:task-planning": "node scripts/check-task-planning.cjs"
   },
   "private": true,
   "overrides": {

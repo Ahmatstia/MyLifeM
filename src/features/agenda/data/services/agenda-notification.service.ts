@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
-import { parseInstant } from '@/shared/utils/local-date';
+import { parseInstant, formatLocalDate } from '@/shared/utils/local-date';
 import type { CalendarReminder as ReminderEvent } from '../../domain/weekly-reminders';
 let notificationsModule: typeof import('expo-notifications') | null = null;
 let isLoaded = false;
@@ -34,7 +34,7 @@ export class AgendaNotificationService {
     } catch { return false; }
   }
 
-  static async scheduleReminder(eventId: string, title: string, startTimeIso: string, reminderMinutes: number | null, requestPermission = true, kind: 'agenda' | 'weekly' = 'agenda'): Promise<string | null> {
+  static async scheduleReminder(eventId: string, title: string, startTimeIso: string, reminderMinutes: number | null, requestPermission = true, kind: 'agenda' | 'weekly' = 'agenda', taskId?: string | null): Promise<string | null> {
     if (reminderMinutes === null || !Number.isSafeInteger(reminderMinutes) || reminderMinutes < 0) return null;
     try {
       const trigger = parseInstant(startTimeIso).getTime() - reminderMinutes * 60_000;
@@ -43,7 +43,7 @@ export class AgendaNotificationService {
       if (!notifications || !await this.requestPermissions(requestPermission)) return null;
       return await notifications.scheduleNotificationAsync({
         identifier: `${kind}-${eventId}`,
-        content: { title: kind === 'weekly' ? 'Pengingat Jadwal Rutin MyLife' : 'Pengingat Agenda MyLife', body: reminderMinutes === 0 ? `"${title}" dimulai sekarang.` : `"${title}" akan dimulai dalam ${reminderMinutes} menit.`, sound: 'default' },
+        content: { title: kind === 'weekly' ? 'Pengingat Jadwal Rutin MyLife' : 'Pengingat Agenda MyLife', data: { taskId: taskId ?? null, date: formatLocalDate(parseInstant(startTimeIso)) }, body: reminderMinutes === 0 ? `"${title}" dimulai sekarang.` : `"${title}" akan dimulai dalam ${reminderMinutes} menit.`, sound: 'default' },
         trigger: { type: notifications.SchedulableTriggerInputTypes.DATE, date: new Date(trigger), channelId: 'agenda' },
       });
     } catch { return null; }
@@ -76,7 +76,7 @@ export class AgendaNotificationService {
         let ready = events.length <= available;
         events.sort((a, b) => parseInstant(a.startTime).getTime() - Number(a.reminderMinutes) * 60_000 - (parseInstant(b.startTime).getTime() - Number(b.reminderMinutes) * 60_000));
         // shortcut: enqueue only the 50 nearest reminders; refill on reopen/resume/midnight, and report partial coverage.
-        for (const event of events.slice(0, available)) if (!await this.scheduleReminder(event.id, event.title, event.startTime, event.reminderMinutes, false, event.kind)) ready = false;
+        for (const event of events.slice(0, available)) if (!await this.scheduleReminder(event.id, event.title, event.startTime, event.reminderMinutes, false, event.kind, event.taskId)) ready = false;
         if (Platform.OS === 'android' && !(await notifications.getExactAlarmPermissionsAsync()).granted) ready = false;
         return ready;
       } catch { return false; }
@@ -97,4 +97,19 @@ export class AgendaNotificationService {
       return true;
     } catch { return false; }
   }
+  static observeResponses(open: (taskId: string | null, date: string | null) => void): () => void {
+    const notifications=getNotifications();if(!notifications)return ()=>{};
+    let alive=true;const handled=new Set<string>();
+    const receive=(response:import('expo-notifications').NotificationResponse|null)=>{
+      if(!alive||!response||response.actionIdentifier!==notifications.DEFAULT_ACTION_IDENTIFIER)return;
+      const request=response.notification.request;
+      if(!request.identifier.startsWith('agenda-')&&!request.identifier.startsWith('weekly-'))return;
+      const key=request.identifier+'|'+response.notification.date;if(handled.has(key))return;handled.add(key);
+      const data=request.content.data ?? {};
+      open(typeof data.taskId==='string'?data.taskId:null,typeof data.date==='string'?data.date:null);
+      notifications.clearLastNotificationResponse();
+    };
+    try{const subscription=notifications.addNotificationResponseReceivedListener(receive);receive(notifications.getLastNotificationResponse());return ()=>{alive=false;subscription.remove();};}catch{return ()=>{alive=false;};}
+  }
+
 }

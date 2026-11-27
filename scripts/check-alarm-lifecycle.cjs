@@ -78,7 +78,7 @@ async function main() {
   const component = h.load('src/features/task-manager/presentation/components/managed-alarm-sync.tsx').ManagedAlarmSync;
   h.render(component); await tick(); assert.deepEqual(calls, ['managed', 'calendar', 'due']); checks++;
   calls.length = 0; calendar = { key: 'resume' }; h.render(component); await tick(); assert.deepEqual(calls, ['managed', 'calendar', 'due']);
-  await received({ taskId: 'one', occurrence: null, isAlarm: false }); assert.equal(calls.at(-1), '/task-manager'); h.close(); assert.ok(disposed); checks++;
+  await received({ taskId: 'one', occurrence: null, isAlarm: false }); assert.deepEqual(calls.at(-1), {pathname:'/tasks/[id]',params:{id:'one'}}); h.close(); assert.ok(disposed); checks++;
   console.log(`PASS: ${checks} managed-alarm lifecycle checks; native mocked, SQLite memory only.`);
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

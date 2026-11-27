@@ -134,9 +134,9 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
                 icon={BellRing}
                 iconBg={s.sunSoft}
                 iconColor={s.forest}
-                title="Manajemen Tugas & Alarm"
+                title="Semua Tugas"
                 subtitle="Jadwal kerja dan pengingat"
-                onPress={() => navigateTo('/task-manager')}
+                onPress={() => navigateTo('/(tabs)/tasks')}
               />
 
               <SidebarMenuItem
@@ -145,7 +145,7 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
                 iconColor={s.forest}
                 title="Target & Peta Jalan"
                 subtitle="Tujuan, tahapan, dan progres"
-                onPress={() => navigateTo('/(tabs)/targets')}
+                onPress={() => navigateTo('/targets')}
               />
 
               <SidebarMenuItem
@@ -156,6 +156,9 @@ export const AppSidebarDrawer: React.FC<AppSidebarDrawerProps> = ({
                 subtitle="Agenda harian, kalender bulanan & rutinitas"
                 onPress={() => navigateTo('/(tabs)/agenda')}
               />
+
+              <SidebarMenuItem icon={CalendarDays} iconBg={s.tealSoft} iconColor={s.teal}
+                title="Tinjauan" subtitle="Hasil, hambatan, dan keputusan berikutnya" onPress={() => navigateTo('/review')} />
 
               <SidebarMenuItem
                 icon={Settings}

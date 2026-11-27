@@ -134,7 +134,7 @@ export const AlarmRingingModal: React.FC = () => {
 
   const handleStartFocusNow = () => runAction(async () => {
     await managedTaskRepository.dismissTaskAlarm(ringingTask.id);
-    router.push('/(tabs)' as any);
+    router.push({pathname:'/tasks/[id]',params:{id:ringingTask.id}});
   });
 
   const handleSnooze = (minutes: number) => runAction(() => managedTaskRepository.snoozeTaskAlarm(ringingTask.id, minutes));

@@ -4,7 +4,7 @@ import { getDayOfWeekFromDate, validateWeeklySchedule, type WeeklyScheduleEntity
 export const WEEKLY_REMINDER_DAYS = 28;
 export interface CalendarReminder {
   id: string; title: string; startTime: string; reminderMinutes: number | null;
-  isAllDay: boolean | number; isCompleted: boolean | number; kind?: 'agenda' | 'weekly';
+  isAllDay: boolean | number; isCompleted: boolean | number; kind?: 'agenda' | 'weekly'; taskId?: string | null;
 }
 interface ReminderLog { scheduleId: string; date: string; isCompleted: boolean | number; isCancelled: boolean | number; }
 

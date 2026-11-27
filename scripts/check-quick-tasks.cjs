@@ -41,9 +41,9 @@ async function main() {
     await assert.rejects(repo.createQuickTask('Atomic', '2026-11-22', undefined, { estimatedMinutes: 60, category: 'Hobi' }));
     e.fault(() => {}); assert.ok(fired); assert.equal(e.state(), before);
   }));
-  await check('the sixth priority leaves no task or details behind', () => setup(async (e, repo) => {
+  await check('a sixth priority can be selected without a hard daily cap', () => setup(async (e, repo) => {
     for (let i = 0; i < 5; i++) await repo.createQuickTask('Task ' + i, '2026-11-22', undefined, { category: 'Belajar' });
-    const before = e.state(); await assert.rejects(repo.createQuickTask('Sixth', '2026-11-22', undefined, { category: 'Kerja' })); assert.equal(e.state(), before);
+    await repo.createQuickTask('Sixth', '2026-11-22', undefined, { category: 'Kerja' }); assert.equal((await repo.getTodayFocusItems('2026-11-22')).length,6);
   }));
   await check('backup and restore retain quick task details; invalid/orphan metadata is rejected', () => setup(async (e, repo) => {
     const task = await repo.createQuickTask('Round trip', '2026-11-22', undefined, { estimatedMinutes: 30, category: 'Kesehatan' });

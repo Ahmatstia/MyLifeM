@@ -29,6 +29,9 @@ for (const [pkg, weights] of [['fredoka', ['500Medium']], ['plus-jakarta-sans', 
 }
 for (const file of fs.readdirSync(path.join(root, 'assets/images/mascot'))) fs.copyFileSync(path.join(root, 'assets/images/mascot', file), path.join(output, 'assets', file));
 const specs = [
+  ['tasks', 'features/tasks/presentation/task-list-screen.tsx', 'TaskListScreen'],
+  ['task-editor', 'features/tasks/presentation/task-editor-screen.tsx', 'TaskEditorScreen'],
+  ['review', 'features/tasks/presentation/review-screen.tsx', 'ReviewScreen'],
   ['today', 'features/today-focus/presentation/screens/today-focus-screen.tsx', 'TodayFocusScreen'],
   ['targets', 'features/targets/presentation/screens/target-list-screen.tsx', 'TargetListScreen'],
   ['agenda', 'features/agenda/presentation/screens/agenda-screen.tsx', 'AgendaScreen'],
@@ -103,13 +106,13 @@ async function main() {
       await page.goto(`http://127.0.0.1:${server.address().port}/${item.file}`);
       await page.evaluate(() => document.fonts.ready);
       if (fullScreens.has(item.name)) {
-        const first = ['today', 'targets', 'agenda'].includes(item.name)
+        const first = ['today', 'agenda','tasks'].includes(item.name)
           ? page.getByRole('heading').first()
           : page.getByRole('button', { name: 'Kembali', exact: true }).first();
         const rect = await first.boundingBox();
         const left = Math.max(0, (item.width - 640) / 2) + (item.width >= 600 ? 24 : 16);
         assert.ok(rect && Math.abs(rect.x - left) < 1, item.name + ' left gutter ' + JSON.stringify(rect));
-        const top = await first.evaluate(el => (el.tagName === 'BUTTON' ? el.parentElement : el).getBoundingClientRect().top);
+        const top = await first.evaluate((el,isTaskList) => (el.tagName === 'BUTTON' || isTaskList ? el.parentElement : el).getBoundingClientRect().top,item.name === 'tasks');
         assert.ok(Math.abs(top - insets.top - 12) < 1, item.name + ' header top ' + top);
       }
       const smallControls = await page.locator('button,[role="button"],[role="checkbox"]').evaluateAll(elements =>
